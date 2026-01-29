@@ -4,7 +4,7 @@
   "description": "Colyseus Server for Legends of Learning",
   "main": "build/server.js",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "node build/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc"
   },
