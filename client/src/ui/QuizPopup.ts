@@ -11,18 +11,11 @@ export class QuizPopup {
     arrowElement: HTMLElement;
     optionsContainer: HTMLElement;
 
-    onAnswer: (answerIndex: number) => void;
-    isVisibleState: boolean = false;
+    // Button references
+    buttonElements: HTMLElement[] = [];
 
-    // State for Paging
-    fullText: string = "";
-    pages: string[] = [];
-    currentPage: number = 0;
-
-    // Data
-    currentData: any = null;
-
-    constructor(scene: Phaser.Scene, onAnswer: (answerIndex: number) => void) {
+    // Callback now includes the button element for positioning
+    constructor(scene: Phaser.Scene, onAnswer: (answerIndex: number, btn: HTMLElement) => void) {
         this.scene = scene;
         this.onAnswer = onAnswer;
 
@@ -208,6 +201,32 @@ export class QuizPopup {
             .hidden {
                 display: none !important;
             }
+
+            /* Feedback Popup Animation */
+            .feedback-popup {
+                position: fixed;
+                z-index: 2100;
+                pointer-events: none;
+                width: 64px;
+                height: 64px;
+                image-rendering: pixelated;
+                animation: floatUpFade 1.5s forwards ease-out;
+            }
+
+            @keyframes floatUpFade {
+                0% {
+                    transform: translateY(0) scale(0.8);
+                    opacity: 0;
+                }
+                10% {
+                    transform: translateY(-10px) scale(1.1);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-80px) scale(1);
+                    opacity: 0;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -220,6 +239,7 @@ export class QuizPopup {
         this.namePlate.innerText = enemyName;
         this.optionsContainer.classList.add('hidden');
         this.optionsContainer.innerHTML = ''; // Clear buttons
+        this.buttonElements = [];
         this.currentPage = 0;
 
         // Paging Logic (Split by ~100 chars or newlines if needed)
@@ -292,11 +312,18 @@ export class QuizPopup {
             btn.className = 'rpg-btn';
             btn.innerText = `${labels[idx]}. ${opt}`;
             btn.style.zIndex = '10'; // Ensure above container
+
+            // Store reference
+            this.buttonElements[idx] = btn;
+
             btn.onpointerup = (e) => {
                 e.stopPropagation(); // Prevent box click
                 console.log(`QuizPopup: Option ${idx} selected.`);
-                this.onAnswer(idx);
-                this.hide();
+                // Pass button element for feedback positioning
+                this.onAnswer(idx, btn);
+
+                // Do NOT hide immediately -> waiting for showFeedback() call or external hide
+                // this.hide(); 
             };
             // Also block pointerdown to prevent click-through to map if needed, 
             // though overlay handles that.
@@ -304,6 +331,32 @@ export class QuizPopup {
 
             this.optionsContainer.appendChild(btn);
         });
+    }
+
+    showFeedback(isCorrect: boolean, button: HTMLElement) {
+        // Create feedback icon
+        const icon = document.createElement('img');
+        icon.src = isCorrect ? 'assets/ui/confirm.png' : 'assets/ui/cancel.png'; // Assuming local path
+        icon.className = 'feedback-popup';
+
+        // Position it relative to the button
+        const rect = button.getBoundingClientRect();
+
+        // Center horizontally on button, position slightly above
+        const left = rect.left + (rect.width / 2) - 32; // 32 is half of 64px width
+        const top = rect.top; // Start at top of button
+
+        icon.style.left = `${left}px`;
+        icon.style.top = `${top}px`;
+
+        document.body.appendChild(icon);
+
+        // Remove after animation
+        setTimeout(() => {
+            icon.remove();
+            // Hide popup after feedback finishes
+            this.hide();
+        }, 1200);
     }
 
     hide() {

@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, Enemy, Chest } from "./GameState";
+import { GameState, Player, Enemy, Chest, SubRoom } from "./GameState";
 import { QUESTIONS } from "../dummyQuestions";
 import { MapParser } from "../utils/MapParser";
 
@@ -8,6 +8,8 @@ const ROOM_CONFIG = {
     sedang: { maxPlayers: 5, targetQuestions: 10, enemiesPerPlayer: 20 },
     sulit: { maxPlayers: 6, targetQuestions: 20, enemiesPerPlayer: 40 }
 };
+
+const LOBBY_MAX_PLAYERS = 20;
 
 export class GameRoom extends Room<GameState> {
 
@@ -18,10 +20,21 @@ export class GameRoom extends Room<GameState> {
         this.state.subject = options.subject || "matematika";
         this.state.roomCode = this.generateRoomCode();
 
-        // Set max clients based on difficulty
+        // Set max clients for the entire lobby
+        this.maxClients = LOBBY_MAX_PLAYERS;
+
+        // Get config based on difficulty
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-        if (config) {
-            this.maxClients = config.maxPlayers;
+
+        // Initialize Sub-Rooms
+        const subRoomCapacity = config ? config.maxPlayers : 4;
+        const totalSubRooms = Math.ceil(LOBBY_MAX_PLAYERS / subRoomCapacity);
+
+        for (let i = 1; i <= totalSubRooms; i++) {
+            const sub = new SubRoom();
+            sub.id = `Room ${i}`;
+            sub.capacity = subRoomCapacity;
+            this.state.subRooms.push(sub);
         }
 
         this.onMessage("movePlayer", (client, data) => {
@@ -38,22 +51,16 @@ export class GameRoom extends Room<GameState> {
             this.state.gameStartTime = Date.now();
 
             this.initializeGameElements();
+            this.startGameTimer(); // Start 5-minute countdown
             this.broadcast("gameStarted");
-        });
-
-        this.onMessage("wrongAnswer", (client, data) => {
-            const player = this.state.players.get(client.sessionId);
-            if (player) {
-                player.hasWrongAnswer = true;
-                player.lastWrongQuestionId = data.questionId;
-                player.wrongAnswers++;
-            }
         });
 
         this.onMessage("correctAnswer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
-            if (player) {
+            if (player && !player.isFinished) {
                 player.correctAnswers++;
+                player.answeredQuestions++;
+
                 // Target SPECIFIC enemy by index to avoid sync issues
                 const enemyIndex = data.enemyIndex;
                 if (enemyIndex !== undefined) {
@@ -62,6 +69,59 @@ export class GameRoom extends Room<GameState> {
                     if (enemy && enemy.ownerId === client.sessionId && enemy.isAlive) {
                         enemy.isAlive = false;
                     }
+                }
+
+                // Check if player finished all required questions
+                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+                if (player.answeredQuestions >= config.targetQuestions && !player.isFinished) {
+                    player.isFinished = true;
+                    player.finishTime = Date.now();
+                    client.send("playerFinished");
+                    this.checkGameEnd();
+                }
+            }
+        });
+
+        this.onMessage("wrongAnswer", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player && !player.isFinished) {
+                player.hasWrongAnswer = true;
+                player.lastWrongQuestionId = data.questionId;
+                player.wrongAnswers++;
+                player.answeredQuestions++;
+
+                // Check if player finished all required questions (even with wrong answers)
+                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+                if (player.answeredQuestions >= config.targetQuestions && !player.isFinished) {
+                    player.isFinished = true;
+                    player.finishTime = Date.now();
+                    client.send("playerFinished");
+                    this.checkGameEnd();
+                }
+            }
+        });
+
+        this.onMessage("addScore", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player) {
+                // Calculate points based on difficulty (max 100 total)
+                // mudah: 5 questions = 20 pts each
+                // sedang: 10 questions = 10 pts each
+                // sulit: 20 questions = 5 pts each
+                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+                const pointsPerCorrect = Math.floor(100 / config.targetQuestions);
+
+                player.score = Math.min(100, player.score + pointsPerCorrect);
+            }
+        });
+
+        // Kill enemy without counting as answered (for wrong answer case)
+        this.onMessage("killEnemy", (client, data) => {
+            const enemyIndex = data.enemyIndex;
+            if (enemyIndex !== undefined) {
+                const enemy = this.state.enemies[enemyIndex];
+                if (enemy && enemy.ownerId === client.sessionId && enemy.isAlive) {
+                    enemy.isAlive = false;
                 }
             }
         });
@@ -77,6 +137,39 @@ export class GameRoom extends Room<GameState> {
                 player.hasUsedChest = true;
 
                 client.send("retryQuestion", { questionId: player.lastWrongQuestionId });
+            }
+        });
+
+        // --- Name Update Handler ---
+        this.onMessage("updateName", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player && data.name && typeof data.name === "string") {
+                player.name = data.name.substring(0, 20); // Limit to 20 chars
+            }
+        });
+
+        // --- Switch Room Handler ---
+        this.onMessage("switchRoom", (client, data) => {
+            const roomId = data.roomId;
+            const player = this.state.players.get(client.sessionId);
+
+            if (player && roomId && roomId !== player.subRoomId) {
+                const targetRoom = this.state.subRooms.find(r => r.id === roomId);
+                const currentRoom = this.state.subRooms.find(r => r.id === player.subRoomId);
+
+                if (targetRoom && targetRoom.playerIds.length < targetRoom.capacity) {
+                    // Remove from old room
+                    if (currentRoom) {
+                        const idx = currentRoom.playerIds.indexOf(client.sessionId);
+                        if (idx > -1) currentRoom.playerIds.splice(idx, 1);
+                    }
+
+                    // Add to new room
+                    targetRoom.playerIds.push(client.sessionId);
+                    player.subRoomId = roomId;
+
+                    console.log(`Player ${player.name} switched from ${currentRoom?.id} to ${roomId}`);
+                }
             }
         });
     }
@@ -102,11 +195,37 @@ export class GameRoom extends Room<GameState> {
             player.y = 300;
         }
 
+        // Auto-assign to first available sub-room
+        let assignedRoom = this.state.subRooms.find(r => r.playerIds.length < r.capacity);
+        if (!assignedRoom) {
+            // Should not happen if maxClients is correct, but fallback to first
+            assignedRoom = this.state.subRooms[0];
+        }
+
+        if (assignedRoom) {
+            player.subRoomId = assignedRoom.id;
+            assignedRoom.playerIds.push(client.sessionId);
+        }
+
         this.state.players.set(client.sessionId, player);
+
+        // First player to join is the host
+        if (!this.state.hostId || this.state.players.size === 1) {
+            this.state.hostId = client.sessionId;
+        }
     }
 
     onLeave(client: Client, consented: boolean) {
         console.log(client.sessionId, "left!");
+        const player = this.state.players.get(client.sessionId);
+        if (player) {
+            // Remove from sub-room
+            const subRoom = this.state.subRooms.find(r => r.id === player.subRoomId);
+            if (subRoom) {
+                const idx = subRoom.playerIds.indexOf(client.sessionId);
+                if (idx > -1) subRoom.playerIds.splice(idx, 1);
+            }
+        }
         this.state.players.delete(client.sessionId);
     }
 
@@ -134,9 +253,12 @@ export class GameRoom extends Room<GameState> {
                     enemy.x = zone.x + Math.random() * (zone.width || 0);
                     enemy.y = zone.y + Math.random() * (zone.height || 0);
                 } else {
-                    // Fallback
-                    enemy.x = Math.random() * 800;
-                    enemy.y = Math.random() * 600;
+                    // Fallback: Use full map dimensions if available, otherwise default to 800x600
+                    const maxX = mapData ? mapData.mapWidth : 800;
+                    const maxY = mapData ? mapData.mapHeight : 600;
+
+                    enemy.x = Math.random() * maxX;
+                    enemy.y = Math.random() * maxY;
                 }
 
                 enemy.questionId = Math.floor(Math.random() * 5) + 1; // Dummy question ID
@@ -157,5 +279,76 @@ export class GameRoom extends Room<GameState> {
                 this.state.chests.push(chest);
             });
         }
+    }
+
+    // --- Game Timer & End Logic ---
+    private gameTimerInterval: NodeJS.Timeout | null = null;
+    private GAME_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+    startGameTimer() {
+        const endTime = Date.now() + this.GAME_DURATION_MS;
+
+        // Update remaining time every second
+        this.gameTimerInterval = setInterval(() => {
+            const remaining = Math.max(0, endTime - Date.now());
+            this.broadcast("timerUpdate", { remaining });
+
+            if (remaining <= 0) {
+                this.endGame();
+            }
+        }, 1000);
+    }
+
+    checkGameEnd() {
+        // Check if all players are finished
+        let allFinished = true;
+        this.state.players.forEach(player => {
+            if (!player.isFinished) {
+                allFinished = false;
+            }
+        });
+
+        if (allFinished && this.state.players.size > 0) {
+            this.endGame();
+        }
+    }
+
+    endGame() {
+        if (this.state.isGameOver) return; // Prevent double-end
+        this.state.isGameOver = true;
+
+        // Clear timer
+        if (this.gameTimerInterval) {
+            clearInterval(this.gameTimerInterval);
+            this.gameTimerInterval = null;
+        }
+
+        // Mark unfinished players as finished
+        this.state.players.forEach(player => {
+            if (!player.isFinished) {
+                player.isFinished = true;
+                player.finishTime = Date.now();
+            }
+        });
+
+        // Calculate Rankings: Sort by score DESC, then finishTime ASC
+        const rankings = Array.from(this.state.players.values())
+            .sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score; // Higher score first
+                }
+                return a.finishTime - b.finishTime; // Earlier finish time first
+            })
+            .map((player, index) => ({
+                rank: index + 1,
+                sessionId: player.sessionId,
+                name: player.name,
+                score: player.score,
+                finishTime: player.finishTime,
+                correctAnswers: player.correctAnswers,
+                wrongAnswers: player.wrongAnswers
+            }));
+
+        this.broadcast("gameEnded", { rankings });
     }
 }

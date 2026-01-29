@@ -39,6 +39,16 @@
     }
   </script>
   <style>
+    body,
+    * {
+      cursor: url('/assets/cursor_03.png') 0 0, auto !important;
+    }
+
+    /* Phaser canvas cursor */
+    canvas {
+      cursor: url('/assets/cursor_03.png') 0 0, auto !important;
+    }
+
     body {
       margin: 0;
       padding: 0;
@@ -86,6 +96,101 @@
       background-image: radial-gradient(#202026 1px, transparent 1px);
       background-size: 20px 20px;
     }
+
+    /* --- UI Layer (Controls) --- */
+    #ui-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      /* Above game, below lobby (lobby z-index is likely high, checked lobby is 10/20?) */
+    }
+
+    /* --- WASD (Desktop) --- */
+    #dpad-container {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      pointer-events: auto;
+    }
+
+    .dpad-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .dpad-btn {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 4px solid #444;
+      color: #999;
+      /* Gray Text */
+      font-family: 'Press Start 2P', monospace;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      outline: none;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .dpad-btn:active,
+    .dpad-btn.active {
+      background: rgba(128, 128, 128, 0.5);
+      /* Transparent Gray */
+      color: #ccc;
+      border-color: #888;
+      transform: scale(0.95);
+    }
+
+    /* --- Joystick (Mobile) --- */
+    #analog-container {
+      position: absolute;
+      bottom: 50px;
+      left: 50px;
+      width: 120px;
+      height: 120px;
+      pointer-events: auto;
+      display: none;
+    }
+
+    #joystick-base {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 4px solid #444;
+      border-radius: 16px;
+      position: relative;
+    }
+
+    #joystick-stick {
+      width: 50px;
+      height: 50px;
+      background: rgba(100, 100, 100, 0.9);
+      border: 4px solid #888;
+      border-radius: 12px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s;
+    }
+
+    /* --- Responsive Switching --- */
+    @media (max-width: 768px) {
+      #dpad-container {
+        display: none;
+      }
+
+      #analog-container {
+        display: block;
+      }
+    }
   </style>
 </head>
 
@@ -94,137 +199,251 @@
   <!-- PHASER CONTAINER -->
   <div id="app"></div>
 
-  <!-- LOBBY OVERLAY -->
-  <div id="lobby-ui" class="bg-background-dark">
-    <!-- Background Decorative Pixel Blocks -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern">
-      <div class="absolute top-10 left-[10%] rotate-45 w-10 h-10 bg-[#202026] opacity-50 border-2 border-primary/20">
+  <!-- CONTROLS OVERLAY -->
+  <div id="ui-layer" class="hidden">
+    <!-- Virtual D-Pad (Desktop Visuals) -->
+    <div id="dpad-container">
+      <div class="dpad-row">
+        <button id="btn-up" class="dpad-btn" data-key="W">W</button>
       </div>
-      <div class="absolute top-40 left-[85%] w-10 h-10 bg-[#202026] opacity-50 border-2 border-secondary/20"></div>
-      <div class="absolute bottom-20 left-[15%] rotate-12 w-10 h-10 bg-[#202026] opacity-50 border-2 border-accent/20">
+      <div class="dpad-row">
+        <button id="btn-left" class="dpad-btn" data-key="A">A</button>
+        <button id="btn-down" class="dpad-btn" data-key="S">S</button>
+        <button id="btn-right" class="dpad-btn" data-key="D">D</button>
       </div>
     </div>
 
-    <div class="relative z-10 flex h-screen w-full flex-col">
-      <!-- Top Navigation -->
-      <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-10 py-4">
-        <div class="flex items-center gap-4">
-          <div class="size-8 bg-primary pixel-border flex items-center justify-center">
-            <span class="material-symbols-outlined text-background-dark font-bold">videogame_asset</span>
+    <!-- Analog Joystick (Mobile Control) -->
+    <div id="analog-container">
+      <div id="joystick-base">
+        <div id="joystick-stick"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOBBY OVERLAY (Redesigned - No Scroll) -->
+  <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-30"></div>
+
+    <!-- Main Layout -->
+    <div class="relative z-10 flex flex-col h-screen">
+      <!-- Header -->
+      <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="size-7 bg-primary pixel-border flex items-center justify-center">
+            <span class="material-symbols-outlined text-sm text-background-dark font-bold">videogame_asset</span>
           </div>
-          <h2 class="text-xl font-bold leading-tight tracking-tighter uppercase">Pixel Lobby <span
-              class="text-primary">v2.0</span></h2>
+          <h2 class="text-lg font-bold tracking-tighter uppercase">Pixel Lobby <span class="text-primary">v2.0</span>
+          </h2>
         </div>
       </header>
 
-      <!-- Main Content -->
-      <main class="flex flex-1 flex-col md:flex-row w-full overflow-hidden">
-        <!-- Host Room -->
-        <section
-          class="flex-1 flex flex-col items-center justify-center p-8 border-b-4 md:border-b-0 md:border-r-4 border-black relative">
-          <div class="max-w-md w-full flex flex-col items-center text-center space-y-8">
-            <div class="relative">
-              <div class="w-32 h-32 bg-primary/10 border-4 border-primary flex items-center justify-center mb-4">
-                <span class="material-symbols-outlined text-6xl text-primary">add_box</span>
-              </div>
+      <!-- Content: Side by Side -->
+      <main class="flex-1 flex flex-row">
+        <!-- Left: Host Session -->
+        <section class="flex-1 flex flex-col items-center justify-center p-6 border-r-4 border-black">
+          <div class="flex flex-col items-center text-center space-y-5">
+            <div class="w-24 h-24 bg-primary/10 border-4 border-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-5xl text-primary">add_box</span>
             </div>
-            <div class="space-y-2">
-              <h1 class="text-4xl font-bold tracking-tighter uppercase italic">Host Session</h1>
-              <p class="text-primary/60 font-medium max-w-xs mx-auto">Initialize a new secure game instance.</p>
+            <div>
+              <h1 class="text-2xl font-bold tracking-tighter uppercase italic">Host Session</h1>
+              <p class="text-primary/60 text-sm font-medium mt-1">Create a new game room</p>
             </div>
-            <div class="w-full bg-surface-dark p-6 border-4 border-black space-y-6">
-              <div class="flex flex-col gap-4">
-                <label class="flex justify-between items-center text-xs font-bold uppercase text-white/40">
-                  <span>Difficulty</span>
-                  <select id="difficulty-select"
-                    class="bg-surface-dark text-primary border-none text-xs font-bold uppercase focus:ring-0">
-                    <option value="mudah">Mudah</option>
-                    <option value="sedang">Sedang</option>
-                    <option value="sulit">Sulit</option>
-                  </select>
-                </label>
-                <label class="flex justify-between items-center text-xs font-bold uppercase text-white/40">
-                  <span>Subject</span>
-                  <select id="subject-select"
-                    class="bg-surface-dark text-primary border-none text-xs font-bold uppercase focus:ring-0">
-                    <option value="matematika">Matematika</option>
-                    <option value="biologi">Biologi</option>
-                    <option value="sejarah">Sejarah</option>
-                    <option value="fisika">Fisika</option>
-                    <option value="kimia">Kimia</option>
-                    <option value="geografi">Geografi</option>
-                  </select>
-                </label>
-              </div>
-              <button id="create-room-btn"
-                class="w-full h-16 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform">
-                Create Room
-              </button>
-            </div>
+            <button id="create-room-btn"
+              class="w-48 h-12 bg-primary text-background-dark font-bold uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform">
+              Create Room
+            </button>
           </div>
         </section>
 
-        <!-- Join Room -->
-        <section class="flex-1 flex flex-col items-center justify-center p-8 bg-surface-dark/50 relative">
-          <div class="max-w-md w-full flex flex-col items-center text-center space-y-8">
-            <div class="relative">
-              <div class="w-32 h-32 bg-secondary/10 border-4 border-secondary flex items-center justify-center mb-4">
-                <span class="material-symbols-outlined text-6xl text-secondary">login</span>
-              </div>
+        <!-- Right: Join Session -->
+        <section class="flex-1 flex flex-col items-center justify-center p-6 bg-surface-dark/30">
+          <div class="flex flex-col items-center text-center space-y-5">
+            <div class="w-24 h-24 bg-secondary/10 border-4 border-secondary flex items-center justify-center">
+              <span class="material-symbols-outlined text-5xl text-secondary">login</span>
             </div>
-            <div class="space-y-2">
-              <h1 class="text-4xl font-bold tracking-tighter uppercase italic">Join Session</h1>
-              <p class="text-secondary/60 font-medium max-w-xs mx-auto">Enter the 6-digit access code.</p>
+            <div>
+              <h1 class="text-2xl font-bold tracking-tighter uppercase italic">Join Session</h1>
+              <p class="text-secondary/60 text-sm font-medium mt-1">Enter room access code</p>
             </div>
-            <div class="w-full bg-surface-dark p-6 border-4 border-black space-y-6">
-              <div class="relative group">
+            <div class="w-64 space-y-3">
+              <div class="relative">
                 <input id="room-code-input"
-                  class="w-full h-20 bg-background-dark border-4 border-white/10 focus:border-secondary focus:ring-0 text-center text-4xl font-bold tracking-[0.5em] text-secondary uppercase placeholder:text-white/10 transition-colors"
+                  class="w-full h-14 bg-black/40 border-4 border-white/10 focus:border-secondary focus:ring-0 text-center text-2xl font-bold tracking-[0.3em] text-secondary uppercase placeholder:text-white/10"
                   placeholder="000000" type="text" maxlength="6" />
-                <div
-                  class="absolute -top-3 left-4 px-2 bg-surface-dark text-[10px] font-bold text-secondary uppercase tracking-widest">
-                  Room Access Code
-                </div>
               </div>
               <button id="join-room-btn"
-                class="w-full h-16 bg-secondary text-background-dark font-bold text-xl uppercase pixel-btn-blue border-4 border-black active:translate-y-1 transition-transform">
+                class="w-full h-12 bg-secondary text-background-dark font-bold uppercase pixel-btn-blue border-4 border-black active:translate-y-1 transition-transform">
                 Join Game
               </button>
             </div>
           </div>
         </section>
       </main>
+
+      <!-- Footer -->
+      <footer
+        class="bg-black py-2 px-6 flex justify-center items-center text-[9px] font-bold uppercase tracking-widest text-white/30 shrink-0">
+        <span>© 2025 Legends of Learning</span>
+      </footer>
     </div>
   </div>
+  </div>
 
-  <!-- WAITING ROOM OVERLAY -->
-  <div id="waiting-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20">
+  <!-- CREATE ROOM UI (Difficulty + Subject Selection) -->
+  <div id="create-room-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20">
     <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern"></div>
 
     <div class="relative z-10 flex h-screen w-full flex-col items-center justify-center p-8">
-      <h1 class="text-4xl font-bold tracking-tighter uppercase italic text-white mb-8">WAITING ROOM</h1>
+      <!-- Back Button -->
+      <button id="back-to-lobby-btn"
+        class="absolute top-4 left-4 flex items-center gap-2 text-white/60 hover:text-primary transition-colors">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span class="text-xs font-bold uppercase">Back</span>
+      </button>
 
-      <div class="w-full max-w-md bg-surface-dark p-8 border-4 border-black space-y-6 text-center">
-        <div class="space-y-2">
-          <p class="text-xs font-bold uppercase text-white/40">Room Access Code</p>
-          <div id="display-room-code" class="text-6xl font-bold text-accent tracking-[0.2em] font-mono">Loading...</div>
+      <h1 class="text-3xl font-bold tracking-tighter uppercase italic text-white mb-8">Create New Room</h1>
+
+      <div class="w-full max-w-md bg-surface-dark p-8 border-4 border-black space-y-6">
+        <!-- Difficulty Selection -->
+        <div class="space-y-3">
+          <p class="text-xs font-bold uppercase text-white/40 tracking-widest">Select Difficulty</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              class="difficulty-btn bg-black/40 border-2 border-white/10 p-3 text-center hover:border-primary transition-colors"
+              data-difficulty="mudah">
+              <span class="text-lg font-bold text-primary">Mudah</span>
+              <p class="text-[9px] text-white/40">4 Players</p>
+            </button>
+            <button
+              class="difficulty-btn bg-black/40 border-2 border-white/10 p-3 text-center hover:border-primary transition-colors"
+              data-difficulty="sedang">
+              <span class="text-lg font-bold text-secondary">Sedang</span>
+              <p class="text-[9px] text-white/40">5 Players</p>
+            </button>
+            <button
+              class="difficulty-btn bg-black/40 border-2 border-white/10 p-3 text-center hover:border-primary transition-colors"
+              data-difficulty="sulit">
+              <span class="text-lg font-bold text-accent">Sulit</span>
+              <p class="text-[9px] text-white/40">6 Players</p>
+            </button>
+          </div>
         </div>
 
-        <div class="h-[2px] bg-white/5 my-4"></div>
-
-        <div class="text-left">
-          <p class="text-xs font-bold uppercase text-white/40 mb-2">Connected Players</p>
-          <ul id="player-list" class="space-y-2 text-lg font-medium text-white">
-            <!-- Players will be injected here -->
-          </ul>
+        <!-- Subject Selection -->
+        <div class="space-y-3">
+          <p class="text-xs font-bold uppercase text-white/40 tracking-widest">Select Subject</p>
+          <select id="subject-select"
+            class="w-full h-12 bg-black/40 border-2 border-white/10 focus:border-primary focus:ring-0 px-3 text-primary font-bold uppercase text-sm">
+            <option value="matematika">Matematika</option>
+            <option value="biologi">Biologi</option>
+            <option value="sejarah">Sejarah</option>
+            <option value="fisika">Fisika</option>
+            <option value="kimia">Kimia</option>
+            <option value="geografi">Geografi</option>
+          </select>
         </div>
 
-        <button id="start-game-btn"
-          class="w-full h-16 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black hidden hover:brightness-110">
-          START GAME
+        <!-- Create Button -->
+        <button id="confirm-create-room-btn"
+          class="w-full h-16 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform">
+          Buat Room
         </button>
-        <div id="waiting-msg" class="text-white/50 animate-pulse text-sm uppercase">Waiting for host...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- WAITING ROOM OVERLAY (New Design) -->
+  <div id="waiting-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20 overflow-hidden">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern"></div>
+
+    <div class="relative z-10 flex h-screen w-full flex-col">
+      <!-- Header -->
+      <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="size-7 bg-primary pixel-border flex items-center justify-center">
+            <span class="material-symbols-outlined text-sm text-background-dark font-bold">videogame_asset</span>
+          </div>
+          <h2 class="text-lg font-bold tracking-tighter uppercase">Waiting Room</h2>
+        </div>
+        <div class="text-center">
+          <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Room Code</p>
+          <div id="display-room-code" class="text-3xl font-bold tracking-[0.15em] text-accent">------</div>
+        </div>
+        <div class="w-24"></div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex p-4 gap-4 overflow-hidden">
+        <!-- Left: Character + Name -->
+        <section class="w-64 shrink-0 flex flex-col gap-3">
+          <div class="bg-surface-dark border-4 border-black p-4 flex-1">
+            <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-3">Select Character</p>
+            <div class="flex items-center justify-between bg-black/40 border-2 border-white/10 p-3">
+              <button class="hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">chevron_left</span>
+              </button>
+              <div class="w-16 h-16 bg-white/5 border-2 border-white/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-primary">face</span>
+              </div>
+              <button class="hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">chevron_right</span>
+              </button>
+            </div>
+            <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-4 mb-2">Your Name</p>
+            <input id="player-name-input"
+              class="w-full h-10 bg-black/40 border-2 border-white/10 focus:border-primary focus:ring-0 px-3 font-bold tracking-wider uppercase text-primary text-sm placeholder:text-white/20"
+              placeholder="Enter Name" type="text" maxlength="20" value="Player 1" />
+          </div>
+        </section>
+
+        <!-- Center: Connected Players (Grid) -->
+        <section class="flex-1 flex flex-col gap-3 overflow-hidden">
+          <div class="bg-surface-dark border-4 border-black p-4 flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-3">
+              <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Connected Players</p>
+              <p id="player-count" class="text-[9px] font-bold text-primary uppercase">(0/4)</p>
+            </div>
+            <div id="player-grid" class="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1 overflow-y-auto custom-scrollbar">
+              <!-- Player cards will be injected here -->
+            </div>
+          </div>
+          <button id="start-game-btn"
+            class="w-full h-14 bg-primary text-background-dark font-bold text-lg uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform shrink-0 hidden">
+            Start Game
+          </button>
+          <div id="waiting-msg" class="text-center text-white/50 text-xs uppercase shrink-0">Waiting for host to
+            start...</div>
+        </section>
+
+        <!-- Right: Chat -->
+        <!-- Right: Room Selector -->
+        <section class="w-72 shrink-0 flex flex-col">
+          <div class="bg-surface-dark border-4 border-black p-3 flex-1 flex flex-col">
+            <div class="flex items-center gap-2 mb-3 border-b-2 border-white/10 pb-2">
+              <span class="material-symbols-outlined text-secondary text-sm">meeting_room</span>
+              <h3 class="text-[9px] font-bold uppercase tracking-widest">Select Room</h3>
+            </div>
+            <div id="room-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 mb-3 pr-1">
+              <!-- Room cards will be injected here -->
+            </div>
+            <div class="mt-auto pt-2 border-t-2 border-white/10 text-center">
+              <p class="text-[9px] text-white/40 uppercase">Click a room to switch</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer
+        class="bg-black py-2 px-6 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-white/40 shrink-0">
+        <span class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-primary"></div> Status: Connected
+        </span>
+        <span id="host-indicator" class="text-primary/60">You are: Guest</span>
+      </footer>
     </div>
   </div>
 

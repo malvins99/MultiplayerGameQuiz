@@ -1,8 +1,13 @@
 import Phaser from 'phaser';
-import { Client } from 'colyseus.js';
+import { Client, Room } from 'colyseus.js';
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
+    selectedDifficulty: string = 'mudah';
+
+    // UI Elements
+    lobbyUI: HTMLElement | null = null;
+    createRoomUI: HTMLElement | null = null;
 
     constructor() {
         super('LobbyScene');
@@ -10,71 +15,159 @@ export class LobbyScene extends Phaser.Scene {
 
     create() {
         // --- PROD VS DEV URL ---
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const host = window.location.hostname === 'localhost'
-            ? 'ws://localhost:2567'
-            : `${protocol}://${window.location.host}`; // On Railway, Client & Server are same domain
+        // Verify if VITE_SERVER_URL is set in environment (e.g. Vercel)
+        const envServerUrl = import.meta.env.VITE_SERVER_URL;
 
+        let host = envServerUrl;
+
+        if (!host) {
+            // Fallback for local development if env not set
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            host = window.location.hostname === 'localhost'
+                ? 'ws://localhost:2567'
+                : `${protocol}://${window.location.host}`;
+        }
+
+        console.log("Connecting to Colyseus server:", host);
         this.client = new Client(host);
 
-        // --- WIRE UP HTML OVERLAY ---
-        const lobbyUI = document.getElementById('lobby-ui');
-        const createBtn = document.getElementById('create-room-btn');
+        // --- UI Elements ---
+        this.lobbyUI = document.getElementById('lobby-ui');
+        this.createRoomUI = document.getElementById('create-room-ui');
+        const createRoomBtn = document.getElementById('create-room-btn');
         const joinBtn = document.getElementById('join-room-btn');
-        const diffSelect = document.getElementById('difficulty-select') as HTMLSelectElement;
-        const subjSelect = document.getElementById('subject-select') as HTMLSelectElement;
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
+        const backBtn = document.getElementById('back-to-lobby-btn');
+        const confirmCreateBtn = document.getElementById('confirm-create-room-btn');
+        const subjSelect = document.getElementById('subject-select') as HTMLSelectElement;
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
-        // Ensure visible initially
-        if (lobbyUI) lobbyUI.classList.remove('hidden');
+        // Ensure lobby is visible initially
+        this.showLobby();
 
-        // Create Room Listener
-        const onCreate = async () => {
-            const difficulty = diffSelect ? diffSelect.value : 'mudah';
-            const subject = subjSelect ? subjSelect.value : 'matematika';
+        // --- "Create Room" Button → Go to Create Room Page ---
+        if (createRoomBtn) {
+            createRoomBtn.onclick = () => {
+                window.location.hash = '/create';
+            };
+        }
 
-            try {
-                const room = await this.client.joinOrCreate("game_room", { difficulty, subject });
-                console.log("Joined successfully", room);
+        // --- Back Button → Return to Lobby ---
+        if (backBtn) {
+            backBtn.onclick = () => {
+                window.location.hash = '/';
+            };
+        }
 
-                // HIDE LOBBY
-                if (lobbyUI) lobbyUI.classList.add('hidden');
+        // --- Difficulty Buttons ---
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active from all
+                difficultyBtns.forEach(b => b.classList.remove('border-primary', 'border-secondary', 'border-accent'));
+                difficultyBtns.forEach(b => b.classList.add('border-white/10'));
 
-                this.scene.start('WaitingRoomScene', { room, isHost: true });
+                // Add active to clicked
+                const diff = (btn as HTMLElement).dataset.difficulty || 'mudah';
+                this.selectedDifficulty = diff;
 
-                // Cleanup listeners to prevent duplicates if scene restarts (simple way)
-                createBtn?.removeEventListener('click', onCreate);
-                joinBtn?.removeEventListener('click', onJoin);
-            } catch (e) {
-                console.error("Create room error", e);
-                alert("Error creating room. Check console.");
-            }
-        };
+                const colorClass = diff === 'mudah' ? 'border-primary' : diff === 'sedang' ? 'border-secondary' : 'border-accent';
+                btn.classList.remove('border-white/10');
+                btn.classList.add(colorClass);
+            });
+        });
 
-        // Join Room Listener
-        const onJoin = async () => {
-            const code = codeInput ? codeInput.value : "";
-            // TODO: Implement join by code logic properly
-            try {
-                // For now joining any room
-                const room = await this.client.join("game_room");
-                console.log("Joined successfully", room);
+        // Select first difficulty by default
+        if (difficultyBtns.length > 0) {
+            (difficultyBtns[0] as HTMLElement).click();
+        }
 
-                // HIDE LOBBY
-                if (lobbyUI) lobbyUI.classList.add('hidden');
+        // --- Handle URL Hash Change ---
+        window.addEventListener('hashchange', () => this.handleRouting());
 
-                this.scene.start('WaitingRoomScene', { room, isHost: false });
+        // Initial route check
+        if (!window.location.hash) window.location.hash = '/';
+        this.handleRouting();
 
-                createBtn?.removeEventListener('click', onCreate);
-                joinBtn?.removeEventListener('click', onJoin);
-            } catch (e) {
-                console.error("Join room error", e);
-                alert("Error joining room. Check console.");
-            }
-        };
+        // --- "Buat Room" Button → Create Room and Navigate ---
+        if (confirmCreateBtn) {
+            confirmCreateBtn.onclick = async () => {
+                const difficulty = this.selectedDifficulty;
+                const subject = subjSelect ? subjSelect.value : 'matematika';
 
-        // Attach - using onclick directly to be simple and override previous if any
-        if (createBtn) createBtn.onclick = onCreate;
-        if (joinBtn) joinBtn.onclick = onJoin;
+                try {
+                    const room = await this.client.joinOrCreate("game_room", { difficulty, subject });
+                    console.log("Room created!", room);
+
+                    // Hide create room UI
+                    if (this.createRoomUI) this.createRoomUI.classList.add('hidden');
+
+                    // Navigate to Waiting Room
+                    window.location.hash = '/waiting';
+                    this.scene.start('WaitingRoomScene', { room, isHost: true });
+                } catch (e) {
+                    console.error("Create room error", e);
+                    alert("Error creating room. Check console.");
+                }
+            };
+        }
+
+        // --- Join Button ---
+        if (joinBtn) {
+            joinBtn.onclick = async () => {
+                const code = codeInput ? codeInput.value.trim() : "";
+
+                if (!code || code.length !== 6) {
+                    alert("Please enter a valid 6-digit room code.");
+                    return;
+                }
+
+                try {
+                    // Join room by room code
+                    // Note: Colyseus doesn't support join-by-custom-code natively out of box
+                    // We'd need server-side filter or matchmaking. For now, joining any available room.
+                    const rooms = await this.client.getAvailableRooms("game_room");
+                    const targetRoom = rooms.find((r: any) => r.metadata?.roomCode === code);
+
+                    let room: Room;
+                    if (targetRoom) {
+                        room = await this.client.joinById(targetRoom.roomId);
+                    } else {
+                        // Fallback: just join any room for now
+                        room = await this.client.join("game_room");
+                    }
+
+                    console.log("Joined room!", room);
+
+                    // Hide lobby
+                    if (this.lobbyUI) this.lobbyUI.classList.add('hidden');
+
+                    // Navigate to Waiting Room
+                    this.scene.start('WaitingRoomScene', { room, isHost: false });
+                } catch (e) {
+                    console.error("Join room error", e);
+                    alert("Error joining room. Check console.");
+                }
+            };
+        }
+    }
+
+    handleRouting() {
+        const hash = window.location.hash;
+
+        if (hash === '#/' || hash === '') {
+            this.showLobby();
+        } else if (hash === '#/create') {
+            this.showCreateRoom();
+        }
+    }
+
+    showLobby() {
+        if (this.lobbyUI) this.lobbyUI.classList.remove('hidden');
+        if (this.createRoomUI) this.createRoomUI.classList.add('hidden');
+    }
+
+    showCreateRoom() {
+        if (this.lobbyUI) this.lobbyUI.classList.add('hidden');
+        if (this.createRoomUI) this.createRoomUI.classList.remove('hidden');
     }
 }
