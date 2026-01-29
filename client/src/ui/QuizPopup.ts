@@ -14,6 +14,14 @@ export class QuizPopup {
     // Button references
     buttonElements: HTMLElement[] = [];
 
+    // State properties
+    currentData: any = null;
+    pages: string[] = [];
+    currentPage: number = 0;
+    fullText: string = "";
+    isVisibleState: boolean = false;
+    onAnswer: (answerIndex: number, btn: HTMLElement) => void;
+
     // Callback now includes the button element for positioning
     constructor(scene: Phaser.Scene, onAnswer: (answerIndex: number, btn: HTMLElement) => void) {
         this.scene = scene;
