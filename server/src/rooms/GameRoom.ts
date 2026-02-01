@@ -106,12 +106,22 @@ export class GameRoom extends Room<GameState> {
             if (player) {
                 // Calculate points based on difficulty (max 100 total)
                 // mudah: 5 questions = 20 pts each
-                // sedang: 10 questions = 10 pts each
-                // sulit: 20 questions = 5 pts each
                 const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-                const pointsPerCorrect = Math.floor(100 / config.targetQuestions);
+                const pointsPerCorrect = Math.floor(100 / config.targetQuestions); // 20 pts
 
                 player.score = Math.min(100, player.score + pointsPerCorrect);
+            }
+        });
+
+        this.onMessage("addScoreFromChest", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player) {
+                // Chest gives half points of a normal question
+                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+                const pointsPerCorrect = Math.floor(100 / config.targetQuestions);
+                const chestPoints = Math.floor(pointsPerCorrect / 2); // 10 pts for easy
+
+                player.score = Math.min(100, player.score + chestPoints);
             }
         });
 
@@ -271,14 +281,17 @@ export class GameRoom extends Room<GameState> {
         });
 
         // Create Chests from Map Data
+        console.log("[Debug] mapData.chests:", mapData?.chests);
         if (mapData && mapData.chests.length > 0) {
             mapData.chests.forEach((c: any) => {
                 const chest = new Chest();
                 chest.x = c.x;
                 chest.y = c.y;
                 this.state.chests.push(chest);
+                console.log(`[Debug] Created chest at (${c.x}, ${c.y})`);
             });
         }
+        console.log(`[Debug] Total chests created: ${this.state.chests.length}`);
     }
 
     // --- Game Timer & End Logic ---

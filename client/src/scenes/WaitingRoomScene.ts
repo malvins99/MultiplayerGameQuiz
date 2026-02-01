@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
+import { Router } from '../utils/Router';
 
 export class WaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -96,7 +97,7 @@ export class WaitingRoomScene extends Phaser.Scene {
         // Game Start
         this.room.onMessage("gameStarted", () => {
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            window.location.hash = '/game';
+            Router.navigate('/game');
             this.scene.start('GameScene', { room: this.room });
         });
 

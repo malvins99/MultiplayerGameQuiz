@@ -3,6 +3,32 @@
 
 <head>
   <meta charset="UTF-8" />
+
+  <!-- QUIZ SELECTION styles -->
+  <style>
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+      border-color: #00ff55;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1a1a20;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #00ff55;
+    }
+  </style>
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Legends of Learning - Multiplayer RPG</title>
@@ -351,6 +377,179 @@
           class="w-full h-16 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform">
           Buat Room
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ SELECTION UI -->
+  <div id="quiz-selection-ui"
+    class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20 overflow-hidden font-display">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-50"></div>
+
+    <!-- Navbar/Header -->
+    <nav class="relative z-10 border-b-4 border-black bg-surface-dark px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-primary pixel-border flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl text-background-dark font-bold">bolt</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tighter uppercase font-['Press_Start_2P'] text-white">
+          <span class="text-white">Pilih</span> <span class="text-primary">Kuis</span>
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button id="quiz-back-btn" class="p-2 hover:text-primary transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined">arrow_back</span>
+          <span class="text-xs font-bold uppercase hidden md:block">Back</span>
+        </button>
+        <div class="h-10 w-10 bg-white/5 border-2 border-white/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-white/40">person</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative z-10 max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)] flex flex-col">
+
+      <!-- Search & Filter Bar -->
+      <div class="flex flex-col md:flex-row gap-4 mb-8 shrink-0">
+        <div class="relative flex-grow">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/40">search</span>
+          <input id="quiz-search-input"
+            class="w-full h-14 pl-12 pr-4 bg-black/40 border-4 border-white/10 focus:border-primary focus:ring-0 text-white placeholder:text-white/20 font-bold uppercase tracking-wider"
+            placeholder="Search Quiz..." type="text" />
+        </div>
+        <div class="flex gap-3 shrink-0">
+          <select id="quiz-category-select"
+            class="h-14 bg-black/40 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 text-white font-bold uppercase min-w-[180px]">
+            <option value="">All Categories</option>
+            <!-- Categories injected via JS -->
+          </select>
+          <button id="quiz-filter-fav-btn"
+            class="h-14 w-14 bg-black/40 border-4 border-white/10 hover:border-primary flex items-center justify-center transition-colors group">
+            <span
+              class="material-symbols-outlined text-white/40 group-hover:text-red-500 transition-colors">favorite</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Grid -->
+      <div id="quiz-grid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20">
+        <!-- Cards injected via JS -->
+      </div>
+
+      <!-- Pagination -->
+      <div class="mt-auto pt-4 flex justify-center items-center gap-4 shrink-0 border-t-2 border-white/5">
+        <button id="prev-page-btn"
+          class="px-4 py-2 bg-black/40 border-2 border-white/10 hover:border-white/40 text-white/60 hover:text-white flex items-center gap-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-sm">chevron_left</span>
+          <span class="text-xs font-bold uppercase">Prev</span>
+        </button>
+
+        <div id="pagination-numbers" class="flex items-center gap-2">
+          <!-- Page numbers injected -->
+        </div>
+
+        <button id="next-page-btn"
+          class="px-4 py-2 bg-black/40 border-2 border-white/10 hover:border-white/40 text-white/60 hover:text-white flex items-center gap-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+          <span class="text-xs font-bold uppercase">Next</span>
+          <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- QUIZ SETTINGS UI (Configuration) -->
+  <div id="quiz-settings-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-30">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-30"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+    <div class="relative z-10 flex h-screen w-full items-center justify-center p-4">
+      <div
+        class="w-full max-w-2xl bg-surface-dark border-4 border-primary shadow-[0_0_50px_rgba(0,255,85,0.1)] flex flex-col relative overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-black/40 p-6 border-b-4 border-black">
+          <button id="settings-back-btn" class="absolute top-6 left-6 text-white/40 hover:text-white transition-colors">
+            <span class="material-symbols-outlined text-3xl">arrow_back</span>
+          </button>
+          <h2 id="settings-quiz-title"
+            class="text-2xl font-bold text-center text-primary uppercase tracking-wider font-['Press_Start_2P'] leading-relaxed mt-2 px-8">
+            Quiz Title Here
+          </h2>
+        </div>
+
+        <div class="p-8 space-y-8">
+          <!-- Description -->
+          <div class="bg-primary/5 p-4 border-l-4 border-primary">
+            <p id="settings-quiz-desc" class="text-white/80 font-display leading-relaxed">
+              Description goes here...
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Timer -->
+            <div class="space-y-3">
+              <label class="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-widest">
+                <span class="material-symbols-outlined text-sm">timer</span> Pengaturan (Waktu)
+              </label>
+              <select id="settings-timer"
+                class="w-full h-12 bg-black/40 border-2 border-white/10 focus:border-secondary focus:ring-0 text-white font-bold px-3">
+                <option value="300">5 Menit</option>
+                <option value="600">10 Menit</option>
+                <option value="900">15 Menit</option>
+              </select>
+            </div>
+
+            <!-- Question Count -->
+            <div class="space-y-3">
+              <label class="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-widest">
+                <span class="material-symbols-outlined text-sm">numbers</span> # Jumlah Soal
+              </label>
+              <select id="settings-question-count"
+                class="w-full h-12 bg-black/40 border-2 border-white/10 focus:border-secondary focus:ring-0 text-white font-bold px-3">
+                <option value="5">5 Soal (10 Musuh)</option>
+                <option value="10">10 Soal (20 Musuh)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Difficulty -->
+          <div class="space-y-4">
+            <label
+              class="flex items-center justify-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
+              <span class="material-symbols-outlined text-sm">hotel_class</span> Tingkat Kesulitan
+            </label>
+            <div class="flex justify-center gap-4">
+              <button
+                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-primary text-white font-bold uppercase transition-all"
+                data-diff="mudah">
+                Mudah
+              </button>
+              <button
+                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-secondary text-white font-bold uppercase transition-all"
+                data-diff="sedang">
+                Sedang
+              </button>
+              <button
+                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-accent text-white font-bold uppercase transition-all"
+                data-diff="sulit">
+                Sulit
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Action -->
+        <div class="p-6 bg-black/40 border-t-4 border-black">
+          <button id="settings-continue-btn"
+            class="w-full h-16 bg-secondary text-black font-bold text-xl uppercase pixel-btn-blue hover:brightness-110 active:scale-[0.99] transition-all font-['Press_Start_2P'] flex items-center justify-center gap-4">
+            <span class="material-symbols-outlined">play_arrow</span>
+            Lanjutkan
+          </button>
+        </div>
+
       </div>
     </div>
   </div>

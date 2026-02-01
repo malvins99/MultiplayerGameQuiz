@@ -12,6 +12,7 @@ export class GameScene extends Phaser.Scene {
     room!: Room;
     playerEntities: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
     enemyEntities: { [id: string]: Phaser.GameObjects.Sprite } = {};
+    chestContainers: { [index: number]: Phaser.GameObjects.Container } = {};
     nameTagContainers: { [sessionId: string]: Phaser.GameObjects.Container } = {};
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     currentPlayer!: Phaser.GameObjects.Sprite;
@@ -20,6 +21,8 @@ export class GameScene extends Phaser.Scene {
     quizPopup!: QuizPopup;
     activeEnemyId: string | null = null;
     activeQuestionId: number | null = null;
+    isChestPopupVisible: boolean = false;
+    activeChestIndex: number | null = null;
     cooldownEnemies: Set<string> = new Set();
     isZooming: boolean = false;
     controls!: HTMLControlAdapter;
@@ -38,7 +41,7 @@ export class GameScene extends Phaser.Scene {
         // Determine map based on difficulty from room state
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
-        let mapFile = 'map_baru1.tmj';
+        let mapFile = 'map_baru1_tetap.tmj';
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
@@ -50,6 +53,7 @@ export class GameScene extends Phaser.Scene {
 
         this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
         this.load.image('tiles', '/assets/spr_tileset_sunnysideworld_16px.png');
+        this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png'); // Load Forest Tileset
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
 
         // Load Enemy Assets
@@ -58,13 +62,18 @@ export class GameScene extends Phaser.Scene {
         this.load.spritesheet('goblin_idle', '/assets/goblin_idle.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('goblin_death', '/assets/goblin_death.png', { frameWidth: 96, frameHeight: 64 });
 
+        // Load Chest Tileset as Spritesheet for frame access
+        this.load.spritesheet('chest_tiles', '/assets/spr_tileset_sunnysideworld_16px.png', {
+            frameWidth: 16,
+            frameHeight: 16,
+            margin: 0,
+            spacing: 0
+        });
+
         // Load Player Indicator
         this.load.image('indicator', '/assets/indicator.png');
 
         // Load Name Tag Label Assets
-        this.load.image('label_left', '/assets/label_left.png');
-        this.load.image('label_middle', '/assets/label_middle.png');
-        this.load.image('label_right', '/assets/label_right.png');
         this.load.image('label_left', '/assets/label_left.png');
         this.load.image('label_middle', '/assets/label_middle.png');
         this.load.image('label_right', '/assets/label_right.png');
@@ -89,20 +98,30 @@ export class GameScene extends Phaser.Scene {
 
         this.map = this.make.tilemap({ key: mapKey });
 
-        const tileset = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
+        // Add both tilesets
+        const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
+        const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
 
-        if (tileset) {
-            this.map.layers.forEach(layer => {
-                this.map.createLayer(layer.name, tileset, 0, 0);
+        const tilesets = [];
+        if (tileset1) tilesets.push(tileset1);
+        if (tileset2) tilesets.push(tileset2);
+
+        if (tilesets.length > 0) {
+            this.map.layers.forEach(layerData => {
+                try {
+                    // Check if layer already exists (to prevent "Layer ID already exists" error)
+                    const existingLayer = this.map.getLayer(layerData.name);
+                    if (existingLayer && existingLayer.tilemapLayer) {
+                        // Already initialized, skip
+                        return;
+                    }
+                    this.map.createLayer(layerData.name, tilesets, 0, 0);
+                } catch (e) {
+                    console.warn(`Skipping layer render: ${layerData.name}`, e);
+                }
             });
         } else {
-            console.error("Could not load tileset!");
-            const tilesetFallback = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px.png', 'tiles');
-            if (tilesetFallback) {
-                this.map.layers.forEach(layer => {
-                    this.map.createLayer(layer.name, tilesetFallback, 0, 0);
-                });
-            }
+            console.error("Could not load tilesets properly!");
         }
 
         // --- Animations ---
@@ -227,6 +246,86 @@ export class GameScene extends Phaser.Scene {
                 this.nameTagContainers[sessionId].destroy();
                 delete this.nameTagContainers[sessionId];
             }
+        });
+
+        // --- Chest Sync ---
+        this.room.state.chests.onAdd((chest: any, index: number) => {
+            const container = this.add.container(chest.x, chest.y);
+            container.setDepth(50);
+
+            // Interaction: Touch/Overlap
+            container.setSize(32, 32);
+            this.physics.world.enable(container);
+            (container.body as Phaser.Physics.Arcade.Body).setImmovable(true);
+
+            // Create sprite layers
+            // 1. Shadow: Frame 2019 (Always visible)
+            // 2. Body: 1956 (Closed), 1957 (Open Empty), 1958 (Locked)
+            // 3. Lid: 1891 (Lid Open) -> Only visible when Open
+
+            const shadow = this.add.sprite(0, 5, 'chest_tiles', 2020);
+            const body = this.add.sprite(0, 0, 'chest_tiles', 1956); // Start Closed
+            const lid = this.add.sprite(0, -5, 'chest_tiles', 1892); // Lid (Hidden by default)
+            lid.setVisible(false);
+
+            container.add([shadow, body, lid]);
+            this.chestContainers[index] = container;
+
+            // Visual Update Function
+            const updateVisuals = (animate: boolean = false) => {
+                const myPlayer = this.room.state.players.get(this.room.sessionId);
+                if (!myPlayer) return;
+
+                body.setTint(0xffffff); // Reset Visuals
+                lid.setVisible(false);  // Default hidden
+                lid.y = -5;
+
+                if (chest.isCollected) {
+                    // --- OPENED State ---
+                    // Body: Open Empty (1957)
+                    body.setFrame(1957);
+
+                    // Lid: Visible & Animated
+                    lid.setVisible(true);
+                    lid.setFrame(1893);
+
+                    if (animate) {
+                        this.tweens.add({
+                            targets: lid,
+                            y: -15, duration: 300, ease: 'Back.easeOut',
+                            onComplete: () => { lid.y = -12; }
+                        });
+                    } else {
+                        lid.y = -12;
+                    }
+                }
+                else if (myPlayer.hasUsedChest) {
+                    // --- LOCKED State ---
+                    // Body: Locked (1958)
+                    body.setFrame(1958);
+                }
+                else {
+                    // --- AVAILABLE State ---
+                    // Body: Closed (1956)
+                    body.setFrame(1956);
+                }
+            };
+
+            updateVisuals(false);
+
+            chest.onChange(() => {
+                updateVisuals(chest.isCollected); // Animate if becomes collected
+            });
+
+            const myPlayer = this.room.state.players.get(this.room.sessionId);
+            if (myPlayer) {
+                myPlayer.onChange(() => { updateVisuals(false); });
+            }
+        });
+
+        // Handle Retry Question
+        this.room.onMessage('retryQuestion', (data: { questionId: number }) => {
+            this.showRetryQuestionPopup(data.questionId);
         });
 
         // --- Enemy Sync ---
@@ -407,6 +506,9 @@ export class GameScene extends Phaser.Scene {
 
     handleAnswer(answerIndex: number, btnElement?: HTMLElement) {
         console.log(`handleAnswer called with index: ${answerIndex}, activeQuestionId: ${this.activeQuestionId}`);
+
+        const isFromChest = this.isChestPopupVisible;
+
         // Mark enemy as locally processed to prevent immediate re-trigger
         if (this.activeEnemyId) {
             this.cooldownEnemies.add(this.activeEnemyId);
@@ -422,25 +524,27 @@ export class GameScene extends Phaser.Scene {
 
             // Show Feedback Popup via DOM
             if (btnElement && this.quizPopup) {
-                // If wrong, we still show the 'cancel' icon. 
-                // User said: "if wrong, do not show correct answer". 
-                // We just show X on the clicked button.
                 this.quizPopup.showFeedback(isCorrect, btnElement);
             }
 
             if (isCorrect) {
                 console.log("Sending correctAnswer to server");
-                this.room.send("correctAnswer", {
-                    questionId: this.activeQuestionId,
-                    enemyIndex: this.activeEnemyId
-                });
-                // Add Score (10 points)
-                this.room.send("addScore", { amount: 10 });
+                if (isFromChest) {
+                    this.room.send("addScoreFromChest", { amount: 10 }); // Half points
+                } else {
+                    this.room.send("correctAnswer", {
+                        questionId: this.activeQuestionId,
+                        enemyIndex: this.activeEnemyId
+                    });
+                    this.room.send("addScore", { amount: 20 }); // Full points
+                }
             } else {
                 console.log("Sending wrongAnswer to server");
-                this.room.send("wrongAnswer", { questionId: this.activeQuestionId });
-                // Kill enemy without sending correctAnswer (to avoid double-counting)
-                this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
+                // Wrong answer logic is same for both (no points, opportunity lost)
+                if (!isFromChest) {
+                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId });
+                    this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
+                }
             }
         } else {
             console.error(`Question Data not found for ID: ${this.activeQuestionId}`);
@@ -449,11 +553,67 @@ export class GameScene extends Phaser.Scene {
 
         this.activeQuestionId = null;
         this.activeEnemyId = null;
+        this.isChestPopupVisible = false;
+        this.activeChestIndex = null;
 
         // Reset Camera delayed to match feedback animation
         this.time.delayedCall(1200, () => {
             this.resetCamera();
         });
+    }
+
+    handleChestInteraction(chestIndex: number) {
+        const chest = this.room.state.chests[chestIndex];
+        const myPlayer = this.room.state.players.get(this.room.sessionId);
+
+        if (!chest || !myPlayer) return;
+
+        // Check distance
+        const chestContainer = this.chestContainers[chestIndex];
+        const dist = Phaser.Math.Distance.Between(
+            this.currentPlayer.x, this.currentPlayer.y,
+            chestContainer.x, chestContainer.y
+        );
+
+        if (dist > 50) return; // Too far
+
+        if (myPlayer.hasUsedChest) {
+            console.log("You have already used a chest!");
+            return;
+        }
+
+        if (chest.isCollected) {
+            console.log("Chest is empty!");
+            return;
+        }
+
+        if (!myPlayer.hasWrongAnswer) {
+            console.log("Chest is locked! You need to answer a question wrong first.");
+            return;
+        }
+
+        // Valid! Send to server
+        this.room.send('collectChest', { chestIndex });
+        this.activeChestIndex = chestIndex;
+    }
+
+    showRetryQuestionPopup(questionId: number) {
+        const questions = QUESTIONS;
+        const qData = questions.find((q: any) => q.id === questionId);
+
+        if (qData) {
+            this.activeQuestionId = questionId; // Set active ID for handleAnswer
+            this.isChestPopupVisible = true;
+            this.quizPopup.show(qData, 'RETRY CHEST');
+
+            // Optional: Zoom to chest?
+            if (this.activeChestIndex !== null) {
+                const chest = this.chestContainers[this.activeChestIndex];
+                if (chest) {
+                    this.startCombatCamera(chest.x, chest.y);
+                }
+            }
+        }
     }
 
     startCombatCamera(targetX: number, targetY: number) {
@@ -490,8 +650,24 @@ export class GameScene extends Phaser.Scene {
         }
 
         // --- Interaction Check ---
+        // --- Interaction Check ---
         let hitEnemy = false;
 
+        // --- Chest Interaction Check (TOUCH) ---
+        // Iterate over chest containers to check distance
+        Object.keys(this.chestContainers).forEach(key => {
+            const index = Number(key);
+            const chestContainer = this.chestContainers[index];
+            if (chestContainer && chestContainer.visible) {
+                const dist = Phaser.Math.Distance.Between(this.currentPlayer.x, this.currentPlayer.y, chestContainer.x, chestContainer.y);
+                // 40px radius for touch interaction
+                if (dist < 40) {
+                    this.handleChestInteraction(index);
+                }
+            }
+        });
+
+        // --- Enemy Interaction Check ---
         Object.keys(this.enemyEntities).forEach(key => {
             const enemySprite = this.enemyEntities[key];
             if (enemySprite && enemySprite.active && enemySprite.visible) {

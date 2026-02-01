@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Router } from '../utils/Router';
 
 interface RankingEntry {
     rank: number;
@@ -195,19 +196,19 @@ export class LeaderboardScene extends Phaser.Scene {
         document.getElementById('lb-back')?.addEventListener('click', () => {
             this.cleanup();
             // Full page reload to clean all overlays and reset game state
-            window.location.href = window.location.origin + '/#/lobby';
+            Router.navigate('/');
             window.location.reload();
         });
 
         document.getElementById('lb-again')?.addEventListener('click', () => {
             this.cleanup();
             // Full page reload to clean all overlays and reset game state
-            window.location.href = window.location.origin + '/#/lobby';
+            Router.navigate('/');
             window.location.reload();
         });
 
         // Update URL hash
-        window.location.hash = '/leaderboard';
+        Router.navigate('/leaderboard');
     }
 
     renderPodium(top3: RankingEntry[]): string {
