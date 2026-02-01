@@ -102,7 +102,7 @@ export class GameScene extends Phaser.Scene {
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
         const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
 
-        const tilesets = [];
+        const tilesets: Phaser.Tilemaps.Tileset[] = [];
         if (tileset1) tilesets.push(tileset1);
         if (tileset2) tilesets.push(tileset2);
 
