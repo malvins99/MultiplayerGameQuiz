@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node build/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc"
+    "build": "tsc && npm run copy-maps",
+    "copy-maps": "node -e \"const fs=require('fs');const path=require('path');const src='src/maps';const dest='build/maps';if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).filter(f=>f.endsWith('.json')).forEach(f=>fs.copyFileSync(path.join(src,f),path.join(dest,f)));console.log('Maps copied!');\""
   },
   "dependencies": {
     "@colyseus/monitor": "^0.15.0",
