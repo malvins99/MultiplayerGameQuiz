@@ -1,8 +1,8 @@
-
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { QuizPopup } from '../ui/QuizPopup';
 import { UIScene } from './UIScene'; // Import UI Scene for types
+import { TransitionManager } from '../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../ui/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../systems/ClickToMoveSystem';
@@ -28,6 +28,8 @@ export class GameScene extends Phaser.Scene {
     controls!: HTMLControlAdapter;
     indicatorContainer: Phaser.GameObjects.Container | null = null;
     clickToMove!: ClickToMoveSystem;
+
+    isGameReady: boolean = false; // Block input until countdown finishes
 
     constructor() {
         super('GameScene');
@@ -91,6 +93,17 @@ export class GameScene extends Phaser.Scene {
         // --- UI Scene Launch ---
         this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');
+
+        // --- Start Countdown (Block Input) ---
+        // Uses global transition manager for consistent look
+        // The game logically starts now, but we want 5s countdown
+        this.isGameReady = false;
+
+        // This function will display countdown over the CLOSED iris, then open it.
+        TransitionManager.runGameStartSequence(() => {
+            console.log("Game Started! Input unlocked.");
+            this.isGameReady = true;
+        });
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
@@ -345,12 +358,15 @@ export class GameScene extends Phaser.Scene {
 
             enemy.onChange(() => {
                 if (!enemy.isAlive) {
-                    console.log(`Enemy ${index} died. Playing death animation.`);
+                    // console.log(`Enemy ${index} died. Playing death animation.`);
                     // Play death animation then destroy
-                    enemySprite.play(type + '_death');
-                    enemySprite.once('animationcomplete', () => {
-                        enemySprite.destroy();
-                    });
+                    // FIX: Ensure sprite actually exists
+                    if (enemySprite && enemySprite.anims) {
+                        enemySprite.play(type + '_death');
+                        enemySprite.once('animationcomplete', () => {
+                            if (enemySprite) enemySprite.destroy();
+                        });
+                    }
                 }
             });
         });
@@ -644,12 +660,14 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number) {
         if (!this.currentPlayer) return;
 
+        // BLOCK INPUT IF COUNTDOWN RUNNING
+        if (!this.isGameReady) return;
+
         // Block movement if quiz is open
         if (this.quizPopup.isVisible()) {
             return;
         }
 
-        // --- Interaction Check ---
         // --- Interaction Check ---
         let hitEnemy = false;
 

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
 import { getQuizzes, getCategories, Quiz } from '../data/QuizData';
+import { TransitionManager } from '../utils/TransitionManager'; // Import TransitionManager
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
@@ -47,6 +48,18 @@ export class LobbyScene extends Phaser.Scene {
         // Check routing on load
         window.addEventListener('popstate', () => this.handleRouting());
         this.handleRouting();
+
+        // Check for Room Code in URL (Auto-Join from QR)
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomCode = urlParams.get('room');
+        if (roomCode) {
+            console.log("Auto-joining room from URL:", roomCode);
+            this.handleJoinRoom(roomCode);
+            // Clean URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('room');
+            window.history.replaceState({}, '', url);
+        }
     }
 
     initializeClient() {
@@ -70,10 +83,13 @@ export class LobbyScene extends Phaser.Scene {
         this.quizSelectionUI = document.getElementById('quiz-selection-ui');
         this.quizSettingsUI = document.getElementById('quiz-settings-ui');
 
-        // Populate Categories
-        const catSelect = document.getElementById('quiz-category-select') as HTMLSelectElement;
+        // Populate Categories (Custom & Native Fallback)
+        const categories = getCategories();
+        const catSelect = document.getElementById('quiz-category-select') as HTMLSelectElement; // Native hidden
+        const customMenu = document.getElementById('custom-cat-menu'); // Custom container
+
+        // 1. Populate Native (Hidden)
         if (catSelect) {
-            const categories = getCategories();
             categories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat;
@@ -81,9 +97,142 @@ export class LobbyScene extends Phaser.Scene {
                 catSelect.appendChild(opt);
             });
         }
+
+        // 2. Populate Custom Menu
+        if (customMenu) {
+            // "ALL" Option
+            const allBtn = this.createCustomOption('ALL', '');
+            customMenu.appendChild(allBtn);
+
+            categories.forEach(cat => {
+                const btn = this.createCustomOption(cat, cat);
+                customMenu.appendChild(btn);
+            });
+        }
     }
 
+    createCustomOption(label: string, value: string): HTMLElement {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
+        btn.innerHTML = `<span>${label}</span>`;
+        btn.dataset.value = value;
+
+        btn.onclick = () => {
+            this.handleCategoryChange(value, label);
+        };
+        return btn;
+    }
+
+    handleCategoryChange(value: string, label: string) {
+        // Update Logic State
+        this.selectedCategory = value;
+        this.currentPage = 1;
+
+        // Update UI Text
+        const selectedText = document.getElementById('custom-cat-selected');
+        if (selectedText) selectedText.innerText = label;
+
+        // Close Menu
+        this.toggleCustomDropdown(false);
+
+        // Update Hidden Native Select (just in case)
+        const nativeSelect = document.getElementById('quiz-category-select') as HTMLSelectElement;
+        if (nativeSelect) nativeSelect.value = value;
+
+        // Visual Feedback on Active Item
+        const menu = document.getElementById('custom-cat-menu');
+        if (menu) {
+            const btns = menu.querySelectorAll('button');
+            btns.forEach(b => {
+                b.classList.remove('text-primary', 'bg-white/5');
+                b.classList.add('text-white/70');
+                if (b.dataset.value === value) {
+                    b.classList.add('text-primary', 'bg-white/5');
+                    b.classList.remove('text-white/70');
+                }
+            });
+        }
+
+        this.applyFilters();
+    }
+
+
     setupEventListeners() {
+        // --- CUSTOM DROPDOWN TOGGLE (Generic) ---
+        this.setupDropdown('custom-cat-trigger', 'custom-cat-menu', 'custom-cat-arrow', (val, label) => {
+            this.handleCategoryChange(val, label);
+        });
+
+        // --- QUIZ SETTINGS DROPDOWNS ---
+
+        // Timer Dropdown
+        this.setupDropdown('settings-timer-trigger', 'settings-timer-menu', 'settings-timer-arrow');
+        const timerOptions = document.querySelectorAll('.timer-opt');
+        timerOptions.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const val = parseInt(target.dataset.value || '300');
+                const label = target.dataset.label || '5 Menit';
+
+                this.settingsTimer = val;
+
+                // Update UI
+                const display = document.getElementById('settings-timer-selected');
+                if (display) display.innerText = label;
+
+                // Highlight active
+                timerOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
+                target.classList.add('text-primary', 'bg-white/5');
+
+                // Close menu
+                this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
+            });
+        });
+
+        // Question Count Dropdown
+        this.setupDropdown('settings-question-trigger', 'settings-question-menu', 'settings-question-arrow');
+        const questionOptions = document.querySelectorAll('.question-opt');
+        questionOptions.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const val = parseInt(target.dataset.value || '5');
+                const label = target.dataset.label || '5 Soal';
+
+                this.settingsQuestionCount = val;
+
+                // Update UI
+                const display = document.getElementById('settings-question-selected');
+                if (display) display.innerText = label;
+
+                // Highlight active
+                questionOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
+                target.classList.add('text-primary', 'bg-white/5');
+
+                // Close menu
+                this.closeDropdown('settings-question-menu', 'settings-question-arrow');
+            });
+        });
+
+        // Click Outside to Close All Dropdowns
+        document.addEventListener('click', (e) => {
+            const dropdowns = [
+                { menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' },
+                { menu: 'settings-timer-menu', trigger: 'settings-timer-trigger', arrow: 'settings-timer-arrow' },
+                { menu: 'settings-question-menu', trigger: 'settings-question-trigger', arrow: 'settings-question-arrow' }
+            ];
+
+            dropdowns.forEach(d => {
+                const menu = document.getElementById(d.menu);
+                const trigger = document.getElementById(d.trigger);
+                if (menu && !menu.classList.contains('hidden')) {
+                    if (!menu.contains(e.target as Node) && !trigger?.contains(e.target as Node)) {
+                        this.closeDropdown(d.menu, d.arrow);
+                    }
+                }
+            });
+        });
+
+
         // --- LOBBY UI ---
         const createRoomBtn = document.getElementById('create-room-btn');
         const joinBtn = document.getElementById('join-room-btn');
@@ -91,37 +240,45 @@ export class LobbyScene extends Phaser.Scene {
 
         if (createRoomBtn) {
             createRoomBtn.onclick = () => {
-                Router.navigate('/create');
-                this.showQuizSelection();
+                TransitionManager.transitionTo(() => {
+                    Router.navigate('/create');
+                    this.showQuizSelection();
+                });
             };
         }
 
         if (joinBtn) {
-            joinBtn.onclick = () => this.handleJoinRoom(codeInput?.value);
+            joinBtn.onclick = () => {
+                this.handleJoinRoom(codeInput?.value);
+            };
         }
 
         // --- QUIZ SELECTION UI ---
         const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
-        const catSelect = document.getElementById('quiz-category-select') as HTMLSelectElement;
+        const searchBtn = document.getElementById('search-trigger-btn');
         const favBtn = document.getElementById('quiz-filter-fav-btn');
         const prevBtn = document.getElementById('prev-page-btn');
         const nextBtn = document.getElementById('next-page-btn');
         const quizBackBtn = document.getElementById('quiz-back-btn');
 
         if (searchInput) {
-            searchInput.addEventListener('input', (e) => { // Real-time search preferred over Enter only
-                this.searchQuery = (e.target as HTMLInputElement).value;
-                this.currentPage = 1;
-                this.applyFilters();
+            // Remove 'input' event (Real-time). Use 'keydown' for Enter.
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.searchQuery = (e.target as HTMLInputElement).value;
+                    this.currentPage = 1;
+                    this.applyFilters();
+                }
             });
         }
 
-        if (catSelect) {
-            catSelect.addEventListener('change', (e) => {
-                this.selectedCategory = (e.target as HTMLSelectElement).value;
+        if (searchBtn) {
+            searchBtn.onclick = () => {
+                const val = searchInput ? searchInput.value : '';
+                this.searchQuery = val;
                 this.currentPage = 1;
                 this.applyFilters();
-            });
+            }
         }
 
         if (favBtn) {
@@ -154,34 +311,24 @@ export class LobbyScene extends Phaser.Scene {
 
         if (quizBackBtn) {
             quizBackBtn.onclick = () => {
-                Router.navigate('/');
-                this.showLobby();
+                TransitionManager.transitionTo(() => {
+                    Router.navigate('/');
+                    this.showLobby();
+                });
             };
         }
 
         // --- QUIZ SETTINGS UI ---
         const settingsBackBtn = document.getElementById('settings-back-btn');
         const settingsContinueBtn = document.getElementById('settings-continue-btn');
-        const timerSelect = document.getElementById('settings-timer') as HTMLSelectElement;
-        const questionCountSelect = document.getElementById('settings-question-count') as HTMLSelectElement;
         const diffBtns = document.querySelectorAll('.settings-diff-btn');
 
         if (settingsBackBtn) {
             settingsBackBtn.onclick = () => {
-                this.showQuizSelection(); // Go back to selection, don't change URL
+                TransitionManager.transitionTo(() => {
+                    this.showQuizSelection(); // Go back to selection, don't change URL
+                });
             };
-        }
-
-        if (timerSelect) {
-            timerSelect.addEventListener('change', (e) => {
-                this.settingsTimer = parseInt((e.target as HTMLSelectElement).value);
-            });
-        }
-
-        if (questionCountSelect) {
-            questionCountSelect.addEventListener('change', (e) => {
-                this.settingsQuestionCount = parseInt((e.target as HTMLSelectElement).value);
-            });
         }
 
         diffBtns.forEach(btn => {
@@ -201,8 +348,61 @@ export class LobbyScene extends Phaser.Scene {
         });
 
         if (settingsContinueBtn) {
-            settingsContinueBtn.onclick = () => this.createRoom();
+            settingsContinueBtn.onclick = () => {
+                TransitionManager.transitionTo(() => {
+                    this.createRoom();
+                });
+            };
         }
+    }
+
+    // Helper for Dropdowns
+    setupDropdown(triggerId: string, menuId: string, arrowId?: string, onSelect?: (val: string, label: string) => void) {
+        const trigger = document.getElementById(triggerId);
+        if (trigger) {
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+
+                const menu = document.getElementById(menuId);
+                const arrow = arrowId ? document.getElementById(arrowId) : null;
+                const isHidden = menu?.classList.contains('hidden');
+
+                // Close others? For now, we rely on click-outside to close others or just toggle this one.
+                this.toggleDropdownElement(menuId, arrowId, !!isHidden);
+            };
+        }
+    }
+
+    toggleDropdownElement(menuId: string, arrowId: string | undefined | null, show: boolean) {
+        const menu = document.getElementById(menuId);
+        const arrow = arrowId ? document.getElementById(arrowId) : null;
+
+        if (!menu) return;
+
+        if (show) {
+            menu.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                menu.classList.remove('scale-95', 'opacity-0');
+                menu.classList.add('scale-100', 'opacity-100');
+            });
+            if (arrow) arrow.classList.add('rotate-180');
+        } else {
+            menu.classList.remove('scale-100', 'opacity-100');
+            menu.classList.add('scale-95', 'opacity-0');
+            if (arrow) arrow.classList.remove('rotate-180');
+            setTimeout(() => {
+                menu.classList.add('hidden');
+            }, 200);
+        }
+    }
+
+    closeDropdown(menuId: string, arrowId?: string) {
+        this.toggleDropdownElement(menuId, arrowId, false);
+    }
+
+    // OLD METHOD, replaced by toggleDropdownElement but kept for existing calls if any
+    toggleCustomDropdown(show: boolean) {
+        this.toggleDropdownElement('custom-cat-menu', 'custom-cat-arrow', show);
     }
 
     // --- DATA & LOGIC ---
@@ -260,28 +460,36 @@ export class LobbyScene extends Phaser.Scene {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
 
-            // Determine styling based on category
-            let badgeColor = 'bg-primary/10 text-primary';
-            if (quiz.category === 'Matematika') badgeColor = 'bg-indigo-900/40 text-indigo-400 border border-indigo-500/30';
-            else if (quiz.category === 'Teknologi') badgeColor = 'bg-emerald-900/40 text-emerald-400 border border-emerald-500/30';
-            else if (quiz.category === 'Sains') badgeColor = 'bg-amber-900/40 text-amber-400 border border-amber-500/30';
-            else badgeColor = 'bg-rose-900/40 text-rose-400 border border-rose-500/30';
+            // Determine styling based on category - UNIFIED GREEN THEME for badge text/border, mostly neutral for sleek look
+            // User requested: "jagan gunakan style seperti itu... gunakan saja font pixel... sesuaikan warna"
+            // We'll use the Primary Green (#00ff55) as the accent for everything to look professional.
+            let badgeColor = 'bg-primary/10 text-primary border border-primary/20';
 
-            card.className = "group bg-surface-dark border-2 border-white/5 p-5 rounded-xl hover:border-white/20 transition-all duration-300 card-hover cursor-pointer relative";
+            // "Maju ke depan" (Scale Up) - REMOVED per user request (Round 3) "hanya hover warna saja"
+            // Simple border color change, no layout shift.
+            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-white/5 transition-colors duration-200 cursor-pointer relative overflow-hidden";
+
             card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <span class="px-3 py-1 ${badgeColor} text-[10px] font-bold rounded-full uppercase tracking-wider">${quiz.category}</span>
-                    <button class="fav-btn text-white/20 hover:text-red-500 transition-colors relative z-10" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined ${isFav ? 'text-red-500' : ''}">favorite</span>
+                <!-- Background Gradient (Subtle Green on Hover) -->
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div class="relative z-10 flex justify-between items-start mb-6">
+                    <!-- Pixel Font Badge -->
+                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none">${quiz.category}</span>
+                    
+                    <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                        <span class="material-symbols-outlined text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current group-hover:text-red-400'} transition-colors">favorite</span>
                     </button>
                 </div>
-                <h3 class="text-lg font-bold text-white mb-6 group-hover:text-primary transition-colors line-clamp-2 h-14">${quiz.title}</h3>
-                <div class="flex items-center justify-between pt-4 border-t border-white/5">
-                    <div class="flex items-center gap-1.5 text-white/40 text-xs font-bold uppercase">
+                
+                <h3 class="relative z-10 text-lg font-bold text-white mb-6 group-hover:text-primary transition-colors leading-relaxed h-14 line-clamp-2">${quiz.title}</h3>
+                
+                <div class="relative z-10 flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                    <div class="flex items-center gap-2 text-white/40 group-hover:text-primary/80 transition-colors text-xs font-bold uppercase tracking-wide font-['Press_Start_2P']">
                         <span class="material-symbols-outlined text-sm">quiz</span>
-                        <span>${quiz.questionCount} Quest</span>
+                        <span>${quiz.questionCount} Qs</span>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-all">
+                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center -mr-2 group-hover:bg-primary group-hover:text-black transition-all duration-300">
                         <span class="material-symbols-outlined text-sm">arrow_forward</span>
                     </div>
                 </div>
@@ -290,7 +498,9 @@ export class LobbyScene extends Phaser.Scene {
             // Card Click -> Settings
             card.onclick = (e) => {
                 if (!(e.target as HTMLElement).closest('.fav-btn')) {
-                    this.openSettings(quiz);
+                    TransitionManager.transitionTo(() => {
+                        this.openSettings(quiz);
+                    });
                 }
             };
 
@@ -386,7 +596,16 @@ export class LobbyScene extends Phaser.Scene {
             }
 
             this.lobbyUI?.classList.add('hidden');
-            this.scene.start('WaitingRoomScene', { room, isHost: false });
+
+            // Wrap scene start in transition (if not already managed by onclick wrapper)
+            // But since handleJoinRoom is async called from onclick...
+            // We should wrap the specific UI switch part.
+            // Let's modify the onclick handler for joinBtn instead of here to be consistent.
+
+            TransitionManager.transitionTo(() => {
+                this.scene.start('WaitingRoomScene', { room, isHost: false });
+            });
+
         } catch (e) {
             console.error("Join room error", e);
             alert("Error joining room.");

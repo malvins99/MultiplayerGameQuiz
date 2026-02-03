@@ -28,6 +28,12 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: #00ff55;
     }
+
+    /* Dropdown Options Fix for Dark Mode */
+    #quiz-category-select option {
+      background-color: #1a1a20;
+      color: white;
+    }
   </style>
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -118,9 +124,27 @@
       box-shadow: inset -4px -4px 0px 0px #008299;
     }
 
+    /* Animated Scrolling Background (Bottom-Left Direction) */
+    @keyframes scroll-diagonal {
+      0% {
+        background-position: 0 0;
+      }
+
+      100% {
+        background-position: -400px 400px;
+        /* Move LEFT (-x) and DOWN (+y) */
+      }
+    }
+
     .pixel-bg-pattern {
-      background-image: radial-gradient(#202026 1px, transparent 1px);
-      background-size: 20px 20px;
+      background-image: url('/assets/bg_pattern.png');
+      background-repeat: repeat;
+      background-size: 400px;
+      /* Made MUCH larger */
+      animation: scroll-diagonal 20s linear infinite;
+      /* Slower animation for larger pattern */
+      image-rendering: pixelated;
+      /* Ensure crisp scaling */
     }
 
     /* --- UI Layer (Controls) --- */
@@ -217,6 +241,177 @@
         display: block;
       }
     }
+
+    /* Floating Animation for Host Icon */
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* SPRITE ANIMATION (10 Frames) */
+    /* Target size: 128px (w-32) */
+    /* Total width: 1280px (10 * 128) */
+    @keyframes sprite-play-10 {
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: -1280px 0;
+      }
+    }
+
+    .sprite-icon {
+      width: 128px;
+      height: 128px;
+      background-repeat: no-repeat;
+      background-size: 1280px 128px;
+      /* 1000% width would also work but px is safer for steps */
+      image-rendering: pixelated;
+    }
+
+    .icon-sword {
+      background-image: url('/assets/icon_sword.png');
+      animation: sprite-play-10 1s steps(10) infinite;
+      /* Fast loop 1s */
+    }
+
+    .icon-shield {
+      background-image: url('/assets/icon_shield.png');
+      animation: sprite-play-10 1s steps(10) infinite;
+    }
+
+    /* --- Button Sweep/Fill Animation --- */
+    .btn-sweep {
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      transition: color 0.3s;
+    }
+
+    .btn-sweep::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background-color: white;
+      /* Fill color */
+      z-index: -1;
+      transition: width 0.3s ease-in-out;
+    }
+
+    /* Specific text colors for hover state if needed */
+    .pixel-btn-green.btn-sweep:hover {
+      color: #000 !important;
+    }
+
+    .pixel-btn-blue.btn-sweep:hover {
+      color: #000 !important;
+    }
+
+    .btn-sweep:hover::before {
+      width: 100%;
+    }
+
+    /* --- Spotlight / Dimming Effect --- */
+    /* When hovering the main container, dim all sections by default */
+    .lobby-container:hover .lobby-card {
+      filter: grayscale(80%) brightness(0.5);
+      transform: scale(0.95);
+      transition: all 0.4s ease;
+    }
+
+    /* But keep the specifically hovered card bright and scaled up */
+    /* But keep the specifically hovered card bright and scaled up */
+    .lobby-container .lobby-card:hover {
+      filter: grayscale(0%) brightness(1.1);
+      transform: scale(1.05);
+      z-index: 10;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Icon Specific Glows on Card Hover */
+    .lobby-container .lobby-card:hover .icon-sword {
+      filter: drop-shadow(0 0 20px #00ff55);
+    }
+
+    .lobby-container .lobby-card:hover .icon-shield {
+      filter: drop-shadow(0 0 20px #ffffff);
+      /* White Glow for Shield */
+    }
+
+    /* --- GLOBAL IRIS TRANSITION (Robust Box-Shadow Method) --- */
+    #transition-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2147483647 !important;
+
+      /* Base State: Tiny hole, No Shadow (Hidden) */
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: 0 0 0 0 transparent;
+      pointer-events: none;
+    }
+
+    /* 1. PERSISTENT STATE: Shadow is ON (Black) */
+    /* This class is added first and removed last to prevent flickering */
+    #transition-overlay.overlay-active {
+      box-shadow: 0 0 0 300vmax black;
+      pointer-events: auto;
+    }
+
+    /* 2. ANIMATIONS: Only control width/height of the "Hole" */
+
+    /* Close: Big Hole -> Small Hole (Screen goes black) */
+    .iris-close {
+      animation: anim-close 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* Open: Small Hole -> Big Hole (Screen reveals) */
+    .iris-open {
+      animation: anim-open 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes anim-close {
+      0% {
+        width: 300vmax;
+        height: 300vmax;
+      }
+
+      100% {
+        width: 0px;
+        height: 0px;
+      }
+    }
+
+    @keyframes anim-open {
+      0% {
+        width: 0px;
+        height: 0px;
+      }
+
+      100% {
+        width: 300vmax;
+        height: 300vmax;
+      }
+    }
   </style>
 </head>
 
@@ -250,58 +445,68 @@
   <!-- LOBBY OVERLAY (Redesigned - No Scroll) -->
   <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden">
     <!-- Background Pattern -->
-    <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-30"></div>
+    <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-15"></div>
 
     <!-- Main Layout -->
     <div class="relative z-10 flex flex-col h-screen">
-      <!-- Header -->
-      <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="size-7 bg-primary pixel-border flex items-center justify-center">
-            <span class="material-symbols-outlined text-sm text-background-dark font-bold">videogame_asset</span>
-          </div>
-          <h2 class="text-lg font-bold tracking-tighter uppercase">Pixel Lobby <span class="text-primary">v2.0</span>
-          </h2>
-        </div>
-      </header>
+      <!-- Header Removed for Clean Look -->
+      <!-- <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0"> ... </header> -->
 
       <!-- Content: Side by Side -->
-      <main class="flex-1 flex flex-row">
+      <main class="flex-1 flex flex-row lobby-container group/main">
         <!-- Left: Host Session -->
-        <section class="flex-1 flex flex-col items-center justify-center p-6 border-r-4 border-black">
-          <div class="flex flex-col items-center text-center space-y-5">
-            <div class="w-24 h-24 bg-primary/10 border-4 border-primary flex items-center justify-center">
-              <span class="material-symbols-outlined text-5xl text-primary">add_box</span>
+        <section class="flex-1 flex flex-col items-center justify-center p-6 lobby-card transition-all duration-300">
+          <div class="flex flex-col items-center text-center space-y-6">
+            <!-- Animated Sword Icon (Sprite) -->
+            <div class="relative animate-float">
+              <div class="sprite-icon icon-sword"></div>
+              <!-- Glow effect behind (Removed internal logic, handled by card hover now) -->
             </div>
+
             <div>
-              <h1 class="text-2xl font-bold tracking-tighter uppercase italic">Host Session</h1>
-              <p class="text-primary/60 text-sm font-medium mt-1">Create a new game room</p>
+              <h1
+                class="text-3xl font-bold tracking-widest uppercase text-primary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                Host Session
+              </h1>
+              <p class="text-white/60 text-xs font-bold uppercase mt-4 font-['Press_Start_2P'] tracking-wide">
+                Create a new game room
+              </p>
             </div>
+
             <button id="create-room-btn"
-              class="w-48 h-12 bg-primary text-background-dark font-bold uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform">
+              class="px-8 py-4 bg-primary text-background-dark font-bold text-sm uppercase pixel-btn-green border-4 border-black active:translate-y-1 btn-sweep font-['Press_Start_2P']">
               Create Room
             </button>
           </div>
         </section>
 
         <!-- Right: Join Session -->
-        <section class="flex-1 flex flex-col items-center justify-center p-6 bg-surface-dark/30">
-          <div class="flex flex-col items-center text-center space-y-5">
-            <div class="w-24 h-24 bg-secondary/10 border-4 border-secondary flex items-center justify-center">
-              <span class="material-symbols-outlined text-5xl text-secondary">login</span>
+        <section
+          class="flex-1 flex flex-col items-center justify-center p-6 bg-surface-dark/30 lobby-card transition-all duration-300">
+          <div class="flex flex-col items-center text-center space-y-6">
+            <!-- Shield/Evasion Icon (Sprite) -->
+            <div class="relative">
+              <div class="sprite-icon icon-shield"></div>
             </div>
+
             <div>
-              <h1 class="text-2xl font-bold tracking-tighter uppercase italic">Join Session</h1>
-              <p class="text-secondary/60 text-sm font-medium mt-1">Enter room access code</p>
+              <h1
+                class="text-3xl font-bold tracking-widest uppercase text-secondary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                Join Session
+              </h1>
+              <p class="text-white/60 text-xs font-bold uppercase mt-4 font-['Press_Start_2P'] tracking-wide">
+                Enter room access code
+              </p>
             </div>
-            <div class="w-64 space-y-3">
+
+            <div class="w-80 space-y-4">
               <div class="relative">
                 <input id="room-code-input"
-                  class="w-full h-14 bg-black/40 border-4 border-white/10 focus:border-secondary focus:ring-0 text-center text-2xl font-bold tracking-[0.3em] text-secondary uppercase placeholder:text-white/10"
+                  class="w-full h-16 bg-black/60 border-4 border-white/10 focus:border-secondary focus:ring-0 text-center text-2xl tracking-[0.2em] text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P']"
                   placeholder="000000" type="text" maxlength="6" />
               </div>
               <button id="join-room-btn"
-                class="w-full h-12 bg-secondary text-background-dark font-bold uppercase pixel-btn-blue border-4 border-black active:translate-y-1 transition-transform">
+                class="w-full h-14 bg-secondary text-background-dark font-bold text-sm uppercase pixel-btn-blue border-4 border-black active:translate-y-1 btn-sweep font-['Press_Start_2P']">
                 Join Game
               </button>
             </div>
@@ -312,7 +517,7 @@
       <!-- Footer -->
       <footer
         class="bg-black py-2 px-6 flex justify-center items-center text-[9px] font-bold uppercase tracking-widest text-white/30 shrink-0">
-        <span>© 2025 Legends of Learning</span>
+        <span>© 2026 gameforsmart</span>
       </footer>
     </div>
   </div>
@@ -320,7 +525,7 @@
 
   <!-- CREATE ROOM UI (Difficulty + Subject Selection) -->
   <div id="create-room-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20">
-    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern"></div>
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
 
     <div class="relative z-10 flex h-screen w-full flex-col items-center justify-center p-8">
       <!-- Back Button -->
@@ -384,52 +589,88 @@
   <!-- QUIZ SELECTION UI -->
   <div id="quiz-selection-ui"
     class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20 overflow-hidden font-display">
-    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-50"></div>
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
 
-    <!-- Navbar/Header -->
-    <nav class="relative z-10 border-b-4 border-black bg-surface-dark px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="size-10 bg-primary pixel-border flex items-center justify-center">
-          <span class="material-symbols-outlined text-xl text-background-dark font-bold">bolt</span>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tighter uppercase font-['Press_Start_2P'] text-white">
-          <span class="text-white">Pilih</span> <span class="text-primary">Kuis</span>
-        </h1>
-      </div>
-
-      <div class="flex items-center gap-4">
-        <button id="quiz-back-btn" class="p-2 hover:text-primary transition-colors flex items-center gap-2">
+    <!-- Navbar/Header (Redesigned) -->
+    <nav class="relative z-10 p-6 flex justify-between items-center shrink-0">
+      <!-- Left: Back Button Only -->
+      <button id="quiz-back-btn" class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group">
+        <div
+          class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-black transition-all">
           <span class="material-symbols-outlined">arrow_back</span>
-          <span class="text-xs font-bold uppercase hidden md:block">Back</span>
-        </button>
-        <div class="h-10 w-10 bg-white/5 border-2 border-white/10 flex items-center justify-center">
-          <span class="material-symbols-outlined text-white/40">person</span>
         </div>
-      </div>
+        <span class="text-xs font-bold uppercase tracking-widest hidden md:block">Back</span>
+      </button>
+
+      <!-- Right: Empty (Icons moved to filter bar) -->
+      <div></div>
     </nav>
 
     <!-- Main Content -->
-    <main class="relative z-10 max-w-7xl mx-auto px-6 py-8 h-[calc(100vh-80px)] flex flex-col">
+    <main class="relative z-10 max-w-5xl mx-auto px-4 h-[calc(100vh-100px)] flex flex-col">
 
-      <!-- Search & Filter Bar -->
-      <div class="flex flex-col md:flex-row gap-4 mb-8 shrink-0">
-        <div class="relative flex-grow">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/40">search</span>
-          <input id="quiz-search-input"
-            class="w-full h-14 pl-12 pr-4 bg-black/40 border-4 border-white/10 focus:border-primary focus:ring-0 text-white placeholder:text-white/20 font-bold uppercase tracking-wider"
-            placeholder="Search Quiz..." type="text" />
-        </div>
-        <div class="flex gap-3 shrink-0">
-          <select id="quiz-category-select"
-            class="h-14 bg-black/40 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 text-white font-bold uppercase min-w-[180px]">
-            <option value="">All Categories</option>
-            <!-- Categories injected via JS -->
-          </select>
-          <button id="quiz-filter-fav-btn"
-            class="h-14 w-14 bg-black/40 border-4 border-white/10 hover:border-primary flex items-center justify-center transition-colors group">
-            <span
-              class="material-symbols-outlined text-white/40 group-hover:text-red-500 transition-colors">favorite</span>
-          </button>
+      <!-- Unified Search & Filter Bar (Reference Image Style) -->
+      <div class="w-full mb-8 shrink-0 relative z-50">
+        <!-- Container with Neon Border -->
+        <div
+          class="flex flex-col md:flex-row items-stretch md:items-center bg-black/60 border-2 border-primary/30 rounded-2xl p-2 gap-2 shadow-[0_0_15px_rgba(0,255,85,0.1)] backdrop-blur-sm">
+
+          <!-- Search Section (Grow) -->
+          <div class="relative flex-grow flex items-center">
+            <input id="quiz-search-input"
+              class="w-full h-12 pl-4 pr-12 bg-transparent border-none focus:ring-0 text-white placeholder:text-white/30 font-medium text-sm font-['Press_Start_2P'] tracking-tight"
+              placeholder="SEARCH QUIZ..." type="text" />
+
+            <!-- Search Icon (Right side of input) -->
+            <button id="search-trigger-btn"
+              class="absolute right-4 text-primary hover:text-white transition-colors cursor-pointer p-1">
+              <span class="material-symbols-outlined font-bold">search</span>
+            </button>
+
+            <!-- Vertical Divider -->
+            <div class="absolute right-0 top-2 bottom-2 w-0.5 bg-white/10 hidden md:block"></div>
+          </div>
+
+          <!-- Middle: Custom Dropdown -->
+          <div
+            class="relative min-w-[200px] shrink-0 border-t md:border-t-0 border-white/10 md:border-l md:border-white/10 z-50">
+            <!-- Trigger Button -->
+            <button id="custom-cat-trigger"
+              class="w-full h-12 flex items-center justify-between pl-4 pr-3 text-white text-xs font-bold uppercase cursor-pointer font-['Press_Start_2P'] tracking-tight hover:text-primary transition-colors focus:outline-none group">
+              <span id="custom-cat-selected" class="truncate mr-2">ALL</span>
+              <span id="custom-cat-arrow"
+                class="material-symbols-outlined text-sm text-primary transition-transform duration-300 group-hover:scale-110">expand_more</span>
+            </button>
+
+            <!-- Custom Dropdown Menu (Hidden by default) -->
+            <div id="custom-cat-menu"
+              class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden origin-top transform transition-all duration-200 scale-95 opacity-0 flex flex-col p-1">
+              <!-- Options injected via JS -->
+            </div>
+
+            <!-- Hidden Native Select (For Logic Compatibility) -->
+            <select id="quiz-category-select" class="hidden"></select>
+          </div>
+
+          <!-- Right: Icons (Fav & Profile) -->
+          <div
+            class="flex items-center gap-2 pl-2 border-t md:border-t-0 border-white/10 md:border-l md:border-white/10 py-2 md:py-0 justify-end px-2">
+            <!-- Favorites Toggle -->
+            <button id="quiz-filter-fav-btn"
+              class="w-10 h-10 rounded-xl border border-white/10 hover:border-red-500 hover:bg-red-500/10 flex items-center justify-center transition-all group"
+              title="Favorites">
+              <span
+                class="material-symbols-outlined text-white/40 group-hover:text-red-500 fill-current text-lg">favorite</span>
+            </button>
+
+            <!-- My Quiz / Profile Icon -->
+            <button
+              class="w-10 h-10 rounded-xl border border-white/10 hover:border-primary hover:bg-primary/10 flex items-center justify-center transition-all group"
+              title="My Quiz">
+              <span class="material-symbols-outlined text-white/40 group-hover:text-primary text-lg">person</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -461,79 +702,138 @@
   </div>
 
   <!-- QUIZ SETTINGS UI (Configuration) -->
-  <div id="quiz-settings-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-30">
-    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-30"></div>
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div id="quiz-settings-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-50">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
 
     <div class="relative z-10 flex h-screen w-full items-center justify-center p-4">
       <div
-        class="w-full max-w-2xl bg-surface-dark border-4 border-primary shadow-[0_0_50px_rgba(0,255,85,0.1)] flex flex-col relative overflow-hidden">
+        class="w-full max-w-2xl bg-[#1a1a20] border-2 border-primary shadow-[0_0_30px_rgba(0,255,85,0.15)] flex flex-col relative overflow-hidden rounded-3xl">
 
         <!-- Header -->
-        <div class="bg-black/40 p-6 border-b-4 border-black">
-          <button id="settings-back-btn" class="absolute top-6 left-6 text-white/40 hover:text-white transition-colors">
-            <span class="material-symbols-outlined text-3xl">arrow_back</span>
+        <div class="bg-black/40 p-6 border-b border-white/10 flex items-center justify-between shrink-0 relative">
+          <!-- Back Button (Matched to Image 3) -->
+          <button id="settings-back-btn"
+            class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group">
+            <div
+              class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-black transition-all">
+              <span class="material-symbols-outlined font-bold">arrow_back</span>
+            </div>
+            <span
+              class="text-xs font-bold uppercase tracking-widest hidden md:block group-hover:text-primary transition-colors">Back</span>
           </button>
+
           <h2 id="settings-quiz-title"
-            class="text-2xl font-bold text-center text-primary uppercase tracking-wider font-['Press_Start_2P'] leading-relaxed mt-2 px-8">
-            Quiz Title Here
+            class="flex-1 text-center text-xl md:text-2xl font-bold text-primary uppercase tracking-widest font-['Press_Start_2P'] leading-relaxed px-4 break-words">
+            Quiz Title
           </h2>
+          <!-- Empty div for spacing balance -->
+          <div class="w-20 hidden md:block"></div>
         </div>
 
-        <div class="p-8 space-y-8">
+        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar">
           <!-- Description -->
-          <div class="bg-primary/5 p-4 border-l-4 border-primary">
-            <p id="settings-quiz-desc" class="text-white/80 font-display leading-relaxed">
+          <div class="bg-primary/5 p-5 border border-primary/20 rounded-xl relative overflow-hidden group shrink-0">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+            <p id="settings-quiz-desc" class="text-white/70 font-display leading-relaxed text-sm md:text-base">
               Description goes here...
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Timer -->
-            <div class="space-y-3">
-              <label class="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-widest">
-                <span class="material-symbols-outlined text-sm">timer</span> Pengaturan (Waktu)
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-30">
+            <!-- Timer (Custom Dropdown) -->
+            <div class="space-y-3 relative z-40">
+              <label
+                class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">timer</span> Waktu
               </label>
-              <select id="settings-timer"
-                class="w-full h-12 bg-black/40 border-2 border-white/10 focus:border-secondary focus:ring-0 text-white font-bold px-3">
-                <option value="300">5 Menit</option>
-                <option value="600">10 Menit</option>
-                <option value="900">15 Menit</option>
-              </select>
+
+              <div class="relative w-full">
+                <!-- Trigger -->
+                <button id="settings-timer-trigger"
+                  class="w-full h-12 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-between px-4 text-white font-bold hover:border-primary transition-all group relative z-10">
+                  <span id="settings-timer-selected" class="font-['Space_Grotesk'] tracking-wide">5 Menit</span>
+                  <span id="settings-timer-arrow"
+                    class="material-symbols-outlined text-white/30 transition-transform duration-300 group-hover:text-primary">expand_more</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="settings-timer-menu"
+                  class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
+                  <!-- Options will be handled by click events in JS, but we can hardcode layout for simplicity if static -->
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="300" data-label="5 Menit">5 Menit</button>
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="600" data-label="10 Menit">10 Menit</button>
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="900" data-label="15 Menit">15 Menit</button>
+                </div>
+              </div>
             </div>
 
-            <!-- Question Count -->
-            <div class="space-y-3">
-              <label class="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-widest">
-                <span class="material-symbols-outlined text-sm">numbers</span> # Jumlah Soal
+            <!-- Question Count (Custom Dropdown) -->
+            <div class="space-y-3 relative z-30">
+              <label
+                class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">numbers</span> Jumlah Soal
               </label>
-              <select id="settings-question-count"
-                class="w-full h-12 bg-black/40 border-2 border-white/10 focus:border-secondary focus:ring-0 text-white font-bold px-3">
-                <option value="5">5 Soal (10 Musuh)</option>
-                <option value="10">10 Soal (20 Musuh)</option>
-              </select>
+
+              <div class="relative w-full">
+                <!-- Trigger -->
+                <button id="settings-question-trigger"
+                  class="w-full h-12 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-between px-4 text-white font-bold hover:border-primary transition-all group relative z-10">
+                  <span id="settings-question-selected" class="font-['Space_Grotesk'] tracking-wide">5 Soal</span>
+                  <span id="settings-question-arrow"
+                    class="material-symbols-outlined text-white/30 transition-transform duration-300 group-hover:text-primary">expand_more</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="settings-question-menu"
+                  class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
+                  <button
+                    class="question-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="5" data-label="5 Soal">5 Soal</button>
+                  <button
+                    class="question-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="10" data-label="10 Soal">10 Soal</button>
+                  <button
+                    class="question-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="15" data-label="15 Soal">15 Soal</button>
+                </div>
+              </div>
             </div>
+
+            <!-- Invisible Selects form Logic Compatibility (if needed by existing robust code, but we will update JS) -->
+            <select id="settings-timer" class="hidden">
+              <option value="300">5</option>
+            </select>
+            <select id="settings-question-count" class="hidden">
+              <option value="5">5</option>
+            </select>
           </div>
 
           <!-- Difficulty -->
           <div class="space-y-4">
             <label
-              class="flex items-center justify-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
-              <span class="material-symbols-outlined text-sm">hotel_class</span> Tingkat Kesulitan
+              class="flex items-center justify-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P'] mb-4">
+              <span class="material-symbols-outlined text-sm text-primary">hotel_class</span> Tingkat Kesulitan
             </label>
-            <div class="flex justify-center gap-4">
+            <div class="flex justify-center gap-3">
               <button
-                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-primary text-white font-bold uppercase transition-all"
+                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-primary text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
                 data-diff="mudah">
                 Mudah
               </button>
               <button
-                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-secondary text-white font-bold uppercase transition-all"
+                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-secondary text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
                 data-diff="sedang">
                 Sedang
               </button>
               <button
-                class="settings-diff-btn px-6 py-3 bg-black/40 border-2 border-white/10 hover:border-accent text-white font-bold uppercase transition-all"
+                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-accent text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
                 data-diff="sulit">
                 Sulit
               </button>
@@ -542,11 +842,10 @@
         </div>
 
         <!-- Footer Action -->
-        <div class="p-6 bg-black/40 border-t-4 border-black">
+        <div class="p-6 bg-black/40 border-t border-white/10 flex justify-center">
           <button id="settings-continue-btn"
-            class="w-full h-16 bg-secondary text-black font-bold text-xl uppercase pixel-btn-blue hover:brightness-110 active:scale-[0.99] transition-all font-['Press_Start_2P'] flex items-center justify-center gap-4">
-            <span class="material-symbols-outlined">play_arrow</span>
-            Lanjutkan
+            class="w-full md:w-auto px-12 h-14 bg-primary text-black font-bold text-sm uppercase rounded-xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all font-['Press_Start_2P'] flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(0,255,85,0.3)]">
+            BUAT ROOM
           </button>
         </div>
 
@@ -554,97 +853,131 @@
     </div>
   </div>
 
-  <!-- WAITING ROOM OVERLAY (New Design) -->
-  <div id="waiting-ui" class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20 overflow-hidden">
-    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern"></div>
+  <!-- WAITING ROOM OVERLAY (Refined V3) -->
+  <div id="waiting-ui"
+    class="bg-background-dark hidden fixed top-0 left-0 w-full h-screen z-20 overflow-hidden font-display">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
 
-    <div class="relative z-10 flex h-screen w-full flex-col">
-      <!-- Header -->
-      <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="size-7 bg-primary pixel-border flex items-center justify-center">
-            <span class="material-symbols-outlined text-sm text-background-dark font-bold">videogame_asset</span>
-          </div>
-          <h2 class="text-lg font-bold tracking-tighter uppercase">Waiting Room</h2>
-        </div>
-        <div class="text-center">
-          <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Room Code</p>
-          <div id="display-room-code" class="text-3xl font-bold tracking-[0.15em] text-accent">------</div>
-        </div>
-        <div class="w-24"></div>
-      </header>
+    <div class="relative z-10 flex h-screen w-full flex-col p-6">
 
-      <!-- Main Content -->
-      <main class="flex-1 flex p-4 gap-4 overflow-hidden">
-        <!-- Left: Character + Name -->
-        <section class="w-64 shrink-0 flex flex-col gap-3">
-          <div class="bg-surface-dark border-4 border-black p-4 flex-1">
-            <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-3">Select Character</p>
-            <div class="flex items-center justify-between bg-black/40 border-2 border-white/10 p-3">
-              <button class="hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">chevron_left</span>
-              </button>
-              <div class="w-16 h-16 bg-white/5 border-2 border-white/10 flex items-center justify-center">
-                <span class="material-symbols-outlined text-4xl text-primary">face</span>
+      <!-- Back Button (Matched Style) -->
+      <!-- Back Button (Matched Style) -->
+      <button id="waiting-back-btn"
+        class="absolute top-6 left-6 w-12 h-12 bg-black/40 border-2 border-white/10 hover:border-primary rounded-full flex items-center justify-center transition-all z-50 group shadow-lg">
+        <span class="material-symbols-outlined text-white/50 group-hover:text-white transition-colors">arrow_back</span>
+      </button>
+
+      <main class="flex-1 flex gap-6 overflow-hidden max-w-[1600px] mx-auto w-full pt-12">
+        <!-- LEFT: Character & Profile -->
+        <section class="w-80 shrink-0 flex flex-col gap-3">
+          <div
+            class="bg-surface-dark border-4 border-black p-5 rounded-2xl flex-1 flex flex-col gap-4 shadow-xl relative overflow-hidden">
+
+            <!-- 1. Character Selection (Compacted) -->
+            <div class="space-y-2 shrink-0">
+              <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Select Character</p>
+              <div class="flex items-center gap-2">
+                <button
+                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined text-white/50">chevron_left</span>
+                </button>
+                <!-- Reduced height aspect ratio -->
+                <div
+                  class="flex-1 h-32 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden group">
+                  <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-20"></div>
+                  <span
+                    class="material-symbols-outlined text-6xl text-white/20 group-hover:text-primary/50 transition-colors">face</span>
+                </div>
+                <button
+                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors">
+                  <span class="material-symbols-outlined text-white/50">chevron_right</span>
+                </button>
               </div>
-              <button class="hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-2xl">chevron_right</span>
+            </div>
+
+            <!-- 2. Name Input -->
+            <div class="space-y-1 shrink-0">
+              <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Your Name</p>
+              <input id="player-name-input"
+                class="w-full h-12 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-sm placeholder:text-white/20 font-['Press_Start_2P'] text-center rounded-xl transition-all"
+                placeholder="PLAYER" type="text" maxlength="12" />
+            </div>
+
+            <!-- 3. Room Code (Centered) -->
+            <!-- 3. Room Code (Absolute Copy Icon) -->
+            <div
+              class="shrink-0 relative bg-black/40 border-2 border-white/10 p-5 rounded-xl flex flex-col items-center justify-center gap-1 group hover:border-primary/50 transition-colors">
+              <p class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Room Code</p>
+              <span id="display-room-code"
+                class="text-3xl font-bold tracking-[0.2em] text-primary font-['Press_Start_2P'] drop-shadow-md text-center">------</span>
+
+              <button id="copy-code-btn"
+                class="absolute top-2 right-2 p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                title="Copy Code">
+                <span id="copy-icon" class="material-symbols-outlined text-sm">content_copy</span>
               </button>
             </div>
-            <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-4 mb-2">Your Name</p>
-            <input id="player-name-input"
-              class="w-full h-10 bg-black/40 border-2 border-white/10 focus:border-primary focus:ring-0 px-3 font-bold tracking-wider uppercase text-primary text-sm placeholder:text-white/20"
-              placeholder="Enter Name" type="text" maxlength="20" value="Player 1" />
+
+            <!-- 4. QR Code (Larger & No Cutoff) -->
+            <div class="mt-auto flex flex-col items-center gap-2 flex-grow justify-end pb-2">
+              <p class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Scan to Join</p>
+              <div
+                class="bg-white p-2 rounded-xl w-36 h-36 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300">
+                <img src="" class="w-full h-full object-contain mix-blend-multiply" alt="QR" id="room-qr-code" />
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- Center: Connected Players (Grid) -->
-        <section class="flex-1 flex flex-col gap-3 overflow-hidden">
-          <div class="bg-surface-dark border-4 border-black p-4 flex-1 flex flex-col">
-            <div class="flex justify-between items-center mb-3">
-              <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Connected Players</p>
-              <p id="player-count" class="text-[9px] font-bold text-primary uppercase">(0/4)</p>
+        <!-- CENTER: Connected Players -->
+        <section class="flex-1 flex flex-col gap-4 min-w-0">
+          <div
+            class="bg-surface-dark border-4 border-black p-6 rounded-2xl flex-1 flex flex-col relative overflow-hidden shadow-xl">
+            <div class="flex justify-between items-center mb-6 border-b-2 border-white/5 pb-4">
+              <!-- Header Font Fix -->
+              <h3
+                class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3 font-['Press_Start_2P']">
+                <span class="flex size-3 relative">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span class="relative inline-flex rounded-full size-3 bg-primary"></span>
+                </span>
+                Connected Players
+              </h3>
+              <div id="player-count"
+                class="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded text-[10px] font-bold font-['Press_Start_2P']">
+                0/4</div>
             </div>
-            <div id="player-grid" class="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1 overflow-y-auto custom-scrollbar">
-              <!-- Player cards will be injected here -->
+
+            <!-- Grid: Tall Cards -->
+            <div id="player-grid" class="grid grid-cols-4 gap-4 flex-1 h-full items-stretch">
+              <!-- Content injected via JS -->
             </div>
           </div>
-          <button id="start-game-btn"
-            class="w-full h-14 bg-primary text-background-dark font-bold text-lg uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform shrink-0 hidden">
-            Start Game
-          </button>
-          <div id="waiting-msg" class="text-center text-white/50 text-xs uppercase shrink-0">Waiting for host to
-            start...</div>
+
+          <!-- Start Button Area -->
+          <div class="shrink-0 relative">
+            <button id="start-game-btn"
+              class="w-full py-6 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform hidden font-['Press_Start_2P'] shadow-[0_10px_0_#000] hover:brightness-110 mb-2">
+              START GAME
+            </button>
+            <div id="waiting-msg"
+              class="w-full py-6 flex items-center justify-center bg-black/20 border-4 border-black/20 rounded-xl">
+              <p
+                class="text-white/30 text-xs font-bold uppercase tracking-widest animate-pulse font-['Press_Start_2P']">
+                Waiting for host...</p>
+            </div>
+          </div>
         </section>
 
-        <!-- Right: Chat -->
-        <!-- Right: Room Selector -->
-        <section class="w-72 shrink-0 flex flex-col">
-          <div class="bg-surface-dark border-4 border-black p-3 flex-1 flex flex-col">
-            <div class="flex items-center gap-2 mb-3 border-b-2 border-white/10 pb-2">
-              <span class="material-symbols-outlined text-secondary text-sm">meeting_room</span>
-              <h3 class="text-[9px] font-bold uppercase tracking-widest">Select Room</h3>
-            </div>
-            <div id="room-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 mb-3 pr-1">
-              <!-- Room cards will be injected here -->
-            </div>
-            <div class="mt-auto pt-2 border-t-2 border-white/10 text-center">
-              <p class="text-[9px] text-white/40 uppercase">Click a room to switch</p>
-            </div>
-          </div>
-        </section>
+        <!-- RIGHT: Room Selection REMOVED -->
+        <!-- The center column now flex-expands to fill this space -->
       </main>
-
-      <!-- Footer -->
-      <footer
-        class="bg-black py-2 px-6 flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-white/40 shrink-0">
-        <span class="flex items-center gap-2">
-          <div class="w-2 h-2 bg-primary"></div> Status: Connected
-        </span>
-        <span id="host-indicator" class="text-primary/60">You are: Guest</span>
-      </footer>
     </div>
   </div>
+
+  <!-- GLOBAL TRANSITION OVERLAY -->
+  <div id="transition-overlay"></div>
 
   <!-- MAIN SCRIPT -->
   <script type="module" src="/src/main.ts"></script>

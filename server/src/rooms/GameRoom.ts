@@ -358,6 +358,7 @@ export class GameRoom extends Room<GameState> {
                 name: player.name,
                 score: player.score,
                 finishTime: player.finishTime,
+                duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0, // Calculate duration
                 correctAnswers: player.correctAnswers,
                 wrongAnswers: player.wrongAnswers
             }));
