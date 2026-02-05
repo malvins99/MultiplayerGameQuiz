@@ -31,6 +31,7 @@ export class Player extends Schema {
     @type("number") lastWrongQuestionId: number = 0;
     @type("string") sessionId!: string;
     @type("string") subRoomId!: string; // Track which sub-room the player is in
+    @type("number") spawnIndex: number = -1; // Track assigned spawn point index
 }
 
 export class SubRoom extends Schema {

@@ -377,19 +377,35 @@ export class LeaderboardScene extends Phaser.Scene {
         document.body.appendChild(this.container);
 
         // --- Event Listeners ---
-        document.getElementById('lb-back-btn')?.addEventListener('click', () => {
-            TransitionManager.transitionTo(() => {
-                this.cleanup();
-                window.location.href = '/';
-            });
-        });
+        // --- Event Listeners ---
+        const backBtn = this.container.querySelector('#lb-back-btn');
+        const homeBtn = this.container.querySelector('#lb-home-btn');
 
-        document.getElementById('lb-home-btn')?.addEventListener('click', () => {
-            TransitionManager.transitionTo(() => {
-                this.cleanup();
-                window.location.href = '/';
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                console.log("Back button clicked");
+                TransitionManager.transitionTo(() => {
+                    console.log("Transition completed, redirecting...");
+                    this.cleanup();
+                    window.location.href = '/';
+                });
             });
-        });
+        } else {
+            console.error("Back button not found!");
+        }
+
+        if (homeBtn) {
+            homeBtn.addEventListener('click', () => {
+                console.log("Home button clicked");
+                TransitionManager.transitionTo(() => {
+                    console.log("Transition completed, redirecting...");
+                    this.cleanup();
+                    window.location.href = '/';
+                });
+            });
+        } else {
+            console.error("Home button not found!");
+        }
     }
 
     renderPodium(top3: RankingEntry[]): string {

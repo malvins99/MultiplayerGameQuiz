@@ -12,6 +12,8 @@ const ROOM_CONFIG = {
 const LOBBY_MAX_PLAYERS = 20;
 
 export class GameRoom extends Room<GameState> {
+    // Track which spawn points have been used
+    private usedSpawnIndices: Set<number> = new Set();
 
     onCreate(options: any) {
         this.setState(new GameState());
@@ -192,15 +194,38 @@ export class GameRoom extends Room<GameState> {
 
         // Assign spawn position from Map Data
         const mapData = MapParser.loadMapData(this.state.difficulty);
+        console.log(`[MapDebug] Loaded map for difficulty: ${this.state.difficulty}`);
+        console.log(`[MapDebug] Player Spawns found: ${mapData?.playerSpawns?.length ?? 0}`);
+        console.log(`[MapDebug] Enemy Zones found: ${mapData?.enemySpawnZones?.length ?? 0}`);
 
-        if (mapData && mapData.playerSpawns.length > 0) {
-            // Round robin or random spawn selection
-            // For now random is fine as multiple players can share spawn area
-            const spawn = mapData.playerSpawns[Math.floor(Math.random() * mapData.playerSpawns.length)];
+        if (mapData && mapData.playerSpawns && mapData.playerSpawns.length > 0) {
+            // Find an unused spawn point
+            let spawnIndex = -1;
+
+            // Try to find a strictly unused spawn point
+            for (let i = 0; i < mapData.playerSpawns.length; i++) {
+                if (!this.usedSpawnIndices.has(i)) {
+                    spawnIndex = i;
+                    break;
+                }
+            }
+
+            // DO NOT reset usedSpawnIndices here. If we are full, we are full.
+            // But for safety, if we genuinely can't find a spot, we might just pick a random one 
+            // or circle back, but WITHOUT clearing the set (which causes the bug).
+            if (spawnIndex === -1) {
+                console.warn("[Spawn] No empty spawn points left! Overwriting index 0.");
+                spawnIndex = 0; // Fallback, but don't clear the set so duplicates stay minimized
+            }
+
+            this.usedSpawnIndices.add(spawnIndex);
+            const spawn = mapData.playerSpawns[spawnIndex];
             player.x = spawn.x;
             player.y = spawn.y;
+            player.spawnIndex = spawnIndex;
+            console.log(`[Spawn] Player ${player.name} assigned spawn point ${spawnIndex} at (${spawn.x}, ${spawn.y}).`);
         } else {
-            // Fallback
+            console.error("[Spawn] No spawn points found in map data! Using fallback 400,300.");
             player.x = 400;
             player.y = 300;
         }
@@ -229,6 +254,12 @@ export class GameRoom extends Room<GameState> {
         console.log(client.sessionId, "left!");
         const player = this.state.players.get(client.sessionId);
         if (player) {
+            // Free up spawn index for reuse
+            if (player.spawnIndex !== -1) {
+                this.usedSpawnIndices.delete(player.spawnIndex);
+                console.log(`[Spawn] Freed spawn point ${player.spawnIndex} for player ${player.name}`);
+            }
+
             // Remove from sub-room
             const subRoom = this.state.subRooms.find(r => r.id === player.subRoomId);
             if (subRoom) {
@@ -251,32 +282,86 @@ export class GameRoom extends Room<GameState> {
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
         const mapData = MapParser.loadMapData(this.state.difficulty);
 
+        // Minimum distance between enemies to prevent overlap (in pixels)
+        const MIN_ENEMY_DISTANCE = 96; // Increased from 48px to 96px
+        const MAX_SPAWN_ATTEMPTS = 100; // Max attempts to find valid position
+
+        // Helper function to check distance from existing enemies and players
+        const isValidSpawnPosition = (x: number, y: number, minDist: number = 96): boolean => {
+            // Check against existing enemies
+            for (const existingEnemy of this.state.enemies) {
+                const dx = existingEnemy.x - x;
+                const dy = existingEnemy.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < minDist) {
+                    return false;
+                }
+            }
+
+            // Check against players (prevent spawn kill)
+            // Strict distance from players is always enforced (100px minimum)
+            for (const player of this.state.players.values()) {
+                const dx = player.x - x;
+                const dy = player.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 100) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         // Create Enemies Per Player
         this.state.players.forEach(player => {
+            // Use decaying radius logic for enemy placement
+            // Consolidate enemy creation to try strict distance first -> then relax if needed
+            let enemiesSpawnedForPlayer = 0;
+
+            // We want 'config.enemiesPerPlayer' enemies
             for (let i = 0; i < config.enemiesPerPlayer; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
-
-                if (mapData && mapData.enemySpawnZones.length > 0) {
-                    const zone = mapData.enemySpawnZones[Math.floor(Math.random() * mapData.enemySpawnZones.length)];
-                    // Random position within the spawn zone rectangle/bbox
-                    enemy.x = zone.x + Math.random() * (zone.width || 0);
-                    enemy.y = zone.y + Math.random() * (zone.height || 0);
-                } else {
-                    // Fallback: Use full map dimensions if available, otherwise default to 800x600
-                    const maxX = mapData ? mapData.mapWidth : 800;
-                    const maxY = mapData ? mapData.mapHeight : 600;
-
-                    enemy.x = Math.random() * maxX;
-                    enemy.y = Math.random() * maxY;
-                }
-
-                enemy.questionId = Math.floor(Math.random() * 5) + 1; // Dummy question ID
-
-                // Assign Type: 60% Skeleton, 40% Goblin
+                enemy.questionId = Math.floor(Math.random() * 5) + 1;
                 enemy.type = Math.random() < 0.6 ? "skeleton" : "goblin";
 
-                this.state.enemies.push(enemy);
+                let foundPosition = false;
+                // Tiers of distance: 96px (ideal) -> 64px -> 32px (crowded)
+                const distanceTiers = [96, 64, 32];
+
+                for (const minDistance of distanceTiers) {
+                    let attempts = 0;
+                    const maxAttemptsPerTier = 20;
+
+                    while (attempts < maxAttemptsPerTier && !foundPosition) {
+                        let x = 0, y = 0;
+                        if (mapData && mapData.enemySpawnZones && mapData.enemySpawnZones.length > 0) {
+                            const zone = mapData.enemySpawnZones[Math.floor(Math.random() * mapData.enemySpawnZones.length)];
+                            x = zone.x + Math.random() * (zone.width || 0);
+                            y = zone.y + Math.random() * (zone.height || 0);
+                        } else {
+                            const maxX = mapData ? mapData.mapWidth : 800;
+                            const maxY = mapData ? mapData.mapHeight : 600;
+                            // Avoid spawning exactly at 0,0
+                            x = 50 + Math.random() * (maxX - 100);
+                            y = 50 + Math.random() * (maxY - 100);
+                        }
+
+                        if (isValidSpawnPosition(x, y, minDistance)) {
+                            enemy.x = x;
+                            enemy.y = y;
+                            foundPosition = true;
+                        }
+                        attempts++;
+                    }
+                    if (foundPosition) break;
+                }
+
+                if (foundPosition) {
+                    this.state.enemies.push(enemy);
+                    enemiesSpawnedForPlayer++;
+                } else {
+                    console.warn(`[Spawn] Could not find valid position for enemy belonging to ${player.name} even with relaxed rules.`);
+                }
             }
         });
 

@@ -548,7 +548,7 @@ export class QuizPopup {
 
         // Create feedback icon
         const icon = document.createElement('img');
-        icon.src = isCorrect ? 'assets/ui/confirm.png' : 'assets/ui/cancel.png'; // Assuming local path
+        icon.src = isCorrect ? '/assets/ui/confirm.png' : '/assets/ui/cancel.png'; // Assuming local path
         icon.className = 'feedback-popup';
 
         // Position it relative to the button

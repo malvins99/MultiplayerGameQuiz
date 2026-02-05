@@ -259,16 +259,16 @@
       animation: float 3s ease-in-out infinite;
     }
 
-    /* SPRITE ANIMATION (10 Frames) */
-    /* Target size: 128px (w-32) */
-    /* Total width: 1280px (10 * 128) */
-    @keyframes sprite-play-10 {
+    /* SPRITE ANIMATION (6 Frames: 1, 6, 7, 8, 9, 10 from original) */
+    /* New icons: 144x24 sprite sheets (6 frames at 24x24 each) */
+    /* Scaled up to 128x128 display size (768x128 total) */
+    @keyframes sprite-play-6 {
       from {
         background-position: 0 0;
       }
 
       to {
-        background-position: -1280px 0;
+        background-position: -768px 0;
       }
     }
 
@@ -276,20 +276,19 @@
       width: 128px;
       height: 128px;
       background-repeat: no-repeat;
-      background-size: 1280px 128px;
-      /* 1000% width would also work but px is safer for steps */
+      /* Scale 144x24 -> 768x128 (128/24 = 5.33x) */
+      background-size: 768px 128px;
       image-rendering: pixelated;
     }
 
     .icon-sword {
-      background-image: url('/assets/icon_sword.png');
-      animation: sprite-play-10 1s steps(10) infinite;
-      /* Fast loop 1s */
+      background-image: url('/assets/icon_sword_subset.png');
+      animation: sprite-play-6 0.6s steps(6) infinite;
     }
 
     .icon-shield {
-      background-image: url('/assets/icon_shield.png');
-      animation: sprite-play-10 1s steps(10) infinite;
+      background-image: url('/assets/icon_evasion_subset.png');
+      animation: sprite-play-6 0.6s steps(6) infinite;
     }
 
     /* --- Button Sweep/Fill Animation --- */
@@ -457,8 +456,8 @@
         <!-- Left: Host Session -->
         <section class="flex-1 flex flex-col items-center justify-center p-6 lobby-card transition-all duration-300">
           <div class="flex flex-col items-center text-center space-y-6">
-            <!-- Animated Sword Icon (Sprite) -->
-            <div class="relative animate-float">
+            <!-- Sword Icon (Sprite) -->
+            <div class="relative">
               <div class="sprite-icon icon-sword"></div>
               <!-- Glow effect behind (Removed internal logic, handled by card hover now) -->
             </div>
@@ -481,8 +480,7 @@
         </section>
 
         <!-- Right: Join Session -->
-        <section
-          class="flex-1 flex flex-col items-center justify-center p-6 bg-surface-dark/30 lobby-card transition-all duration-300">
+        <section class="flex-1 flex flex-col items-center justify-center p-6 lobby-card transition-all duration-300">
           <div class="flex flex-col items-center text-center space-y-6">
             <!-- Shield/Evasion Icon (Sprite) -->
             <div class="relative">
