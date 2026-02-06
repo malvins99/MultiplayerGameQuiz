@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
 import { TransitionManager } from '../utils/TransitionManager';
+import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
+import { QRCodePopup } from '../ui/QRCodePopup';
+import { HAIR_OPTIONS, getHairById } from '../data/characterData';
 
 export class WaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -24,6 +27,11 @@ export class WaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
+
+    // Feature
+    characterPopup: CharacterSelectPopup | null = null;
+    characterPreviewEl: HTMLElement | null = null;
+    qrPopup: QRCodePopup | null = null;
 
     constructor() {
         super('WaitingRoomScene');
@@ -123,6 +131,7 @@ export class WaitingRoomScene extends Phaser.Scene {
             this.updateAll();
             // Listen for changes
             player.listen("name", () => this.updateAll());
+            player.listen("hairId", () => this.updateAll());
             player.listen("subRoomId", () => this.updateAll());
         });
 
@@ -139,6 +148,121 @@ export class WaitingRoomScene extends Phaser.Scene {
 
         // Initial render
         this.updateAll();
+
+        // --- Character Customization ---
+        const charPreviewBox = document.getElementById('character-preview-box');
+
+        // Find the specific container for character selection
+        const charSelectContainer = charPreviewBox?.parentElement?.parentElement; // section -> container
+
+        if (charSelectContainer) {
+            // Initialize Popup
+            this.characterPopup = new CharacterSelectPopup(
+                HAIR_OPTIONS,
+                (hairId) => {
+                    // On Confirm
+                    this.room.send("updateHair", { hairId });
+                },
+                () => {
+                    // On Close
+                }
+            );
+
+            // Bind Click (Entire container or specific button)
+            const spans = Array.from(charSelectContainer.querySelectorAll('.material-symbols-outlined'));
+            const leftSpan = spans.find(el => el.textContent?.includes('chevron_left'));
+            const rightSpan = spans.find(el => el.textContent?.includes('chevron_right'));
+
+            const leftBtn = leftSpan?.closest('button');
+            const rightBtn = rightSpan?.closest('button');
+
+            if (charPreviewBox) {
+                charPreviewBox.onclick = () => {
+                    const myPlayer = this.room.state.players.get(this.mySessionId);
+                    this.characterPopup?.show(myPlayer?.hairId || 0);
+                };
+            }
+
+            const cycleHair = (dir: number) => {
+                const myPlayer = this.room.state.players.get(this.mySessionId);
+                if (myPlayer) {
+                    let newId = (myPlayer.hairId || 0) + dir;
+                    if (newId < 0) newId = HAIR_OPTIONS.length - 1;
+                    if (newId >= HAIR_OPTIONS.length) newId = 0;
+                    this.room.send("updateHair", { hairId: newId });
+                }
+            };
+
+            if (leftBtn) leftBtn.onclick = () => cycleHair(-1);
+            if (rightBtn) rightBtn.onclick = () => cycleHair(1);
+        }
+
+        // --- QR Code Popup ---
+        if (!this.qrPopup) {
+            this.qrPopup = new QRCodePopup(() => { });
+
+            const qrImg = document.getElementById('room-qr-code');
+            const qrContainer = qrImg?.parentElement;
+
+            if (qrContainer) {
+                qrContainer.onclick = () => {
+                    // Wait for main loop or just ensure image is set
+                    const img = document.getElementById('room-qr-code') as HTMLImageElement;
+                    if (img && img.src) {
+                        this.qrPopup?.show(img.src);
+                    }
+                };
+            }
+        }
+    }
+
+    updateCharacterPreview(hairId: number) {
+        // Use the new stable ID
+        const container = document.getElementById('character-preview-box');
+        if (!container) return;
+
+        // Clear content
+        container.innerHTML = '';
+
+        // Re-add background pattern
+        const bg = document.createElement('div');
+        bg.className = 'absolute inset-0 bg-[url("/assets/bg_pattern.png")] opacity-20';
+        container.appendChild(bg);
+
+        // Render Base
+        const base = document.createElement('div');
+        base.style.backgroundImage = `url('/assets/base_idle_strip9.png')`;
+        base.style.width = '96px';
+        base.style.height = '64px';
+        base.style.backgroundSize = '864px 64px'; // 9 frames
+        base.style.imageRendering = 'pixelated';
+        base.style.position = 'absolute';
+        base.style.top = '50%';
+        base.style.left = '50%';
+        base.style.transform = 'translate(-50%, -50%) scale(5)'; // Centered and SCALED UP (5x)
+        base.style.animation = 'play-idle 1s steps(9) infinite';
+        container.appendChild(base);
+
+        // Render Hair
+        if (hairId > 0) {
+            import('../data/characterData').then(({ getHairById }) => {
+                const hair = getHairById(hairId);
+                if (hair) {
+                    const hairLayer = document.createElement('div');
+                    hairLayer.style.backgroundImage = `url('/assets/${hair.idleKey}_strip9.png')`;
+                    hairLayer.style.width = '96px';
+                    hairLayer.style.height = '64px';
+                    hairLayer.style.backgroundSize = '864px 64px';
+                    hairLayer.style.imageRendering = 'pixelated';
+                    hairLayer.style.position = 'absolute';
+                    hairLayer.style.top = '50%';
+                    hairLayer.style.left = '50%';
+                    hairLayer.style.transform = 'translate(-50%, -50%) scale(5)'; // Centered and SCALED UP (5x)
+                    hairLayer.style.animation = 'play-idle 1s steps(9) infinite';
+                    container.appendChild(hairLayer);
+                }
+            });
+        }
     }
 
     leaveRoom() {
@@ -164,6 +288,11 @@ export class WaitingRoomScene extends Phaser.Scene {
     updateAll() {
         this.updateRoomList();
         this.updatePlayerGrid();
+
+        const myPlayer = this.room.state.players.get(this.mySessionId);
+        if (myPlayer) {
+            this.updateCharacterPreview(myPlayer.hairId || 0);
+        }
     }
 
     updateRoomCode() {

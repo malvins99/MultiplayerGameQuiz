@@ -10,12 +10,12 @@ import { QUESTIONS } from '../dummyQuestions';
 
 export class GameScene extends Phaser.Scene {
     room!: Room;
-    playerEntities: { [sessionId: string]: Phaser.GameObjects.Sprite } = {};
+    playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
     enemyEntities: { [id: string]: Phaser.GameObjects.Sprite } = {};
     chestContainers: { [index: number]: Phaser.GameObjects.Container } = {};
     nameTagContainers: { [sessionId: string]: Phaser.GameObjects.Container } = {};
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    currentPlayer!: Phaser.GameObjects.Sprite;
+    currentPlayer!: Phaser.GameObjects.Container;
     map!: Phaser.Tilemaps.Tilemap;
 
     quizPopup!: QuizPopup;
@@ -56,7 +56,16 @@ export class GameScene extends Phaser.Scene {
         this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
         this.load.image('tiles', '/assets/spr_tileset_sunnysideworld_16px.png');
         this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png'); // Load Forest Tileset
+        this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png'); // Load Forest Tileset
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
+
+        // Load Hair Assets
+        const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
+        hairKeys.forEach(key => {
+            this.load.spritesheet(`${key}_walk`, `/assets/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_idle`, `/assets/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+        });
 
         // Load Enemy Assets
         this.load.spritesheet('skeleton_idle', '/assets/skeleton_idle.png', { frameWidth: 96, frameHeight: 64 });
@@ -138,17 +147,35 @@ export class GameScene extends Phaser.Scene {
         }
 
         // --- Animations ---
+        // Base Animations
         this.anims.create({
             key: 'walk',
             frames: this.anims.generateFrameNumbers('character', { start: 0, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'idle',
-            frames: [{ key: 'character', frame: 0 }],
-            frameRate: 10
+            frames: this.anims.generateFrameNumbers('base_idle', { start: 0, end: 8 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Hair Animations
+        const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
+        hairKeys.forEach(key => {
+            this.anims.create({
+                key: `${key}_walk`,
+                frames: this.anims.generateFrameNumbers(`${key}_walk`, { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: `${key}_idle`,
+                frames: this.anims.generateFrameNumbers(`${key}_idle`, { start: 0, end: 8 }),
+                frameRate: 10,
+                repeat: -1
+            });
         });
 
         // Enemy Animations
@@ -188,15 +215,58 @@ export class GameScene extends Phaser.Scene {
             const myPlayer = this.room.state.players.get(this.room.sessionId);
             if (!myPlayer || player.subRoomId !== myPlayer.subRoomId) return;
 
-            const entity = this.add.sprite(player.x, player.y, 'character');
-            entity.setOrigin(0.5, 0.5);
-            this.playerEntities[sessionId] = entity as any;
+            // Container for Base + Hair
+            const container = this.add.container(player.x, player.y);
+            container.setDepth(10); // Standard depth
+
+            // Base Sprite
+            const baseSprite = this.add.sprite(0, 0, 'character');
+            baseSprite.setOrigin(0.5, 0.5);
+            baseSprite.play('idle');
+
+            // Hair Sprite
+            const hairSprite = this.add.sprite(0, 0, 'bowlhair_idle'); // placeholder key
+            hairSprite.setOrigin(0.5, 0.5);
+            hairSprite.setVisible(false); // Hidden by default if 0/none or not set
+
+            container.add([baseSprite, hairSprite]);
+            container.setData('hairSprite', hairSprite); // Store ref
+            container.setData('baseSprite', baseSprite);
+
+            this.playerEntities[sessionId] = container;
+
+            // Helper to update hair visual
+            const updateHairVisuals = () => {
+                const hairId = player.hairId || 0;
+                import('../data/characterData').then(({ getHairById }) => {
+                    const hairData = getHairById(hairId);
+                    if (hairData.id === 0) {
+                        hairSprite.setVisible(false);
+                    } else {
+                        hairSprite.setVisible(true);
+                        // We need to play the correct animation based on current state (idle or walk)
+                        const currentAnim = baseSprite.anims.currentAnim?.key;
+                        const isWalking = currentAnim === 'walk';
+                        const newKey = isWalking ? hairData.walkKey : hairData.idleKey;
+
+                        // Only play if different or not playing
+                        if (hairSprite.anims.currentAnim?.key !== newKey) {
+                            hairSprite.play(newKey);
+                            // Sync frame with base if possible, but they are same FPS so starting play should be enough
+                            // hairSprite.setFrame(baseSprite.frame.name); 
+                        }
+                    }
+                });
+            };
+
+            // Initial hair update (wait for module? or just run)
+            updateHairVisuals();
 
             // Create Name Tag for this player
-            this.createNameTag(sessionId, player.name || 'Player', entity.x, entity.y);
+            this.createNameTag(sessionId, player.name || 'Player', container.x, container.y);
 
             if (sessionId === this.room.sessionId) {
-                this.currentPlayer = entity as any;
+                this.currentPlayer = container as any; // Cast container to sprite compatible for camera
                 this.cameras.main.startFollow(this.currentPlayer);
                 this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
                 this.cameras.main.setZoom(2);
@@ -223,20 +293,60 @@ export class GameScene extends Phaser.Scene {
                 }
 
                 if (sessionId !== this.room.sessionId) {
-                    const dx = player.x - entity.x;
-                    entity.x = player.x;
-                    entity.y = player.y;
+                    const entity = this.playerEntities[sessionId];
+                    if (entity) {
+                        const dx = player.x - entity.x;
+                        entity.x = player.x;
+                        entity.y = player.y;
 
-                    // Update name tag position
-                    if (this.nameTagContainers[sessionId]) {
-                        this.nameTagContainers[sessionId].setPosition(entity.x, entity.y - 35);
-                    }
+                        // Update name tag position
+                        if (this.nameTagContainers[sessionId]) {
+                            this.nameTagContainers[sessionId].setPosition(entity.x, entity.y - 35);
+                        }
 
-                    if (dx !== 0 || Math.abs(dx) > 0.1) {
-                        entity.anims.play('walk', true);
-                        entity.setFlipX(dx < 0);
+                        const bSprite = entity.getData('baseSprite') as Phaser.GameObjects.Sprite;
+                        const hSprite = entity.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+                        if (dx !== 0 || Math.abs(dx) > 0.1) {
+                            if (bSprite.anims.currentAnim?.key !== 'walk') bSprite.play('walk', true);
+
+                            // Container cannot be flipped directly, flip children
+                            bSprite.setFlipX(dx < 0);
+                            hSprite.setFlipX(dx < 0);
+
+                            // Sync Hair Animation
+                            const hairId = player.hairId || 0;
+                            if (hairId > 0) {
+                                import('../data/characterData').then(({ getHairById }) => {
+                                    const h = getHairById(hairId);
+                                    if (hSprite.anims.currentAnim?.key !== h.walkKey) {
+                                        hSprite.play(h.walkKey, true);
+                                    }
+                                });
+                            }
+                        } else {
+                            // Idle
+                            if (bSprite.anims.currentAnim?.key !== 'idle') bSprite.play('idle', true);
+
+                            // Sync Hair Idle
+                            const hairId = player.hairId || 0;
+                            if (hairId > 0) {
+                                import('../data/characterData').then(({ getHairById }) => {
+                                    const h = getHairById(hairId);
+                                    if (hSprite.anims.currentAnim?.key !== h.idleKey) {
+                                        hSprite.play(h.idleKey, true);
+                                    }
+                                });
+                            }
+                        }
                     }
                 }
+
+                // If I am moving myself (client-side prediction usually, but here we might need to sync hair animation locally too if not handled)
+                // Actually my local movement logic is usually input-driven.
+                // But my player.onChange handles *server* updates.
+                // If hair changes, we must update visuals regardless of movement.
+                updateHairVisuals();
 
                 // Update name text if it changed
                 this.updateNameTagText(sessionId, player.name);
@@ -763,11 +873,17 @@ export class GameScene extends Phaser.Scene {
 
         if (this.cursors.left.isDown || this.input.keyboard?.addKey('A').isDown || nav.left) {
             inputPayload.left = true;
-            this.currentPlayer.setFlipX(true);
+            const b = this.currentPlayer.getData('baseSprite');
+            const h = this.currentPlayer.getData('hairSprite');
+            if (b) b.setFlipX(true);
+            if (h) h.setFlipX(true);
             isMoving = true;
         } else if (this.cursors.right.isDown || this.input.keyboard?.addKey('D').isDown || nav.right) {
             inputPayload.right = true;
-            this.currentPlayer.setFlipX(false);
+            const b = this.currentPlayer.getData('baseSprite');
+            const h = this.currentPlayer.getData('hairSprite');
+            if (b) b.setFlipX(false);
+            if (h) h.setFlipX(false);
             isMoving = true;
         }
 
@@ -793,11 +909,22 @@ export class GameScene extends Phaser.Scene {
             this.currentPlayer.x += velocity.x * speed * (delta / 1000);
             this.currentPlayer.y += velocity.y * speed * (delta / 1000);
 
-            const sprite = this.currentPlayer as unknown as Phaser.GameObjects.Sprite;
-            if (sprite.anims) {
-                sprite.anims.play('walk', true);
-                if (velocity.x < 0) sprite.setFlipX(true);
-                else if (velocity.x > 0) sprite.setFlipX(false);
+            // Animate Children (Base + Hair) - NOT Container
+            const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
+            const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+            if (base) {
+                base.play('walk', true);
+                if (velocity.x !== 0) base.setFlipX(velocity.x < 0);
+            }
+            if (hair && hair.visible) {
+                // Infer key from current idle/walk or data
+                const currentKey = hair.anims.currentAnim?.key || '';
+                const baseKey = currentKey.split('_')[0];
+                if (baseKey && baseKey !== 'walk' && baseKey !== 'idle') {
+                    hair.play(baseKey + '_walk', true);
+                }
+                if (velocity.x !== 0) hair.setFlipX(velocity.x < 0);
             }
 
             this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
@@ -812,9 +939,15 @@ export class GameScene extends Phaser.Scene {
                 this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 35);
             }
         } else {
-            const sprite = this.currentPlayer as unknown as Phaser.GameObjects.Sprite;
-            if (sprite.anims) {
-                sprite.anims.play('idle', true);
+            // Idle Logic
+            const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
+            const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+            if (base) base.play('idle', true);
+            if (hair && hair.visible) {
+                const currentKey = hair.anims.currentAnim?.key || '';
+                const baseKey = currentKey.split('_')[0];
+                if (baseKey) hair.play(baseKey + '_idle', true);
             }
         }
     }

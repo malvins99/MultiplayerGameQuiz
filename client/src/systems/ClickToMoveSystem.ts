@@ -155,8 +155,16 @@ export class ClickToMoveSystem {
 
         // Reset animation to idle
         const player = (this.scene as any).currentPlayer;
-        if (player && player.anims) {
-            player.anims.play('idle', true);
+        if (player) {
+            const base = player.getData('baseSprite') as Phaser.GameObjects.Sprite;
+            const hair = player.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+            if (base) base.play('idle', true);
+            if (hair && hair.visible) {
+                const currentKey = hair.anims.currentAnim?.key || '';
+                const baseKey = currentKey.split('_')[0];
+                if (baseKey) hair.play(baseKey + '_idle', true);
+            }
         }
     }
 
@@ -190,9 +198,27 @@ export class ClickToMoveSystem {
         player.y += vy;
 
         // Animation
-        if (player.anims) {
-            player.anims.play('walk', true);
-            player.setFlipX(vx < 0);
+        // Animation
+        const base = player.getData('baseSprite') as Phaser.GameObjects.Sprite;
+        const hair = player.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+        if (base) {
+            base.play('walk', true);
+            base.setFlipX(vx < 0);
+        }
+        if (hair) {
+            // Determine hair key based on current texture or data
+            // Assuming hair sprite has a key like "bowlhair_idle", we want to switch to "_walk" or "_idle"
+            // Best way: check if it has a texture key to derive from, OR just play based on known key if possible.
+            // Simplified: If hair is visible, try to play matching walk anim.
+            if (hair.visible) {
+                const currentKey = hair.anims.currentAnim?.key || '';
+                const baseKey = currentKey.split('_')[0]; // e.g. "bowlhair"
+                if (baseKey && baseKey !== 'walk' && baseKey !== 'idle') {
+                    hair.play(baseKey + '_walk', true);
+                }
+                hair.setFlipX(vx < 0);
+            }
         }
 
         // --- Updates for visual syncing ---
@@ -229,8 +255,16 @@ export class ClickToMoveSystem {
 
         // Reset player to idle if they were moving via click
         const player = (this.scene as any).currentPlayer;
-        if (player && player.anims) {
-            player.anims.play('idle', true);
+        if (player) {
+            const base = player.getData('baseSprite') as Phaser.GameObjects.Sprite;
+            const hair = player.getData('hairSprite') as Phaser.GameObjects.Sprite;
+
+            if (base) base.play('idle', true);
+            if (hair && hair.visible) {
+                const currentKey = hair.anims.currentAnim?.key || '';
+                const baseKey = currentKey.split('_')[0];
+                if (baseKey) hair.play(baseKey + '_idle', true);
+            }
         }
     }
 

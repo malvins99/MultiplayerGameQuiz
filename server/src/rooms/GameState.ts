@@ -20,6 +20,7 @@ export class Player extends Schema {
     @type("number") x!: number;
     @type("number") y!: number;
     @type("string") name!: string;
+    @type("number") hairId: number = 0;
     @type("number") score: number = 0;
     @type("number") correctAnswers: number = 0;
     @type("number") wrongAnswers: number = 0;

@@ -160,6 +160,14 @@ export class GameRoom extends Room<GameState> {
             }
         });
 
+        // --- Hair Update Handler ---
+        this.onMessage("updateHair", (client, data) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player && data.hairId !== undefined) {
+                player.hairId = Number(data.hairId);
+            }
+        });
+
         // --- Switch Room Handler ---
         this.onMessage("switchRoom", (client, data) => {
             const roomId = data.roomId;
@@ -441,6 +449,7 @@ export class GameRoom extends Room<GameState> {
                 rank: index + 1,
                 sessionId: player.sessionId,
                 name: player.name,
+                hairId: player.hairId || 0, // Ensure hairId is sent
                 score: player.score,
                 finishTime: player.finishTime,
                 duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0, // Calculate duration

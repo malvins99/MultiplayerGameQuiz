@@ -10,9 +10,29 @@ export class WaitingResultsScene extends Phaser.Scene {
     }
 
     create() {
+        // Check Room State for Solo Player
+        const room = this.registry.get('room');
+        // Using a safe check for player count. If not available, assume multiplayer.
+        // We can check room.state.players.size if utilizing Colyseus state directly.
+        const playerCount = room?.state?.players?.size || 0;
+
+        if (playerCount <= 1) {
+            console.log("Solo player finished. Skipping waiting screen...");
+            // Immediately transition to Leaderboard when 'gameEnded' comes
+            // Likely 'gameEnded' has NOT arrived yet if we are just "playerFinished".
+            // Actually, if I am the only player and I finish, the server should trigger 'gameEnded' almost immediately.
+            // But we can show a minimal "Loading..." just in case.
+        }
+
         // Create dark overlay
         this.container = document.createElement('div');
         this.container.id = 'waiting-results-overlay';
+
+        // Conditional Text
+        const isSolo = playerCount <= 1;
+        const mainText = isSolo ? 'Loading Leaderboard' : 'Menunggu pemain lain';
+        const subText = isSolo ? '' : 'Permainan akan berakhir setelah semua selesai atau waktu habis';
+
         this.container.innerHTML = `
             <style>
                 #waiting-results-overlay {
@@ -50,8 +70,7 @@ export class WaitingResultsScene extends Phaser.Scene {
                 }
             </style>
             <div class="waiting-spinner"></div>
-            <div class="waiting-text">Menunggu pemain lain<span id="waiting-dots">...</span></div>
-            <div class="waiting-subtext">Permainan akan berakhir setelah semua selesai atau waktu habis</div>
+            <div class="waiting-text">${mainText}<span id="waiting-dots">...</span></div>
         `;
         document.body.appendChild(this.container);
 
@@ -62,16 +81,21 @@ export class WaitingResultsScene extends Phaser.Scene {
             if (dotsEl) dotsEl.textContent = this.dots;
         }, 500);
 
-        // Listen for gameEnded event from server (passed via registry)
-        const room = this.registry.get('room');
+        // Listen for gameEnded event from server
         if (room) {
             room.onMessage('gameEnded', (data: any) => {
-                // Add minimum delay for system to process all players
+                // Determine Host Status
+                const isHost = room.sessionId === room.state.hostId;
+                this.registry.set('isHost', isHost);
+
+                // If solo, minimal delay. If multiplayer, slight delay to ensure sync.
+                const delay = isSolo ? 500 : 2000;
+
                 setTimeout(() => {
                     this.cleanup();
                     this.registry.set('leaderboardData', data.rankings);
                     this.scene.start('LeaderboardScene');
-                }, 2000); // 2 second delay for safety
+                }, delay);
             });
         }
     }

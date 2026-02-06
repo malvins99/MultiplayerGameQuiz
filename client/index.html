@@ -705,12 +705,14 @@
     <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
 
     <div class="relative z-10 flex h-screen w-full items-center justify-center p-4">
+      <!-- Container: Removed overflow-hidden to allow dropdowns to pop out. Added explicit rounded corners to children. -->
       <div
-        class="w-full max-w-2xl bg-[#1a1a20] border-2 border-primary shadow-[0_0_30px_rgba(0,255,85,0.15)] flex flex-col relative overflow-hidden rounded-3xl">
+        class="w-full max-w-2xl bg-[#1a1a20] border-2 border-primary shadow-[0_0_30px_rgba(0,255,85,0.15)] flex flex-col relative rounded-3xl">
 
-        <!-- Header -->
-        <div class="bg-black/40 p-6 border-b border-white/10 flex items-center justify-between shrink-0 relative">
-          <!-- Back Button (Matched to Image 3) -->
+        <!-- Header: rounded-t-3xl -->
+        <div
+          class="bg-black/40 p-5 border-b border-white/10 flex items-center justify-between shrink-0 relative rounded-t-[calc(1.5rem-2px)]">
+          <!-- Back Button -->
           <button id="settings-back-btn"
             class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group">
             <div
@@ -729,25 +731,51 @@
           <div class="w-20 hidden md:block"></div>
         </div>
 
-        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar">
-          <!-- Description -->
-          <div class="bg-primary/5 p-5 border border-primary/20 rounded-xl relative overflow-hidden group shrink-0">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
-            <p id="settings-quiz-desc" class="text-white/70 font-display leading-relaxed text-sm md:text-base">
-              Description goes here...
-            </p>
-          </div>
+        <!-- Content Area: Tighter padding (p-6), tighter gap (gap-6) -->
+        <div class="p-6 space-y-6 overflow-visible flex flex-col justify-center">
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-30">
-            <!-- Timer (Custom Dropdown) -->
-            <div class="space-y-3 relative z-40">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-30">
+
+            <!-- ROW 1: Difficulty & Timer -->
+
+            <!-- Difficulty -->
+            <div class="space-y-2 relative z-[60]">
+              <label
+                class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">hotel_class</span> Kesulitan
+              </label>
+
+              <div class="relative w-full">
+                <button id="settings-difficulty-trigger"
+                  class="w-full h-12 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-between px-4 text-white font-bold hover:border-primary transition-all group relative z-10">
+                  <span id="settings-difficulty-selected" class="font-['Space_Grotesk'] tracking-wide">Mudah</span>
+                  <span id="settings-difficulty-arrow"
+                    class="material-symbols-outlined text-white/30 transition-transform duration-300 group-hover:text-primary">expand_more</span>
+                </button>
+
+                <div id="settings-difficulty-menu"
+                  class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top z-[70] flex flex-col p-1">
+                  <button
+                    class="diff-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="mudah" data-label="Mudah">Mudah</button>
+                  <button
+                    class="diff-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="sedang" data-label="Sedang">Sedang</button>
+                  <button
+                    class="diff-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="sulit" data-label="Sulit">Sulit</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="space-y-2 relative z-[50]">
               <label
                 class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
                 <span class="material-symbols-outlined text-sm text-primary">timer</span> Waktu
               </label>
 
               <div class="relative w-full">
-                <!-- Trigger -->
                 <button id="settings-timer-trigger"
                   class="w-full h-12 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-between px-4 text-white font-bold hover:border-primary transition-all group relative z-10">
                   <span id="settings-timer-selected" class="font-['Space_Grotesk'] tracking-wide">5 Menit</span>
@@ -755,10 +783,8 @@
                     class="material-symbols-outlined text-white/30 transition-transform duration-300 group-hover:text-primary">expand_more</span>
                 </button>
 
-                <!-- Dropdown Menu -->
                 <div id="settings-timer-menu"
                   class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
-                  <!-- Options will be handled by click events in JS, but we can hardcode layout for simplicity if static -->
                   <button
                     class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
                     data-value="300" data-label="5 Menit">5 Menit</button>
@@ -772,15 +798,16 @@
               </div>
             </div>
 
-            <!-- Question Count (Custom Dropdown) -->
-            <div class="space-y-3 relative z-30">
+            <!-- ROW 2: Question & Sound -->
+
+            <!-- Question Count -->
+            <div class="space-y-2 relative z-[40]">
               <label
                 class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
                 <span class="material-symbols-outlined text-sm text-primary">numbers</span> Jumlah Soal
               </label>
 
               <div class="relative w-full">
-                <!-- Trigger -->
                 <button id="settings-question-trigger"
                   class="w-full h-12 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-between px-4 text-white font-bold hover:border-primary transition-all group relative z-10">
                   <span id="settings-question-selected" class="font-['Space_Grotesk'] tracking-wide">5 Soal</span>
@@ -788,7 +815,6 @@
                     class="material-symbols-outlined text-white/30 transition-transform duration-300 group-hover:text-primary">expand_more</span>
                 </button>
 
-                <!-- Dropdown Menu -->
                 <div id="settings-question-menu"
                   class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
                   <button
@@ -804,43 +830,32 @@
               </div>
             </div>
 
-            <!-- Invisible Selects form Logic Compatibility (if needed by existing robust code, but we will update JS) -->
-            <select id="settings-timer" class="hidden">
-              <option value="300">5</option>
-            </select>
-            <select id="settings-question-count" class="hidden">
-              <option value="5">5</option>
-            </select>
-          </div>
+            <!-- Sound Toggle -->
+            <div class="space-y-2 relative z-[30]">
+              <label
+                class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">music_note</span> Music
+              </label>
 
-          <!-- Difficulty -->
-          <div class="space-y-4">
-            <label
-              class="flex items-center justify-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P'] mb-4">
-              <span class="material-symbols-outlined text-sm text-primary">hotel_class</span> Tingkat Kesulitan
-            </label>
-            <div class="flex justify-center gap-3">
-              <button
-                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-primary text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
-                data-diff="mudah">
-                Mudah
-              </button>
-              <button
-                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-secondary text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
-                data-diff="sedang">
-                Sedang
-              </button>
-              <button
-                class="settings-diff-btn flex-1 py-4 bg-black/40 border-2 border-white/10 rounded-xl hover:border-accent text-white/60 hover:text-white font-bold uppercase transition-all font-['Press_Start_2P'] text-[10px] tracking-wider"
-                data-diff="sulit">
-                Sulit
-              </button>
+              <div
+                class="w-full h-12 flex items-center bg-black/40 border-2 border-white/10 rounded-xl px-4 justify-between group hover:border-primary transition-colors cursor-pointer"
+                onclick="document.getElementById('sound-toggle-btn').click()">
+                <span class="text-white font-bold font-['Space_Grotesk'] tracking-wide">Music</span>
+
+                <button id="sound-toggle-btn"
+                  class="w-12 h-7 bg-[#34c759] rounded-full relative transition-colors duration-300 cursor-pointer shadow-inner shrink-0">
+                  <div id="sound-toggle-knob"
+                    class="absolute top-[2px] left-[2px] w-6 h-6 bg-white rounded-full shadow-md transform translate-x-6 transition-transform duration-300">
+                  </div>
+                </button>
+              </div>
             </div>
+
           </div>
         </div>
 
-        <!-- Footer Action -->
-        <div class="p-6 bg-black/40 border-t border-white/10 flex justify-center">
+        <!-- Footer: rounded-b-3xl -->
+        <div class="p-5 bg-black/40 border-t border-white/10 flex justify-center mt-auto rounded-b-[calc(1.5rem-2px)]">
           <button id="settings-continue-btn"
             class="w-full md:w-auto px-12 h-14 bg-primary text-black font-bold text-sm uppercase rounded-xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all font-['Press_Start_2P'] flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(0,255,85,0.3)]">
             BUAT ROOM
@@ -866,28 +881,30 @@
       </button>
 
       <main class="flex-1 flex gap-6 overflow-hidden max-w-[1600px] mx-auto w-full pt-12">
-        <!-- LEFT: Character & Profile -->
-        <section class="w-80 shrink-0 flex flex-col gap-3">
+        <!-- LEFT: Character & Profile - Adjusted Width -->
+        <section class="w-96 shrink-0 flex flex-col gap-3">
           <div
             class="bg-surface-dark border-4 border-black p-5 rounded-2xl flex-1 flex flex-col gap-4 shadow-xl relative overflow-hidden">
 
-            <!-- 1. Character Selection (Compacted) -->
-            <div class="space-y-2 shrink-0">
-              <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Select Character</p>
+            <!-- 1. Character Selection -->
+            <div class="space-y-2 shrink-0 w-full">
+              <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">Selected Character
+              </p>
+
               <div class="flex items-center gap-2">
                 <button
-                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors">
+                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors rounded-lg">
                   <span class="material-symbols-outlined text-white/50">chevron_left</span>
                 </button>
-                <!-- Reduced height aspect ratio -->
-                <div
-                  class="flex-1 h-32 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden group">
+
+                <!-- Preview Box - Height Reduced further (160px) to save space for QR -->
+                <div id="character-preview-box"
+                  class="flex-1 h-40 bg-black/40 border-2 border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden group hover:border-primary transition-colors cursor-pointer ring-1 ring-white/5 shadow-inner">
                   <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-20"></div>
-                  <span
-                    class="material-symbols-outlined text-6xl text-white/20 group-hover:text-primary/50 transition-colors">face</span>
                 </div>
+
                 <button
-                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors">
+                  class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors rounded-lg">
                   <span class="material-symbols-outlined text-white/50">chevron_right</span>
                 </button>
               </div>
@@ -917,10 +934,11 @@
             </div>
 
             <!-- 4. QR Code (Larger & No Cutoff) -->
-            <div class="mt-auto flex flex-col items-center gap-2 flex-grow justify-end pb-2">
+            <!-- Removing mt-auto to make it stick to the element above as requested ("menempel seperti konten lain") -->
+            <div class="mt-1 flex flex-col items-center gap-2">
               <p class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Scan to Join</p>
               <div
-                class="bg-white p-2 rounded-xl w-36 h-36 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300">
+                class="bg-white p-2 rounded-xl w-56 h-56 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300">
                 <img src="" class="w-full h-full object-contain mix-blend-multiply" alt="QR" id="room-qr-code" />
               </div>
             </div>
@@ -948,7 +966,7 @@
             </div>
 
             <!-- Grid: Tall Cards -->
-            <div id="player-grid" class="grid grid-cols-4 gap-4 flex-1 h-full items-stretch">
+            <div id="player-grid" class="grid grid-cols-4 gap-4 flex-1 h-full max-h-[400px]">
               <!-- Content injected via JS -->
             </div>
           </div>

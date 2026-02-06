@@ -88,7 +88,7 @@ export const TransitionManager = {
             el.style.left = '50%';
             el.style.transform = 'translate(-50%, -50%)';
             el.style.fontFamily = '"Press Start 2P", monospace';
-            el.style.fontSize = '80px';
+            el.style.fontSize = '150px';
             el.style.color = '#00ff55';
             el.style.zIndex = '10001';
             overlay.appendChild(el);

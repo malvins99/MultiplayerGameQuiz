@@ -13,6 +13,7 @@ export class LobbyScene extends Phaser.Scene {
     currentPage: number = 1;
     itemsPerPage: number = 6;
     favorites: Set<string> = new Set();
+    soundEnabled: boolean = true; // NEW: Sound Toggle logic
 
     // Filters
     searchQuery: string = '';
@@ -213,12 +214,60 @@ export class LobbyScene extends Phaser.Scene {
             });
         });
 
+        // Difficulty Dropdown
+        this.setupDropdown('settings-difficulty-trigger', 'settings-difficulty-menu', 'settings-difficulty-arrow');
+        const diffOptions = document.querySelectorAll('.diff-opt');
+        diffOptions.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLElement;
+                const val = target.dataset.value || 'mudah';
+                const label = target.dataset.label || 'Mudah';
+
+                this.settingsDifficulty = val;
+
+                // Update UI
+                const display = document.getElementById('settings-difficulty-selected');
+                if (display) display.innerText = label;
+
+                // Highlight active
+                diffOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
+                target.classList.add('text-primary', 'bg-white/5');
+
+                // Close menu
+                this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
+            });
+        });
+
+        // Sound Toggle
+        const soundToggle = document.getElementById('sound-toggle-btn');
+        const soundKnob = document.getElementById('sound-toggle-knob');
+        if (soundToggle && soundKnob) {
+            soundToggle.onclick = () => {
+                this.soundEnabled = !this.soundEnabled;
+
+                // Update visuals
+                if (this.soundEnabled) {
+                    soundToggle.classList.remove('bg-white/10');
+                    soundToggle.classList.add('bg-[#34c759]'); // iOS Green
+                    soundKnob.classList.add('translate-x-6');
+                } else {
+                    soundToggle.classList.remove('bg-[#34c759]');
+                    soundToggle.classList.add('bg-white/10');
+                    soundKnob.classList.remove('translate-x-6');
+                }
+
+                // Here you would also mute/unmute global sound manager if you have one
+                console.log("Sound Enabled:", this.soundEnabled);
+            };
+        }
+
         // Click Outside to Close All Dropdowns
         document.addEventListener('click', (e) => {
             const dropdowns = [
                 { menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' },
                 { menu: 'settings-timer-menu', trigger: 'settings-timer-trigger', arrow: 'settings-timer-arrow' },
-                { menu: 'settings-question-menu', trigger: 'settings-question-trigger', arrow: 'settings-question-arrow' }
+                { menu: 'settings-question-menu', trigger: 'settings-question-trigger', arrow: 'settings-question-arrow' },
+                { menu: 'settings-difficulty-menu', trigger: 'settings-difficulty-trigger', arrow: 'settings-difficulty-arrow' }
             ];
 
             dropdowns.forEach(d => {
@@ -331,21 +380,8 @@ export class LobbyScene extends Phaser.Scene {
             };
         }
 
-        diffBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Style update
-                diffBtns.forEach(b => {
-                    b.classList.remove('border-primary', 'border-secondary', 'border-accent');
-                    b.classList.add('border-white/10');
-                });
-                const diff = (btn as HTMLElement).dataset.diff || 'mudah';
-                this.settingsDifficulty = diff;
+        // Remove Old Difficulty Button Listeners if any (replaced by dropdown logic above)
 
-                const color = diff === 'mudah' ? 'border-primary' : diff === 'sedang' ? 'border-secondary' : 'border-accent';
-                btn.classList.remove('border-white/10');
-                btn.classList.add(color);
-            });
-        });
 
         if (settingsContinueBtn) {
             settingsContinueBtn.onclick = () => {
@@ -467,14 +503,16 @@ export class LobbyScene extends Phaser.Scene {
 
             // "Maju ke depan" (Scale Up) - REMOVED per user request (Round 3) "hanya hover warna saja"
             // Simple border color change, no layout shift.
-            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-white/5 transition-colors duration-200 cursor-pointer relative overflow-hidden";
+            // User requested: "ubah hover nya jagan transparan melain kan ubah saja menjadi abu abu"
+            // Using bg-[#2a2a30] (lighter than surface-dark #1a1a20) for hover
+            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-colors duration-200 cursor-pointer relative overflow-hidden";
 
             card.innerHTML = `
-                <!-- Background Gradient (Subtle Green on Hover) -->
+                <!-- Background Gradient (Subtle Green on Hover) logic removed or kept subtle -->
                 <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div class="relative z-10 flex justify-between items-start mb-6">
-                    <!-- Pixel Font Badge -->
+                    <!-- Pixel Font Badge - User Req: "hanya badge materi dan judul materi dan icon fav" -->
                     <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none">${quiz.category}</span>
                     
                     <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
@@ -482,17 +520,11 @@ export class LobbyScene extends Phaser.Scene {
                     </button>
                 </div>
                 
-                <h3 class="relative z-10 text-lg font-bold text-white mb-6 group-hover:text-primary transition-colors leading-relaxed h-14 line-clamp-2">${quiz.title}</h3>
+                <!-- Font Title: Mibecraft Pisel (Press Start 2P) -->
+                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Press_Start_2P'] tracking-tight text-[12px]">${quiz.title}</h3>
                 
-                <div class="relative z-10 flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                    <div class="flex items-center gap-2 text-white/40 group-hover:text-primary/80 transition-colors text-xs font-bold uppercase tracking-wide font-['Press_Start_2P']">
-                        <span class="material-symbols-outlined text-sm">quiz</span>
-                        <span>${quiz.questionCount} Qs</span>
-                    </div>
-                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center -mr-2 group-hover:bg-primary group-hover:text-black transition-all duration-300">
-                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                    </div>
-                </div>
+                <!-- REMOVED: 10 Qs and Arrow per user request -->
+                <div class="h-4"></div> 
             `;
 
             // Card Click -> Settings
@@ -527,14 +559,16 @@ export class LobbyScene extends Phaser.Scene {
         this.selectedQuiz = quiz;
 
         const titleEl = document.getElementById('settings-quiz-title');
-        const descEl = document.getElementById('settings-quiz-desc');
+        // REMOVED: Description element update (User requested removal)
 
         if (titleEl) titleEl.innerText = quiz.title;
-        if (descEl) descEl.innerText = quiz.description;
 
-        // Reset difficulty buttons
-        const diffBtns = document.querySelectorAll('.settings-diff-btn');
-        if (diffBtns.length > 0) (diffBtns[0] as HTMLElement).click();
+        // Reset selections if needed, current setting is kept.
+        // Update Difficulty Dropdown UI to match current internal state
+        const diffDisplay = document.getElementById('settings-difficulty-selected');
+        if (diffDisplay) {
+            diffDisplay.innerText = this.settingsDifficulty.charAt(0).toUpperCase() + this.settingsDifficulty.slice(1);
+        }
 
         this.showSettings();
     }
@@ -638,6 +672,9 @@ export class LobbyScene extends Phaser.Scene {
         try {
             const room = await this.client.joinOrCreate("game_room", options);
             console.log("Room created!", room);
+
+            // Save options for Restart functionality
+            this.registry.set('lastGameOptions', options);
 
             // Hide all overlays
             this.toggleUI(''); // Hides everything since '' matches nothing
