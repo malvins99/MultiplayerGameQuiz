@@ -67,11 +67,16 @@ export class GameScene extends Phaser.Scene {
             this.load.spritesheet(`${key}_idle`, `/assets/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
         });
 
-        // Load Enemy Assets
-        this.load.spritesheet('skeleton_idle', '/assets/skeleton_idle.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('skeleton_death', '/assets/skeleton_death.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('goblin_idle', '/assets/goblin_idle.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('goblin_death', '/assets/goblin_death.png', { frameWidth: 96, frameHeight: 64 });
+        // Skeleton
+        // Skeleton
+        this.load.spritesheet('skeleton_idle', '/assets/characters/Skeleton/PNG/skeleton_idle_strip6.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('skeleton_walk', '/assets/characters/Skeleton/PNG/skeleton_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('skeleton_death', '/assets/characters/Skeleton/PNG/skeleton_death_strip10.png', { frameWidth: 96, frameHeight: 64 });
+
+        // Goblin
+        this.load.spritesheet('goblin_idle', '/assets/characters/Goblin/PNG/spr_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('goblin_walk', '/assets/characters/Goblin/PNG/spr_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('goblin_death', '/assets/characters/Goblin/PNG/spr_death_strip13.png', { frameWidth: 96, frameHeight: 64 });
 
         // Load Chest Tileset as Spritesheet for frame access
         this.load.spritesheet('chest_tiles', '/assets/spr_tileset_sunnysideworld_16px.png', {
@@ -99,6 +104,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // DEBUG: Check if textures are loaded
+        console.log('[DEBUG] Textures loaded:');
+        console.log('  skeleton_idle:', this.textures.exists('skeleton_idle'));
+        console.log('  skeleton_walk:', this.textures.exists('skeleton_walk'));
+        console.log('  goblin_idle:', this.textures.exists('goblin_idle'));
+        console.log('  goblin_walk:', this.textures.exists('goblin_walk'));
+
         // --- UI Scene Launch ---
         this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');
@@ -181,13 +193,19 @@ export class GameScene extends Phaser.Scene {
         // Enemy Animations
         this.anims.create({
             key: 'skeleton_idle',
-            frames: this.anims.generateFrameNumbers('skeleton_idle', { start: 0, end: 5 }),
+            frames: this.anims.generateFrameNumbers('skeleton_idle', { start: 0, end: 5 }), // Updated to 6 frames
             frameRate: 8,
             repeat: -1
         });
         this.anims.create({
+            key: 'skeleton_walk',
+            frames: this.anims.generateFrameNumbers('skeleton_walk', { start: 0, end: 7 }),
+            frameRate: 12,
+            repeat: -1
+        });
+        this.anims.create({
             key: 'skeleton_death',
-            frames: this.anims.generateFrameNumbers('skeleton_death', { start: 0, end: 9 }),
+            frames: this.anims.generateFrameNumbers('skeleton_death', { start: 0, end: 9 }), // Updated to 10 frames
             frameRate: 8,
             repeat: 0
         });
@@ -195,13 +213,19 @@ export class GameScene extends Phaser.Scene {
         // Goblin Animations
         this.anims.create({
             key: 'goblin_idle',
-            frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: 5 }),
+            frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: 8 }), // Updated to 9 frames
             frameRate: 8,
             repeat: -1
         });
         this.anims.create({
+            key: 'goblin_walk',
+            frames: this.anims.generateFrameNumbers('goblin_walk', { start: 0, end: 7 }),
+            frameRate: 12,
+            repeat: -1
+        });
+        this.anims.create({
             key: 'goblin_death',
-            frames: this.anims.generateFrameNumbers('goblin_death', { start: 0, end: 8 }),
+            frames: this.anims.generateFrameNumbers('goblin_death', { start: 0, end: 12 }),
             frameRate: 8,
             repeat: 0
         });
@@ -453,29 +477,151 @@ export class GameScene extends Phaser.Scene {
 
         // --- Enemy Sync ---
         this.room.state.enemies.onAdd((enemy: any, index: number) => {
+            console.log(`[Enemy] onAdd: index=${index}, ownerId=${enemy.ownerId}, myId=${this.room.sessionId}, type=${enemy.type}, pos=(${enemy.x}, ${enemy.y})`);
+
             // PRIVATE VISIBILITY: Each player ONLY sees their OWN enemies
             // This is the correct behavior - enemies are spawned randomly per player
-            if (enemy.ownerId !== this.room.sessionId) return;
+            if (enemy.ownerId !== this.room.sessionId) {
+                console.log(`[Enemy] Skipping enemy ${index} - belongs to different player`);
+                return;
+            }
 
+            console.log(`[Enemy] Creating sprite for enemy ${index}`);
             const type = enemy.type || 'skeleton';
             const animKey = type + '_idle';
 
             const enemySprite = this.physics.add.sprite(enemy.x, enemy.y, type + '_idle');
-            enemySprite.play(animKey);
-            enemySprite.setOrigin(0.5, 0.5);
 
-            this.enemyEntities[index] = enemySprite as any;
+            // Play animation correctly
+            if (this.anims.exists(animKey)) {
+                enemySprite.play(animKey);
+            } else {
+                console.warn(`Animation ${animKey} missing for enemy ${type}`);
+            }
+
+            enemySprite.setOrigin(0.5, 0.5);
+            // Height is 64px, so anchor at feet (roughly 0.8 to look grounded) or center
+            // Let's stick to center for now but adjust scale if needed.
+            // Original scale 2 was for 16px sprites. For 96x64 sprites, scale 1 is likely fine, or even smaller (0.5).
+            // Let's try scale 1 first.
+            enemySprite.setScale(1);
+            enemySprite.setDepth(50); // Ensure above map tiles
+            enemySprite.setInteractive();
+
+            // Store previous position to calculate direction
+            enemySprite.setData('prevX', enemy.x);
+
+            // Enemy Interaction (Click)
+            enemySprite.on('pointerdown', () => {
+                // Check distance
+                const dist = Phaser.Math.Distance.Between(
+                    this.currentPlayer.x, this.currentPlayer.y,
+                    enemySprite.x, enemySprite.y
+                );
+
+                if (dist < 50) {
+                    this.triggerQuiz(enemy);
+                } else {
+                    // Move to enemy
+                    this.clickToMove.moveTo(enemySprite.x, enemySprite.y, () => {
+                        this.triggerQuiz(enemy);
+                    });
+                }
+            });
+
+            this.enemyEntities[index] = enemySprite;
 
             enemy.onChange(() => {
-                if (!enemy.isAlive) {
-                    // console.log(`Enemy ${index} died. Playing death animation.`);
-                    // Play death animation then destroy
-                    // FIX: Ensure sprite actually exists
-                    if (enemySprite && enemySprite.anims) {
-                        enemySprite.play(type + '_death');
+                if (enemy.isAlive) {
+                    // Calculate movement for animation
+                    const prevX = enemySprite.getData('prevX') || enemySprite.x;
+                    const isMoving = Math.abs(enemy.x - prevX) > 0.1 || Math.abs(enemy.y - enemySprite.y) > 0.1;
+
+                    // Update position
+                    enemySprite.x = enemy.x;
+                    enemySprite.y = enemy.y;
+
+                    // Update data
+                    enemySprite.setData('prevX', enemy.x);
+
+                    // Animation Logic
+                    const type = enemy.type === 'goblin' ? 'goblin' : 'skeleton';
+                    const currentAnim = enemySprite.anims.currentAnim?.key;
+
+                    if (isMoving) {
+                        const walkKey = type + '_walk';
+                        if (currentAnim !== walkKey && this.anims.exists(walkKey)) {
+                            enemySprite.play(walkKey, true);
+                        }
+
+                        // Flip based on movement direction
+                        if (enemy.x < prevX) {
+                            enemySprite.setFlipX(true);
+                        } else if (enemy.x > prevX) {
+                            enemySprite.setFlipX(false);
+                        }
+                    } else {
+                        const idleKey = type + '_idle';
+                        if (currentAnim !== idleKey && this.anims.exists(idleKey)) {
+                            enemySprite.play(idleKey, true);
+                        }
+                    }
+
+                    // --- Trail Dots Rendering ---
+                    // Clear existing trail
+                    const existingTrail = enemySprite.getData('trail') as Phaser.GameObjects.Group | null;
+                    if (existingTrail) {
+                        existingTrail.clear(true, true);
+                    }
+
+                    // Draw trail if enemy has a target waypoint
+                    if (enemy.targetX > 0 && enemy.targetY > 0) {
+                        const trail = existingTrail || this.add.group();
+                        const startX = enemy.x;
+                        const startY = enemy.y;
+                        const endX = enemy.targetX;
+                        const endY = enemy.targetY;
+
+                        // Calculate distance and number of dots
+                        const dist = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                        const dotSpacing = 30; // px between dots
+                        const numDots = Math.floor(dist / dotSpacing);
+
+                        for (let i = 1; i <= numDots; i++) {
+                            const t = i / (numDots + 1);
+                            const dotX = startX + (endX - startX) * t;
+                            const dotY = startY + (endY - startY) * t;
+
+                            const dot = this.add.image(dotX, dotY, 'select_dots');
+                            dot.setScale(1.2); // Increased visibility
+                            dot.setAlpha(1);
+                            dot.setDepth(40);
+                            trail.add(dot);
+                        }
+
+                        enemySprite.setData('trail', trail);
+                    }
+                } else {
+                    // Handle death
+                    // Clear trail on death
+                    const existingTrail = enemySprite.getData('trail') as Phaser.GameObjects.Group | null;
+                    if (existingTrail) {
+                        existingTrail.clear(true, true);
+                    }
+
+                    // If we want to play death anim, ensure we don't snap back to idle
+                    if (enemySprite.anims.currentAnim?.key.includes('death')) return;
+
+                    const deathAnim = enemy.type === 'goblin' ? 'goblin_death' : 'skeleton_death';
+                    if (this.anims.exists(deathAnim)) {
+                        enemySprite.play(deathAnim);
                         enemySprite.once('animationcomplete', () => {
-                            if (enemySprite) enemySprite.destroy();
+                            enemySprite.destroy();
+                            delete this.enemyEntities[index];
                         });
+                    } else {
+                        enemySprite.destroy();
+                        delete this.enemyEntities[index];
                     }
                 }
             });
@@ -859,7 +1005,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Simple movement logic
-        const speed = 200;
+        const speed = 130; // Reduced from 200
         const velocity = { x: 0, y: 0 };
         const inputPayload = {
             left: false,

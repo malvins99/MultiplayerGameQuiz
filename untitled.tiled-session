@@ -25,46 +25,46 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 666,
-                "y": 499.99999999999994
+                "x": 665.9999999999999,
+                "y": 552.6666666666666
             }
         },
         "multiplayer_map.tmj": {
             "expandedGroupLayers": [
-                179,
-                103,
-                53,
+                161,
                 54,
+                179,
+                90,
+                53,
+                105,
                 163,
                 34,
-                161,
-                105,
-                90,
+                103,
                 167
             ],
             "expandedObjectLayers": [
-                179,
-                162,
-                53,
+                161,
+                180,
+                164,
+                32,
                 54,
-                163,
-                166,
-                165,
-                155,
-                34,
                 154,
                 168,
-                161,
-                32,
-                167,
-                180,
-                164
+                179,
+                162,
+                165,
+                53,
+                155,
+                163,
+                34,
+                166,
+                167
             ],
             "scale": 0.5,
             "selectedLayer": 143,
             "viewCenter": {
-                "x": 560,
-                "y": 559
+                "x": 559,
+                "y": 159
             }
         },
         "multiplayer_map.tmj#spr_tileset_sunnysideworld_16px": {
@@ -78,6 +78,9 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "spr_tileset_sunnysideworld_16px.tsx": {
+            "scaleInDock": 1
+        },
         "untitled.tmx": {
             "expandedGroupLayers": [
                 3
@@ -89,7 +92,7 @@
             "selectedLayer": 5,
             "viewCenter": {
                 "x": 883,
-                "y": 872
+                "y": 277
             }
         },
         "untitled1.tmx": {
@@ -99,12 +102,13 @@
             "scale": 0.33,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 604.5454545454547,
-                "y": 648.4848484848484
+                "x": 604.5454545454546,
+                "y": 40.90909090909088
             }
         }
     },
     "last.exportedFilePath": "C:/baru ini",
+    "last.externalTilesetPath": "C:/Legends of Learning (LoL)",
     "last.imagePath": "C:/Sunnyside_World_ASSET_PACK_V2.1/Sunnyside_World_Assets/Characters/Goblin/PNG",
     "map.height": 110,
     "map.lastUsedExportFilter": "Tiled map files (*.tmx *.xml)",
@@ -125,11 +129,11 @@
     "recentFiles": [
         "multiplayer_map.tmj",
         "map_baru1.tmx",
-        "untitled1.tmx",
         "spr_death_strip13.tsx",
         "spr_caught_strip10.tsx",
         "base_mining_strip10.tsx",
-        "untitled.tmx"
+        "untitled.tmx",
+        "untitled1.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

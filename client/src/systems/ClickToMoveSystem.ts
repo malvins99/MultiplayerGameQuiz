@@ -11,7 +11,7 @@ export class ClickToMoveSystem {
 
     private lastClickTime: number = 0;
     private readonly DOUBLE_CLICK_DELAY = 300; // ms
-    private readonly MOVEMENT_SPEED = 200;
+    private readonly MOVEMENT_SPEED = 130; // Reduced from 200 for flee mechanic balance
     private readonly DOT_SPACING = 30;
 
     constructor(scene: Phaser.Scene) {
@@ -282,5 +282,27 @@ export class ClickToMoveSystem {
     public destroy() {
         this.cancelMovement();
         // Remove listeners if needed
+    }
+
+    public moveTo(x: number, y: number, onComplete?: () => void) {
+        this.targetPosition = new Phaser.Math.Vector2(x, y);
+        this.isMoving = true;
+        this.pathPoints = [this.targetPosition]; // simplified path for now
+
+        // Visuals
+        if (this.selectorContainer) {
+            this.selectorContainer.setPosition(x, y);
+            this.selectorContainer.setVisible(true);
+            this.selectorContainer.setScale(0);
+            this.scene.tweens.add({
+                targets: this.selectorContainer,
+                scale: 1,
+                duration: 200,
+                ease: 'Back.out'
+            });
+        }
+
+        // Store callback
+        (this as any).onMoveComplete = onComplete;
     }
 }

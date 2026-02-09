@@ -7,6 +7,13 @@ export class Enemy extends Schema {
     @type("number") questionId!: number;
     @type("string") type!: string; // 'skeleton' | 'goblin'
     @type("boolean") isAlive: boolean = true;
+    @type("boolean") isFleeing: boolean = false;
+
+    // Waypoint flee system
+    @type("number") targetX: number = 0;  // Waypoint destination X
+    @type("number") targetY: number = 0;  // Waypoint destination Y
+    @type("number") restUntil: number = 0; // Timestamp when rest ends (0 = not resting)
+    @type("number") spawnZoneIndex: number = -1; // Index of the spawn zone this enemy belongs to
 }
 
 export class Chest extends Schema {

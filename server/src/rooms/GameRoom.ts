@@ -192,6 +192,130 @@ export class GameRoom extends Room<GameState> {
                 }
             }
         });
+
+        // Monitor Enemy Flee Logic (10 FPS is enough)
+        this.setSimulationInterval((deltaTime) => this.update(deltaTime));
+    }
+
+    update(deltaTime: number) {
+        if (!this.state.isGameStarted) return;
+
+        const ENEMY_SPEED = 110; // px/sec
+        const FLEE_RADIUS = 180; // Distance to trigger flee
+        const REST_DURATION_MIN = 2000; // 2 seconds
+        const REST_DURATION_MAX = 3000; // 3 seconds
+        const ARRIVAL_THRESHOLD = 20; // px - considered "arrived" at waypoint
+
+        const now = Date.now();
+
+        // Process each enemy
+        this.state.enemies.forEach(enemy => {
+            if (!enemy.isAlive) return;
+
+            const owner = this.state.players.get(enemy.ownerId);
+            if (!owner) return;
+
+            // Check if resting
+            if (enemy.restUntil > 0) {
+                if (now < enemy.restUntil) {
+                    // Still resting
+                    enemy.isFleeing = false;
+                    return;
+                } else {
+                    // Rest period over
+                    enemy.restUntil = 0;
+                }
+            }
+
+            // Calculate distance to owner
+            const dx = enemy.x - owner.x;
+            const dy = enemy.y - owner.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < FLEE_RADIUS) {
+                // Need to flee!
+                enemy.isFleeing = true;
+
+                // If no target waypoint set, pick one
+                if (enemy.targetX === 0 && enemy.targetY === 0) {
+                    const waypoint = this.pickWaypointAwayFromPlayer(enemy, owner);
+                    enemy.targetX = waypoint.x;
+                    enemy.targetY = waypoint.y;
+                }
+
+                // Move toward waypoint
+                const toTargetX = enemy.targetX - enemy.x;
+                const toTargetY = enemy.targetY - enemy.y;
+                const distToTarget = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
+
+                if (distToTarget < ARRIVAL_THRESHOLD) {
+                    // Arrived at waypoint - rest
+                    const restTime = REST_DURATION_MIN + Math.random() * (REST_DURATION_MAX - REST_DURATION_MIN);
+                    enemy.restUntil = now + restTime;
+                    enemy.targetX = 0;
+                    enemy.targetY = 0;
+                    enemy.isFleeing = false;
+                } else {
+                    // Move toward target
+                    const vx = toTargetX / distToTarget;
+                    const vy = toTargetY / distToTarget;
+                    const moveDist = (ENEMY_SPEED * deltaTime) / 1000;
+
+                    let nextX = enemy.x + vx * moveDist;
+                    let nextY = enemy.y + vy * moveDist;
+
+                    // Boundary check
+                    if (nextX < 50) nextX = 50;
+                    if (nextX > 1550) nextX = 1550;
+                    if (nextY < 50) nextY = 50;
+                    if (nextY > 1550) nextY = 1550;
+
+                    enemy.x = nextX;
+                    enemy.y = nextY;
+                }
+            } else {
+                // Player far away - idle
+                enemy.isFleeing = false;
+                enemy.targetX = 0;
+                enemy.targetY = 0;
+            }
+        });
+    }
+
+    // Pick a waypoint that's away from the player
+    private pickWaypointAwayFromPlayer(enemy: Enemy, player: Player): { x: number, y: number } {
+        // Generate waypoints from enemy's spawn zone (simple random in bounds)
+        const candidates: { x: number, y: number, dist: number }[] = [];
+
+        // Load map data to get zone info
+        const mapData = MapParser.loadMapData(this.state.difficulty);
+        let zone = { x: 50, y: 50, width: 1500, height: 1500 }; // Default global bounds
+
+        // If enemy has a valid spawn zone index, use that zone
+        if (enemy.spawnZoneIndex !== -1 && mapData && mapData.enemySpawnZones && mapData.enemySpawnZones[enemy.spawnZoneIndex]) {
+            zone = mapData.enemySpawnZones[enemy.spawnZoneIndex];
+        }
+
+        // Generate 5 random candidate waypoints in the zone
+        for (let i = 0; i < 5; i++) {
+            // Generate point directly in zone
+            const wx = zone.x + Math.random() * (zone.width || 200);
+            const wy = zone.y + Math.random() * (zone.height || 200);
+
+            // Calculate distance from player (prefer farther)
+            const distFromPlayer = Math.sqrt(
+                Math.pow(wx - player.x, 2) +
+                Math.pow(wy - player.y, 2)
+            );
+
+            candidates.push({ x: wx, y: wy, dist: distFromPlayer });
+        }
+
+        // Sort by distance from player (farthest first)
+        candidates.sort((a, b) => b.dist - a.dist);
+
+        // Return farthest waypoint
+        return { x: candidates[0].x, y: candidates[0].y };
     }
 
     onJoin(client: Client, options: any) {
@@ -342,10 +466,18 @@ export class GameRoom extends Room<GameState> {
 
                     while (attempts < maxAttemptsPerTier && !foundPosition) {
                         let x = 0, y = 0;
+                        let zoneIndex = -1;
+
                         if (mapData && mapData.enemySpawnZones && mapData.enemySpawnZones.length > 0) {
-                            const zone = mapData.enemySpawnZones[Math.floor(Math.random() * mapData.enemySpawnZones.length)];
-                            x = zone.x + Math.random() * (zone.width || 0);
-                            y = zone.y + Math.random() * (zone.height || 0);
+                            zoneIndex = Math.floor(Math.random() * mapData.enemySpawnZones.length);
+                            const zone = mapData.enemySpawnZones[zoneIndex];
+
+                            // Ensure zone has width/height
+                            const w = zone.width || 200;
+                            const h = zone.height || 200;
+
+                            x = zone.x + Math.random() * w;
+                            y = zone.y + Math.random() * h;
                         } else {
                             const maxX = mapData ? mapData.mapWidth : 800;
                             const maxY = mapData ? mapData.mapHeight : 600;
@@ -357,6 +489,7 @@ export class GameRoom extends Room<GameState> {
                         if (isValidSpawnPosition(x, y, minDistance)) {
                             enemy.x = x;
                             enemy.y = y;
+                            enemy.spawnZoneIndex = zoneIndex; // Assign spawn zone
                             foundPosition = true;
                         }
                         attempts++;
