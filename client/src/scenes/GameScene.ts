@@ -522,7 +522,7 @@ export class GameScene extends Phaser.Scene {
 
                 if (dist < 50) {
                     // Check if not already in a quiz or cooling down
-                    if (!this.activeQuestionId && !this.cooldownEnemies.has(index)) {
+                    if (!this.activeQuestionId && !this.cooldownEnemies.has(String(index))) {
                         this.triggerQuiz(enemy);
                     }
                 } else {
@@ -533,7 +533,7 @@ export class GameScene extends Phaser.Scene {
                             this.currentPlayer.x, this.currentPlayer.y,
                             enemySprite.x, enemySprite.y
                         );
-                        if (newDist < 60 && !this.activeQuestionId && !this.cooldownEnemies.has(index)) {
+                        if (newDist < 60 && !this.activeQuestionId && !this.cooldownEnemies.has(String(index))) {
                             this.triggerQuiz(enemy);
                         }
                     });
@@ -873,14 +873,14 @@ export class GameScene extends Phaser.Scene {
                 this.quizPopup.show(questionData, (enemy.type || 'SKELETON').toUpperCase());
 
                 // Notify Server to Halt Enemy
-                if (this.activeEnemyId) {
+                if (this.activeEnemyId !== null) {
                     this.room.send("engageEnemy", { enemyIndex: this.activeEnemyId });
-                }
 
-                // Start Combat Camera
-                const enemySprite = this.enemyEntities[this.activeEnemyId];
-                if (enemySprite) {
-                    this.startCombatCamera(enemySprite.x, enemySprite.y);
+                    // Start Combat Camera
+                    const enemySprite = this.enemyEntities[this.activeEnemyId];
+                    if (enemySprite) {
+                        this.startCombatCamera(enemySprite.x, enemySprite.y);
+                    }
                 }
             }
         }

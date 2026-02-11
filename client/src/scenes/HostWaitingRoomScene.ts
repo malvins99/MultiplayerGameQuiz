@@ -129,7 +129,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         });
 
         // Host ID
-        this.room.state.listen("hostId", (hostId) => {
+        this.room.state.listen("hostId", (hostId: string) => {
             if (hostId !== this.mySessionId) {
                 this.scene.start('PlayerWaitingRoomScene', { room: this.room, isHost: false });
             }
