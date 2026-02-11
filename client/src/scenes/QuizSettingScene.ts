@@ -325,8 +325,8 @@ export class QuizSettingScene extends Phaser.Scene {
 
             // Navigate to Waiting Room
             this.cleanup();
-            Router.navigate('/waiting');
-            this.scene.start('WaitingRoomScene', { room, isHost: true });
+            Router.navigate('/host/lobby');
+            this.scene.start('HostWaitingRoomScene', { room, isHost: true });
         } catch (e) {
             console.error("Create room error", e);
             alert("Error creating room. Check console.");

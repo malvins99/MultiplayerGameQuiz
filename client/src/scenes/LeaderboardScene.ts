@@ -484,8 +484,8 @@ export class LeaderboardScene extends Phaser.Scene {
 
                         TransitionManager.transitionTo(() => {
                             this.cleanup();
-                            Router.navigate('/waiting');
-                            this.scene.start('WaitingRoomScene', { room: newRoom, isHost: true });
+                            Router.navigate('/host/lobby');
+                            this.scene.start('HostWaitingRoomScene', { room: newRoom, isHost: true });
                         });
                     } catch (e) {
                         console.error("[DEBUG] Restart Failed:", e);

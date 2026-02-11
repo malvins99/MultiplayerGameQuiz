@@ -253,7 +253,6 @@ export class LobbyScene extends Phaser.Scene {
             alert("Error joining room.");
         }
     }
-<<<<<<< HEAD
 
     async createRoom() {
         if (!this.selectedQuiz) return;
@@ -296,6 +295,4 @@ export class LobbyScene extends Phaser.Scene {
             alert("Error creating room. Check console.");
         }
     }
-=======
->>>>>>> 99150af7b23f79aa6a6e15f5c7817e89b98ef515
 }

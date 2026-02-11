@@ -27,11 +27,20 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
-<<<<<<< HEAD
-    scene: [LobbyScene, HostWaitingRoomScene, PlayerWaitingRoomScene, GameScene, UIScene, WaitingResultsScene, LeaderboardScene, HostProgressScene, HostSpectatorScene],
-=======
-    scene: [LoginScene, LobbyScene, SelectQuizScene, QuizSettingScene, WaitingRoomScene, GameScene, UIScene, WaitingResultsScene, LeaderboardScene],
->>>>>>> 99150af7b23f79aa6a6e15f5c7817e89b98ef515
+    scene: [
+        LoginScene,
+        LobbyScene,
+        SelectQuizScene,
+        QuizSettingScene,
+        HostWaitingRoomScene,
+        PlayerWaitingRoomScene,
+        GameScene,
+        UIScene,
+        WaitingResultsScene,
+        LeaderboardScene,
+        HostProgressScene,
+        HostSpectatorScene
+    ],
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH
