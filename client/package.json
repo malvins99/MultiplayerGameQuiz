@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "colyseus.js": "^0.15.0",
     "phaser": "^3.80.0"
   },

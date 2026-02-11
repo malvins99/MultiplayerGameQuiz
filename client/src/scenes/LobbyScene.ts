@@ -1,36 +1,14 @@
 import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
-import { getQuizzes, getCategories, Quiz } from '../data/QuizData';
-import { TransitionManager } from '../utils/TransitionManager'; // Import TransitionManager
+import { TransitionManager } from '../utils/TransitionManager';
+import { authService } from '../services/AuthService';
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
 
-    // Quiz Selection State
-    quizzes: Quiz[] = [];
-    filteredQuizzes: Quiz[] = [];
-    currentPage: number = 1;
-    itemsPerPage: number = 6;
-    favorites: Set<string> = new Set();
-    soundEnabled: boolean = true; // NEW: Sound Toggle logic
-
-    // Filters
-    searchQuery: string = '';
-    selectedCategory: string = '';
-    showFavoritesOnly: boolean = false;
-
-    // Settings State
-    selectedQuiz: Quiz | null = null;
-    settingsDifficulty: string = 'mudah';
-    settingsTimer: number = 300;
-    settingsQuestionCount: number = 5;
-
     // UI Elements
     lobbyUI: HTMLElement | null = null;
-    createRoomUI: HTMLElement | null = null; // Legacy, kept just in case but we use new UI
-    quizSelectionUI: HTMLElement | null = null;
-    quizSettingsUI: HTMLElement | null = null;
 
     constructor() {
         super('LobbyScene');
@@ -40,11 +18,6 @@ export class LobbyScene extends Phaser.Scene {
         this.initializeClient();
         this.initializeUI();
         this.setupEventListeners();
-        this.loadFavorites();
-
-        // Initial data load
-        this.quizzes = getQuizzes();
-        this.applyFilters(); // Load initial grid
 
         // Check routing on load
         window.addEventListener('popstate', () => this.handleRouting());
@@ -80,207 +53,124 @@ export class LobbyScene extends Phaser.Scene {
 
     initializeUI() {
         this.lobbyUI = document.getElementById('lobby-ui');
-        this.createRoomUI = document.getElementById('create-room-ui');
-        this.quizSelectionUI = document.getElementById('quiz-selection-ui');
-        this.quizSettingsUI = document.getElementById('quiz-settings-ui');
 
-        // Populate Categories (Custom & Native Fallback)
-        const categories = getCategories();
-        const catSelect = document.getElementById('quiz-category-select') as HTMLSelectElement; // Native hidden
-        const customMenu = document.getElementById('custom-cat-menu'); // Custom container
-
-        // 1. Populate Native (Hidden)
-        if (catSelect) {
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.innerText = cat;
-                catSelect.appendChild(opt);
-            });
-        }
-
-        // 2. Populate Custom Menu
-        if (customMenu) {
-            // "ALL" Option
-            const allBtn = this.createCustomOption('ALL', '');
-            customMenu.appendChild(allBtn);
-
-            categories.forEach(cat => {
-                const btn = this.createCustomOption(cat, cat);
-                customMenu.appendChild(btn);
-            });
-        }
+        // --- Populate User Profile Widget ---
+        this.populateUserProfile();
     }
 
-    createCustomOption(label: string, value: string): HTMLElement {
-        const btn = document.createElement('button');
-        btn.className = "w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
-        btn.innerHTML = `<span>${label}</span>`;
-        btn.dataset.value = value;
+    populateUserProfile() {
+        const profile = authService.getStoredProfile();
+        const nameEl = document.getElementById('lobby-user-name');
+        const avatarEl = document.getElementById('lobby-user-avatar') as HTMLImageElement;
+        const avatarFallback = document.getElementById('lobby-user-avatar-fallback');
 
-        btn.onclick = () => {
-            this.handleCategoryChange(value, label);
-        };
-        return btn;
-    }
+        if (profile) {
+            // Set username
+            if (nameEl) {
+                nameEl.innerText = profile.nickname || profile.fullname || profile.username || profile.email || 'Guest';
+            }
 
-    handleCategoryChange(value: string, label: string) {
-        // Update Logic State
-        this.selectedCategory = value;
-        this.currentPage = 1;
+            // Set avatar
+            if (avatarEl && profile.avatar_url) {
+                avatarEl.src = profile.avatar_url;
+                avatarEl.classList.remove('hidden');
+                if (avatarFallback) avatarFallback.classList.add('hidden');
 
-        // Update UI Text
-        const selectedText = document.getElementById('custom-cat-selected');
-        if (selectedText) selectedText.innerText = label;
-
-        // Close Menu
-        this.toggleCustomDropdown(false);
-
-        // Update Hidden Native Select (just in case)
-        const nativeSelect = document.getElementById('quiz-category-select') as HTMLSelectElement;
-        if (nativeSelect) nativeSelect.value = value;
-
-        // Visual Feedback on Active Item
-        const menu = document.getElementById('custom-cat-menu');
-        if (menu) {
-            const btns = menu.querySelectorAll('button');
-            btns.forEach(b => {
-                b.classList.remove('text-primary', 'bg-white/5');
-                b.classList.add('text-white/70');
-                if (b.dataset.value === value) {
-                    b.classList.add('text-primary', 'bg-white/5');
-                    b.classList.remove('text-white/70');
-                }
-            });
+                avatarEl.onerror = () => {
+                    avatarEl.classList.add('hidden');
+                    if (avatarFallback) avatarFallback.classList.remove('hidden');
+                };
+            }
         }
-
-        this.applyFilters();
     }
-
 
     setupEventListeners() {
-        // --- CUSTOM DROPDOWN TOGGLE (Generic) ---
-        this.setupDropdown('custom-cat-trigger', 'custom-cat-menu', 'custom-cat-arrow', (val, label) => {
-            this.handleCategoryChange(val, label);
-        });
+        // --- LOBBY MENU ---
+        const lobbyMenuBtn = document.getElementById('lobby-menu-btn');
+        const lobbyMenuDropdown = document.getElementById('lobby-menu-dropdown');
+        const lobbyLogoutBtn = document.getElementById('lobby-menu-logout-btn');
 
-        // --- QUIZ SETTINGS DROPDOWNS ---
-
-        // Timer Dropdown
-        this.setupDropdown('settings-timer-trigger', 'settings-timer-menu', 'settings-timer-arrow');
-        const timerOptions = document.querySelectorAll('.timer-opt');
-        timerOptions.forEach(opt => {
-            opt.addEventListener('click', (e) => {
-                const target = e.currentTarget as HTMLElement;
-                const val = parseInt(target.dataset.value || '300');
-                const label = target.dataset.label || '5 Menit';
-
-                this.settingsTimer = val;
-
-                // Update UI
-                const display = document.getElementById('settings-timer-selected');
-                if (display) display.innerText = label;
-
-                // Highlight active
-                timerOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
-
-                // Close menu
-                this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
-            });
-        });
-
-        // Question Count Dropdown
-        this.setupDropdown('settings-question-trigger', 'settings-question-menu', 'settings-question-arrow');
-        const questionOptions = document.querySelectorAll('.question-opt');
-        questionOptions.forEach(opt => {
-            opt.addEventListener('click', (e) => {
-                const target = e.currentTarget as HTMLElement;
-                const val = parseInt(target.dataset.value || '5');
-                const label = target.dataset.label || '5 Soal';
-
-                this.settingsQuestionCount = val;
-
-                // Update UI
-                const display = document.getElementById('settings-question-selected');
-                if (display) display.innerText = label;
-
-                // Highlight active
-                questionOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
-
-                // Close menu
-                this.closeDropdown('settings-question-menu', 'settings-question-arrow');
-            });
-        });
-
-        // Difficulty Dropdown
-        this.setupDropdown('settings-difficulty-trigger', 'settings-difficulty-menu', 'settings-difficulty-arrow');
-        const diffOptions = document.querySelectorAll('.diff-opt');
-        diffOptions.forEach(opt => {
-            opt.addEventListener('click', (e) => {
-                const target = e.currentTarget as HTMLElement;
-                const val = target.dataset.value || 'mudah';
-                const label = target.dataset.label || 'Mudah';
-
-                this.settingsDifficulty = val;
-
-                // Update UI
-                const display = document.getElementById('settings-difficulty-selected');
-                if (display) display.innerText = label;
-
-                // Highlight active
-                diffOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
-
-                // Close menu
-                this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
-            });
-        });
-
-        // Sound Toggle
-        const soundToggle = document.getElementById('sound-toggle-btn');
-        const soundKnob = document.getElementById('sound-toggle-knob');
-        if (soundToggle && soundKnob) {
-            soundToggle.onclick = () => {
-                this.soundEnabled = !this.soundEnabled;
-
-                // Update visuals
-                if (this.soundEnabled) {
-                    soundToggle.classList.remove('bg-white/10');
-                    soundToggle.classList.add('bg-[#34c759]'); // iOS Green
-                    soundKnob.classList.add('translate-x-6');
+        if (lobbyMenuBtn && lobbyMenuDropdown) {
+            lobbyMenuBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isHidden = lobbyMenuDropdown.classList.contains('hidden');
+                if (isHidden) {
+                    lobbyMenuDropdown.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        lobbyMenuDropdown.classList.remove('scale-95', 'opacity-0');
+                        lobbyMenuDropdown.classList.add('scale-100', 'opacity-100');
+                    });
                 } else {
-                    soundToggle.classList.remove('bg-[#34c759]');
-                    soundToggle.classList.add('bg-white/10');
-                    soundKnob.classList.remove('translate-x-6');
+                    lobbyMenuDropdown.classList.remove('scale-100', 'opacity-100');
+                    lobbyMenuDropdown.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => lobbyMenuDropdown.classList.add('hidden'), 200);
                 }
-
-                // Here you would also mute/unmute global sound manager if you have one
-                console.log("Sound Enabled:", this.soundEnabled);
             };
-        }
 
-        // Click Outside to Close All Dropdowns
-        document.addEventListener('click', (e) => {
-            const dropdowns = [
-                { menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' },
-                { menu: 'settings-timer-menu', trigger: 'settings-timer-trigger', arrow: 'settings-timer-arrow' },
-                { menu: 'settings-question-menu', trigger: 'settings-question-trigger', arrow: 'settings-question-arrow' },
-                { menu: 'settings-difficulty-menu', trigger: 'settings-difficulty-trigger', arrow: 'settings-difficulty-arrow' }
-            ];
-
-            dropdowns.forEach(d => {
-                const menu = document.getElementById(d.menu);
-                const trigger = document.getElementById(d.trigger);
-                if (menu && !menu.classList.contains('hidden')) {
-                    if (!menu.contains(e.target as Node) && !trigger?.contains(e.target as Node)) {
-                        this.closeDropdown(d.menu, d.arrow);
+            // Close menu on outside click
+            document.addEventListener('click', (e) => {
+                if (!lobbyMenuDropdown.classList.contains('hidden')) {
+                    if (!lobbyMenuDropdown.contains(e.target as Node) && !lobbyMenuBtn.contains(e.target as Node)) {
+                        lobbyMenuDropdown.classList.remove('scale-100', 'opacity-100');
+                        lobbyMenuDropdown.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => lobbyMenuDropdown.classList.add('hidden'), 200);
                     }
                 }
             });
-        });
+        }
 
+        // --- LOGOUT CONFIRMATION MODAL ---
+        const logoutModal = document.getElementById('logout-modal');
+        const logoutModalBackdrop = document.getElementById('logout-modal-backdrop');
+        const logoutModalName = document.getElementById('logout-modal-name');
+        const logoutCancelBtn = document.getElementById('logout-cancel-btn');
+        const logoutConfirmBtn = document.getElementById('logout-confirm-btn');
+
+        const showLogoutModal = () => {
+            // Tutup dropdown menu dulu
+            if (lobbyMenuDropdown) {
+                lobbyMenuDropdown.classList.remove('scale-100', 'opacity-100');
+                lobbyMenuDropdown.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => lobbyMenuDropdown.classList.add('hidden'), 200);
+            }
+
+            // Set nama user di modal
+            const profile = authService.getStoredProfile();
+            if (logoutModalName && profile) {
+                logoutModalName.innerText = profile.nickname || profile.fullname || profile.username || profile.email || 'User';
+            }
+
+            // Tampilkan modal
+            if (logoutModal) logoutModal.classList.remove('hidden');
+        };
+
+        const hideLogoutModal = () => {
+            if (logoutModal) logoutModal.classList.add('hidden');
+        };
+
+        if (lobbyLogoutBtn) {
+            lobbyLogoutBtn.onclick = () => showLogoutModal();
+        }
+
+        if (logoutCancelBtn) {
+            logoutCancelBtn.onclick = () => hideLogoutModal();
+        }
+
+        if (logoutModalBackdrop) {
+            logoutModalBackdrop.onclick = () => hideLogoutModal();
+        }
+
+        if (logoutConfirmBtn) {
+            logoutConfirmBtn.onclick = async () => {
+                hideLogoutModal();
+                await authService.signOut();
+                TransitionManager.transitionTo(() => {
+                    this.toggleUI('');
+                    Router.navigate('/login');
+                    this.scene.start('LoginScene');
+                });
+            };
+        }
 
         // --- LOBBY UI ---
         const createRoomBtn = document.getElementById('create-room-btn');
@@ -290,8 +180,8 @@ export class LobbyScene extends Phaser.Scene {
         if (createRoomBtn) {
             createRoomBtn.onclick = () => {
                 TransitionManager.transitionTo(() => {
-                    Router.navigate('/create');
-                    this.showQuizSelection();
+                    this.toggleUI('');
+                    this.scene.start('SelectQuizScene', { client: this.client });
                 });
             };
         }
@@ -301,276 +191,6 @@ export class LobbyScene extends Phaser.Scene {
                 this.handleJoinRoom(codeInput?.value);
             };
         }
-
-        // --- QUIZ SELECTION UI ---
-        const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
-        const searchBtn = document.getElementById('search-trigger-btn');
-        const favBtn = document.getElementById('quiz-filter-fav-btn');
-        const prevBtn = document.getElementById('prev-page-btn');
-        const nextBtn = document.getElementById('next-page-btn');
-        const quizBackBtn = document.getElementById('quiz-back-btn');
-
-        if (searchInput) {
-            // Remove 'input' event (Real-time). Use 'keydown' for Enter.
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    this.searchQuery = (e.target as HTMLInputElement).value;
-                    this.currentPage = 1;
-                    this.applyFilters();
-                }
-            });
-        }
-
-        if (searchBtn) {
-            searchBtn.onclick = () => {
-                const val = searchInput ? searchInput.value : '';
-                this.searchQuery = val;
-                this.currentPage = 1;
-                this.applyFilters();
-            }
-        }
-
-        if (favBtn) {
-            favBtn.onclick = () => {
-                this.showFavoritesOnly = !this.showFavoritesOnly;
-                favBtn.querySelector('span')?.classList.toggle('text-red-500', this.showFavoritesOnly);
-                this.currentPage = 1;
-                this.applyFilters();
-            };
-        }
-
-        if (prevBtn) {
-            prevBtn.onclick = () => {
-                if (this.currentPage > 1) {
-                    this.currentPage--;
-                    this.renderQuizGrid();
-                }
-            };
-        }
-
-        if (nextBtn) {
-            nextBtn.onclick = () => {
-                const totalPages = Math.ceil(this.filteredQuizzes.length / this.itemsPerPage);
-                if (this.currentPage < totalPages) {
-                    this.currentPage++;
-                    this.renderQuizGrid();
-                }
-            };
-        }
-
-        if (quizBackBtn) {
-            quizBackBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    Router.navigate('/');
-                    this.showLobby();
-                });
-            };
-        }
-
-        // --- QUIZ SETTINGS UI ---
-        const settingsBackBtn = document.getElementById('settings-back-btn');
-        const settingsContinueBtn = document.getElementById('settings-continue-btn');
-        const diffBtns = document.querySelectorAll('.settings-diff-btn');
-
-        if (settingsBackBtn) {
-            settingsBackBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.showQuizSelection(); // Go back to selection, don't change URL
-                });
-            };
-        }
-
-        // Remove Old Difficulty Button Listeners if any (replaced by dropdown logic above)
-
-
-        if (settingsContinueBtn) {
-            settingsContinueBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.createRoom();
-                });
-            };
-        }
-    }
-
-    // Helper for Dropdowns
-    setupDropdown(triggerId: string, menuId: string, arrowId?: string, onSelect?: (val: string, label: string) => void) {
-        const trigger = document.getElementById(triggerId);
-        if (trigger) {
-            trigger.onclick = (e) => {
-                e.stopPropagation();
-
-                const menu = document.getElementById(menuId);
-                const arrow = arrowId ? document.getElementById(arrowId) : null;
-                const isHidden = menu?.classList.contains('hidden');
-
-                // Close others? For now, we rely on click-outside to close others or just toggle this one.
-                this.toggleDropdownElement(menuId, arrowId, !!isHidden);
-            };
-        }
-    }
-
-    toggleDropdownElement(menuId: string, arrowId: string | undefined | null, show: boolean) {
-        const menu = document.getElementById(menuId);
-        const arrow = arrowId ? document.getElementById(arrowId) : null;
-
-        if (!menu) return;
-
-        if (show) {
-            menu.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                menu.classList.remove('scale-95', 'opacity-0');
-                menu.classList.add('scale-100', 'opacity-100');
-            });
-            if (arrow) arrow.classList.add('rotate-180');
-        } else {
-            menu.classList.remove('scale-100', 'opacity-100');
-            menu.classList.add('scale-95', 'opacity-0');
-            if (arrow) arrow.classList.remove('rotate-180');
-            setTimeout(() => {
-                menu.classList.add('hidden');
-            }, 200);
-        }
-    }
-
-    closeDropdown(menuId: string, arrowId?: string) {
-        this.toggleDropdownElement(menuId, arrowId, false);
-    }
-
-    // OLD METHOD, replaced by toggleDropdownElement but kept for existing calls if any
-    toggleCustomDropdown(show: boolean) {
-        this.toggleDropdownElement('custom-cat-menu', 'custom-cat-arrow', show);
-    }
-
-    // --- DATA & LOGIC ---
-
-    loadFavorites() {
-        const stored = localStorage.getItem('quiz_favorites');
-        if (stored) {
-            this.favorites = new Set(JSON.parse(stored));
-        }
-    }
-
-    toggleFavorite(quizId: string) {
-        if (this.favorites.has(quizId)) {
-            this.favorites.delete(quizId);
-        } else {
-            this.favorites.add(quizId);
-        }
-        localStorage.setItem('quiz_favorites', JSON.stringify(Array.from(this.favorites)));
-
-        // Re-render to update icon state
-        this.renderQuizGrid();
-    }
-
-    applyFilters() {
-        this.filteredQuizzes = this.quizzes.filter(q => {
-            const matchesSearch = q.title.toLowerCase().includes(this.searchQuery.toLowerCase());
-            const matchesCategory = this.selectedCategory ? q.category === this.selectedCategory : true;
-            const matchesFav = this.showFavoritesOnly ? this.favorites.has(q.id) : true;
-            return matchesSearch && matchesCategory && matchesFav;
-        });
-
-        this.renderQuizGrid();
-    }
-
-    renderQuizGrid() {
-        const grid = document.getElementById('quiz-grid');
-        const pageNumbers = document.getElementById('pagination-numbers');
-        const prevBtn = document.getElementById('prev-page-btn') as HTMLButtonElement;
-        const nextBtn = document.getElementById('next-page-btn') as HTMLButtonElement;
-
-        if (!grid) return;
-
-        grid.innerHTML = '';
-
-        // Pagination Logic
-        const totalPages = Math.ceil(this.filteredQuizzes.length / this.itemsPerPage);
-        if (this.currentPage > totalPages) this.currentPage = Math.max(1, totalPages);
-
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        const end = start + this.itemsPerPage;
-        const pageItems = this.filteredQuizzes.slice(start, end);
-
-        // Render Cards
-        pageItems.forEach(quiz => {
-            const isFav = this.favorites.has(quiz.id);
-            const card = document.createElement('div');
-
-            // Determine styling based on category - UNIFIED GREEN THEME for badge text/border, mostly neutral for sleek look
-            // User requested: "jagan gunakan style seperti itu... gunakan saja font pixel... sesuaikan warna"
-            // We'll use the Primary Green (#00ff55) as the accent for everything to look professional.
-            let badgeColor = 'bg-primary/10 text-primary border border-primary/20';
-
-            // "Maju ke depan" (Scale Up) - REMOVED per user request (Round 3) "hanya hover warna saja"
-            // Simple border color change, no layout shift.
-            // User requested: "ubah hover nya jagan transparan melain kan ubah saja menjadi abu abu"
-            // Using bg-[#2a2a30] (lighter than surface-dark #1a1a20) for hover
-            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-colors duration-200 cursor-pointer relative overflow-hidden";
-
-            card.innerHTML = `
-                <!-- Background Gradient (Subtle Green on Hover) logic removed or kept subtle -->
-                <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                <div class="relative z-10 flex justify-between items-start mb-6">
-                    <!-- Pixel Font Badge - User Req: "hanya badge materi dan judul materi dan icon fav" -->
-                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none">${quiz.category}</span>
-                    
-                    <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current group-hover:text-red-400'} transition-colors">favorite</span>
-                    </button>
-                </div>
-                
-                <!-- Font Title: Mibecraft Pisel (Press Start 2P) -->
-                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Press_Start_2P'] tracking-tight text-[12px]">${quiz.title}</h3>
-                
-                <!-- REMOVED: 10 Qs and Arrow per user request -->
-                <div class="h-4"></div> 
-            `;
-
-            // Card Click -> Settings
-            card.onclick = (e) => {
-                if (!(e.target as HTMLElement).closest('.fav-btn')) {
-                    TransitionManager.transitionTo(() => {
-                        this.openSettings(quiz);
-                    });
-                }
-            };
-
-            // Favorite Click
-            const favBtn = card.querySelector('.fav-btn');
-            favBtn?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleFavorite(quiz.id);
-            });
-
-            grid.appendChild(card);
-        });
-
-        // Update Pagination UI
-        if (pageNumbers) {
-            pageNumbers.innerHTML = `<span class="px-4 py-2 bg-primary text-black font-bold rounded-lg text-sm">${this.currentPage} / ${totalPages || 1}</span>`;
-        }
-
-        if (prevBtn) prevBtn.disabled = this.currentPage === 1;
-        if (nextBtn) nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
-    }
-
-    openSettings(quiz: Quiz) {
-        this.selectedQuiz = quiz;
-
-        const titleEl = document.getElementById('settings-quiz-title');
-        // REMOVED: Description element update (User requested removal)
-
-        if (titleEl) titleEl.innerText = quiz.title;
-
-        // Reset selections if needed, current setting is kept.
-        // Update Difficulty Dropdown UI to match current internal state
-        const diffDisplay = document.getElementById('settings-difficulty-selected');
-        if (diffDisplay) {
-            diffDisplay.innerText = this.settingsDifficulty.charAt(0).toUpperCase() + this.settingsDifficulty.slice(1);
-        }
-
-        this.showSettings();
     }
 
     // --- NAVIGATION ---
@@ -580,8 +200,6 @@ export class LobbyScene extends Phaser.Scene {
 
         if (path === '/' || path === '') {
             this.showLobby();
-        } else if (path === '/create') {
-            this.showQuizSelection();
         } else {
             Router.replace('/');
             this.showLobby();
@@ -592,17 +210,11 @@ export class LobbyScene extends Phaser.Scene {
         this.toggleUI('lobby-ui');
     }
 
-    showQuizSelection() {
-        this.toggleUI('quiz-selection-ui');
-        this.renderQuizGrid(); // Ensure grid is rendered
-    }
-
-    showSettings() {
-        this.toggleUI('quiz-settings-ui');
-    }
-
     toggleUI(id: string) {
-        [this.lobbyUI, this.quizSelectionUI, this.quizSettingsUI, this.createRoomUI].forEach(el => {
+        // Hide all known UIs
+        const allUIs = ['lobby-ui', 'create-room-ui', 'quiz-selection-ui', 'quiz-settings-ui'];
+        allUIs.forEach(uiId => {
+            const el = document.getElementById(uiId);
             if (el) el.classList.add('hidden');
         });
         const target = document.getElementById(id);
@@ -631,11 +243,6 @@ export class LobbyScene extends Phaser.Scene {
 
             this.lobbyUI?.classList.add('hidden');
 
-            // Wrap scene start in transition (if not already managed by onclick wrapper)
-            // But since handleJoinRoom is async called from onclick...
-            // We should wrap the specific UI switch part.
-            // Let's modify the onclick handler for joinBtn instead of here to be consistent.
-
             TransitionManager.transitionTo(() => {
                 this.scene.start('WaitingRoomScene', { room, isHost: false });
             });
@@ -643,48 +250,6 @@ export class LobbyScene extends Phaser.Scene {
         } catch (e) {
             console.error("Join room error", e);
             alert("Error joining room.");
-        }
-    }
-
-    async createRoom() {
-        if (!this.selectedQuiz) return;
-
-        // MAP CONFIGURATION
-        let mapFile = 'map_baru1_tetap.tmj'; // Default Mudah
-        if (this.settingsDifficulty === 'sedang') mapFile = 'map_baru3.tmj';
-        if (this.settingsDifficulty === 'sulit') mapFile = 'map_baru3.tmj';
-
-        // ENEMY COUNT CALCULATION
-        // 5 soal -> 10 enemies, 10 soal -> 20 enemies
-        const enemyCount = this.settingsQuestionCount === 5 ? 10 : 20;
-
-        const options = {
-            difficulty: this.settingsDifficulty,
-            subject: this.selectedQuiz.category.toLowerCase(),
-            quizId: this.selectedQuiz.id,
-            quizTitle: this.selectedQuiz.title,
-            map: mapFile,
-            questionCount: this.settingsQuestionCount,
-            enemyCount: enemyCount,
-            timer: this.settingsTimer
-        };
-
-        try {
-            const room = await this.client.joinOrCreate("game_room", options);
-            console.log("Room created!", room);
-
-            // Save options for Restart functionality
-            this.registry.set('lastGameOptions', options);
-
-            // Hide all overlays
-            this.toggleUI(''); // Hides everything since '' matches nothing
-
-            // Navigate to Waiting Room
-            Router.navigate('/waiting');
-            this.scene.start('WaitingRoomScene', { room, isHost: true });
-        } catch (e) {
-            console.error("Create room error", e);
-            alert("Error creating room. Check console.");
         }
     }
 }
