@@ -101,6 +101,7 @@ export class GameScene extends Phaser.Scene {
         this.load.image('selectbox_bl', '/assets/selectbox_bl.png');
         this.load.image('selectbox_br', '/assets/selectbox_br.png');
         this.load.image('cancel', '/assets/cancel.png');
+        this.load.image('expression_alerted', '/assets/expression_alerted.png');
     }
 
     create() {
@@ -520,11 +521,21 @@ export class GameScene extends Phaser.Scene {
                 );
 
                 if (dist < 50) {
-                    this.triggerQuiz(enemy);
+                    // Check if not already in a quiz or cooling down
+                    if (!this.activeQuestionId && !this.cooldownEnemies.has(index)) {
+                        this.triggerQuiz(enemy);
+                    }
                 } else {
                     // Move to enemy
                     this.clickToMove.moveTo(enemySprite.x, enemySprite.y, () => {
-                        this.triggerQuiz(enemy);
+                        // Verify distance again after moving
+                        const newDist = Phaser.Math.Distance.Between(
+                            this.currentPlayer.x, this.currentPlayer.y,
+                            enemySprite.x, enemySprite.y
+                        );
+                        if (newDist < 60 && !this.activeQuestionId && !this.cooldownEnemies.has(index)) {
+                            this.triggerQuiz(enemy);
+                        }
                     });
                 }
             });
@@ -566,6 +577,26 @@ export class GameScene extends Phaser.Scene {
                             enemySprite.play(idleKey, true);
                         }
                     }
+
+                    // --- Alert Animation ---
+                    if (enemy.isFleeing && !enemySprite.getData('wasFleeing')) {
+                        // Enemy just started fleeing - play alert
+                        const alert = this.add.image(enemy.x, enemy.y - 40, 'expression_alerted');
+                        alert.setDepth(100);
+                        alert.setScale(1.5); // Increased scale
+
+                        this.tweens.add({
+                            targets: alert,
+                            y: enemy.y - 70, // Move up
+                            alpha: 0,        // Fade out
+                            duration: 1000,
+                            ease: 'Power1',
+                            onComplete: () => {
+                                alert.destroy();
+                            }
+                        });
+                    }
+                    enemySprite.setData('wasFleeing', enemy.isFleeing);
 
                     // --- Trail Dots Rendering ---
                     // Clear existing trail
@@ -672,36 +703,60 @@ export class GameScene extends Phaser.Scene {
     }
 
     createPlayerIndicator() {
-        // Wait for player to be created, might need slight delay
-        this.time.addEvent({
-            delay: 500,
-            callback: () => {
-                if (!this.currentPlayer) return;
+        if (this.currentPlayer) {
+            // Update camera to follow player
+            this.cameras.main.startFollow(this.currentPlayer);
 
-                // Create Container following player
-                this.indicatorContainer = this.add.container(
-                    this.currentPlayer.x,
-                    this.currentPlayer.y - 15
-                );
-                this.indicatorContainer.setDepth(200);
+            // Add collision/overlap with enemies for manual triggering
+            this.physics.add.overlap(
+                this.currentPlayer,
+                Object.values(this.enemyEntities).filter((e: any) => e !== undefined) as Phaser.GameObjects.Sprite[],
+                (player, enemySprite: any) => {
+                    // Find the enemy data object
+                    // We need to find which enemy index this sprite corresponds to
+                    let enemyId: string | null = null;
+                    Object.entries(this.enemyEntities).forEach(([id, sprite]) => {
+                        if (sprite === enemySprite) enemyId = id;
+                    });
 
-                // Add Indicator Image inside
-                const indicator = this.add.image(0, 0, 'indicator');
-                indicator.setOrigin(0.5, 1);
-                this.indicatorContainer.add(indicator);
+                    if (enemyId && !this.cooldownEnemies.has(enemyId) && !this.activeQuestionId) {
+                        // Get the enemy state data from the map? 
+                        // Actually we need the room state enemy data
+                        const enemyState = this.room.state.enemies.get(enemyId);
+                        if (enemyState) {
+                            this.triggerQuiz(enemyState);
+                            // Stop movement to prevent sliding through
+                            (this.currentPlayer.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+                            if (this.clickToMove) this.clickToMove.cancelMovement();
+                        }
+                    }
+                }
+            );
+        }
 
-                // Floating Animation
-                this.tweens.add({
-                    targets: indicator,
-                    y: -4,
-                    duration: 600,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
+        // Create Container following player
+        this.indicatorContainer = this.add.container(
+            this.currentPlayer.x,
+            this.currentPlayer.y - 15
+        );
+        this.indicatorContainer.setDepth(200);
+
+        // Add Indicator Image inside
+        const indicator = this.add.image(0, 0, 'indicator');
+        indicator.setOrigin(0.5, 1);
+        this.indicatorContainer.add(indicator);
+
+        // Floating Animation
+        this.tweens.add({
+            targets: indicator,
+            y: -4,
+            duration: 600,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
         });
     }
+
 
     createNameTag(sessionId: string, name: string, x: number, y: number) {
         // Create container for name tag (Above pointer)
@@ -776,6 +831,61 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    triggerQuiz(enemy: any) {
+        // Find question data
+        const allQuestions = Object.values(QUESTIONS).flat();
+        let currentQ = allQuestions.find((q: any) => q.id === enemy.questionId);
+
+        // Fallback for testing if ID not found or 0
+        if (!currentQ && allQuestions.length > 0) {
+            currentQ = allQuestions[0];
+        }
+
+        if (currentQ) {
+            // Map new dummy data structure to expected format
+            const questionData = {
+                id: currentQ.id,
+                question: currentQ.pertanyaan,
+                image: currentQ.image,
+                options: [
+                    currentQ.jawaban_a,
+                    currentQ.jawaban_b,
+                    currentQ.jawaban_c,
+                    currentQ.jawaban_d
+                ],
+                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban)
+            };
+
+            console.log(`Triggering quiz for question ID: ${questionData.id}`);
+            this.activeQuestionId = questionData.id;
+
+            // Find enemy index/key from state
+            let foundKey = null;
+            this.room.state.enemies.forEach((val: any, key: string) => {
+                if (val === enemy) foundKey = key;
+            });
+            this.activeEnemyId = foundKey;
+
+            this.isChestPopupVisible = false;
+            this.activeChestIndex = null;
+
+            if (this.quizPopup) {
+                this.quizPopup.show(questionData, (enemy.type || 'SKELETON').toUpperCase());
+
+                // Notify Server to Halt Enemy
+                if (this.activeEnemyId) {
+                    this.room.send("engageEnemy", { enemyIndex: this.activeEnemyId });
+                }
+
+                // Start Combat Camera
+                const enemySprite = this.enemyEntities[this.activeEnemyId];
+                if (enemySprite) {
+                    this.startCombatCamera(enemySprite.x, enemySprite.y);
+                }
+            }
+        }
+    }
+
     handleAnswer(answerIndex: number, btnElement?: HTMLElement) {
         console.log(`handleAnswer called with index: ${answerIndex}, activeQuestionId: ${this.activeQuestionId}`);
 
@@ -786,13 +896,16 @@ export class GameScene extends Phaser.Scene {
             this.cooldownEnemies.add(this.activeEnemyId);
         }
 
-        // Use QUESTIONS array directly
-        const questions = QUESTIONS;
-        const currentQ = questions.find((q: any) => q.id === this.activeQuestionId);
+        // Use QUESTIONS object (keyed by subject)
+        const allQuestions = Object.values(QUESTIONS).flat();
+        const currentQ = allQuestions.find((q: any) => q.id === this.activeQuestionId);
 
         if (currentQ) {
-            const isCorrect = currentQ.correctAnswer === answerIndex;
-            console.log(`Checking answer. Question: ${currentQ.question}, CorrectIdx: ${currentQ.correctAnswer}, UserIdx: ${answerIndex}, isCorrect: ${isCorrect}`);
+            // Determine correct index from dummy data
+            const correctIdx = ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban);
+            const isCorrect = correctIdx === answerIndex;
+
+            console.log(`Checking answer. CorrectIdx: ${correctIdx}, UserIdx: ${answerIndex}, isCorrect: ${isCorrect}`);
 
             // Show Feedback Popup via DOM
             if (btnElement && this.quizPopup) {
@@ -833,6 +946,8 @@ export class GameScene extends Phaser.Scene {
             this.resetCamera();
         });
     }
+
+
 
     handleChestInteraction(chestIndex: number) {
         const chest = this.room.state.chests[chestIndex];

@@ -136,5 +136,18 @@ export const TransitionManager = {
             overlay.classList.remove('overlay-active');
             overlay.classList.remove('iris-close');
         }
+    },
+
+    /**
+     * Specialized scene transition for Phaser scenes
+     */
+    sceneTo(scene: Phaser.Scene, key: string, data?: any) {
+        this.close(() => {
+            scene.scene.start(key, data);
+            // Re-open after switch
+            setTimeout(() => {
+                this.open();
+            }, 600);
+        });
     }
 };

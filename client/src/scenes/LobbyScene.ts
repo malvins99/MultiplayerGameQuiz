@@ -637,7 +637,8 @@ export class LobbyScene extends Phaser.Scene {
             // Let's modify the onclick handler for joinBtn instead of here to be consistent.
 
             TransitionManager.transitionTo(() => {
-                this.scene.start('WaitingRoomScene', { room, isHost: false });
+                Router.navigate('/player/lobby');
+                this.scene.start('PlayerWaitingRoomScene', { room, isHost: false });
             });
 
         } catch (e) {
@@ -680,8 +681,8 @@ export class LobbyScene extends Phaser.Scene {
             this.toggleUI(''); // Hides everything since '' matches nothing
 
             // Navigate to Waiting Room
-            Router.navigate('/waiting');
-            this.scene.start('WaitingRoomScene', { room, isHost: true });
+            Router.navigate('/host/lobby');
+            this.scene.start('HostWaitingRoomScene', { room, isHost: true });
         } catch (e) {
             console.error("Create room error", e);
             alert("Error creating room. Check console.");

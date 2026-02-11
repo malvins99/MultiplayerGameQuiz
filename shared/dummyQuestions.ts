@@ -7,9 +7,11 @@ export const SUBJECTS = [
     "geografi"
 ];
 
+// Story-based questions containing optional images
 export interface Question {
     id: number;
     pertanyaan: string;
+    image?: string; // Optional image URL
     jawaban_a: string;
     jawaban_b: string;
     jawaban_c: string;
@@ -21,283 +23,77 @@ export const QUESTIONS: Record<string, Question[]> = {
     matematika: [
         {
             id: 1,
-            pertanyaan: "Berapa hasil dari 7 × 8?",
-            jawaban_a: "54",
-            jawaban_b: "56",
-            jawaban_c: "58",
-            jawaban_d: "60",
+            pertanyaan: "Pak Budi memiliki kebun apel seluas 2 hektar. Setiap hektar menghasilkan 1.500 apel. Jika ia menjual 500 apel ke pasar dan memberikan 200 apel ke panti asuhan, berapa sisa apel Pak Budi sekarang?",
+            image: "/assets/ui/apple_basket.png", // Dummy placeholder
+            jawaban_a: "2200",
+            jawaban_b: "2300",
+            jawaban_c: "2400",
+            jawaban_d: "2500",
             kunci_jawaban: "b"
         },
         {
             id: 2,
-            pertanyaan: "Jika x + 5 = 12, berapakah nilai x?",
-            jawaban_a: "6",
-            jawaban_b: "7",
-            jawaban_c: "8",
-            jawaban_d: "5",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 3,
-            pertanyaan: "Berapa sisi yang dimiliki segi enam?",
-            jawaban_a: "5",
-            jawaban_b: "6",
-            jawaban_c: "7",
-            jawaban_d: "8",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 4,
-            pertanyaan: "15% dari 200 adalah...",
-            jawaban_a: "20",
-            jawaban_b: "25",
-            jawaban_c: "30",
-            jawaban_d: "35",
-            kunci_jawaban: "c"
-        },
-        {
-            id: 5,
-            pertanyaan: "Akar kuadrat dari 144 adalah...",
-            jawaban_a: "10",
-            jawaban_b: "11",
-            jawaban_c: "12",
-            jawaban_d: "13",
-            kunci_jawaban: "c"
-        }
-    ],
-    biologi: [
-        {
-            id: 1,
-            pertanyaan: "Organ yang berfungsi memompa darah adalah...",
-            jawaban_a: "Paru-paru",
-            jawaban_b: "Jantung",
-            jawaban_c: "Ginjal",
-            jawaban_d: "Hati",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 2,
-            pertanyaan: "Bagian sel yang berfungsi sebagai pengatur kegiatan sel adalah...",
-            jawaban_a: "Sitoplasma",
-            jawaban_b: "Inti sel",
-            jawaban_c: "Membran sel",
-            jawaban_d: "Ribosom",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 3,
-            pertanyaan: "Hewan pemakan daging disebut...",
-            jawaban_a: "Herbivora",
-            jawaban_b: "Karnivora",
-            jawaban_c: "Omnivora",
-            jawaban_d: "Insektivora",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 4,
-            pertanyaan: "Proses pembuatan makanan pada tumbuhan disebut...",
-            jawaban_a: "Respirasi",
-            jawaban_b: "Fotosintesis",
-            jawaban_c: "Transpirasi",
-            jawaban_d: "Ekskresi",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 5,
-            pertanyaan: "Tulang yang melindungi otak adalah...",
-            jawaban_a: "Tulang rusuk",
-            jawaban_b: "Tulang tengkorak",
-            jawaban_c: "Tulang belakang",
-            jawaban_d: "Tulang panggul",
-            kunci_jawaban: "b"
-        }
-    ],
-    sejarah: [
-        {
-            id: 1,
-            pertanyaan: "Proklamasi kemerdekaan Indonesia dibacakan pada tanggal...",
-            jawaban_a: "17 Agustus 1945",
-            jawaban_b: "18 Agustus 1945",
-            jawaban_c: "17 Agustus 1944",
-            jawaban_d: "16 Agustus 1945",
-            kunci_jawaban: "a"
-        },
-        {
-            id: 2,
-            pertanyaan: "Presiden pertama Indonesia adalah...",
-            jawaban_a: "Soeharto",
-            jawaban_b: "B.J. Habibie",
-            jawaban_c: "Ir. Soekarno",
-            jawaban_d: "Megawati",
-            kunci_jawaban: "c"
-        },
-        {
-            id: 3,
-            pertanyaan: "Kerajaan Hindu tertua di Indonesia adalah...",
-            jawaban_a: "Majapahit",
-            jawaban_b: "Kutai",
-            jawaban_c: "Tarumanegara",
-            jawaban_d: "Sriwijaya",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 4,
-            pertanyaan: "Sumpah Pemuda diikrarkan pada tanggal...",
-            jawaban_a: "28 Oktober 1928",
-            jawaban_b: "20 Mei 1908",
-            jawaban_c: "1 Juni 1945",
-            jawaban_d: "10 November 1945",
-            kunci_jawaban: "a"
-        },
-        {
-            id: 5,
-            pertanyaan: "Gedung tempat perumusan naskah proklamasi adalah rumah laksamana...",
-            jawaban_a: "Maeda",
-            jawaban_b: "Kalbuadi",
-            jawaban_c: "Chou",
-            jawaban_d: "Takeshi",
-            kunci_jawaban: "a"
-        }
-    ],
-    fisika: [
-        {
-            id: 1,
-            pertanyaan: "Satuan SI untuk gaya adalah...",
-            jawaban_a: "Joule",
-            jawaban_b: "Watt",
-            jawaban_c: "Newton",
-            jawaban_d: "Pascal",
-            kunci_jawaban: "c"
-        },
-        {
-            id: 2,
-            pertanyaan: "Rumus kecepatan (v) adalah...",
-            jawaban_a: "s / t",
-            jawaban_b: "s x t",
-            jawaban_c: "m x a",
-            jawaban_d: "F / m",
+            pertanyaan: "Sebuah kereta api berangkat dari stasiun A pukul 08.00 dengan kecepatan 80 km/jam. Kereta tersebut sampai di stasiun B pukul 11.00. Jika kereta berhenti istirahat selama 30 menit di tengah perjalanan, berapakah jarak total antara stasiun A dan stasiun B?",
+            jawaban_a: "200 km",
+            jawaban_b: "240 km",
+            jawaban_c: "280 km",
+            jawaban_d: "160 km",
             kunci_jawaban: "a"
         },
         {
             id: 3,
-            pertanyaan: "Alat untuk mengukur suhu adalah...",
-            jawaban_a: "Barometer",
-            jawaban_b: "Termometer",
-            jawaban_c: "Speedometer",
-            jawaban_d: "Higrometer",
-            kunci_jawaban: "b"
+            pertanyaan: "Ibu membeli 3 karung beras. Setiap karung beratnya 25 kg. Ibu kemudian membagikan beras tersebut ke dalam kantong plastik kecil yang masing-masing berisi 2,5 kg. Berapa banyak kantong plastik yang dibutuhkan Ibu?",
+            image: "/assets/ui/rice_sack.png", // Dummy placeholder
+            jawaban_a: "20 kantong",
+            jawaban_b: "25 kantong",
+            jawaban_c: "30 kantong",
+            jawaban_d: "35 kantong",
+            kunci_jawaban: "c"
         },
         {
             id: 4,
-            pertanyaan: "Energi yang dimiliki benda karena posisinya disebut energi...",
-            jawaban_a: "Kinetik",
-            jawaban_b: "Potensial",
-            jawaban_c: "Mekanik",
-            jawaban_d: "Kimia",
+            pertanyaan: "Di sebuah kelas terdapat 40 siswa. 60% siswa adalah perempuan. Dari seluruh siswa perempuan, 50% mengikuti ekstrakurikuler tari. Berapa banyak siswa perempuan yang mengikuti strakurikuler tari?",
+            jawaban_a: "10 siswa",
+            jawaban_b: "12 siswa",
+            jawaban_c: "15 siswa",
+            jawaban_d: "8 siswa",
             kunci_jawaban: "b"
         },
         {
             id: 5,
-            pertanyaan: "Bunyi tidak dapat merambat melalui...",
-            jawaban_a: "Udara",
-            jawaban_b: "Air",
-            jawaban_c: "Besi",
-            jawaban_d: "Ruang hampa",
+            pertanyaan: "Sebuah bak mandi berbentuk kubus dengan panjang rusuk 1 meter berisi air penuh. Jika air tersebut dipindahkan ke dalam ember berkapasitas 10 liter, berapa kali ember tersebut harus diisi penuh untuk mengosongkan bak mandi?",
+            jawaban_a: "10 kali",
+            jawaban_b: "50 kali",
+            jawaban_c: "100 kali",
+            jawaban_d: "1000 kali",
             kunci_jawaban: "d"
         }
     ],
-    kimia: [
+    // Keep other subjects simple for now or update similarly if requested
+    biologi: [
         {
             id: 1,
-            pertanyaan: "Rumus kimia air adalah...",
-            jawaban_a: "H2O",
-            jawaban_b: "CO2",
-            jawaban_c: "NaCl",
-            jawaban_d: "O2",
-            kunci_jawaban: "a"
+            pertanyaan: "Pak Tani menemukan bahwa tanaman padinya banyak yang mati karena dimakan tikus. Ia kemudian memelihara burung hantu di sawahnya. Beberapa bulan kemudian, hasil panen padinya meningkat. Hubungan antara burung hantu dan tikus dalam ekosistem sawah tersebut adalah...",
+            jawaban_a: "Simbiosis Mutulisme",
+            jawaban_b: "Predasi",
+            jawaban_c: "Kompetisi",
+            jawaban_d: "Simbiosis Parasitisme",
+            kunci_jawaban: "b"
         },
         {
             id: 2,
-            pertanyaan: "Lambang unsur Emas adalah...",
-            jawaban_a: "Ag",
-            jawaban_b: "Au",
-            jawaban_c: "Fe",
-            jawaban_d: "Cu",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 3,
-            pertanyaan: "Gas yang kita hirup saat bernapas adalah...",
-            jawaban_a: "Nitrogen",
-            jawaban_b: "Oksigen",
-            jawaban_c: "Karbon Dioksida",
-            jawaban_d: "Hidrogen",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 4,
-            pertanyaan: "PH untuk larutan netral adalah...",
-            jawaban_a: "3",
-            jawaban_b: "5",
-            jawaban_c: "7",
-            jawaban_d: "9",
-            kunci_jawaban: "c"
-        },
-        {
-            id: 5,
-            pertanyaan: "Partikel atom yang bermuatan positif disebut...",
-            jawaban_a: "Elektron",
-            jawaban_b: "Proton",
-            jawaban_c: "Neutron",
-            jawaban_d: "Ion",
+            pertanyaan: "Dina mengamati sel tumbuhan di bawah mikroskop. Ia melihat adanya dinding sel yang kaku dan kloroplas yang berwarna hijau. Berdasarkan pengamatan tersebut, apa fungsi utama dari kloroplas yang dilihat Dina?",
+            image: "/assets/ui/cell_structure.png",
+            jawaban_a: "Tempat respirasi sel",
+            jawaban_b: "Tempat fotosintesis",
+            jawaban_c: "Mengatur kegiatan sel",
+            jawaban_d: "Menyimpan cadangan makanan",
             kunci_jawaban: "b"
         }
     ],
-    geografi: [
-        {
-            id: 1,
-            pertanyaan: "Ibu kota Indonesia saat ini (2024) adalah...",
-            jawaban_a: "Surabaya",
-            jawaban_b: "Jakarta",
-            jawaban_c: "Bandung",
-            jawaban_d: "Nusantara",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 2,
-            pertanyaan: "Samudra terluas di dunia adalah...",
-            jawaban_a: "Atlantik",
-            jawaban_b: "Hindia",
-            jawaban_c: "Pasifik",
-            jawaban_d: "Arktik",
-            kunci_jawaban: "c"
-        },
-        {
-            id: 3,
-            pertanyaan: "Gunung tertinggi di dunia adalah...",
-            jawaban_a: "Semeru",
-            jawaban_b: "Everest",
-            jawaban_c: "Fujiyama",
-            jawaban_d: "Kilimanjaro",
-            kunci_jawaban: "b"
-        },
-        {
-            id: 4,
-            pertanyaan: "Garis khayal yang membagi bumi menjadi belahan utara dan selatan adalah...",
-            jawaban_a: "Khatulistiwa",
-            jawaban_b: "Bujur",
-            jawaban_c: "Lintang",
-            jawaban_d: "Meridian",
-            kunci_jawaban: "a"
-        },
-        {
-            id: 5,
-            pertanyaan: "Benua terbesar di dunia adalah...",
-            jawaban_a: "Afrika",
-            jawaban_b: "Amerika",
-            jawaban_c: "Asia",
-            jawaban_d: "Eropa",
-            kunci_jawaban: "c"
-        }
-    ]
+    // Empty/Simple for others to save space
+    sejarah: [],
+    fisika: [],
+    kimia: [],
+    geografi: []
 };

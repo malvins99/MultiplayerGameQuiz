@@ -6,7 +6,7 @@ import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
 import { QRCodePopup } from '../ui/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../data/characterData';
 
-export class WaitingRoomScene extends Phaser.Scene {
+export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
     isHost: boolean = false;
     mySessionId: string = '';
@@ -34,7 +34,7 @@ export class WaitingRoomScene extends Phaser.Scene {
     qrPopup: QRCodePopup | null = null;
 
     constructor() {
-        super('WaitingRoomScene');
+        super('HostWaitingRoomScene');
     }
 
     init(data: { room: Room, isHost: boolean }) {
@@ -44,6 +44,20 @@ export class WaitingRoomScene extends Phaser.Scene {
     }
 
     create() {
+        // Inject shared styles (play-idle)
+        const styleId = 'waiting-room-common-styles';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                @keyframes play-idle {
+                    from { background-position: 0 0; }
+                    to { background-position: -864px 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         // Grab DOM elements
         this.waitingUI = document.getElementById('waiting-ui');
         this.roomCodeEl = document.getElementById('display-room-code');
@@ -115,7 +129,10 @@ export class WaitingRoomScene extends Phaser.Scene {
         });
 
         // Host ID
-        this.room.state.listen("hostId", () => {
+        this.room.state.listen("hostId", (hostId) => {
+            if (hostId !== this.mySessionId) {
+                this.scene.start('PlayerWaitingRoomScene', { room: this.room, isHost: false });
+            }
             this.updateHostStatus();
         });
 
@@ -141,8 +158,14 @@ export class WaitingRoomScene extends Phaser.Scene {
         this.room.onMessage("gameStarted", () => {
             TransitionManager.close(() => {
                 if (this.waitingUI) this.waitingUI.classList.add('hidden');
-                Router.navigate('/game');
-                this.scene.start('GameScene', { room: this.room });
+
+                if (this.isHost) {
+                    Router.navigate('/host/progress');
+                    this.scene.start('HostProgressScene', { room: this.room });
+                } else {
+                    Router.navigate('/game');
+                    this.scene.start('GameScene', { room: this.room });
+                }
             });
         });
 
@@ -178,6 +201,9 @@ export class WaitingRoomScene extends Phaser.Scene {
 
             if (charPreviewBox) {
                 charPreviewBox.onclick = () => {
+                    // Host cannot change character
+                    if (this.isHost) return;
+
                     const myPlayer = this.room.state.players.get(this.mySessionId);
                     this.characterPopup?.show(myPlayer?.hairId || 0);
                 };
@@ -286,7 +312,6 @@ export class WaitingRoomScene extends Phaser.Scene {
     }
 
     updateAll() {
-        this.updateRoomList();
         this.updatePlayerGrid();
 
         const myPlayer = this.room.state.players.get(this.mySessionId);
@@ -305,31 +330,78 @@ export class WaitingRoomScene extends Phaser.Scene {
 
     updateQrCode(code: string) {
         if (this.roomQrCode && code) {
-            // Create a full join URL
             const url = `${window.location.origin}?room=${code}`;
-            // Encode it
             this.roomQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
         }
     }
 
     updateHostStatus() {
         const isCurrentHost = this.room.state.hostId === this.mySessionId;
+        const totalPlayers = this.room.state.players.size;
+        const labelText = totalPlayers <= 1 ? 'PLAYER' : 'PLAYERS';
 
-        if (this.hostIndicatorEl) {
-            this.hostIndicatorEl.innerText = isCurrentHost ? 'You are: HOST' : 'You are: Guest';
+        const headerText = document.getElementById('waiting-header-text');
+        if (headerText) {
+            headerText.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;">
+                    <span style="color: #00ff88;">${totalPlayers}</span>
+                    <span style="color: white; opacity: 0.9;">${labelText}</span>
+                </div>
+            `;
         }
 
+        // Hide Player Count Header for host
+        const headerCount = document.getElementById('player-count');
+        if (headerCount) {
+            headerCount.style.display = isCurrentHost ? 'none' : 'block';
+        }
+
+        // Hide Name Input for host
+        const nameSection = document.getElementById('player-name-section');
+        if (nameSection) {
+            nameSection.style.display = isCurrentHost ? 'none' : 'block';
+        }
+
+        // Hide labels for host
+        const roomCodeLabel = document.getElementById('room-code-label');
+        if (roomCodeLabel) roomCodeLabel.style.display = isCurrentHost ? 'none' : 'block';
+
+        const scanLabel = document.getElementById('scan-to-join-label');
+        if (scanLabel) scanLabel.style.display = isCurrentHost ? 'none' : 'block';
+
         if (isCurrentHost) {
-            if (this.startBtn) {
-                this.startBtn.classList.remove('hidden');
+            // Move Start Button to left for host
+            const leftContainer = document.getElementById('host-start-btn-container');
+            if (leftContainer && this.startBtn) {
+                this.startBtn.classList.remove('hidden'); // Fix: Ensure it's visible
+                leftContainer.classList.remove('hidden');
+                leftContainer.appendChild(this.startBtn);
+
+                // Style adjustment for left column (Compact & Tight Style)
+                this.startBtn.classList.remove('py-8', 'text-2xl', 'shadow-[0_10px_0_#000]', 'pixel-btn-green', 'mb-2', 'w-full', 'py-4', 'px-8', 'py-2');
+                this.startBtn.classList.add('py-0', 'px-6', 'text-[10px]', 'shadow-none', 'bg-primary', 'hover:bg-white', 'text-black', 'rounded-xl', 'mx-auto', 'block', 'transition-all', 'font-bold');
+                this.startBtn.innerText = 'START';
+
                 this.startBtn.onclick = () => {
                     this.room.send("startGame");
                 };
             }
             if (this.waitingMsg) this.waitingMsg.classList.add('hidden');
         } else {
+            // Restore Start Button to bottom for player (if they somehow become non-host)
+            const mainContent = document.getElementById('waiting-ui');
+            if (mainContent && this.startBtn && this.startBtn.parentElement?.id === 'host-start-btn-container') {
+                mainContent.appendChild(this.startBtn);
+                this.startBtn.classList.add('py-8', 'text-2xl');
+                this.startBtn.classList.remove('py-4', 'text-sm');
+            }
             if (this.startBtn) this.startBtn.classList.add('hidden');
             if (this.waitingMsg) this.waitingMsg.classList.remove('hidden');
+        }
+
+        const charSection = document.getElementById('character-selection-section');
+        if (charSection) {
+            charSection.style.display = isCurrentHost ? 'none' : 'flex';
         }
     }
 
@@ -355,7 +427,9 @@ export class WaitingRoomScene extends Phaser.Scene {
                     : 'bg-secondary text-black font-bold pixel-btn-blue border-black hover:brightness-110';
 
             const btnText = isMyRoom ? 'JOINED' : isFull ? 'FULL' : 'JOIN';
-            const action = (isFull || isMyRoom) ? '' : `onclick="window.switchRoom('${subRoom.id}')"`;
+            // Host cannot join rooms
+            const action = (this.isHost || isFull || isMyRoom) ? '' : `onclick="window.switchRoom('${subRoom.id}')"`;
+            const btnVisibility = this.isHost ? 'invisible' : '';
 
             // Get player names
             let playerListHTML = '';
@@ -388,7 +462,7 @@ export class WaitingRoomScene extends Phaser.Scene {
                         ${playerListHTML}
                     </div>
 
-                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide">
+                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide ${btnVisibility}">
                         ${btnText}
                     </button>
                 </div>
@@ -406,58 +480,95 @@ export class WaitingRoomScene extends Phaser.Scene {
     updatePlayerGrid() {
         if (!this.playerGridEl) return;
 
-        const myPlayer = this.room.state.players.get(this.mySessionId);
-        const mySubRoomId = myPlayer ? myPlayer.subRoomId : "";
-
-        // Find current room object to know capacity
-        const currentSubRoom = this.room.state.subRooms.find((r: any) => r.id === mySubRoomId);
-        const maxPlayers = currentSubRoom ? currentSubRoom.capacity : 4;
-
-        // Filter players in MY subroom
-        const playersInRoom: any[] = [];
+        // Unified View: Host and Players see ALL players
+        const players: any[] = [];
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            if (p.subRoomId === mySubRoomId) {
-                playersInRoom.push({ ...p, sessionId });
-            }
+            players.push({ ...p, sessionId });
         });
 
-        // Update count
-        if (this.playerCountEl) {
-            this.playerCountEl.innerText = `(${playersInRoom.length}/${maxPlayers})`;
-        }
+        // Update Header dynamically (also update count if needed)
+        this.updateHostStatus();
 
         let html = '';
 
-        // Render player cards (Horizontal Compact Style)
-        playersInRoom.forEach((player) => {
+        // Render player cards (Style matched to HostProgress v6)
+        players.forEach((player) => {
             const isMe = player.sessionId === this.mySessionId;
-            const isHost = player.sessionId === this.room.state.hostId;
-
-            // Neon border for self
-            const borderClass = isMe ? 'border-primary shadow-[0_0_10px_rgba(0,255,85,0.2)]' : 'border-white/10';
-            const bgClass = isMe ? 'bg-black/60' : 'bg-black/40';
+            const borderClass = isMe ? 'border: 2px solid #00ff88; box-shadow: 0 0 15px rgba(0,255,136,0.3);' : 'border: 1px solid rgba(255,255,255,0.05);';
 
             html += `
-                <div class="${bgClass} border-2 ${borderClass} p-3 rounded-xl flex items-center gap-3 transition-colors">
-                    <div class="w-3 h-3 rounded-full ${isHost ? 'bg-accent shadow-[0_0_10px_#cc00ff]' : 'bg-primary shadow-[0_0_10px_#00ff55]'}"></div>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-xs font-bold uppercase truncate font-['Space_Grotesk'] tracking-wide ${isMe ? 'text-primary' : 'text-white'}">${player.name || 'Unknown'}</span>
-                        ${isHost ? '<span class="text-[8px] text-accent font-bold tracking-widest">HOST</span>' : ''}
+                <div style="
+                    background: rgba(20, 20, 35, 0.9); 
+                    ${borderClass}
+                    padding: 12px; 
+                    border-radius: 16px; 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center;
+                    gap: 10px; 
+                    position: relative; 
+                    aspect-ratio: 1 / 1.1;
+                    width: 100%;
+                    max-width: 140px;
+                    margin: 0 auto;
+                    transition: transform 0.2s ease;
+                ">
+                    <!-- Character (Middle) - Matched v6 Centering -->
+                    <div style="width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
+                         <div style="
+                            position: relative;
+                            width: 32px; height: 32px; 
+                            transform: scale(1.6);
+                         ">
+                            <!-- Base Body -->
+                            <div style="
+                                position: absolute; inset: 0;
+                                background-image: url('/assets/base_idle_strip9.png');
+                                background-repeat: no-repeat;
+                                background-position: -32px -16px;
+                                image-rendering: pixelated;
+                            "></div>
+                            <!-- Hair Layer -->
+                            ${(() => {
+                    const hair = getHairById(player.hairId || 0);
+                    if (player.hairId > 0 && hair) {
+                        return `
+                                        <div style="
+                                            position: absolute; inset: 0;
+                                            background-image: url('/assets/${hair.idleKey}_strip9.png');
+                                            background-repeat: no-repeat;
+                                            background-position: -32px -16px;
+                                            image-rendering: pixelated;
+                                        "></div>
+                                    `;
+                    }
+                    return '';
+                })()}
+                         </div>
+                    </div>
+                    
+                    <!-- Player Name -->
+                    <div style="text-align: center; width: 100%; padding: 0 2px;">
+                        <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                            ${player.name || 'PLAYER'}
+                        </span>
                     </div>
                 </div>
             `;
         });
 
-        // Render empty slots (Horizontal Compact Style)
-        for (let i = playersInRoom.length; i < maxPlayers; i++) {
-            html += `
-                <div class="bg-black/20 border-2 border-dashed border-white/5 p-3 rounded-xl flex items-center gap-3 opacity-50">
-                    <div class="w-3 h-3 bg-white/10 rounded-full"></div>
-                    <span class="text-[10px] uppercase italic text-white/20 font-bold">Empty Slot</span>
-                </div>
-            `;
-        }
+        // Render empty slots up to 20 if needed (optional, but requested simple/clean)
+        // User didn't explicitly ask for empty slots in new style, so we just show active players.
 
         this.playerGridEl.innerHTML = html;
+        this.playerGridEl.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            padding: 10px;
+            width: 100%;
+        `;
     }
+
 }

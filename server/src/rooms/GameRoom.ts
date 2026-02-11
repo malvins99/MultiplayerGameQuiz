@@ -57,6 +57,13 @@ export class GameRoom extends Room<GameState> {
             this.broadcast("gameStarted");
         });
 
+        this.onMessage("hostEndGame", (client) => {
+            if (client.sessionId === this.state.hostId) {
+                console.log("[Host] Ending game for all rooms...");
+                this.endGame();
+            }
+        });
+
         this.onMessage("correctAnswer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player && !player.isFinished) {
@@ -195,6 +202,23 @@ export class GameRoom extends Room<GameState> {
 
         // Monitor Enemy Flee Logic (10 FPS is enough)
         this.setSimulationInterval((deltaTime) => this.update(deltaTime));
+
+        // --- Engage Enemy Handler ---
+        this.onMessage("engageEnemy", (client, data) => {
+            const enemyIndex = data.enemyIndex;
+            // Map key is string, but sometimes passed as number index if array
+            // Our state.enemies is ArraySchema, so index is correct
+            if (enemyIndex !== undefined) {
+                const enemy = this.state.enemies[enemyIndex];
+                if (enemy && enemy.isAlive) {
+                    enemy.isBusy = true;
+                    enemy.isFleeing = false;
+                    enemy.targetX = 0;
+                    enemy.targetY = 0;
+                    console.log(`Enemy ${enemyIndex} engaged by ${client.sessionId}. Movement halted.`);
+                }
+            }
+        });
     }
 
     update(deltaTime: number) {
@@ -211,6 +235,9 @@ export class GameRoom extends Room<GameState> {
         // Process each enemy
         this.state.enemies.forEach(enemy => {
             if (!enemy.isAlive) return;
+
+            // If busy (in quiz), DO NOT MOVE
+            if (enemy.isBusy) return;
 
             const owner = this.state.players.get(enemy.ownerId);
             if (!owner) return;
@@ -362,7 +389,18 @@ export class GameRoom extends Room<GameState> {
             player.y = 300;
         }
 
-        // Auto-assign to first available sub-room
+        this.state.players.set(client.sessionId, player);
+
+        // First player to join is the host — BEFORE sub-room assignment
+        if (!this.state.hostId || this.state.players.size === 1) {
+            this.state.hostId = client.sessionId;
+            player.isHost = true;
+            player.subRoomId = ""; // Host doesn't join any sub-room
+            console.log(`[Host] ${player.name} is the host. Skipping sub-room assignment.`);
+            return;
+        }
+
+        // Auto-assign to first available sub-room (non-host players only)
         let assignedRoom = this.state.subRooms.find(r => r.playerIds.length < r.capacity);
         if (!assignedRoom) {
             // Should not happen if maxClients is correct, but fallback to first
@@ -372,13 +410,6 @@ export class GameRoom extends Room<GameState> {
         if (assignedRoom) {
             player.subRoomId = assignedRoom.id;
             assignedRoom.playerIds.push(client.sessionId);
-        }
-
-        this.state.players.set(client.sessionId, player);
-
-        // First player to join is the host
-        if (!this.state.hostId || this.state.players.size === 1) {
-            this.state.hostId = client.sessionId;
         }
     }
 
@@ -445,6 +476,9 @@ export class GameRoom extends Room<GameState> {
 
         // Create Enemies Per Player
         this.state.players.forEach(player => {
+            // Host gets NO enemies
+            if (player.isHost) return;
+
             // Use decaying radius logic for enemy placement
             // Consolidate enemy creation to try strict distance first -> then relax if needed
             let enemiesSpawnedForPlayer = 0;
@@ -453,7 +487,7 @@ export class GameRoom extends Room<GameState> {
             for (let i = 0; i < config.enemiesPerPlayer; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
-                enemy.questionId = Math.floor(Math.random() * 5) + 1;
+                enemy.questionId = Math.floor(Math.random() * 10) + 1;
                 enemy.type = Math.random() < 0.6 ? "skeleton" : "goblin";
 
                 let foundPosition = false;
@@ -542,7 +576,7 @@ export class GameRoom extends Room<GameState> {
         // Check if all players are finished
         let allFinished = true;
         this.state.players.forEach(player => {
-            if (!player.isFinished) {
+            if (!player.isHost && !player.isFinished) {
                 allFinished = false;
             }
         });
@@ -572,6 +606,7 @@ export class GameRoom extends Room<GameState> {
 
         // Calculate Rankings: Sort by score DESC, then finishTime ASC
         const rankings = Array.from(this.state.players.values())
+            .filter(p => !p.isHost)
             .sort((a, b) => {
                 if (b.score !== a.score) {
                     return b.score - a.score; // Higher score first

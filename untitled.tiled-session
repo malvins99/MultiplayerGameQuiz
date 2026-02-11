@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "untitled.tmx",
+    "activeFile": "server/src/maps/map_easy.json",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
@@ -70,6 +70,23 @@
         "multiplayer_map.tmj#spr_tileset_sunnysideworld_16px": {
             "scaleInDock": 1.5
         },
+        "server/src/maps/map_easy.json": {
+            "expandedGroupLayers": [
+                3
+            ],
+            "scale": 0.5,
+            "selectedLayer": 19,
+            "viewCenter": {
+                "x": 395,
+                "y": 549
+            }
+        },
+        "server/src/maps/map_easy.json#spr_tileset_sunnysideworld_16px": {
+            "scaleInDock": 1
+        },
+        "server/src/maps/map_easy.json#spr_tileset_sunnysideworld_forest_32px": {
+            "scaleInDock": 1
+        },
         "spr_caught_strip10.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -117,16 +134,11 @@
     "map.tileWidth": 16,
     "map.width": 110,
     "openFiles": [
-        "multiplayer_map.tmj",
-        "map_baru1.tmx",
-        "untitled1.tmx",
-        "untitled.tmx",
-        "base_mining_strip10.tsx",
-        "spr_caught_strip10.tsx",
-        "spr_death_strip13.tsx"
+        "server/src/maps/map_easy.json"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
+        "server/src/maps/map_easy.json",
         "multiplayer_map.tmj",
         "map_baru1.tmx",
         "spr_death_strip13.tsx",

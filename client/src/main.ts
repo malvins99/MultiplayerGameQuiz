@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
 import { LobbyScene } from './scenes/LobbyScene';
-import { WaitingRoomScene } from './scenes/WaitingRoomScene';
+import { HostWaitingRoomScene } from './scenes/HostWaitingRoomScene';
+import { PlayerWaitingRoomScene } from './scenes/PlayerWaitingRoomScene';
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
 import { WaitingResultsScene } from './scenes/WaitingResultsScene';
 import { LeaderboardScene } from './scenes/LeaderboardScene';
+
+import { HostProgressScene } from './scenes/HostProgressScene';
+import { HostSpectatorScene } from './scenes/HostSpectatorScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -20,7 +24,7 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
-    scene: [LobbyScene, WaitingRoomScene, GameScene, UIScene, WaitingResultsScene, LeaderboardScene],
+    scene: [LobbyScene, HostWaitingRoomScene, PlayerWaitingRoomScene, GameScene, UIScene, WaitingResultsScene, LeaderboardScene, HostProgressScene, HostSpectatorScene],
     scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH

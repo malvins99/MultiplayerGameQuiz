@@ -14,6 +14,7 @@ export class Enemy extends Schema {
     @type("number") targetY: number = 0;  // Waypoint destination Y
     @type("number") restUntil: number = 0; // Timestamp when rest ends (0 = not resting)
     @type("number") spawnZoneIndex: number = -1; // Index of the spawn zone this enemy belongs to
+    @type("boolean") isBusy: boolean = false; // True if engaged in a quiz
 }
 
 export class Chest extends Schema {
@@ -40,6 +41,7 @@ export class Player extends Schema {
     @type("string") sessionId!: string;
     @type("string") subRoomId!: string; // Track which sub-room the player is in
     @type("number") spawnIndex: number = -1; // Track assigned spawn point index
+    @type("boolean") isHost: boolean = false;
 }
 
 export class SubRoom extends Schema {

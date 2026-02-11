@@ -883,11 +883,11 @@
       <main class="flex-1 flex gap-6 overflow-hidden max-w-[1600px] mx-auto w-full pt-12">
         <!-- LEFT: Character & Profile - Adjusted Width -->
         <section class="w-96 shrink-0 flex flex-col gap-3">
-          <div
-            class="bg-surface-dark border-4 border-black p-5 rounded-2xl flex-1 flex flex-col gap-4 shadow-xl relative overflow-hidden">
+          <div id="sidebar-card"
+            class="bg-surface-dark border-4 border-black p-5 rounded-2xl flex flex-col gap-4 shadow-xl relative overflow-hidden">
 
             <!-- 1. Character Selection -->
-            <div class="space-y-2 shrink-0 w-full">
+            <div id="character-selection-section" class="space-y-2 shrink-0 w-full">
               <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">Selected Character
               </p>
 
@@ -911,7 +911,7 @@
             </div>
 
             <!-- 2. Name Input -->
-            <div class="space-y-1 shrink-0">
+            <div id="player-name-section" class="space-y-1 shrink-0">
               <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Your Name</p>
               <input id="player-name-input"
                 class="w-full h-12 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-sm placeholder:text-white/20 font-['Press_Start_2P'] text-center rounded-xl transition-all"
@@ -921,8 +921,7 @@
             <!-- 3. Room Code (Centered) -->
             <!-- 3. Room Code (Absolute Copy Icon) -->
             <div
-              class="shrink-0 relative bg-black/40 border-2 border-white/10 p-5 rounded-xl flex flex-col items-center justify-center gap-1 group hover:border-primary/50 transition-colors">
-              <p class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Room Code</p>
+              class="shrink-0 relative bg-black/40 border-2 border-primary/50 p-5 rounded-xl flex flex-col items-center justify-center gap-1 group hover:border-primary transition-colors">
               <span id="display-room-code"
                 class="text-3xl font-bold tracking-[0.2em] text-primary font-['Press_Start_2P'] drop-shadow-md text-center">------</span>
 
@@ -933,14 +932,19 @@
               </button>
             </div>
 
-            <!-- 4. QR Code (Larger & No Cutoff) -->
-            <!-- Removing mt-auto to make it stick to the element above as requested ("menempel seperti konten lain") -->
-            <div class="mt-1 flex flex-col items-center gap-2">
-              <p class="text-[9px] font-bold text-white/30 uppercase tracking-widest">Scan to Join</p>
+            <!-- 4. QR Code (Aligned & Tight Style) -->
+            <div class="mt-0.5 flex flex-col items-center w-full">
               <div
-                class="bg-white p-2 rounded-xl w-56 h-56 shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300">
-                <img src="" class="w-full h-full object-contain mix-blend-multiply" alt="QR" id="room-qr-code" />
+                class="bg-black/40 p-4 rounded-xl w-full flex items-center justify-center border-2 border-primary shadow-[0_0_15px_rgba(0,255,85,0.1)]">
+                <div class="w-48 h-48 bg-white p-2 rounded-lg">
+                  <img src="" class="w-full h-full object-contain mix-blend-multiply" alt="QR" id="room-qr-code" />
+                </div>
               </div>
+            </div>
+
+            <!-- 5. Host-only Start Button Container -->
+            <div id="host-start-btn-container" class="mt-2 w-full hidden">
+              <!-- Re-injected here via JS for host -->
             </div>
           </div>
         </section>
@@ -951,7 +955,7 @@
             class="bg-surface-dark border-4 border-black p-6 rounded-2xl flex-1 flex flex-col relative overflow-hidden shadow-xl">
             <div class="flex justify-between items-center mb-6 border-b-2 border-white/5 pb-4">
               <!-- Header Font Fix -->
-              <h3
+              <h3 id="waiting-header-text"
                 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3 font-['Press_Start_2P']">
                 <span class="flex size-3 relative">
                   <span
