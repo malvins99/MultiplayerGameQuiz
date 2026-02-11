@@ -325,32 +325,7 @@
       width: 100%;
     }
 
-    /* --- Spotlight / Dimming Effect --- */
-    /* When hovering the main container, dim all sections by default */
-    .lobby-container:hover .lobby-card {
-      filter: grayscale(80%) brightness(0.5);
-      transform: scale(0.95);
-      transition: all 0.4s ease;
-    }
-
-    /* But keep the specifically hovered card bright and scaled up */
-    /* But keep the specifically hovered card bright and scaled up */
-    .lobby-container .lobby-card:hover {
-      filter: grayscale(0%) brightness(1.1);
-      transform: scale(1.05);
-      z-index: 10;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-    }
-
-    /* Icon Specific Glows on Card Hover */
-    .lobby-container .lobby-card:hover .icon-sword {
-      filter: drop-shadow(0 0 20px #00ff55);
-    }
-
-    .lobby-container .lobby-card:hover .icon-shield {
-      filter: drop-shadow(0 0 20px #ffffff);
-      /* White Glow for Shield */
-    }
+    /* --- Spotlight / Dimming Effect DISABLED --- */
 
     /* --- GLOBAL IRIS TRANSITION (Robust Box-Shadow Method) --- */
     #transition-overlay {
@@ -411,6 +386,227 @@
         height: 300vmax;
       }
     }
+
+    /* === FANTASY ADVENTURE BACKGROUND EFFECTS === */
+
+    /* Magic Firefly Particles */
+    @keyframes firefly {
+
+      0%,
+      100% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0.5);
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+        transform: translateY(-100px) translateX(30px) scale(1);
+      }
+
+      90% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes float-particle {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.3;
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: translateY(-40px) translateX(-10px);
+        opacity: 0.5;
+      }
+
+      75% {
+        transform: translateY(-20px) translateX(15px);
+        opacity: 0.9;
+      }
+    }
+
+    @keyframes glow-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 5px rgba(0, 255, 85, 0.3), 0 0 10px rgba(0, 255, 85, 0.2);
+      }
+
+      50% {
+        box-shadow: 0 0 15px rgba(0, 255, 85, 0.5), 0 0 30px rgba(0, 255, 85, 0.3);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    @keyframes mystical-float {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      33% {
+        transform: translateY(-15px) rotate(2deg);
+      }
+
+      66% {
+        transform: translateY(-8px) rotate(-2deg);
+      }
+    }
+
+    .firefly {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, #00ff55 0%, transparent 70%);
+      border-radius: 50%;
+      animation: firefly 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .magic-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00ff55;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ff55, 0 0 20px #00ff55;
+      animation: float-particle 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Fantasy Gradient Background */
+    .fantasy-bg {
+      background:
+        radial-gradient(ellipse at top, rgba(0, 50, 30, 0.8) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 30, 20, 0.9) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0f0a 0%, #0d1a0d 30%, #081208 70%, #050a05 100%);
+    }
+
+    /* Forest Silhouette Effect */
+    .forest-silhouette {
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23050a05' d='M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,218.7C672,235,768,245,864,234.7C960,224,1056,192,1152,181.3C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+      background-size: cover;
+      background-position: bottom;
+      background-repeat: no-repeat;
+    }
+
+    /* Mystical Fog */
+    @keyframes fog-drift {
+      0% {
+        transform: translateX(-10%);
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: translateX(10%);
+        opacity: 0.3;
+      }
+    }
+
+    .mystical-fog {
+      background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(0, 255, 85, 0.03) 20%,
+          rgba(0, 255, 85, 0.05) 50%,
+          rgba(0, 255, 85, 0.03) 80%,
+          transparent 100%);
+      animation: fog-drift 15s ease-in-out infinite alternate;
+    }
+
+    /* === AUTH LOADING SPINNER === */
+    .auth-loading-spinner {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: #00ff55;
+      animation: spin 1.2s linear infinite;
+    }
+
+    .spinner-ring-2 {
+      width: 80%;
+      height: 80%;
+      border-top-color: transparent;
+      border-right-color: #00d4ff;
+      animation: spin-reverse 1.5s linear infinite;
+    }
+
+    .spinner-ring-3 {
+      width: 60%;
+      height: 60%;
+      border-top-color: transparent;
+      border-bottom-color: #cc00ff;
+      animation: spin 2s linear infinite;
+    }
+
+    .spinner-icon {
+      font-size: 32px !important;
+      color: #00ff55;
+      animation: pulse-glow 2s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin-reverse {
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        opacity: 0.6;
+        filter: drop-shadow(0 0 5px rgba(0, 255, 85, 0.3));
+      }
+
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 20px rgba(0, 255, 85, 0.8));
+      }
+    }
   </style>
 </head>
 
@@ -448,6 +644,72 @@
 
     <!-- Main Layout -->
     <div class="relative z-10 flex flex-col h-screen">
+      <!-- Game Logo (Top-Left) -->
+      <div class="absolute top-4 left-4 z-50 select-none pointer-events-none">
+        <img src="/logo/gameforsmart.webp" alt="Game Logo"
+          class="h-10 md:w-72 h-auto object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.3)]" />
+      </div>
+
+      <!-- User Profile Widget (Top-Right) -->
+      <div class="absolute top-4 right-4 z-50 flex items-center gap-3">
+        <!-- Profile Pill -->
+        <div id="lobby-user-profile"
+          class="flex items-center gap-3 bg-primary/20 border-2 border-primary/40 rounded-full pl-1.5 pr-4 py-1.5 backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,85,0.15)]">
+          <!-- Avatar -->
+          <div
+            class="w-9 h-9 rounded-full bg-primary/30 border-2 border-primary/50 overflow-hidden flex items-center justify-center shrink-0">
+            <img id="lobby-user-avatar" src="" alt="Avatar" class="w-full h-full object-cover hidden" />
+            <span id="lobby-user-avatar-fallback" class="material-symbols-outlined text-primary text-lg">person</span>
+          </div>
+          <!-- Username -->
+          <span id="lobby-user-name"
+            class="text-white font-bold text-xs font-['Press_Start_2P'] tracking-wide truncate max-w-[120px]">Guest</span>
+        </div>
+
+        <!-- Hamburger Menu Button -->
+        <div class="relative">
+          <button id="lobby-menu-btn"
+            class="w-11 h-11 bg-primary/20 border-2 border-primary/40 rounded-xl flex items-center justify-center hover:bg-primary/30 hover:border-primary transition-all backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,85,0.15)]">
+            <span class="material-symbols-outlined text-primary text-xl">menu</span>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="lobby-menu-dropdown"
+            class="hidden absolute top-[calc(100%+8px)] right-0 w-48 bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top-right scale-95 opacity-0 flex flex-col p-1 z-[60]">
+            <button id="lobby-menu-logout-btn"
+              class="w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center gap-3">
+              <span class="material-symbols-outlined text-sm">logout</span> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout Confirmation Modal -->
+      <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
+        <!-- Backdrop -->
+        <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <!-- Modal Content -->
+        <div
+          class="relative z-10 bg-[#1a1a20] border-2 border-primary/40 rounded-2xl shadow-[0_0_40px_rgba(0,255,85,0.2)] p-8 max-w-sm w-full mx-4 text-center">
+          <div class="mb-4">
+            <span class="material-symbols-outlined text-primary text-4xl">logout</span>
+          </div>
+          <p class="text-white font-['Press_Start_2P'] text-sm leading-relaxed mb-2">Logout</p>
+
+          <p class="text-white/50 font-['Press_Start_2P'] text-[9px] mb-8">Apakah kamu yakin ingin keluar?</p>
+          <div class="flex gap-3">
+            <button id="logout-cancel-btn"
+              class="flex-1 h-12 bg-white/10 border-2 border-white/20 rounded-xl text-white font-['Press_Start_2P'] text-xs uppercase hover:bg-white/20 hover:border-white/40 transition-all">
+              Tidak
+            </button>
+            <button id="logout-confirm-btn"
+              class="flex-1 h-12 bg-red-500/20 border-2 border-red-500/40 rounded-xl text-red-400 font-['Press_Start_2P'] text-xs uppercase hover:bg-red-500/30 hover:border-red-500 transition-all">
+              Keluar
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Header Removed for Clean Look -->
       <!-- <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0"> ... </header> -->
 
@@ -465,11 +727,8 @@
             <div>
               <h1
                 class="text-3xl font-bold tracking-widest uppercase text-primary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                Host Session
+                Host Game
               </h1>
-              <p class="text-white/60 text-xs font-bold uppercase mt-4 font-['Press_Start_2P'] tracking-wide">
-                Create a new game room
-              </p>
             </div>
 
             <button id="create-room-btn"
@@ -490,17 +749,14 @@
             <div>
               <h1
                 class="text-3xl font-bold tracking-widest uppercase text-secondary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                Join Session
+                Join Game
               </h1>
-              <p class="text-white/60 text-xs font-bold uppercase mt-4 font-['Press_Start_2P'] tracking-wide">
-                Enter room access code
-              </p>
             </div>
 
             <div class="w-80 space-y-4">
               <div class="relative">
                 <input id="room-code-input"
-                  class="w-full h-16 bg-black/60 border-4 border-white/10 focus:border-secondary focus:ring-0 text-center text-2xl tracking-[0.2em] text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P']"
+                  class="w-full h-16 bg-black/60 border-4 border-white/30 focus:border-secondary focus:ring-0 text-center text-2xl tracking-[0.2em] text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P']"
                   placeholder="000000" type="text" maxlength="6" />
               </div>
               <button id="join-room-btn"
@@ -511,12 +767,6 @@
           </div>
         </section>
       </main>
-
-      <!-- Footer -->
-      <footer
-        class="bg-black py-2 px-6 flex justify-center items-center text-[9px] font-bold uppercase tracking-widest text-white/30 shrink-0">
-        <span>© 2026 gameforsmart</span>
-      </footer>
     </div>
   </div>
   </div>
@@ -662,7 +912,7 @@
             </button>
 
             <!-- My Quiz / Profile Icon -->
-            <button
+            <button id="quiz-filter-my-btn"
               class="w-10 h-10 rounded-xl border border-white/10 hover:border-primary hover:bg-primary/10 flex items-center justify-center transition-all group"
               title="My Quiz">
               <span class="material-symbols-outlined text-white/40 group-hover:text-primary text-lg">person</span>
@@ -837,15 +1087,14 @@
                 <span class="material-symbols-outlined text-sm text-primary">music_note</span> Music
               </label>
 
-              <div
-                class="w-full h-12 flex items-center bg-black/40 border-2 border-white/10 rounded-xl px-4 justify-between group hover:border-primary transition-colors cursor-pointer"
-                onclick="document.getElementById('sound-toggle-btn').click()">
+              <div id="sound-toggle-container"
+                class="w-full h-12 flex items-center bg-black/40 border-2 border-white/10 rounded-xl px-4 justify-between group hover:border-primary transition-colors cursor-pointer">
                 <span class="text-white font-bold font-['Space_Grotesk'] tracking-wide">Music</span>
 
                 <button id="sound-toggle-btn"
-                  class="w-12 h-7 bg-[#34c759] rounded-full relative transition-colors duration-300 cursor-pointer shadow-inner shrink-0">
+                  class="w-12 h-7 bg-white/10 rounded-full relative transition-colors duration-300 cursor-pointer shadow-inner shrink-0 pointer-events-none">
                   <div id="sound-toggle-knob"
-                    class="absolute top-[2px] left-[2px] w-6 h-6 bg-white rounded-full shadow-md transform translate-x-6 transition-transform duration-300">
+                    class="absolute top-[2px] left-[2px] w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300">
                   </div>
                 </button>
               </div>
@@ -989,6 +1238,216 @@
         <!-- RIGHT: Room Selection REMOVED -->
         <!-- The center column now flex-expands to fill this space -->
       </main>
+    </div>
+  </div>
+
+  <!-- LOGIN UI -->
+  <div id="login-ui" class="hidden fixed top-0 left-0 w-full h-screen z-30 overflow-hidden fantasy-bg">
+
+    <!-- GameForSmart Logo - Top Right Corner -->
+    <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
+      <img src="/logo/gameforsmart.webp" alt="GameForSmart" draggable="false"
+        class="w-32 h-auto md:w-72 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
+    </div>
+    <!-- Fantasy Forest Gradient Overlay -->
+    <div class="absolute inset-0 pointer-events-none"
+      style="background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);"></div>
+
+    <!-- Mystical Fog Layer -->
+    <div class="absolute inset-0 pointer-events-none mystical-fog"></div>
+    <div class="absolute inset-0 pointer-events-none mystical-fog"
+      style="animation-delay: 5s; animation-direction: reverse;"></div>
+
+    <!-- Magic Firefly Particles -->
+    <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s; animation-duration: 7s;"></div>
+    <div class="firefly" style="top: 60%; left: 15%; animation-delay: 1s; animation-duration: 5s;"></div>
+    <div class="firefly" style="top: 30%; left: 85%; animation-delay: 2s; animation-duration: 6s;"></div>
+    <div class="firefly" style="top: 70%; left: 80%; animation-delay: 0.5s; animation-duration: 8s;"></div>
+    <div class="firefly" style="top: 45%; left: 5%; animation-delay: 3s; animation-duration: 6s;"></div>
+    <div class="firefly" style="top: 15%; left: 70%; animation-delay: 1.5s; animation-duration: 7s;"></div>
+    <div class="firefly" style="top: 80%; left: 25%; animation-delay: 2.5s; animation-duration: 5s;"></div>
+    <div class="firefly" style="top: 50%; left: 90%; animation-delay: 4s; animation-duration: 6s;"></div>
+    <div class="firefly" style="top: 85%; left: 60%; animation-delay: 0.8s; animation-duration: 7s;"></div>
+    <div class="firefly" style="top: 25%; left: 40%; animation-delay: 3.5s; animation-duration: 5s;"></div>
+
+    <!-- Additional Magic Particles -->
+    <div class="magic-particle" style="top: 35%; left: 8%; animation-delay: 0s;"></div>
+    <div class="magic-particle" style="top: 55%; left: 92%; animation-delay: 2s;"></div>
+    <div class="magic-particle" style="top: 75%; left: 12%; animation-delay: 4s;"></div>
+    <div class="magic-particle" style="top: 20%; left: 88%; animation-delay: 1s;"></div>
+    <div class="magic-particle" style="top: 65%; left: 6%; animation-delay: 3s;"></div>
+    <div class="magic-particle" style="top: 40%; left: 95%; animation-delay: 5s;"></div>
+
+    <!-- Scanlines Effect (subtle) -->
+    <div class="absolute inset-0 pointer-events-none opacity-30"
+      style="background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,85,0.02) 2px, rgba(0,255,85,0.02) 4px);">
+    </div>
+
+    <!-- Glowing Orbs - Mystical Energy -->
+    <div
+      class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none animate-pulse">
+    </div>
+    <div
+      class="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse"
+      style="animation-delay: 1s;"></div>
+    <div
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none animate-pulse"
+      style="animation-delay: 2s;"></div>
+
+    <!-- Bottom Forest Silhouette -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none forest-silhouette opacity-50"></div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 flex h-screen w-full items-center justify-center p-4">
+      <div class="w-full max-w-md">
+
+        <!-- Login Card -->
+        <div
+          class="bg-surface-dark/90 backdrop-blur-sm border-4 border-primary/30 rounded-3xl shadow-[0_0_60px_rgba(0,255,85,0.15)] overflow-hidden">
+
+          <!-- Header -->
+          <div class="bg-black/40 p-6 border-b-4 border-primary/20 text-center relative">
+            <!-- Pixel Art Decoration -->
+            <div class="absolute top-2 left-2 w-3 h-3 bg-primary/40"></div>
+            <div class="absolute top-2 right-2 w-3 h-3 bg-primary/40"></div>
+            <div class="absolute top-5 left-5 w-2 h-2 bg-primary/20"></div>
+            <div class="absolute top-5 right-5 w-2 h-2 bg-primary/20"></div>
+
+            <!-- Logo/Title -->
+            <div class="flex flex-col items-center">
+              <h1
+                class="text-2xl font-bold text-primary font-['Press_Start_2P'] tracking-wider drop-shadow-[3px_3px_0_rgba(0,0,0,1)]">
+                LOGIN</h1>
+            </div>
+          </div>
+
+          <!-- Form -->
+          <form id="login-form" class="p-6 space-y-5">
+            <!-- Error Message -->
+            <div id="login-error"
+              class="hidden bg-red-500/20 border-2 border-red-500/50 text-red-400 text-[10px] font-['Press_Start_2P'] p-3 rounded-xl text-center">
+            </div>
+
+            <!-- Google Login (At the TOP) -->
+            <button type="button" id="google-login-btn"
+              class="w-full h-14 bg-white/5 hover:bg-white/10 border-4 border-white/10 hover:border-white/30 text-white font-['Press_Start_2P'] text-[10px] uppercase transition-all rounded-xl flex items-center justify-center gap-3 group">
+              <!-- Google Icon -->
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              LOGIN WITH GOOGLE
+            </button>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-4">
+              <div class="flex-1 h-1 bg-white/10 rounded"></div>
+              <span class="text-white/30 text-[8px] font-['Press_Start_2P'] uppercase">or</span>
+              <div class="flex-1 h-1 bg-white/10 rounded"></div>
+            </div>
+
+            <!-- Email/Username Input -->
+            <div class="space-y-2">
+              <label
+                class="flex items-center gap-2 text-white/80 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">person</span> EMAIL / USERNAME
+              </label>
+              <div class="relative group">
+                <input id="login-email" type="text" placeholder="player@game.com"
+                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 text-white font-['Press_Start_2P'] text-xs placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
+                <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                  <span
+                    class="material-symbols-outlined text-white/20 group-focus-within:text-primary transition-colors">mail</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="space-y-2">
+              <label
+                class="flex items-center gap-2 text-white/80 text-[10px] font-bold uppercase tracking-widest font-['Press_Start_2P']">
+                <span class="material-symbols-outlined text-sm text-primary">lock</span> PASSWORD
+              </label>
+              <div class="relative group">
+                <input id="login-password" type="password" placeholder="••••••••"
+                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 pr-12 text-white font-['Press_Start_2P'] text-xs placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
+                <button type="button" id="password-toggle"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-primary transition-colors">
+                  <span class="material-symbols-outlined">visibility_off</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit" id="login-btn"
+              class="w-full h-16 bg-primary text-black font-bold text-sm uppercase font-['Press_Start_2P'] border-4 border-black pixel-btn-green active:translate-y-1 transition-all btn-sweep hover:shadow-[0_0_30px_rgba(0,255,85,0.4)] rounded-xl flex items-center justify-center gap-3">
+              <span class="material-symbols-outlined">login</span>
+              LOGIN
+            </button>
+
+            <!-- Register Link -->
+            <div class="text-center pt-4 border-t-2 border-white/5">
+              <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link"
+                class="inline-flex items-center gap-2 text-[9px] font-['Press_Start_2P'] transition-colors group">
+                <span class="text-white/40">DON'T HAVE AN ACCOUNT?</span>
+                <span class="text-primary group-hover:text-white group-hover:underline">REGISTER NOW</span>
+                <span
+                  class="material-symbols-outlined text-sm text-primary group-hover:text-white group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </a>
+            </div>
+          </form>
+
+          <!-- Footer Decoration -->
+          <div class="h-2 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH LOADING OVERLAY (shown during OAuth callback) -->
+  <div id="auth-loading-overlay" class="hidden fixed inset-0 z-[9999] fantasy-bg flex items-center justify-center">
+    <!-- Background Effects -->
+    <div class="absolute inset-0 pointer-events-none"
+      style="background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);"></div>
+    <div class="absolute inset-0 pointer-events-none mystical-fog"></div>
+
+    <!-- Fireflies -->
+    <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s; animation-duration: 7s;"></div>
+    <div class="firefly" style="top: 60%; left: 85%; animation-delay: 1s; animation-duration: 5s;"></div>
+    <div class="firefly" style="top: 40%; left: 50%; animation-delay: 2s; animation-duration: 6s;"></div>
+    <div class="firefly" style="top: 80%; left: 30%; animation-delay: 0.5s; animation-duration: 8s;"></div>
+
+    <!-- Glowing Orbs -->
+    <div
+      class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none animate-pulse">
+    </div>
+    <div
+      class="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse"
+      style="animation-delay: 1s;"></div>
+
+    <!-- Loading Content -->
+    <div class="relative z-10 flex flex-col items-center gap-8">
+      <!-- Spinner -->
+      <div class="auth-loading-spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring spinner-ring-2"></div>
+        <div class="spinner-ring spinner-ring-3"></div>
+        <span class="material-symbols-outlined spinner-icon">shield_person</span>
+      </div>
+      <!-- Text -->
+      <div class="text-center space-y-3">
+        <p id="auth-loading-text" class="text-primary font-['Press_Start_2P'] text-sm tracking-wider animate-pulse">
+          Completing login...</p>
+        <p class="text-white/30 font-['Press_Start_2P'] text-[8px] tracking-widest uppercase">Please wait</p>
+      </div>
     </div>
   </div>
 
