@@ -253,46 +253,4 @@ export class LobbyScene extends Phaser.Scene {
             alert("Error joining room.");
         }
     }
-
-    async createRoom() {
-        if (!this.selectedQuiz) return;
-
-        // MAP CONFIGURATION
-        let mapFile = 'map_baru1_tetap.tmj'; // Default Mudah
-        if (this.settingsDifficulty === 'sedang') mapFile = 'map_baru3.tmj';
-        if (this.settingsDifficulty === 'sulit') mapFile = 'map_baru3.tmj';
-
-        // ENEMY COUNT CALCULATION
-        // 5 soal -> 10 enemies, 10 soal -> 20 enemies
-        const enemyCount = this.settingsQuestionCount === 5 ? 10 : 20;
-
-        const options = {
-            difficulty: this.settingsDifficulty,
-            subject: this.selectedQuiz.category.toLowerCase(),
-            quizId: this.selectedQuiz.id,
-            quizTitle: this.selectedQuiz.title,
-            map: mapFile,
-            questionCount: this.settingsQuestionCount,
-            enemyCount: enemyCount,
-            timer: this.settingsTimer
-        };
-
-        try {
-            const room = await this.client.joinOrCreate("game_room", options);
-            console.log("Room created!", room);
-
-            // Save options for Restart functionality
-            this.registry.set('lastGameOptions', options);
-
-            // Hide all overlays
-            this.toggleUI(''); // Hides everything since '' matches nothing
-
-            // Navigate to Waiting Room
-            Router.navigate('/host/lobby');
-            this.scene.start('HostWaitingRoomScene', { room, isHost: true });
-        } catch (e) {
-            console.error("Create room error", e);
-            alert("Error creating room. Check console.");
-        }
-    }
 }
