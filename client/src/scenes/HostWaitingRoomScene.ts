@@ -5,11 +5,13 @@ import { TransitionManager } from '../utils/TransitionManager';
 import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
 import { QRCodePopup } from '../ui/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../data/characterData';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
 
 export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
     isHost: boolean = false;
     mySessionId: string = '';
+    isGameStarting: boolean = false; // Flag to prevent double transition
 
     // UI Elements
     waitingUI: HTMLElement | null = null;
@@ -27,6 +29,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
+    countdownOverlay: HTMLElement | null = null;
+    countdownText: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
@@ -58,26 +62,31 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             document.head.appendChild(style);
         }
 
-        // Grab DOM elements
         this.waitingUI = document.getElementById('waiting-ui');
-        this.roomCodeEl = document.getElementById('display-room-code');
-        this.playerGridEl = document.getElementById('player-grid');
-        this.playerCountEl = document.getElementById('player-count');
-        this.startBtn = document.getElementById('start-game-btn');
-        this.waitingMsg = document.getElementById('waiting-msg');
-        this.nameInput = document.getElementById('player-name-input') as HTMLInputElement;
-        this.roomListEl = document.getElementById('room-list');
-        this.hostIndicatorEl = document.getElementById('host-indicator');
 
-        this.copyCodeBtn = document.getElementById('copy-code-btn');
-        this.copyFeedback = document.getElementById('copy-feedback');
-        this.roomQrCode = document.getElementById('room-qr-code') as HTMLImageElement;
-        this.backBtn = document.getElementById('waiting-back-btn');
-
-        // Hide lobby, show waiting room
+        // Hide lobby, show waiting room container
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.add('hidden');
         if (this.waitingUI) this.waitingUI.classList.remove('hidden');
+
+        // IF HOST: Inject Custom Layout
+        if (this.isHost) {
+            this.createHostLayout();
+        } else {
+            // Player Logic (Original DOM mapping)
+            this.roomCodeEl = document.getElementById('display-room-code');
+            this.playerGridEl = document.getElementById('player-grid');
+            this.playerCountEl = document.getElementById('player-count');
+            this.startBtn = document.getElementById('start-game-btn');
+            this.waitingMsg = document.getElementById('waiting-msg');
+            this.nameInput = document.getElementById('player-name-input') as HTMLInputElement;
+            this.roomListEl = document.getElementById('room-list');
+            this.hostIndicatorEl = document.getElementById('host-indicator');
+            this.copyCodeBtn = document.getElementById('copy-code-btn');
+            this.copyFeedback = document.getElementById('copy-feedback');
+            this.roomQrCode = document.getElementById('room-qr-code') as HTMLImageElement;
+            this.backBtn = document.getElementById('waiting-back-btn');
+        }
 
         // Display Room Code
         this.updateRoomCode();
@@ -87,8 +96,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         // --- Event Listeners ---
 
-        // Back Button
-        if (this.backBtn) {
+        // Back Button (Player Only - Host handled in createHostLayout)
+        if (this.backBtn && !this.isHost) {
             this.backBtn.onclick = () => {
                 this.leaveRoom();
             };
@@ -101,20 +110,29 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 if (code) {
                     navigator.clipboard.writeText(code).then(() => {
                         this.showCopyFeedback();
+
+                        // Icon Check Animation
+                        const iconSpan = this.copyCodeBtn?.querySelector('.material-symbols-outlined');
+                        if (iconSpan) {
+                            const originalText = iconSpan.textContent;
+                            iconSpan.innerHTML = 'check';
+                            iconSpan.classList.add('text-primary');
+                            setTimeout(() => {
+                                iconSpan.innerHTML = 'content_copy';
+                                iconSpan.classList.remove('text-primary');
+                            }, 2000);
+                        }
                     });
                 }
             };
         }
 
-        // Name Input Sync
+        // Name Input Sync (Only for Player)
         if (this.nameInput) {
-            // Set initial value from player state if available
             const myPlayer = this.room.state.players.get(this.mySessionId);
             if (myPlayer) {
                 this.nameInput.value = myPlayer.name || 'Player';
             }
-
-            // Send updates when user types
             this.nameInput.addEventListener('input', () => {
                 this.room.send('updateName', { name: this.nameInput!.value });
             });
@@ -122,31 +140,29 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         // --- Room State Listeners ---
 
-        // Room Code
         this.room.state.listen("roomCode", (code: string) => {
-            if (this.roomCodeEl) this.roomCodeEl.innerText = code;
+            if (this.roomCodeEl) this.roomCodeEl.innerText = code || '------';
             this.updateQrCode(code);
+            this.updateJoinUrl(code);
         });
 
-        // Host ID
         this.room.state.listen("hostId", (hostId: string) => {
-            if (hostId !== this.mySessionId) {
-                this.scene.start('PlayerWaitingRoomScene', { room: this.room, isHost: false });
+            if (hostId !== this.mySessionId && this.isHost) {
+                window.location.reload(); // Host lost status
+            } else if (hostId !== this.mySessionId && !this.isHost) {
+                // Player logic
             }
             this.updateHostStatus();
         });
 
-        // Sub Rooms Listener
         this.room.state.subRooms.onAdd((subRoom: any) => {
             this.updateRoomList();
             subRoom.playerIds.onAdd(() => this.updateAll());
             subRoom.playerIds.onRemove(() => this.updateAll());
         });
 
-        // Player Add/Remove/Change
         this.room.state.players.onAdd((player: any, key: string) => {
             this.updateAll();
-            // Listen for changes
             player.listen("name", () => this.updateAll());
             player.listen("hairId", () => this.updateAll());
             player.listen("subRoomId", () => this.updateAll());
@@ -154,56 +170,258 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         this.room.state.players.onRemove(() => this.updateAll());
 
-        // Game Start
-        this.room.onMessage("gameStarted", () => {
-            TransitionManager.close(() => {
-                if (this.waitingUI) this.waitingUI.classList.add('hidden');
-
-                if (this.isHost) {
-                    Router.navigate('/host/spectator');
-                    TransitionManager.sceneTo(this, 'HostSpectatorScene', { room: this.room });
-                } else {
-                    Router.navigate('/game');
-                    this.scene.start('GameScene', { room: this.room });
+// Listen for Countdown
+        this.room.state.listen("countdown", (val: number) => {
+            if (val > 0) {
+                if (this.countdownOverlay) {
+                    this.countdownOverlay.classList.remove('hidden');
+                    // Reset opacity if it was hidden
+                    this.countdownOverlay.style.opacity = '1';
                 }
-            });
+                if (this.countdownText) this.countdownText.innerText = val.toString();
+            } else if (val === 0) {
+                // Countdown finished, wait for start
+                if (this.countdownText) this.countdownText.innerText = "GO!";
+            }
         });
 
-        // Initial render
+        // Listen for Game Start (State)
+        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+            if (isStarted) this.handleGameStart();
+        });
+
+        // Listen for Game Start (Message)
+        this.room.onMessage("gameStarted", () => {
+            this.handleGameStart();
+        });
+
         this.updateAll();
 
-        // --- Character Customization ---
-        const charPreviewBox = document.getElementById('character-preview-box');
+        // --- Character & QR Popup (Only for Player) ---
+        if (!this.isHost) {
+            this.setupCharacterCustomization();
+            this.setupQRPopup();
+        }
+    }
 
-        // Find the specific container for character selection
-        const charSelectContainer = charPreviewBox?.parentElement?.parentElement; // section -> container
+    createHostLayout() {
+        if (!this.waitingUI) return;
+
+        // NEW 2-COLUMN HOST LAYOUT
+        this.waitingUI.innerHTML = `
+            <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
+            
+            <div class="relative z-10 flex h-screen w-full flex-row p-6 gap-6 font-display">
+                <!-- LOGO -->
+                <img src="/logo/gameforsmart.webp" class="absolute top-0 left-8 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)] hover:scale-105 transition-transform" />
+
+                <!-- Back Button REMOVED -->
+
+                <!-- LEFT PANEL (Code, QR, URL, Start) -->
+                <section class="w-1/3 min-w-[350px] max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-8 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-24 bg-opacity-90 backdrop-blur-sm">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+
+                    <!-- Room Code -->
+                    <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
+                        <span id="host-room-code" class="text-4xl text-primary font-['Press_Start_2P'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
+                        <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="flex-1 w-full flex items-center justify-center my-4 relative">
+                        <button id="host-qr-expand-btn" class="absolute top-0 right-0 text-white/20 hover:text-white transition-colors cursor-pointer p-2 hover:scale-110 active:scale-95">
+                            <span class="material-symbols-outlined">open_in_full</span>
+                        </button>
+                        <div class="bg-white p-4 rounded-xl aspect-square w-full max-w-[280px] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,85,0.2)]">
+                            <img id="host-qr-img" src="" class="w-full h-full object-contain" />
+                        </div>
+                    </div>
+
+                    <!-- URL Box -->
+                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-8 group hover:border-secondary transition-all cursor-pointer relative">
+                        <span id="host-join-url" class="text-[8px] text-secondary font-['Press_Start_2P'] whitespace-nowrap mr-2 select-all">https://...</span>
+                        <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
+                            <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
+                        </div>
+                    </div>
+
+                    <!-- Start Button REMOVED from here -->
+                    <!-- Start Button REMOVED from here -->
+                </section>
+
+                <!-- RIGHT PANEL (Players) -->
+                <section class="flex-1 bg-surface-dark border-4 border-purple-500/30 rounded-3xl p-8 flex flex-col shadow-[0_0_30px_rgba(204,0,255,0.1)] relative overflow-hidden mt-24 bg-opacity-90 backdrop-blur-sm">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-6 border-b-2 border-purple-500/20 pb-4">
+                        <div class="flex items-center gap-4">
+                            <h2 id="host-player-count" class="text-2xl text-secondary font-['Press_Start_2P'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <!-- Back Button MOVED here -->
+                            <button id="host-back-btn" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] uppercase text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                                BACK
+                            </button>
+
+                            <!-- Start Button -->
+                            <button id="host-start-btn" class="px-8 py-3 bg-primary text-black font-['Press_Start_2P'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer">
+                                Start
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Player List / Empty State -->
+                    <div id="host-player-area" class="flex-1 w-full relative overflow-hidden">
+                        <!-- Empty State -->
+                        <div id="host-empty-state" class="absolute inset-0 flex flex-col items-center justify-center opacity-50 space-y-4">
+                            <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10">
+                                <span class="material-symbols-outlined text-6xl text-white/20">person_add</span>
+                            </div>
+                            <p class="text-white/30 font-['Press_Start_2P'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
+                        </div>
+                        
+                        <!-- Grid Container -->
+                        <div id="host-player-grid" class="grid grid-cols-3 xl:grid-cols-4 gap-4 w-full h-full overflow-y-auto custom-scrollbar p-2 hidden"></div>
+                    </div>
+                </section>
+                </section>
+            </div>
+
+            <!-- CONFIRM BACK MODAL -->
+            <div id="host-back-confirm-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                <div class="bg-surface-dark border-4 border-red-500 rounded-3xl p-8 max-w-sm w-full shadow-[0_0_50px_rgba(255,0,0,0.3)] text-center relative overflow-hidden">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+                    
+                    <span class="material-symbols-outlined text-6xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">warning</span>
+                    
+                    <h3 class="text-xl text-white font-['Press_Start_2P'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
+                    <p class="text-white/60 font-['Press_Start_2P'] text-[10px] mb-8 leading-loose">
+                        Room will be destroyed and all players disconnected.
+                    </p>
+
+                    <div class="flex gap-4 justify-center">
+                        <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
+                            NO
+                        </button>
+                        <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
+                            YES
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Create Countdown Overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'countdown-overlay';
+        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
+        overlay.innerHTML = `
+            <div class="flex flex-col items-center animate-bounce">
+                <div id="countdown-text" class="text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                    10
+                </div>
+                <div class="text-white/50 font-['Press_Start_2P'] text-sm mt-4 tracking-widest uppercase">
+                    Game Starting...
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        this.countdownOverlay = overlay;
+        this.countdownText = document.getElementById('countdown-text');
+
+        // Re-assign references
+        this.roomCodeEl = document.getElementById('host-room-code');
+        this.roomQrCode = document.getElementById('host-qr-img') as HTMLImageElement;
+        this.copyCodeBtn = document.getElementById('copy-code-btn');
+        this.backBtn = document.getElementById('host-back-btn');
+        this.startBtn = document.getElementById('host-start-btn');
+
+        // MODAL LOGIC
+        const modal = document.getElementById('host-back-confirm-modal');
+        const yesBtn = document.getElementById('host-confirm-yes');
+        const noBtn = document.getElementById('host-confirm-no');
+
+        if (this.backBtn) {
+            this.backBtn.onclick = () => {
+                if (modal) modal.classList.remove('hidden');
+            };
+        }
+        if (yesBtn) {
+            yesBtn.onclick = () => {
+                if (modal) modal.classList.add('hidden');
+                this.leaveRoom();
+            };
+        }
+        if (noBtn) {
+            noBtn.onclick = () => {
+                if (modal) modal.classList.add('hidden');
+            };
+        }
+
+        // URL Copy Logic
+        const urlBtn = document.getElementById('copy-url-container');
+        if (urlBtn) {
+            urlBtn.onclick = () => {
+                const url = document.getElementById('host-join-url')?.innerText;
+                if (url) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        // Icon Check Animation
+                        const iconSpan = urlBtn.querySelector('.material-symbols-outlined');
+                        if (iconSpan) {
+                            iconSpan.innerHTML = 'check';
+                            iconSpan.classList.add('text-primary');
+                            setTimeout(() => {
+                                iconSpan.innerHTML = 'content_copy';
+                                iconSpan.classList.remove('text-primary');
+                            }, 2000);
+                        }
+                    });
+                }
+            };
+        }
+
+        // QR Expand Logic
+        const expandBtn = document.getElementById('host-qr-expand-btn');
+        if (expandBtn) {
+            // Ensure Popup is initialized
+            if (!this.qrPopup) this.qrPopup = new QRCodePopup(() => { });
+
+            expandBtn.onclick = () => {
+                const img = document.getElementById('host-qr-img') as HTMLImageElement;
+                if (img && img.src) {
+                    this.qrPopup?.show(img.src);
+                }
+            };
+        }
+
+        // Start Button Binding
+        if (this.startBtn) {
+            this.startBtn.classList.remove('hidden');
+            this.startBtn.onclick = () => {
+                this.room.send("startGame");
+            };
+        }
+    }
+
+    setupCharacterCustomization() {
+        const charPreviewBox = document.getElementById('character-preview-box');
+        const charSelectContainer = charPreviewBox?.parentElement?.parentElement;
 
         if (charSelectContainer) {
-            // Initialize Popup
             this.characterPopup = new CharacterSelectPopup(
                 HAIR_OPTIONS,
-                (hairId) => {
-                    // On Confirm
-                    this.room.send("updateHair", { hairId });
-                },
-                () => {
-                    // On Close
-                }
+                (hairId) => this.room.send("updateHair", { hairId }),
+                () => { }
             );
 
-            // Bind Click (Entire container or specific button)
             const spans = Array.from(charSelectContainer.querySelectorAll('.material-symbols-outlined'));
-            const leftSpan = spans.find(el => el.textContent?.includes('chevron_left'));
-            const rightSpan = spans.find(el => el.textContent?.includes('chevron_right'));
-
-            const leftBtn = leftSpan?.closest('button');
-            const rightBtn = rightSpan?.closest('button');
+            const leftBtn = spans.find(el => el.textContent?.includes('chevron_left'))?.closest('button');
+            const rightBtn = spans.find(el => el.textContent?.includes('chevron_right'))?.closest('button');
 
             if (charPreviewBox) {
                 charPreviewBox.onclick = () => {
-                    // Host cannot change character
-                    if (this.isHost) return;
-
                     const myPlayer = this.room.state.players.get(this.mySessionId);
                     this.characterPopup?.show(myPlayer?.hairId || 0);
                 };
@@ -222,21 +440,17 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (leftBtn) leftBtn.onclick = () => cycleHair(-1);
             if (rightBtn) rightBtn.onclick = () => cycleHair(1);
         }
+    }
 
-        // --- QR Code Popup ---
+    setupQRPopup() {
         if (!this.qrPopup) {
             this.qrPopup = new QRCodePopup(() => { });
-
             const qrImg = document.getElementById('room-qr-code');
             const qrContainer = qrImg?.parentElement;
-
             if (qrContainer) {
                 qrContainer.onclick = () => {
-                    // Wait for main loop or just ensure image is set
                     const img = document.getElementById('room-qr-code') as HTMLImageElement;
-                    if (img && img.src) {
-                        this.qrPopup?.show(img.src);
-                    }
+                    if (img && img.src) this.qrPopup?.show(img.src);
                 };
             }
         }
@@ -291,15 +505,48 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         }
     }
 
-    leaveRoom() {
+    async leaveRoom() {
         if (this.room) {
+            // IF HOST: Delete from Supabase
+            if (this.isHost) {
+                const roomCode = this.room.state.roomCode;
+                if (roomCode) {
+                    try {
+                        // Delete the session. 
+                        // Note: If you have ON DELETE CASCADE setup in SQL for participants, this deletes them too.
+                        // Otherwise, you might need to delete participants first.
+                        // Assuming CASCADE or deleting session is enough for now.
+                        const { error } = await supabaseB
+                            .from(SESSION_TABLE)
+                            .delete()
+                            .eq('game_pin', roomCode);
+
+                        if (error) {
+                            console.error("Error cleaning up Supabase session:", error);
+                        } else {
+                            console.log("Supabase session deleted for code:", roomCode);
+                        }
+                    } catch (err) {
+                        console.error("Cleanup error:", err);
+                    }
+                }
+            }
             this.room.leave();
         }
+
+        // Clear local storage session
+        localStorage.removeItem('mindventure_room');
+
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
         Router.navigate('/');
         this.scene.start('LobbyScene');
+        // Clean up overlay
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
     }
 
     showCopyFeedback() {
@@ -337,71 +584,38 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
     updateHostStatus() {
         const isCurrentHost = this.room.state.hostId === this.mySessionId;
-        const totalPlayers = this.room.state.players.size;
-        const labelText = totalPlayers <= 1 ? 'PLAYER' : 'PLAYERS';
 
-        const headerText = document.getElementById('waiting-header-text');
-        if (headerText) {
-            headerText.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;">
-                    <span style="color: #00ff88;">${totalPlayers}</span>
-                    <span style="color: white; opacity: 0.9;">${labelText}</span>
-                </div>
-            `;
-        }
+        // Count only non-host players
+        let totalPlayers = 0;
+        this.room.state.players.forEach((p: any) => {
+            if (!p.isHost) totalPlayers++;
+        });
 
-        // Hide Player Count Header for host
-        const headerCount = document.getElementById('player-count');
-        if (headerCount) {
-            headerCount.style.display = isCurrentHost ? 'none' : 'block';
-        }
-
-        // Hide Name Input for host
-        const nameSection = document.getElementById('player-name-section');
-        if (nameSection) {
-            nameSection.style.display = isCurrentHost ? 'none' : 'block';
-        }
-
-        // Hide labels for host
-        const roomCodeLabel = document.getElementById('room-code-label');
-        if (roomCodeLabel) roomCodeLabel.style.display = isCurrentHost ? 'none' : 'block';
-
-        const scanLabel = document.getElementById('scan-to-join-label');
-        if (scanLabel) scanLabel.style.display = isCurrentHost ? 'none' : 'block';
-
-        if (isCurrentHost) {
-            // Move Start Button to left for host
-            const leftContainer = document.getElementById('host-start-btn-container');
-            if (leftContainer && this.startBtn) {
-                this.startBtn.classList.remove('hidden'); // Fix: Ensure it's visible
-                leftContainer.classList.remove('hidden');
-                leftContainer.appendChild(this.startBtn);
-
-                // Style adjustment for left column (Compact & Tight Style)
-                this.startBtn.classList.remove('py-8', 'text-2xl', 'shadow-[0_10px_0_#000]', 'pixel-btn-green', 'mb-2', 'w-full', 'py-4', 'px-8', 'py-2');
-                this.startBtn.classList.add('py-0', 'px-6', 'text-[10px]', 'shadow-none', 'bg-primary', 'hover:bg-white', 'text-black', 'rounded-xl', 'mx-auto', 'block', 'transition-all', 'font-bold');
-                this.startBtn.innerText = 'START';
-
-                this.startBtn.onclick = () => {
-                    this.room.send("startGame");
-                };
+        // UPDATE HEADER TEXT
+        if (this.isHost) {
+            // New Host Layout Header
+            const hostHeader = document.getElementById('host-player-count');
+            if (hostHeader) {
+                const label = totalPlayers === 1 ? 'Player' : 'Player';
+                hostHeader.innerText = `${totalPlayers} ${label}`;
             }
-            if (this.waitingMsg) this.waitingMsg.classList.add('hidden');
         } else {
-            // Restore Start Button to bottom for player (if they somehow become non-host)
-            const mainContent = document.getElementById('waiting-ui');
-            if (mainContent && this.startBtn && this.startBtn.parentElement?.id === 'host-start-btn-container') {
-                mainContent.appendChild(this.startBtn);
-                this.startBtn.classList.add('py-8', 'text-2xl');
-                this.startBtn.classList.remove('py-4', 'text-sm');
+            // Player view header logic (Existing)
+            const labelText = totalPlayers === 1 ? 'PLAYER' : 'PLAYERS';
+            const headerText = document.getElementById('waiting-header-text');
+            if (headerText) {
+                headerText.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;">
+                        <span style="color: #00ff88;">${totalPlayers}</span>
+                        <span style="color: white; opacity: 0.9;">${labelText}</span>
+                    </div>
+                `;
             }
-            if (this.startBtn) this.startBtn.classList.add('hidden');
-            if (this.waitingMsg) this.waitingMsg.classList.remove('hidden');
         }
 
-        const charSection = document.getElementById('character-selection-section');
-        if (charSection) {
-            charSection.style.display = isCurrentHost ? 'none' : 'flex';
+        // -- OLD LOGIC for Player View (Hide unnecessary things if mistakenly shown) --
+        if (!this.isHost) {
+            // Ensure player logic remains active if needed
         }
     }
 
@@ -478,20 +692,47 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     }
 
     updatePlayerGrid() {
-        if (!this.playerGridEl) return;
+        const gridEl = this.isHost ? document.getElementById('host-player-grid') : document.getElementById('player-grid');
+        if (!gridEl) return;
 
-        // Unified View: Host and Players see ALL players
+        // Unified View: Host and Players see ALL players (EXCEPT HOST)
         const players: any[] = [];
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            players.push({ ...p, sessionId });
+            if (!p.isHost) {
+                players.push({ ...p, sessionId });
+            }
         });
 
-        // Update Header dynamically (also update count if needed)
+        // Update Header dynamically
         this.updateHostStatus();
+
+        // HOST Only: Handle Empty State
+        if (this.isHost) {
+            const emptyState = document.getElementById('host-empty-state');
+            const startHint = document.getElementById('host-start-hint');
+
+            if (players.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                if (gridEl) gridEl.classList.add('hidden');
+                if (this.startBtn) {
+                    this.startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    this.startBtn.onclick = null; // Disable
+                }
+                if (startHint) startHint.classList.remove('hidden');
+            } else {
+                if (emptyState) emptyState.classList.add('hidden');
+                if (gridEl) gridEl.classList.remove('hidden');
+                if (this.startBtn) {
+                    this.startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    this.startBtn.onclick = () => this.room.send("startGame");
+                }
+                if (startHint) startHint.classList.add('hidden');
+            }
+        }
 
         let html = '';
 
-        // Render player cards (Style matched to HostProgress v6)
+        // Render player cards
         players.forEach((player) => {
             const isMe = player.sessionId === this.mySessionId;
             const borderClass = isMe ? 'border: 2px solid #00ff88; box-shadow: 0 0 15px rgba(0,255,136,0.3);' : 'border: 1px solid rgba(255,255,255,0.05);';
@@ -514,7 +755,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     margin: 0 auto;
                     transition: transform 0.2s ease;
                 ">
-                    <!-- Character (Middle) - Matched v6 Centering -->
+                    <!-- Character (Middle) -->
                     <div style="width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
                          <div style="
                             position: relative;
@@ -558,17 +799,51 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             `;
         });
 
-        // Render empty slots up to 20 if needed (optional, but requested simple/clean)
-        // User didn't explicitly ask for empty slots in new style, so we just show active players.
+        gridEl.innerHTML = html;
+        if (this.isHost) {
+            gridEl.style.cssText = `
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 15px;
+                padding: 10px;
+                width: 100%;
+                align-content: start;
+            `;
+        }
+    }
 
-        this.playerGridEl.innerHTML = html;
-        this.playerGridEl.style.cssText = `
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 15px;
-            padding: 10px;
-            width: 100%;
-        `;
+    updateJoinUrl(code: string) {
+        if (!code) return;
+        const urlEl = document.getElementById('host-join-url');
+        if (urlEl) {
+            const baseUrl = window.location.origin;
+            urlEl.innerText = `${baseUrl}/join/${code}`;
+        }
+    }
+
+    handleGameStart() {
+        if (this.isGameStarting) return;
+        this.isGameStarting = true;
+
+        console.log("Game Starting... Transitioning.");
+
+        // Clean Overlay
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
+        TransitionManager.close(() => {
+            if (this.waitingUI) this.waitingUI.classList.add('hidden');
+
+            if (this.isHost) {
+                Router.navigate('/host/progress');
+                this.scene.start('HostProgressScene', { room: this.room });
+            } else {
+                Router.navigate('/game');
+                this.scene.start('GameScene', { room: this.room });
+            }
+        });
     }
 
 }
