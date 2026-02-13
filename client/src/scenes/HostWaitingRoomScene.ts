@@ -170,7 +170,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         this.room.state.players.onRemove(() => this.updateAll());
 
-        // Listen for Countdown
+// Listen for Countdown
         this.room.state.listen("countdown", (val: number) => {
             if (val > 0) {
                 if (this.countdownOverlay) {

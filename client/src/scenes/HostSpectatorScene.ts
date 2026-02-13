@@ -7,8 +7,6 @@ export class HostSpectatorScene extends Phaser.Scene {
     room!: Room;
     map!: Phaser.Tilemaps.Tilemap;
     playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
-    activeSubRoomIndex: number = 0;
-    subRoomIds: string[] = [];
     isDragPan: boolean = false;
     dragOrigin!: Phaser.Math.Vector2;
     uiContainer!: HTMLDivElement;
@@ -19,14 +17,19 @@ export class HostSpectatorScene extends Phaser.Scene {
         super('HostSpectatorScene');
     }
 
-    init(data: { room: Room, targetRoomIndex?: number }) {
-        this.room = data.room;
-        if (data.targetRoomIndex !== undefined) {
-            this.activeSubRoomIndex = data.targetRoomIndex;
+    init(data: { room: Room }) {
+        console.log("[Spectator] Initializing with data:", data);
+        if (!data || !data.room) {
+            console.error("[Spectator] No room data provided! Redirecting to lobby...");
+            window.location.href = '/';
+            return;
         }
+        this.room = data.room;
     }
 
     preload() {
+        console.log("[Spectator] Preloading...");
+        if (!this.room) return;
         // Determine map based on difficulty
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
@@ -54,24 +57,44 @@ export class HostSpectatorScene extends Phaser.Scene {
     }
 
     create() {
+        console.log("[Spectator] Creating...");
+        if (!this.room) {
+            console.error("[Spectator] Create failed: No room!");
+            return;
+        }
+
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
+        console.log("[Spectator] Difficulty:", difficulty);
         const mapKey = difficulty === 'sedang' ? 'map_medium' : difficulty === 'sulit' ? 'map_hard' : 'map_easy';
+        console.log("[Spectator] Loading map with key:", mapKey);
 
         this.map = this.make.tilemap({ key: mapKey });
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
         const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
+
+        if (!tileset1 && !tileset2) {
+            console.error("[Spectator] Failed to load tilesets! Check map keys.");
+        }
 
         const tilesets: Phaser.Tilemaps.Tileset[] = [];
         if (tileset1) tilesets.push(tileset1);
         if (tileset2) tilesets.push(tileset2);
 
         if (tilesets.length > 0) {
-            this.map.layers.forEach(layerData => {
+            console.log(`[Spectator] Iterating through ${this.map.layers.length} layers...`);
+            this.map.layers.forEach((layerData, index) => {
                 try {
-                    this.map.createLayer(layerData.name, tilesets, 0, 0);
+                    // Try to create the layer. createLayer handles the name vs index properly.
+                    const layer = this.map.createLayer(layerData.name, tilesets, 0, 0);
+                    if (layer) {
+                        console.log(`[Spectator] Successfully rendered layer: ${layerData.name}`);
+                    } else {
+                        console.warn(`[Spectator] Layer created as null: ${layerData.name}`);
+                    }
                 } catch (e) {
-                    console.warn(`Skipping layer: ${layerData.name}`);
+                    // This might happen for object layers or groups if Phaser doesn't flatten them as expected
+                    console.log(`[Spectator] Note: Could not render layer '${layerData.name}' as a tile layer. This is normal for object/group layers.`);
                 }
             });
         }
@@ -98,11 +121,16 @@ export class HostSpectatorScene extends Phaser.Scene {
         });
 
         // --- Camera Setup ---
-        this.minZoom = Math.max(this.scale.width / this.map.widthInPixels, this.scale.height / this.map.heightInPixels);
+        const mapW = this.map.widthInPixels || 1920;
+        const mapH = this.map.heightInPixels || 1080;
+        this.minZoom = Math.max(this.scale.width / mapW, this.scale.height / mapH);
 
-        this.cameras.main.centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
-        this.cameras.main.setZoom(Math.max(0.8, this.minZoom));
-        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+        console.log(`[Spectator] Map size: ${mapW}x${mapH}, Zoom: ${this.minZoom}`);
+
+        this.cameras.main.setBackgroundColor('#1a1a1a');
+        this.cameras.main.centerOn(mapW / 2, mapH / 2);
+        this.cameras.main.setZoom(Math.max(0.6, this.minZoom));
+        this.cameras.main.setBounds(0, 0, mapW, mapH);
 
         // Drag Pan
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -125,12 +153,7 @@ export class HostSpectatorScene extends Phaser.Scene {
         });
 
         // --- UI Initialization ---
-        this.refreshSubRooms();
         this.createUI();
-
-        // --- Room Sync ---
-        this.disposers.push(this.room.state.subRooms.onAdd(() => this.refreshSubRooms()));
-        this.disposers.push(this.room.state.subRooms.onRemove(() => this.refreshSubRooms()));
 
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
@@ -146,6 +169,11 @@ export class HostSpectatorScene extends Phaser.Scene {
 
             this.createNameTag(sessionId, player.name || 'Player', container);
             this.playerEntities[sessionId] = container;
+            console.log(`[Spectator] Added player entity: ${sessionId} (${player.name})`);
+
+            // Target questions based on difficulty
+            const diff = this.room.state.difficulty;
+            const target = diff === 'sedang' ? 10 : diff === 'sulit' ? 20 : 5;
 
             const updateHair = () => {
                 const hairId = player.hairId || 0;
@@ -165,10 +193,18 @@ export class HostSpectatorScene extends Phaser.Scene {
             updateHair();
             this.disposers.push(player.listen("hairId", updateHair));
 
-            this.disposers.push(player.onChange(() => {
-                container.setData({ subRoomId: player.subRoomId, targetX: player.x, targetY: player.y });
+            const updateProgress = () => {
                 const tag = container.getByName('nameTag') as Phaser.GameObjects.Text;
-                if (tag) tag.setText(`${player.name} (${player.correctAnswers})`);
+                if (tag) {
+                    const answered = player.answeredQuestions || 0;
+                    tag.setText(`${player.name} (${answered}/${target})`);
+                }
+            };
+            updateProgress();
+
+            this.disposers.push(player.onChange(() => {
+                container.setData({ targetX: player.x, targetY: player.y });
+                updateProgress();
             }));
         };
 
@@ -191,6 +227,13 @@ export class HostSpectatorScene extends Phaser.Scene {
             this.registry.set('leaderboardData', data.rankings);
             TransitionManager.sceneTo(this, 'LeaderboardScene');
         }));
+
+        this.time.delayedCall(500, () => this.focusOnAllPlayers());
+
+        // --- Open Transition (Critical Fix) ---
+        TransitionManager.open();
+
+        console.log("[Spectator] Create finished.");
     }
 
     // Adding helper for background if needed, but let's just stick to UI update
@@ -203,131 +246,64 @@ export class HostSpectatorScene extends Phaser.Scene {
         this.uiContainer = document.createElement('div');
         this.uiContainer.id = 'host-spectator-ui';
 
-        // Spotlight Style (reused from Progress)
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .spotlight-container {
-                position: absolute;
-                top: -100px; left: 50%;
-                transform: translateX(-50%);
-                width: 600px; 
-                height: 500px;
-                pointer-events: none;
-                z-index: 0;
-            }
-            .spotlight-beam {
-                width: 100%; height: 100%;
-                background: conic-gradient(from 0deg at 50% 0%, transparent 160deg, rgba(255, 255, 255, 0.08) 180deg, transparent 200deg);
-                filter: blur(25px);
-                animation: flicker 4s infinite alternate;
-            }
-        `;
-        document.head.appendChild(style);
 
         this.uiContainer.style.cssText = `
             position: fixed;
             inset: 0;
-            pointer-events: none; /* Let clicks pass to map except for buttons */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
-            padding: 40px 60px;
+            padding: 20px 40px;
             font-family: 'Press Start 2P', monospace;
             color: white;
-            z-index: 100;
+            z-index: 9999; /* Force to top */
+            background: transparent;
         `;
 
-        const currentRoomName = this.subRoomIds[this.activeSubRoomIndex] || `Room ${this.activeSubRoomIndex + 1}`;
 
         this.uiContainer.innerHTML = `
-            <div class="spotlight-container">
-                <div class="spotlight-beam"></div>
-            </div>
-
-            <!-- Header (Logo Spacer + Dynamic Room Title) -->
-            <div style="display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px; width: 100%;">
-                <div style="position: absolute; left: 0; width: 200px; height: 50px; opacity: 0.5;"></div>
-                <h1 id="spectator-title" style="font-size: 32px; text-transform: uppercase; color: #00ff88; tracking-widest; margin: 0; font-family: 'Press Start 2P'; text-shadow: 0 0 30px rgba(0,255,136,0.3); pointer-events: auto;">
-                    ${currentRoomName}
-                </h1>
-            </div>
-
             <!-- Top Bar: Timer & Controls -->
-            <div style="max-width: 1200px; width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.4); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); pointer-events: auto; backdrop-filter: blur(8px);">
+            <div style="max-width: 1200px; width: 100%; margin: 10px auto 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.6); border-radius: 16px; border: 1px solid rgba(0,255,136,0.2); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="material-symbols-outlined" style="font-size: 28px; color: #00ff88;">timer</span>
                     <span id="game-timer" style="font-size: 18px; color: #00ff88;">05:00</span>
                 </div>
-                <button id="spec-end-btn" class="pixel-btn-red" style="background: #ff0055; border: 2px solid white; padding: 10px 20px; color: white; cursor: pointer; font-family: inherit; font-size: 10px; text-transform: uppercase; border-radius: 8px;">
+                <button id="spec-end-btn" style="
+                    background: #ff0055; 
+                    border: none; 
+                    padding: 12px 24px; 
+                    color: white; 
+                    cursor: pointer; 
+                    font-family: inherit; 
+                    font-size: 10px; 
+                    text-transform: uppercase; 
+                    border-radius: 8px; 
+                    box-shadow: 0 5px 0 #990033; 
+                    transition: all 0.05s;
+                    position: relative;
+                    outline: none;
+                ">
                     Akhiri Game
                 </button>
             </div>
-
-            <!-- Floating Side Navs (Sequence Logic) - v6 Fix: Floating Absolute -->
-            <button id="spec-prev-btn" style="
-                position: absolute; left: -60px; top: 50%; transform: translateY(-50%);
-                background: none; border: none; 
-                color: #00ff88; 
-                display: flex; align-items: center; justify-content: center; 
-                cursor: pointer; pointer-events: auto;
-                filter: drop-shadow(0 0 10px rgba(0,255,136,0.4));
-                z-index: 10;">
-                <span class="material-symbols-outlined" style="font-size: 64px;">chevron_left</span>
-            </button>
-
-            <button id="spec-next-btn" style="
-                position: absolute; right: -60px; top: 50%; transform: translateY(-50%);
-                background: none; border: none; 
-                color: #00ff88; 
-                display: flex; align-items: center; justify-content: center; 
-                cursor: pointer; pointer-events: auto;
-                filter: drop-shadow(0 0 10px rgba(0,255,136,0.4));
-                z-index: 10;
-                ${this.activeSubRoomIndex >= this.subRoomIds.length - 1 ? 'opacity: 0.1; cursor: not-allowed; pointer-events: none;' : ''}">
-                <span class="material-symbols-outlined" style="font-size: 64px;">chevron_right</span>
-            </button>
+            <style>
+                #spec-end-btn:active {
+                    transform: translateY(3px);
+                    box-shadow: 0 2px 0 #990033;
+                }
+            </style>
         `;
 
+        console.log("[Spectator] UI innerHTML set. Appending to body...");
         document.body.appendChild(this.uiContainer);
 
-        // First frame focus? Wait 1 frame for positions to settle
-        this.time.delayedCall(100, () => this.focusOnRoomPlayers());
-
-        const handlePrev = () => {
-            if (this.activeSubRoomIndex === 0) {
-                // Back to Progress
-                import('../utils/TransitionManager').then(({ TransitionManager }) => {
-                    TransitionManager.sceneTo(this, 'HostProgressScene', { room: this.room });
-                });
-            } else {
-                // Prev Room
-                this.activeSubRoomIndex--;
-                this.createUI();
-            }
-        };
-
-        const handleNext = () => {
-            if (this.activeSubRoomIndex < this.subRoomIds.length - 1) {
-                this.activeSubRoomIndex++;
-                this.createUI();
-                this.focusOnRoomPlayers();
-            }
-        };
-
         // Bindings
-        document.getElementById('spec-prev-btn')!.onclick = handlePrev;
-        document.getElementById('spec-next-btn')!.onclick = handleNext;
+        const endBtn = document.getElementById('spec-end-btn');
+        if (endBtn) {
+            endBtn.onclick = () => this.showEndGamePopup();
+        }
 
-        // v5: Keyboard Navigation Support
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-                handlePrev();
-            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-                handleNext();
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
         this.events.once('shutdown', () => {
-            window.removeEventListener('keydown', handleKeyDown);
             this.disposers.forEach(d => d());
             this.disposers = [];
             if (this.uiContainer && this.uiContainer.parentNode) {
@@ -335,11 +311,124 @@ export class HostSpectatorScene extends Phaser.Scene {
             }
         });
 
-        document.getElementById('spec-end-btn')!.onclick = () => {
-            if (confirm('Akhiri game untuk SEMUA?')) {
-                this.room.send('hostEndGame');
-            }
+    }
+
+    showEndGamePopup() {
+        // Create Overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'popup-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', monospace;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: auto;
+        `;
+
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            width: 480px;
+            background: #1a1a1b;
+            border: 3px solid #ff4444;
+            border-radius: 24px;
+            padding: 45px 25px;
+            box-shadow: 0 0 40px rgba(255, 68, 68, 0.25);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        `;
+
+        popup.innerHTML = `
+            <!-- Warning Icon -->
+            <div style="color: #ff4444; margin-bottom: 25px; filter: drop-shadow(0 0 10px rgba(255,68,68,0.5));">
+                <span class="material-symbols-outlined" style="font-size: 72px; font-variation-settings: 'FILL' 1;">warning</span>
+            </div>
+            
+            <h2 style="color: white; font-size: 22px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">
+                END GAME?
+            </h2>
+            
+            <p style="color: #aaa; font-size: 10px; line-height: 1.8; margin: 0 0 40px 0; max-width: 85%;">
+                This will terminate the current session and disconnect all players.
+            </p>
+
+            <div style="display: flex; gap: 24px; width: 100%; justify-content: center;">
+                <button id="popup-no" style="
+                    background: #2a2a2a;
+                    border: none;
+                    color: #fff;
+                    padding: 18px 45px;
+                    border-radius: 12px;
+                    font-family: inherit;
+                    font-size: 13px;
+                    cursor: pointer;
+                    box-shadow: 0 5px 0 #111;
+                    transition: all 0.05s;
+                    text-transform: uppercase;
+                    position: relative;
+                ">NO</button>
+                <button id="popup-yes" style="
+                    background: #ff4444;
+                    border: none;
+                    color: white;
+                    padding: 18px 45px;
+                    border-radius: 12px;
+                    font-family: inherit;
+                    font-size: 13px;
+                    cursor: pointer;
+                    box-shadow: 0 5px 0 #990000;
+                    transition: all 0.05s;
+                    text-transform: uppercase;
+                    position: relative;
+                ">YES</button>
+            </div>
+
+            <style>
+                #popup-no:hover { background: #333; }
+                #popup-yes:hover { background: #ff5555; }
+                #popup-no:active, #popup-yes:active {
+                    transform: translateY(3px);
+                    box-shadow: 0 2px 0 #000;
+                }
+                #popup-yes:active { box-shadow: 0 2px 0 #660000; }
+            </style>
+        `;
+
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+
+        // Forced reflow for animation
+        overlay.offsetHeight;
+
+        overlay.style.opacity = '1';
+        popup.style.transform = 'translateY(0)';
+
+        const closePopup = () => {
+            overlay.style.opacity = '0';
+            popup.style.transform = 'translateY(20px)';
+            setTimeout(() => overlay.remove(), 300);
         };
+
+        const yesBtn = popup.querySelector('#popup-yes') as HTMLButtonElement;
+        const noBtn = popup.querySelector('#popup-no') as HTMLButtonElement;
+
+        yesBtn.onclick = () => {
+            this.room.send('hostEndGame');
+            closePopup();
+        };
+        noBtn.onclick = closePopup;
+        overlay.onclick = (e) => { if (e.target === overlay) closePopup(); };
     }
 
     updateTimer(remainingMs: number) {
@@ -356,21 +445,12 @@ export class HostSpectatorScene extends Phaser.Scene {
         }
     }
 
-    focusOnRoomPlayers() {
-        if (this.subRoomIds.length === 0) return;
-        const currentRoomId = this.subRoomIds[this.activeSubRoomIndex];
-
-        // Find all player containers belonging to this room
-        const playersInRoom: Phaser.GameObjects.Container[] = [];
-        Object.values(this.playerEntities).forEach(container => {
-            if (container.getData('subRoomId') === currentRoomId) {
-                playersInRoom.push(container);
-            }
-        });
-
-        if (playersInRoom.length > 0) {
+    focusOnAllPlayers() {
+        // Find all player containers
+        const players = Object.values(this.playerEntities);
+        if (players.length > 0) {
             // Focus on the first player found
-            const target = playersInRoom[0];
+            const target = players[0];
             this.cameras.main.pan(target.x, target.y, 800, 'Power2');
         } else {
             // Pan to center if empty
@@ -378,28 +458,19 @@ export class HostSpectatorScene extends Phaser.Scene {
         }
     }
 
-    updateRoomLabel() {
-        const titleEl = document.getElementById('spectator-title');
-        if (titleEl) {
-            const currentName = this.subRoomIds[this.activeSubRoomIndex] || `Room ${this.activeSubRoomIndex + 1}`;
-            titleEl.innerText = currentName;
-        }
-    }
 
     update(time: number, delta: number) {
-        // Filter visibility based on active room
-        const currentRoomId = this.subRoomIds[this.activeSubRoomIndex];
+        if (!this.room || !this.room.state) return;
 
-        Object.keys(this.playerEntities).forEach(sessionId => {
-            const container = this.playerEntities[sessionId];
-            const subRoomId = container.getData('subRoomId');
+        try {
+            Object.keys(this.playerEntities).forEach(sessionId => {
+                const container = this.playerEntities[sessionId];
+                if (!container || !container.active) return;
 
-            // Visibility Check
-            const isVisible = subRoomId === currentRoomId;
-            container.setVisible(isVisible);
+                // Universal Visibility: All players are visible to host
+                container.setVisible(true);
 
-            // Interpolation
-            if (isVisible) {
+                // Interpolation
                 const tx = container.getData('targetX');
                 const ty = container.getData('targetY');
                 if (tx !== undefined && ty !== undefined) {
@@ -416,31 +487,50 @@ export class HostSpectatorScene extends Phaser.Scene {
                         base.play('walk', true);
                         base.setFlipX(dx < 0);
                         hair.setFlipX(dx < 0);
-                        // hair play walk... (simplified)
+
+                        // Specific hair walk animation matching base
+                        const player = this.room.state.players.get(sessionId);
+                        if (player && player.hairId > 0) {
+                            const hairFiles: Record<number, string> = { 1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair' };
+                            const key = hairFiles[player.hairId];
+                            if (key) {
+                                hair.play(`${key}_walk`, true);
+                            }
+                        }
                     } else {
                         base.play('idle', true);
+                        const player = this.room.state.players.get(sessionId);
+                        if (player && player.hairId > 0) {
+                            const hairFiles: Record<number, string> = { 1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair' };
+                            const key = hairFiles[player.hairId];
+                            if (key) {
+                                hair.play(`${key}_idle`, true);
+                            }
+                        }
                     }
                 }
-            }
-        });
-    }
-
-    refreshSubRooms() {
-        this.subRoomIds = this.room.state.subRooms.map((s: any) => s.id);
-        // Ensure index is valid after refresh
-        if (this.activeSubRoomIndex >= this.subRoomIds.length && this.subRoomIds.length > 0) {
-            this.activeSubRoomIndex = this.subRoomIds.length - 1;
+            });
+        } catch (e) {
+            console.error("[Spectator] Update error:", e);
         }
     }
 
+    refreshSubRooms() { }
+
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
-        const text = this.add.text(0, -40, name, {
-            fontSize: '14px',
+        const text = this.add.text(0, -42, name, {
+            fontSize: '18px', // Slightly larger for clarity
             fontFamily: '"Press Start 2P"',
             color: '#00ff88',
             stroke: '#000000',
-            strokeThickness: 4
+            strokeThickness: 3,
+            align: 'center'
         }).setOrigin(0.5);
+
+        // High resolution for text
+        text.setResolution(2);
+        text.setScale(0.5); // Scale down to maintain size but with double resolution (sharper)
+
         text.setName('nameTag');
         container.add(text);
     }
