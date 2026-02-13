@@ -18,9 +18,15 @@ export class GameRoom extends Room<GameState> {
     onCreate(options: any) {
         this.setState(new GameState());
 
-        this.state.difficulty = options.difficulty || "mudah";
         this.state.subject = options.subject || "matematika";
-        this.state.roomCode = this.generateRoomCode();
+        // Use provided room code from client (which matches Supabase session) or generate one
+        this.state.roomCode = options.roomCode || this.generateRoomCode();
+
+        // Store Supabase Session ID in metadata
+        this.setMetadata({
+            roomCode: this.state.roomCode,
+            sessionId: options.sessionId
+        });
 
         // Set max clients for the entire lobby
         this.maxClients = LOBBY_MAX_PLAYERS;
@@ -48,13 +54,33 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("startGame", (client) => {
-            if (this.state.isGameStarted) return;
-            this.state.isGameStarted = true;
-            this.state.gameStartTime = Date.now();
+            if (this.state.isGameStarted || this.state.countdown > 0) return;
 
-            this.initializeGameElements();
-            this.startGameTimer(); // Start 5-minute countdown
-            this.broadcast("gameStarted");
+            // Start Countdown
+            this.state.countdown = 10;
+            console.log("[GameRoom] Starting countdown: 10");
+
+            const countdownInterval = setInterval(() => {
+                if (this.state.countdown > 0) {
+                    this.state.countdown--;
+                    console.log(`[GameRoom] Countdown: ${this.state.countdown}`);
+                }
+
+                // If it hit 0 (or somehow less), Start Game
+                if (this.state.countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    this.state.countdown = 0;
+
+                    console.log("[GameRoom] Countdown finished, starting game immediately.");
+
+                    this.state.isGameStarted = true;
+                    this.state.gameStartTime = Date.now();
+
+                    this.initializeGameElements();
+                    this.startGameTimer();
+                    this.broadcast("gameStarted");
+                }
+            }, 1000);
         });
 
         this.onMessage("hostEndGame", (client) => {
@@ -442,6 +468,11 @@ export class GameRoom extends Room<GameState> {
     }
 
     initializeGameElements() {
+        if (!this.state.difficulty || !ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG]) {
+            console.warn(`[GameRoom] Invalid difficulty: ${this.state.difficulty}. Defaulting to 'mudah'.`);
+            this.state.difficulty = 'mudah';
+        }
+
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
         const mapData = MapParser.loadMapData(this.state.difficulty);
 
