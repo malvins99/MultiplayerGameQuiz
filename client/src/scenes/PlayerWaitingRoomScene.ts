@@ -10,6 +10,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     room!: Room;
     isHost: boolean = false;
     mySessionId: string = '';
+    isGameStarting: boolean = false;
 
     // UI Elements
     waitingUI: HTMLElement | null = null;
@@ -27,6 +28,8 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
+    countdownOverlay: HTMLElement | null = null;
+    countdownText: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
@@ -105,11 +108,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         // Game Start
         this.room.onMessage("gameStarted", () => {
-            TransitionManager.close(() => {
-                if (this.waitingUI) this.waitingUI.classList.add('hidden');
-                Router.navigate('/game');
-                this.scene.start('GameScene', { room: this.room });
-            });
+            this.handleGameStart();
         });
 
         // Initialize Character Popup
@@ -122,6 +121,59 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         // Initial render
         this.updateAll();
         this.updateUILayout();
+
+        // Inject Countdown Overlay (Shared)
+        this.createCountdownOverlay();
+
+        // Listen for Countdown
+        this.room.state.listen("countdown", (val: number) => {
+            if (val > 0) {
+                if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
+                if (this.countdownText) this.countdownText.innerText = val.toString();
+            } else if (val === 0) {
+                if (this.countdownText) this.countdownText.innerText = "GO!";
+            }
+        });
+
+        // Listen for State Start
+        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+            if (isStarted) this.handleGameStart();
+        });
+    }
+
+    handleGameStart() {
+        if (this.isGameStarting) return;
+        this.isGameStarting = true;
+
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
+        TransitionManager.close(() => {
+            if (this.waitingUI) this.waitingUI.classList.add('hidden');
+            Router.navigate('/game');
+            this.scene.start('GameScene', { room: this.room });
+        });
+    }
+
+    createCountdownOverlay() {
+        const overlay = document.createElement('div');
+        overlay.id = 'player-countdown-overlay';
+        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
+        overlay.innerHTML = `
+            <div class="flex flex-col items-center animate-bounce">
+                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                    10
+                </div>
+                <div class="text-white/50 font-['Press_Start_2P'] text-xs md:text-sm mt-4 tracking-widest uppercase">
+                    Get Ready!
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        this.countdownOverlay = overlay;
+        this.countdownText = document.getElementById('player-countdown-text');
     }
 
     setupPlayerUI() {
@@ -364,6 +416,13 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             this.room.leave();
         }
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
+
+        // Remove overlay
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
         Router.navigate('/');
@@ -404,7 +463,11 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     }
 
     updateUILayout() {
-        const totalPlayers = this.room.state.players.size;
+        let totalPlayers = 0;
+        this.room.state.players.forEach((p: any) => {
+            if (!p.isHost) totalPlayers++;
+        });
+
         if (this.playerCountEl) {
             this.playerCountEl.innerText = totalPlayers.toString();
         }
@@ -487,7 +550,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         const players: any[] = [];
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            players.push({ ...p, sessionId });
+            if (!p.isHost) {
+                players.push({ ...p, sessionId });
+            }
         });
 
         this.updateUILayout();

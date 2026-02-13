@@ -3,6 +3,8 @@ import { Client, Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
 import { Quiz } from '../data/QuizData';
 import { TransitionManager } from '../utils/TransitionManager';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
+import { authService } from '../services/AuthService';
 
 export class QuizSettingScene extends Phaser.Scene {
     client!: Client;
@@ -226,7 +228,9 @@ export class QuizSettingScene extends Phaser.Scene {
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
 
             newContinueBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
+                // Use close() to ensure screen stays black during async room creation.
+                // Replaces transitionTo() which would auto-open prematurely.
+                TransitionManager.close(() => {
                     this.createRoom();
                 });
             };
@@ -302,18 +306,66 @@ export class QuizSettingScene extends Phaser.Scene {
         // 5 soal -> 10 enemies, 10 soal -> 20 enemies
         const enemyCount = this.settingsQuestionCount === 5 ? 10 : 20;
 
-        const options = {
-            difficulty: this.settingsDifficulty,
-            subject: this.selectedQuiz.category.toLowerCase(),
-            quizId: this.selectedQuiz.id,
-            quizTitle: this.selectedQuiz.title,
-            map: mapFile,
-            questionCount: this.settingsQuestionCount,
-            enemyCount: enemyCount,
-            timer: this.settingsTimer
-        };
+        const roomCode = this.generateRoomCode();
+        const profile = authService.getStoredProfile();
+        const hostId = profile ? profile.id : null;
 
+        // 1. Create Session in Supabase B
         try {
+            const { data, error } = await supabaseB
+                .from(SESSION_TABLE)
+                .insert({
+                    game_pin: roomCode,
+                    quiz_id: this.selectedQuiz.id,
+                    status: 'waiting',
+                    question_limit: this.settingsQuestionCount,
+                    total_time_minutes: this.settingsTimer / 60, // Convert seconds to minutes if needed, or store as seconds if schema changes. Schema says minutes.
+                    difficulty: this.settingsDifficulty,
+                    host_id: hostId,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error("Supabase Session Error:", error);
+                alert("Failed to create game session. Please try again.");
+                return;
+            }
+
+            console.log("Session Created in Supabase B:", data);
+
+            // 1.5 Add Host to Participants
+            if (data && data.id) {
+                const { error: partError } = await supabaseB
+                    .from(PARTICIPANT_TABLE)
+                    .insert({
+                        session_id: data.id,
+                        nickname: profile?.nickname || profile?.fullname || profile?.username || "Host",
+                        user_id: hostId,
+                        joined_at: new Date().toISOString(),
+                        score: 0
+                    });
+
+                if (partError) {
+                    console.error("Error adding host to participants:", partError);
+                }
+            }
+
+            const options = {
+                roomCode: roomCode,
+                sessionId: data.id, // Pass Supabase Session ID to server
+                difficulty: this.settingsDifficulty,
+                subject: this.selectedQuiz.category.toLowerCase(),
+                quizId: this.selectedQuiz.id,
+                quizTitle: this.selectedQuiz.title,
+                map: mapFile,
+                questionCount: this.settingsQuestionCount,
+                enemyCount: enemyCount,
+                timer: this.settingsTimer
+            };
+
+            // 2. Create/Join Room on Colyseus
             const room = await this.client.joinOrCreate("game_room", options);
             console.log("Room created!", room);
 
@@ -327,10 +379,23 @@ export class QuizSettingScene extends Phaser.Scene {
             this.cleanup();
             Router.navigate('/host/lobby');
             this.scene.start('HostWaitingRoomScene', { room, isHost: true });
+
+            // Manually open the iris after the new scene is kicked off.
+            // This replaces the auto-open from TransitionManager.transitionTo
+            setTimeout(() => {
+                TransitionManager.open();
+            }, 600);
+
         } catch (e) {
             console.error("Create room error", e);
             alert("Error creating room. Check console.");
+            // If error, we might be stuck on black screen, so force open
+            TransitionManager.open();
         }
+    }
+
+    generateRoomCode(): string {
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
     // --- CLEANUP ---

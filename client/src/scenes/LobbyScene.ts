@@ -3,6 +3,7 @@ import { Client, Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
 import { TransitionManager } from '../utils/TransitionManager';
 import { authService } from '../services/AuthService';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
@@ -231,22 +232,74 @@ export class LobbyScene extends Phaser.Scene {
         }
 
         try {
+            // 1. Verify Session in Supabase B
+            const { data: sessionData, error: sessionError } = await supabaseB
+                .from(SESSION_TABLE)
+                .select('*')
+                .eq('game_pin', cleanCode)
+                .single();
+
+            if (sessionError || !sessionData) {
+                console.error("Session lookup error:", sessionError);
+                alert("Room not found or invalid code.");
+                return;
+            }
+
+            if (sessionData.status !== 'waiting') {
+                alert("This game has already started or finished.");
+                return;
+            }
+
+            // 2. Register Participant in Supabase B
+            // 2. Register Participant in Supabase B
+            const profile = authService.getStoredProfile();
+
+            if (!profile) {
+                alert("Please login to join the game.");
+                return;
+            }
+
+            const nickname = profile.nickname || profile.fullname || profile.username || "Unknown Player";
+            const userId = profile.id;
+
+            const { error: partError } = await supabaseB
+                .from(PARTICIPANT_TABLE)
+                .insert({
+                    session_id: sessionData.id,
+                    nickname: nickname,
+                    user_id: userId,
+                    joined_at: new Date().toISOString(),
+                    score: 0
+                });
+
+            if (partError) {
+                console.error("Participant registration error:", partError);
+                // Duplicate nickname check? 
+                // For now, simple alert.
+                alert("Failed to join session. Name might be taken or connection error.");
+                return;
+            }
+
+            // 3. Join Colyseus Room
+            // We need to find the room ID that corresponds to this code
             const rooms = await this.client.getAvailableRooms("game_room");
             const targetRoom = rooms.find((r: any) => r.metadata?.roomCode === cleanCode);
 
-            let room: Room;
             if (targetRoom) {
-                room = await this.client.joinById(targetRoom.roomId);
+                const room = await this.client.joinById(targetRoom.roomId, {
+                    name: nickname, // Matches GameRoom options
+                    sessionId: sessionData.id // Pass session ID
+                });
+
+                this.lobbyUI?.classList.add('hidden');
+
+                TransitionManager.transitionTo(() => {
+                    Router.navigate('/player/lobby');
+                    this.scene.start('PlayerWaitingRoomScene', { room, isHost: false });
+                });
             } else {
-                room = await this.client.join("game_room");
+                alert("Room not found on server (it might be closed).");
             }
-
-            this.lobbyUI?.classList.add('hidden');
-
-            TransitionManager.transitionTo(() => {
-                Router.navigate('/player/lobby');
-                this.scene.start('PlayerWaitingRoomScene', { room, isHost: false });
-            });
 
         } catch (e) {
             console.error("Join room error", e);
