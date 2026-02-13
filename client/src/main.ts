@@ -10,7 +10,6 @@ import { LeaderboardScene } from './scenes/LeaderboardScene';
 import { QuizSettingScene } from './scenes/QuizSettingScene';
 import { SelectQuizScene } from './scenes/SelectQuizScene';
 
-import { HostProgressScene } from './scenes/HostProgressScene';
 import { HostSpectatorScene } from './scenes/HostSpectatorScene';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -38,7 +37,6 @@ const config: Phaser.Types.Core.GameConfig = {
         UIScene,
         WaitingResultsScene,
         LeaderboardScene,
-        HostProgressScene,
         HostSpectatorScene
     ],
     scale: {
