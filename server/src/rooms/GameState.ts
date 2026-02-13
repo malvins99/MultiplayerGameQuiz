@@ -66,4 +66,5 @@ export class GameState extends Schema {
     @type("boolean") isGameOver: boolean = false;
     @type("string") roomCode!: string;
     @type("string") hostId!: string; // Track who is the host
+    @type("number") countdown: number = 0; // Countdown timer (0 = not running)
 }
