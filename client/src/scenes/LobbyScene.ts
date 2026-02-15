@@ -232,7 +232,7 @@ export class LobbyScene extends Phaser.Scene {
 
     // --- ACTIONS ---
 
-    async handleJoinRoom(code: string | undefined, nicknameInput: string | undefined) {
+    async handleJoinRoom(code?: string, nicknameInput?: string) {
         const cleanCode = code ? code.trim() : "";
         if (!cleanCode || cleanCode.length !== 6) {
             alert("Please enter a valid 6-digit room code.");
