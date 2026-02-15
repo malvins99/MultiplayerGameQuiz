@@ -57,6 +57,13 @@ export class LobbyScene extends Phaser.Scene {
 
         // --- Populate User Profile Widget ---
         this.populateUserProfile();
+
+        // --- Populate Nickname Input ---
+        const profile = authService.getStoredProfile();
+        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
+        if (profile && nicknameInput) {
+            nicknameInput.value = profile.nickname || profile.fullname || profile.username || '';
+        }
     }
 
     populateUserProfile() {
@@ -177,6 +184,7 @@ export class LobbyScene extends Phaser.Scene {
         const createRoomBtn = document.getElementById('create-room-btn');
         const joinBtn = document.getElementById('join-room-btn');
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
+        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
 
         if (createRoomBtn) {
             createRoomBtn.onclick = () => {
@@ -189,7 +197,7 @@ export class LobbyScene extends Phaser.Scene {
 
         if (joinBtn) {
             joinBtn.onclick = () => {
-                this.handleJoinRoom(codeInput?.value);
+                this.handleJoinRoom(codeInput?.value, nicknameInput?.value);
             };
         }
     }
@@ -224,10 +232,16 @@ export class LobbyScene extends Phaser.Scene {
 
     // --- ACTIONS ---
 
-    async handleJoinRoom(code: string | undefined) {
+    async handleJoinRoom(code: string | undefined, nicknameInput: string | undefined) {
         const cleanCode = code ? code.trim() : "";
         if (!cleanCode || cleanCode.length !== 6) {
             alert("Please enter a valid 6-digit room code.");
+            return;
+        }
+
+        const nickname = nicknameInput ? nicknameInput.trim() : "";
+        if (!nickname) {
+            alert("Please enter your nickname.");
             return;
         }
 
@@ -251,7 +265,6 @@ export class LobbyScene extends Phaser.Scene {
             }
 
             // 2. Register Participant in Supabase B
-            // 2. Register Participant in Supabase B
             const profile = authService.getStoredProfile();
 
             if (!profile) {
@@ -259,7 +272,6 @@ export class LobbyScene extends Phaser.Scene {
                 return;
             }
 
-            const nickname = profile.nickname || profile.fullname || profile.username || "Unknown Player";
             const userId = profile.id;
 
             const { error: partError } = await supabaseB
@@ -274,14 +286,11 @@ export class LobbyScene extends Phaser.Scene {
 
             if (partError) {
                 console.error("Participant registration error:", partError);
-                // Duplicate nickname check? 
-                // For now, simple alert.
                 alert("Failed to join session. Name might be taken or connection error.");
                 return;
             }
 
             // 3. Join Colyseus Room
-            // We need to find the room ID that corresponds to this code
             const rooms = await this.client.getAvailableRooms("game_room");
             const targetRoom = rooms.find((r: any) => r.metadata?.roomCode === cleanCode);
 

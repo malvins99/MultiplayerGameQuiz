@@ -79,17 +79,6 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             };
         }
 
-        // Name Input Sync (Header)
-        if (this.nameInput) {
-            const myPlayer = this.room.state.players.get(this.mySessionId);
-            if (myPlayer) {
-                this.nameInput.value = myPlayer.name || 'Player';
-            }
-            this.nameInput.oninput = () => {
-                this.room.send('updateName', { name: this.nameInput!.value });
-            };
-        }
-
         // --- Room State Listeners ---
         this.room.state.listen("hostId", (hostId: string) => {
             if (hostId === this.mySessionId) {
@@ -190,51 +179,71 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     border: 4px solid #000;
                     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
                     border-radius: 20px;
-                    width: 98%;
-                    max-width: 1200px;
-                    min-height: 520px;
+                    width: 95%;
+                    max-width: 1100px;
+                    height: 480px; /* Reduced height */
                     position: relative;
-                    padding: 30px;
+                    padding: 25px;
                     display: flex;
                     flex-direction: column;
-                    margin-top: 5px;
+                    margin-top: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #00ff88;
+                    border-radius: 10px;
+                    border: 2px solid #1a1a20;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #00cc6e;
                 }
                 .player-header-section {
                     display: flex;
                     align-items: center;
                     gap: 15px;
-                    margin-bottom: 25px;
+                    margin-bottom: 20px;
                     padding-bottom: 15px;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                 }
+                /* Red Exit Button Style */
+                .btn-exit-standard {
+                    padding: 0 30px;
+                    height: 52px;
+                    background: #ef4444; /* red-500 */
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 11px;
+                    font-weight: bold;
+                    border: none;
+                    border-bottom: 4px solid #b91c1c; /* red-700 */
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    transition: all 0.1s;
+                }
+                .btn-exit-standard:hover {
+                    filter: brightness(1.1);
+                }
+                .btn-exit-standard:active {
+                    border-bottom-width: 0;
+                    transform: translateY(4px);
+                }
                 .player-count-box {
                     background: rgba(0, 0, 0, 0.4);
-                    border: 2px solid #00d4ff;
+                    border: 2px solid #00ff88;
                     border-radius: 10px;
                     padding: 8px 15px;
                     display: flex;
                     align-items: center;
                     gap: 10px;
-                    box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
-                }
-                .header-name-field-standard {
-                    background: rgba(0, 0, 0, 0.5);
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 10px;
-                    padding: 10px 20px;
-                    color: white;
-                    font-family: 'Press Start 2P';
-                    font-size: 11px;
-                    width: 320px;
-                    outline: none;
-                    transition: border-color 0.2s;
-                    text-transform: uppercase;
-                }
-                .header-name-field-standard:focus {
-                    border-color: #00ff88;
+                    box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
                 }
                 .player-count-value {
-                    color: #00d4ff;
+                    color: #00ff88;
                     font-family: 'Press Start 2P';
                     font-size: 14px;
                 }
@@ -287,17 +296,6 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 .standard-pixel-btn:active {
                     transform: scale(0.96);
                 }
-                .btn-back-standard {
-                    width: 52px;
-                    background: rgba(0, 0, 0, 0.6);
-                    border-radius: 50%;
-                    border: 2px solid rgba(255, 255, 255, 0.1);
-                    opacity: 0.8;
-                }
-                .btn-back-standard:hover {
-                    opacity: 1;
-                    background: rgba(0, 0, 0, 0.8);
-                }
                 .btn-choose-char-green {
                     padding: 0 40px;
                     background: #00ff88;
@@ -321,11 +319,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.waitingUI.innerHTML = `
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
+            <!-- LOGO TOP RIGHT -->
+            <img src="/logo/gameforsmart.webp" class="absolute top-6 right-8 w-48 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+
             <div class="relative z-10 flex flex-col items-center justify-center w-full h-screen p-4 overflow-hidden">
                 <!-- Header (Logo Space + Title) -->
                 <div class="mb-2 flex flex-col items-center">
-                    <div class="h-6 mb-2">
-                        <!-- Space for Logo (Slightly reduced) -->
+                    <div class="mb-[-10px] z-20">
+                        <img src="/logo/Zigma-logo.webp" class="w-64 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
                     </div>
                     <h1 class="neon-title-standard">Ruang Tunggu</h1>
                 </div>
@@ -335,10 +336,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     <!-- Standard Header Section (Inside Box) -->
                     <div class="player-header-section">
                         <div class="player-count-box">
-                            <span class="material-symbols-outlined text-[#00d4ff] text-xl">person</span>
+                            <span class="material-symbols-outlined text-[#00ff88] text-xl">person</span>
                             <span id="player-count-value" class="player-count-value">1</span>
                         </div>
-                        <input id="header-player-name" type="text" maxlength="12" class="header-name-field-standard" placeholder="Ketik Nama..." />
                     </div>
 
                     <!-- Player Grid -->
@@ -348,9 +348,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 </div>
 
                 <div class="flex items-center gap-4 mt-8">
-                    <!-- Circular Back (Host Style) -->
-                    <button id="player-back-btn" class="standard-pixel-btn btn-back-standard">
-                        <span class="material-symbols-outlined text-white text-3xl font-bold">arrow_back</span>
+                    <!-- EXIT Button (Red Host Style) -->
+                    <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
+                        EXIT
                     </button>
 
                     <!-- Pill Choose Character (Host Start Button Style) -->

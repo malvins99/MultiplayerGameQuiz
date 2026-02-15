@@ -170,7 +170,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         this.room.state.players.onRemove(() => this.updateAll());
 
-// Listen for Countdown
+        // Listen for Countdown
         this.room.state.listen("countdown", (val: number) => {
             if (val > 0) {
                 if (this.countdownOverlay) {
@@ -837,8 +837,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
             if (this.isHost) {
-                Router.navigate('/host/progress');
-                this.scene.start('HostProgressScene', { room: this.room });
+                Router.navigate('/host/spectator');
+                TransitionManager.sceneTo(this, 'HostSpectatorScene', { room: this.room });
             } else {
                 Router.navigate('/game');
                 this.scene.start('GameScene', { room: this.room });

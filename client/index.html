@@ -638,135 +638,127 @@
   </div>
 
   <!-- LOBBY OVERLAY (Redesigned - No Scroll) -->
-  <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden">
+  <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden flex flex-col">
     <!-- Background Pattern -->
-    <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-15"></div>
+    <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
 
-    <!-- Main Layout -->
-    <div class="relative z-10 flex flex-col h-screen">
-      <!-- Game Logo (Top-Left) -->
-      <div class="absolute top-4 left-4 z-50 select-none pointer-events-none">
-        <img src="/logo/gameforsmart.webp" alt="Game Logo"
-          class="h-10 md:w-72 h-auto object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.3)]" />
+    <!-- Top Navigation -->
+    <div class="relative z-50 flex items-center justify-between p-2 md:p-3 w-full">
+      <!-- Gameforsmart Logo (Enlarged) -->
+      <div class="select-none flex items-center">
+        <img src="/logo/gameforsmart.webp" alt="Partner Logo" class="h-14 md:h-20 w-auto object-contain" />
       </div>
 
-      <!-- User Profile Widget (Top-Right) -->
-      <div class="absolute top-4 right-4 z-50 flex items-center gap-3">
-        <!-- Profile Pill -->
+      <!-- User Profile & Menu -->
+      <div class="flex items-center gap-3">
         <div id="lobby-user-profile"
-          class="flex items-center gap-3 bg-primary/20 border-2 border-primary/40 rounded-full pl-1.5 pr-4 py-1.5 backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,85,0.15)]">
-          <!-- Avatar -->
+          class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full pl-1.5 pr-4 py-1.5 backdrop-blur-md shadow-xl">
           <div
-            class="w-9 h-9 rounded-full bg-primary/30 border-2 border-primary/50 overflow-hidden flex items-center justify-center shrink-0">
+            class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary/20 border border-primary/30 overflow-hidden flex items-center justify-center shrink-0">
             <img id="lobby-user-avatar" src="" alt="Avatar" class="w-full h-full object-cover hidden" />
-            <span id="lobby-user-avatar-fallback" class="material-symbols-outlined text-primary text-lg">person</span>
+            <span id="lobby-user-avatar-fallback"
+              class="material-symbols-outlined text-primary text-base md:text-lg">person</span>
           </div>
-          <!-- Username -->
           <span id="lobby-user-name"
-            class="text-white font-bold text-xs font-['Press_Start_2P'] tracking-wide truncate max-w-[120px]">Guest</span>
+            class="text-white font-bold text-[10px] md:text-xs font-['Press_Start_2P'] tracking-tight truncate max-w-[100px] md:max-w-[150px]">Guest</span>
         </div>
 
-        <!-- Hamburger Menu Button -->
         <div class="relative">
           <button id="lobby-menu-btn"
-            class="w-11 h-11 bg-primary/20 border-2 border-primary/40 rounded-xl flex items-center justify-center hover:bg-primary/30 hover:border-primary transition-all backdrop-blur-sm shadow-[0_0_15px_rgba(0,255,85,0.15)]">
-            <span class="material-symbols-outlined text-primary text-xl">menu</span>
+            class="w-10 h-10 md:w-11 md:h-11 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 hover:border-white/30 transition-all backdrop-blur-md">
+            <span class="material-symbols-outlined text-white/70 text-xl">menu</span>
           </button>
-
-          <!-- Dropdown Menu -->
           <div id="lobby-menu-dropdown"
-            class="hidden absolute top-[calc(100%+8px)] right-0 w-48 bg-[#1a1a20] border-2 border-primary/30 rounded-xl shadow-[0_0_30px_rgba(0,255,85,0.2)] overflow-hidden transform transition-all duration-200 origin-top-right scale-95 opacity-0 flex flex-col p-1 z-[60]">
+            class="hidden absolute top-[calc(100%+8px)] right-0 w-48 bg-[#1a1a20]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top-right scale-95 opacity-0 flex flex-col p-1 z-[60]">
             <button id="lobby-menu-logout-btn"
-              class="w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center gap-3">
+              class="w-full text-left px-4 py-3 text-[10px] font-['Press_Start_2P'] hover:bg-white/5 rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center gap-3">
               <span class="material-symbols-outlined text-sm">logout</span> Logout
             </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Logout Confirmation Modal -->
-      <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center">
-        <!-- Backdrop -->
-        <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
-        <!-- Modal Content -->
+    <!-- Main Content (Logo + Cards) -->
+    <div class="relative z-10 flex-1 flex flex-col items-center justify-center -mt-64 px-4">
+      <!-- Mega Central Logo (Uber Massive - No Shadow) -->
+      <div class="mb-0 transform hover:scale-105 transition-transform duration-500">
+        <img src="/logo/Zigma-logo.webp" alt="Zigma Logo" class="h-64 md:h-[500px] w-auto object-contain" />
+      </div>
+
+      <!-- Action Cards Container (Uber Tight Spacing) -->
+      <div class="flex flex-col md:flex-row gap-6 md:gap-8 w-full max-w-5xl justify-center items-stretch md:-mt-24">
+        <!-- Host Game Card -->
         <div
-          class="relative z-10 bg-[#1a1a20] border-2 border-primary/40 rounded-2xl shadow-[0_0_40px_rgba(0,255,85,0.2)] p-8 max-w-sm w-full mx-4 text-center">
-          <div class="mb-4">
-            <span class="material-symbols-outlined text-primary text-4xl">logout</span>
+          class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[40px] p-6 md:p-8 flex flex-col items-center text-center hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 shadow-2xl">
+          <div
+            class="w-14 h-14 md:w-16 md:h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:rotate-12 transition-transform">
+            <span class="material-symbols-outlined text-primary text-3xl md:text-4xl"
+              style="font-variation-settings: 'FILL' 1;">flag</span>
           </div>
-          <p class="text-white font-['Press_Start_2P'] text-sm leading-relaxed mb-2">Logout</p>
+          <h2 class="text-base md:text-lg font-['Press_Start_2P'] text-white mb-2 uppercase tracking-wider">Host Game
+          </h2>
+          <p class="text-white text-[10px] md:text-sm leading-relaxed mb-6 max-w-[220px]">Create your own session
+            and invite or challenge others</p>
+          <button id="create-room-btn"
+            class="mt-auto w-full py-3.5 bg-primary text-background-dark font-['Press_Start_2P'] text-[10px] rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,255,85,0.2)]">
+            Create Room
+          </button>
+        </div>
 
-          <p class="text-white/50 font-['Press_Start_2P'] text-[9px] mb-8">Apakah kamu yakin ingin keluar?</p>
-          <div class="flex gap-3">
-            <button id="logout-cancel-btn"
-              class="flex-1 h-12 bg-white/10 border-2 border-white/20 rounded-xl text-white font-['Press_Start_2P'] text-xs uppercase hover:bg-white/20 hover:border-white/40 transition-all">
-              Tidak
-            </button>
-            <button id="logout-confirm-btn"
-              class="flex-1 h-12 bg-red-500/20 border-2 border-red-500/40 rounded-xl text-red-400 font-['Press_Start_2P'] text-xs uppercase hover:bg-red-500/30 hover:border-red-500 transition-all">
-              Keluar
+        <!-- Join Game Card -->
+        <div
+          class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[40px] p-6 md:p-8 flex flex-col items-center text-center hover:bg-secondary/5 hover:border-secondary/40 transition-all duration-300 shadow-2xl">
+          <div
+            class="w-14 h-14 md:w-16 md:h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:-rotate-12 transition-transform">
+            <span class="material-symbols-outlined text-secondary text-4xl md:text-5xl"
+              style="font-variation-settings: 'FILL' 1;">group</span>
+          </div>
+          <h2 class="text-base md:text-lg font-['Press_Start_2P'] text-white mb-2 uppercase tracking-wider">Join Game
+          </h2>
+          <p class="text-white text-[10px] md:text-sm leading-relaxed mb-6 max-w-[260px]">Enter a 6-digit code to
+            join an existing session</p>
+
+          <!-- Code Input Group -->
+          <div class="w-full space-y-3 mt-auto">
+            <!-- Nickname Input -->
+            <div class="relative">
+              <input id="lobby-nickname-input"
+                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-sm text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P'] transition-all"
+                placeholder="NICKNAME" type="text" maxlength="12" />
+            </div>
+
+            <div class="relative">
+              <input id="room-code-input"
+                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-lg tracking-[0.3em] text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P'] transition-all"
+                placeholder="CODE" type="text" maxlength="6" />
+            </div>
+            <button id="join-room-btn"
+              class="w-full py-3.5 bg-secondary text-background-dark font-['Press_Start_2P'] text-[10px] rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,212,255,0.2)]">
+              Join
             </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Header Removed for Clean Look -->
-      <!-- <header class="flex items-center justify-between border-b-4 border-black bg-surface-dark px-6 py-3 shrink-0"> ... </header> -->
-
-      <!-- Content: Side by Side -->
-      <main class="flex-1 flex flex-row lobby-container group/main">
-        <!-- Left: Host Session -->
-        <section class="flex-1 flex flex-col items-center justify-center p-6 lobby-card transition-all duration-300">
-          <div class="flex flex-col items-center text-center space-y-6">
-            <!-- Sword Icon (Sprite) -->
-            <div class="relative">
-              <div class="sprite-icon icon-sword"></div>
-              <!-- Glow effect behind (Removed internal logic, handled by card hover now) -->
-            </div>
-
-            <div>
-              <h1
-                class="text-3xl font-bold tracking-widest uppercase text-primary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                Host Game
-              </h1>
-            </div>
-
-            <button id="create-room-btn"
-              class="px-8 py-4 bg-primary text-background-dark font-bold text-sm uppercase pixel-btn-green border-4 border-black active:translate-y-1 btn-sweep font-['Press_Start_2P']">
-              Create Room
-            </button>
-          </div>
-        </section>
-
-        <!-- Right: Join Session -->
-        <section class="flex-1 flex flex-col items-center justify-center p-6 lobby-card transition-all duration-300">
-          <div class="flex flex-col items-center text-center space-y-6">
-            <!-- Shield/Evasion Icon (Sprite) -->
-            <div class="relative">
-              <div class="sprite-icon icon-shield"></div>
-            </div>
-
-            <div>
-              <h1
-                class="text-3xl font-bold tracking-widest uppercase text-secondary font-['Press_Start_2P'] drop-shadow-[4px_4px_0_rgba(0,0,0,1)]">
-                Join Game
-              </h1>
-            </div>
-
-            <div class="w-80 space-y-4">
-              <div class="relative">
-                <input id="room-code-input"
-                  class="w-full h-16 bg-black/60 border-4 border-white/30 focus:border-secondary focus:ring-0 text-center text-2xl tracking-[0.2em] text-secondary uppercase placeholder:text-white/10 font-['Press_Start_2P']"
-                  placeholder="000000" type="text" maxlength="6" />
-              </div>
-              <button id="join-room-btn"
-                class="w-full h-14 bg-secondary text-background-dark font-bold text-sm uppercase pixel-btn-blue border-4 border-black active:translate-y-1 btn-sweep font-['Press_Start_2P']">
-                Join Game
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
+    <!-- Optional: Logout Modal remains the same but with enhanced styling -->
+    <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
+      <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+      <div
+        class="relative z-10 bg-[#1a1a20] border border-white/10 rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center">
+        <div class="mb-6">
+          <span class="material-symbols-outlined text-red-500 text-5xl">logout</span>
+        </div>
+        <p class="text-white font-['Press_Start_2P'] text-sm leading-relaxed mb-3">Logout</p>
+        <p class="text-white/40 font-['Press_Start_2P'] text-[10px] mb-10">Are you sure you want to log out?</p>
+        <div class="flex gap-4">
+          <button id="logout-cancel-btn"
+            class="flex-1 py-4 bg-white/5 border border-white/10 rounded-xl text-white font-['Press_Start_2P'] text-[10px] uppercase hover:bg-white/10 transition-all">No</button>
+          <button id="logout-confirm-btn"
+            class="flex-1 py-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 font-['Press_Start_2P'] text-[10px] uppercase hover:bg-red-500/40 transition-all">Logout</button>
+        </div>
+      </div>
     </div>
   </div>
   </div>
@@ -1162,9 +1154,15 @@
             <!-- 2. Name Input -->
             <div id="player-name-section" class="space-y-1 shrink-0">
               <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Your Name</p>
-              <input id="player-name-input"
-                class="w-full h-12 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-sm placeholder:text-white/20 font-['Press_Start_2P'] text-center rounded-xl transition-all"
-                placeholder="PLAYER" type="text" maxlength="12" />
+              <div class="relative group">
+                <input id="player-name-input"
+                  class="w-full h-11 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-[11px] placeholder:text-white/20 font-['Press_Start_2P'] text-center rounded-xl transition-all hover:border-white/20"
+                  placeholder="PLAYER" type="text" maxlength="12" />
+                <div
+                  class="absolute right-3 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none group-focus-within:opacity-100 transition-opacity">
+                  <span class="material-symbols-outlined text-primary text-sm">edit</span>
+                </div>
+              </div>
             </div>
 
             <!-- 3. Room Code (Centered) -->
