@@ -319,15 +319,15 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.waitingUI.innerHTML = `
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
+            <!-- LOGO TOP LEFT -->
+            <img src="/logo/Zigma-logo.webp" class="absolute top-6 left-8 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            
             <!-- LOGO TOP RIGHT -->
             <img src="/logo/gameforsmart.webp" class="absolute top-6 right-8 w-48 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
             <div class="relative z-10 flex flex-col items-center justify-center w-full h-screen p-4 overflow-hidden">
-                <!-- Header (Logo Space + Title) -->
+                <!-- Header (Title Only) -->
                 <div class="mb-2 flex flex-col items-center">
-                    <div class="mb-[-10px] z-20">
-                        <img src="/logo/Zigma-logo.webp" class="w-64 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-                    </div>
                     <h1 class="neon-title-standard">Ruang Tunggu</h1>
                 </div>
 
