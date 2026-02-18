@@ -181,7 +181,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     border-radius: 20px;
                     width: 95%;
                     max-width: 1100px;
-                    height: 480px; /* Reduced height */
+                    height: auto;
+                    min-height: 220px;
+                    max-height: 520px;
                     position: relative;
                     padding: 25px;
                     display: flex;
@@ -320,17 +322,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" class="absolute top-6 left-8 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="absolute top-6 right-8 w-48 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
-            <div class="relative z-10 flex flex-col items-center justify-center w-full h-screen p-4 overflow-hidden">
-                <!-- Header (Title Only) -->
-                <div class="mb-2 flex flex-col items-center">
-                    <h1 class="neon-title-standard">Ruang Tunggu</h1>
-                </div>
-
+            <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 pt-20 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
                 <div class="player-content-box">
                     <!-- Standard Header Section (Inside Box) -->
@@ -346,18 +343,19 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                         <!-- Player items injected here -->
                     </div>
                 </div>
+            </div>
 
-                <div class="flex items-center gap-4 mt-8">
-                    <!-- EXIT Button (Red Host Style) -->
-                    <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
-                        EXIT
-                    </button>
+            <!-- Sticky Bottom Buttons -->
+            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
+                <!-- EXIT Button (Red Host Style) -->
+                <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
+                    EXIT
+                </button>
 
-                    <!-- Pill Choose Character (Host Start Button Style) -->
-                    <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
-                        Choose Character
-                    </button>
-                </div>
+                <!-- Pill Choose Character (Host Start Button Style) -->
+                <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
+                    Choose Character
+                </button>
             </div>
         `;
     }

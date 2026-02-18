@@ -72,20 +72,23 @@
         },
         "server/src/maps/map_easy.json": {
             "expandedGroupLayers": [
-                3
+                2,
+                41,
+                42,
+                48
             ],
-            "scale": 0.5,
-            "selectedLayer": 19,
+            "scale": 0.25,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 395,
-                "y": 549
+                "x": 934,
+                "y": 552
             }
         },
         "server/src/maps/map_easy.json#spr_tileset_sunnysideworld_16px": {
-            "scaleInDock": 1
+            "scaleInDock": 3
         },
         "server/src/maps/map_easy.json#spr_tileset_sunnysideworld_forest_32px": {
-            "scaleInDock": 1
+            "scaleInDock": 2
         },
         "spr_caught_strip10.tsx": {
             "scaleInDock": 1,

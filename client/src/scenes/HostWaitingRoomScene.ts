@@ -212,13 +212,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
             
             <div class="relative z-10 flex h-screen w-full flex-row p-6 gap-6 font-display">
-                <!-- LOGO -->
-                <img src="/logo/gameforsmart.webp" class="absolute top-0 left-8 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)] hover:scale-105 transition-transform" />
+                <!-- LOGO TOP LEFT -->
+                <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+
+                <!-- LOGO TOP RIGHT -->
+                <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
                 <!-- Back Button REMOVED -->
 
                 <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-1/3 min-w-[350px] max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-8 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-24 bg-opacity-90 backdrop-blur-sm">
+                <section class="w-1/3 min-w-[350px] max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-6 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-16 bg-opacity-90 backdrop-blur-sm">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
 
                     <!-- Room Code -->
@@ -228,17 +231,14 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- QR Code -->
-                    <div class="flex-1 w-full flex items-center justify-center my-4 relative">
-                        <button id="host-qr-expand-btn" class="absolute top-0 right-0 text-white/20 hover:text-white transition-colors cursor-pointer p-2 hover:scale-110 active:scale-95">
-                            <span class="material-symbols-outlined">open_in_full</span>
-                        </button>
-                        <div class="bg-white p-4 rounded-xl aspect-square w-full max-w-[280px] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,85,0.2)]">
+                    <div class="flex-1 w-full flex items-center justify-center my-2 relative">
+                        <div class="bg-white p-4 rounded-xl aspect-square w-full max-w-[340px] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,85,0.2)] cursor-pointer hover:scale-[1.02] transition-transform">
                             <img id="host-qr-img" src="" class="w-full h-full object-contain" />
                         </div>
                     </div>
 
                     <!-- URL Box -->
-                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-8 group hover:border-secondary transition-all cursor-pointer relative">
+                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative">
                         <span id="host-join-url" class="text-[8px] text-secondary font-['Press_Start_2P'] whitespace-nowrap mr-2 select-all">https://...</span>
                         <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
                             <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
@@ -250,7 +250,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 bg-surface-dark border-4 border-purple-500/30 rounded-3xl p-8 flex flex-col shadow-[0_0_30px_rgba(204,0,255,0.1)] relative overflow-hidden mt-24 bg-opacity-90 backdrop-blur-sm">
+                <section class="flex-1 bg-surface-dark border-4 border-primary/30 rounded-3xl p-8 flex flex-col shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-16 bg-opacity-90 backdrop-blur-sm">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
 
                     <!-- Header -->
@@ -261,8 +261,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] uppercase text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
-                                BACK
+                            <button id="host-back-btn" class="px-[30px] h-[52px] flex items-center justify-center bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                                EXIT
                             </button>
 
                             <!-- Start Button -->
@@ -382,13 +382,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             };
         }
 
-        // QR Expand Logic
-        const expandBtn = document.getElementById('host-qr-expand-btn');
-        if (expandBtn) {
+        // QR Click Logic
+        const qrContainer = document.getElementById('host-qr-img')?.parentElement;
+        if (qrContainer) {
             // Ensure Popup is initialized
             if (!this.qrPopup) this.qrPopup = new QRCodePopup(() => { });
 
-            expandBtn.onclick = () => {
+            qrContainer.onclick = () => {
                 const img = document.getElementById('host-qr-img') as HTMLImageElement;
                 if (img && img.src) {
                     this.qrPopup?.show(img.src);
@@ -578,7 +578,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     updateQrCode(code: string) {
         if (this.roomQrCode && code) {
             const url = `${window.location.origin}?room=${code}`;
-            this.roomQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+            // Increased size for better resolution (500x500)
+            this.roomQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(url)}`;
         }
     }
 
