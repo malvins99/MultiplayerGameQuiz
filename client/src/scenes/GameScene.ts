@@ -6,7 +6,7 @@ import { TransitionManager } from '../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../ui/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../systems/ClickToMoveSystem';
-import { QUESTIONS } from '../dummyQuestions';
+// import { QUESTIONS } from '../dummyQuestions'; // Removed to enforce server questions
 
 export class GameScene extends Phaser.Scene {
     room!: Room;
@@ -116,16 +116,10 @@ export class GameScene extends Phaser.Scene {
         this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');
 
-        // --- Start Countdown (Block Input) ---
-        // Uses global transition manager for consistent look
-        // The game logically starts now, but we want 5s countdown
-        this.isGameReady = false;
-
-        // This function will display countdown over the CLOSED iris, then open it.
-        TransitionManager.runGameStartSequence(() => {
-            console.log("Game Started! Input unlocked.");
-            this.isGameReady = true;
-        });
+        // --- Start Game Directly (No 5s Countdown) --- (As requested)
+        this.isGameReady = true;
+        TransitionManager.open();
+        console.log("Game Started! Input unlocked immediately.");
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
@@ -690,9 +684,11 @@ export class GameScene extends Phaser.Scene {
 
         // Game ended (all players finished or timer expired)
         this.room.onMessage('gameEnded', (data: { rankings: any[] }) => {
-            console.log('Game ended! Showing leaderboard...', data.rankings);
+            console.log('Game ended! Showing personal result...', data.rankings);
             this.registry.set('leaderboardData', data.rankings);
-            this.scene.start('LeaderboardScene');
+            // Route via WaitingResultsScene for consistent UI experience
+            this.registry.set('room', this.room); // Ensure room is set
+            this.scene.start('WaitingResultsScene');
         });
 
         // --- Player Indicator (Floating Arrow) ---
@@ -831,59 +827,87 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    triggerQuiz(enemy: any) {
-        // Find question data
-        const allQuestions = Object.values(QUESTIONS).flat();
-        let currentQ = allQuestions.find((q: any) => q.id === enemy.questionId);
+    triggerQuiz(enemy: any, enemyIndex?: string): boolean {
+        // Find question data from Server State
+        // enemy.questionId is the index in state.questions
+        const qIndex = enemy.questionId;
+        let currentQ = this.room.state.questions[qIndex];
 
-        // Fallback for testing if ID not found or 0
-        if (!currentQ && allQuestions.length > 0) {
-            currentQ = allQuestions[0];
+        // Fallback if question is missing (Prevent UI from being silent)
+        if (!currentQ) {
+            console.warn(`[GameScene] No question found for index ${qIndex}. Using Error Fallback.`);
+            currentQ = {
+                id: 9999,
+                text: "Error: Question Data Missing",
+                imageUrl: "",
+                answerType: "text",
+                options: ["Report Bug", "Refresh", "Ignore", "OK"],
+                correctAnswer: 3
+            } as any;
         }
 
-        if (currentQ) {
-            // Map new dummy data structure to expected format
-            const questionData = {
-                id: currentQ.id,
-                question: currentQ.pertanyaan,
-                image: currentQ.image,
-                options: [
-                    currentQ.jawaban_a,
-                    currentQ.jawaban_b,
-                    currentQ.jawaban_c,
-                    currentQ.jawaban_d
-                ],
-                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban)
-            };
+        // Map Server Question Schema to QuizPopup format
+        // Convert Colyseus ArraySchema to JS Array safely
+        const optionsArray: string[] = [];
+        if (currentQ.options) {
+            currentQ.options.forEach((opt: string) => optionsArray.push(opt));
+        }
 
-            console.log(`Triggering quiz for question ID: ${questionData.id}`);
-            this.activeQuestionId = questionData.id;
+        const questionData = {
+            id: currentQ.id,
+            pertanyaan: currentQ.text,
+            image: currentQ.imageUrl || null,
+            answerType: currentQ.answerType || 'text',
+            jawaban_a: optionsArray[0] || "",
+            jawaban_b: optionsArray[1] || "",
+            jawaban_c: optionsArray[2] || "",
+            jawaban_d: optionsArray[3] || ""
+        };
 
-            // Find enemy index/key from state
-            let foundKey = null;
-            this.room.state.enemies.forEach((val: any, key: string) => {
-                if (val === enemy) foundKey = key;
+        console.log(`Triggering quiz for question Index: ${qIndex}`, questionData);
+        this.activeQuestionId = qIndex;
+
+        // Find enemy ID/Key
+        let foundKey: string | null = enemyIndex || null;
+
+        if (!foundKey) {
+            this.room.state.enemies.forEach((val: any, idx: number) => {
+                if (val === enemy) {
+                    foundKey = idx.toString();
+                }
             });
-            this.activeEnemyId = foundKey;
+        }
 
-            this.isChestPopupVisible = false;
-            this.activeChestIndex = null;
+        if (!foundKey) {
+            console.warn("[GameScene] Could not find enemy key in state!");
+            return false;
+        }
 
-            if (this.quizPopup) {
-                this.quizPopup.show(questionData, (enemy.type || 'SKELETON').toUpperCase());
+        this.activeEnemyId = foundKey;
+        this.isChestPopupVisible = false;
+        this.activeChestIndex = null;
 
-                // Notify Server to Halt Enemy
-                if (this.activeEnemyId !== null) {
-                    this.room.send("engageEnemy", { enemyIndex: this.activeEnemyId });
+        if (this.quizPopup) {
+            this.quizPopup.show(questionData, (enemy.type || 'SKELETON').toUpperCase());
 
-                    // Start Combat Camera
-                    const enemySprite = this.enemyEntities[this.activeEnemyId];
-                    if (enemySprite) {
-                        this.startCombatCamera(enemySprite.x, enemySprite.y);
-                    }
+            // Notify Server to Halt Enemy
+            if (this.activeEnemyId !== null) {
+                // If it's a fallback question, don't engage on server to avoid crashing server logic?
+                // Actually server is fine, just doesn't know the question ID if invalid.
+                // But engaging is for movement.
+                this.room.send("engageEnemy", { enemyIndex: Number(this.activeEnemyId) });
+
+                // Start Combat Camera
+                const enemySprite = this.enemyEntities[this.activeEnemyId];
+                if (enemySprite) {
+                    this.startCombatCamera(enemySprite.x, enemySprite.y);
+                } else {
+                    console.warn(`[GameScene] No sprite found for enemy ${this.activeEnemyId}`);
                 }
             }
+            return true;
         }
+        return false;
     }
 
     handleAnswer(answerIndex: number, btnElement?: HTMLElement) {
@@ -896,16 +920,16 @@ export class GameScene extends Phaser.Scene {
             this.cooldownEnemies.add(this.activeEnemyId);
         }
 
-        // Use QUESTIONS object (keyed by subject)
-        const allQuestions = Object.values(QUESTIONS).flat();
-        const currentQ = allQuestions.find((q: any) => q.id === this.activeQuestionId);
+        // Retrieve Question from State
+        if (this.activeQuestionId === null) return;
+
+        const currentQ = this.room.state.questions[this.activeQuestionId];
 
         if (currentQ) {
-            // Determine correct index from dummy data
-            const correctIdx = ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban);
-            const isCorrect = correctIdx === answerIndex;
+            // Check Answer (Server standardized correctAnswer as index 0-3)
+            const isCorrect = (answerIndex === currentQ.correctAnswer);
 
-            console.log(`Checking answer. CorrectIdx: ${correctIdx}, UserIdx: ${answerIndex}, isCorrect: ${isCorrect}`);
+            console.log(`Checking answer. CorrectIdx: ${currentQ.correctAnswer}, UserIdx: ${answerIndex}, isCorrect: ${isCorrect}`);
 
             // Show Feedback Popup via DOM
             if (btnElement && this.quizPopup) {
@@ -919,7 +943,8 @@ export class GameScene extends Phaser.Scene {
                 } else {
                     this.room.send("correctAnswer", {
                         questionId: this.activeQuestionId,
-                        enemyIndex: this.activeEnemyId
+                        answerId: answerIndex, // Send Answer ID (Index 0-3)
+                        enemyIndex: Number(this.activeEnemyId)
                     });
                     this.room.send("addScore", { amount: 20 }); // Full points
                 }
@@ -927,8 +952,11 @@ export class GameScene extends Phaser.Scene {
                 console.log("Sending wrongAnswer to server");
                 // Wrong answer logic is same for both (no points, opportunity lost)
                 if (!isFromChest) {
-                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId });
-                    this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
+                    this.room.send("wrongAnswer", {
+                        questionId: this.activeQuestionId,
+                        answerId: answerIndex // Send Answer ID
+                    });
+                    this.room.send("killEnemy", { enemyIndex: Number(this.activeEnemyId) });
                 }
             }
         } else {
@@ -985,10 +1013,21 @@ export class GameScene extends Phaser.Scene {
     }
 
     showRetryQuestionPopup(questionId: number) {
-        const questions = QUESTIONS;
-        const qData = questions.find((q: any) => q.id === questionId);
+        // questionId is index from lastWrongQuestionId
+        const currentQ = this.room.state.questions[questionId];
 
-        if (qData) {
+        if (currentQ) {
+            const qData = {
+                id: currentQ.id,
+                pertanyaan: currentQ.text,
+                image: currentQ.imageUrl || null,
+                answerType: currentQ.answerType || 'text',
+                jawaban_a: currentQ.options[0],
+                jawaban_b: currentQ.options[1],
+                jawaban_c: currentQ.options[2],
+                jawaban_d: currentQ.options[3]
+            };
+
             this.activeQuestionId = questionId; // Set active ID for handleAnswer
             this.isChestPopupVisible = true;
             this.quizPopup.show(qData, 'RETRY CHEST');
@@ -1064,26 +1103,21 @@ export class GameScene extends Phaser.Scene {
                 if (dist < 50) {
                     const enemyState = this.room.state.enemies[key as any];
                     if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(key)) {
-                        this.activeEnemyId = key;
-                        this.activeQuestionId = enemyState.questionId;
+                        // Use centralized trigger function, passing key directly
+                        const triggered = this.triggerQuiz(enemyState, key);
 
-                        const questions = QUESTIONS;
-                        const qData = questions.find((q: any) => q.id === this.activeQuestionId);
-
-                        if (qData) {
-                            // Derive name from type
-                            const name = (enemyState.type || 'ENEMY').toUpperCase();
-                            this.quizPopup.show(qData, name);
-
-                            // Start Combat Camera
-                            this.startCombatCamera(enemySprite.x, enemySprite.y);
-
+                        if (triggered) {
                             hitEnemy = true;
-
                             // Cancel tracking when quiz triggers
                             if (this.clickToMove) {
                                 this.clickToMove.cancelMovement();
                             }
+                        } else {
+                            // If failed (e.g. no questions), add short cooldown to prevent blocking movement forever
+                            this.cooldownEnemies.add(key);
+                            this.time.delayedCall(2000, () => {
+                                this.cooldownEnemies.delete(key);
+                            });
                         }
                     }
                 }
@@ -1222,23 +1256,8 @@ export class GameScene extends Phaser.Scene {
         // Triggered by ClickToMoveSystem when snapping finishes
         const enemyState = this.room.state.enemies[enemyId];
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
-            const enemySprite = this.enemyEntities[enemyId];
-            this.activeEnemyId = enemyId;
-            this.activeQuestionId = enemyState.questionId;
-
-            const questions = QUESTIONS;
-            const qData = questions.find((q: any) => q.id === this.activeQuestionId);
-
-            if (qData) {
-                // Derive name from type
-                const name = (enemyState.type || 'ENEMY').toUpperCase();
-                this.quizPopup.show(qData, name);
-
-                // Start Combat Camera
-                if (enemySprite) {
-                    this.startCombatCamera(enemySprite.x, enemySprite.y);
-                }
-            }
+            // Reuse centralized function
+            this.triggerQuiz(enemyState);
         }
     }
 }

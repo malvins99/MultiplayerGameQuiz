@@ -17,6 +17,15 @@ export class Enemy extends Schema {
     @type("boolean") isBusy: boolean = false; // True if engaged in a quiz
 }
 
+export class Question extends Schema {
+    @type("number") id!: number;
+    @type("string") text!: string;
+    @type("string") imageUrl: string = ""; // URL for question image
+    @type("string") answerType: string = "text"; // 'text' or 'image'
+    @type(["string"]) options = new ArraySchema<string>();
+    @type("number") correctAnswer!: number;
+}
+
 export class Chest extends Schema {
     @type("number") x!: number;
     @type("number") y!: number;
@@ -42,6 +51,7 @@ export class Player extends Schema {
     @type("string") subRoomId!: string; // Track which sub-room the player is in
     @type("number") spawnIndex: number = -1; // Track assigned spawn point index
     @type("boolean") isHost: boolean = false;
+    @type(["number"]) questionOrder = new ArraySchema<number>(); // Personalized randomized question order
 }
 
 export class SubRoom extends Schema {
@@ -54,6 +64,7 @@ export class GameState extends Schema {
     @type({ map: Player }) players = new MapSchema<Player>();
     @type([Enemy]) enemies = new ArraySchema<Enemy>();
     @type([Chest]) chests = new ArraySchema<Chest>();
+    @type([Question]) questions = new ArraySchema<Question>();
     // Chat removed, replaced by room logic if needed, or keep for future?
     // User asked to remove chat. Removing ChatMessage schema usage here if desired, 
     // but better to just leave it unused or remove if strict.

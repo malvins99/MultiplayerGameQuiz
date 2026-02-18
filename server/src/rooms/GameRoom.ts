@@ -1,5 +1,5 @@
 import { Room, Client } from "colyseus";
-import { GameState, Player, Enemy, Chest, SubRoom } from "./GameState";
+import { GameState, Player, Enemy, Chest, SubRoom, Question } from "./GameState";
 import { QUESTIONS } from "../dummyQuestions";
 import { MapParser } from "../utils/MapParser";
 
@@ -13,7 +13,11 @@ const LOBBY_MAX_PLAYERS = 20;
 
 export class GameRoom extends Room<GameState> {
     // Track which spawn points have been used
+    // Track which spawn points have been used
     private usedSpawnIndices: Set<number> = new Set();
+
+    // Local storage for detailed answers (not synced)
+    playerAnswers: Map<string, any[]> = new Map();
 
     onCreate(options: any) {
         this.setState(new GameState());
@@ -21,6 +25,57 @@ export class GameRoom extends Room<GameState> {
         this.state.subject = options.subject || "matematika";
         // Use provided room code from client (which matches Supabase session) or generate one
         this.state.roomCode = options.roomCode || this.generateRoomCode();
+
+        // Load Questions from Options
+        if (options.questions && Array.isArray(options.questions)) {
+            console.log(`[GameRoom] Loading ${options.questions.length} questions from options.`);
+            options.questions.forEach((q: any, i: number) => {
+                const newQ = new Question();
+                newQ.id = i;
+                // Flexible mapping for various potential schemas
+                newQ.text = q.pertanyaan || q.question || q.text || "No Question Text";
+                newQ.imageUrl = q.image || q.image_url || "";
+                newQ.answerType = q.answerType || 'text';
+
+                // Determine Correct Answer Index
+                if (typeof q.correctAnswer === 'number') {
+                    newQ.correctAnswer = q.correctAnswer;
+                } else if (typeof q.kunci_jawaban === 'string') {
+                    // Map 'a','b','c','d' to 0,1,2,3
+                    const map: { [key: string]: number } = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+                    newQ.correctAnswer = map[q.kunci_jawaban.toLowerCase()] ?? 0;
+                } else {
+                    newQ.correctAnswer = 0;
+                }
+
+                // Options
+                let rawOptions: string[] = [];
+                if (Array.isArray(q.options)) {
+                    // Standard array of strings
+                    rawOptions = q.options;
+                } else if (Array.isArray(q.answers)) {
+                    // JSON format provided by user: array of objects { id, answer, ... }
+                    // Sort by ID to ensure order if necessary, but usually just map 'answer' property
+                    rawOptions = q.answers.map((ans: any) => ans.answer || "");
+
+                    // Re-evaluate correct answer if 'correct' is string index in this format
+                    if (q.correct !== undefined) {
+                        newQ.correctAnswer = parseInt(String(q.correct)) || 0;
+                    }
+                } else {
+                    // Try multiple possible keys for options (Legacy/Other formats)
+                    rawOptions = [
+                        q.jawaban_a || q.option_a || q.pil_a || q.a || "",
+                        q.jawaban_b || q.option_b || q.pil_b || q.b || "",
+                        q.jawaban_c || q.option_c || q.pil_c || q.c || "",
+                        q.jawaban_d || q.option_d || q.pil_d || q.d || ""
+                    ];
+                }
+                rawOptions.forEach(opt => newQ.options.push(String(opt || "")));
+
+                this.state.questions.push(newQ);
+            });
+        }
 
         // Store Supabase Session ID in metadata
         this.setMetadata({
@@ -60,6 +115,10 @@ export class GameRoom extends Room<GameState> {
             this.state.countdown = 10;
             console.log("[GameRoom] Starting countdown: 10");
 
+            // Initialize game elements (map, enemies, etc.) immediately so clients can preload
+            console.log("[GameRoom] Pre-initializing game elements during countdown...");
+            this.initializeGameElements();
+
             const countdownInterval = setInterval(() => {
                 if (this.state.countdown > 0) {
                     this.state.countdown--;
@@ -71,23 +130,25 @@ export class GameRoom extends Room<GameState> {
                     clearInterval(countdownInterval);
                     this.state.countdown = 0;
 
-                    console.log("[GameRoom] Countdown finished, starting game immediately.");
+                    console.log("[GameRoom] Countdown finished, activating game state.");
 
                     this.state.isGameStarted = true;
                     this.state.gameStartTime = Date.now();
 
-                    this.initializeGameElements();
+                    // Mark host as finished automatically (host doesn't play)
+                    this.state.players.forEach(player => {
+                        if (player.isHost) {
+                            player.isFinished = true;
+                            player.finishTime = Date.now();
+                            console.log("[GameRoom] Host auto-marked as finished.");
+                        }
+                    });
+
+                    // Start the gameplay timer only when game officially starts
                     this.startGameTimer();
                     this.broadcast("gameStarted");
                 }
             }, 1000);
-        });
-
-        this.onMessage("hostEndGame", (client) => {
-            if (client.sessionId === this.state.hostId) {
-                console.log("[Host] Ending game for all rooms...");
-                this.endGame();
-            }
         });
 
         this.onMessage("correctAnswer", (client, data) => {
@@ -95,6 +156,15 @@ export class GameRoom extends Room<GameState> {
             if (player && !player.isFinished) {
                 player.correctAnswers++;
                 player.answeredQuestions++;
+
+                // Track Answer
+                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
+                this.playerAnswers.get(client.sessionId).push({
+                    question_id: data.questionId,
+                    answer_id: data.answerId, // Client needs to send this
+                    correct: true,
+                    timestamp: Date.now()
+                });
 
                 // Target SPECIFIC enemy by index to avoid sync issues
                 const enemyIndex = data.enemyIndex;
@@ -107,8 +177,8 @@ export class GameRoom extends Room<GameState> {
                 }
 
                 // Check if player finished all required questions
-                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-                if (player.answeredQuestions >= config.targetQuestions && !player.isFinished) {
+                const totalQuestions = this.state.questions.length;
+                if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
                     client.send("playerFinished");
@@ -125,9 +195,18 @@ export class GameRoom extends Room<GameState> {
                 player.wrongAnswers++;
                 player.answeredQuestions++;
 
+                // Track Answer
+                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
+                this.playerAnswers.get(client.sessionId).push({
+                    question_id: data.questionId,
+                    answer_id: data.answerId, // Client needs to send this
+                    correct: false,
+                    timestamp: Date.now()
+                });
+
                 // Check if player finished all required questions (even with wrong answers)
-                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-                if (player.answeredQuestions >= config.targetQuestions && !player.isFinished) {
+                const totalQuestions = this.state.questions.length;
+                if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
                     client.send("playerFinished");
@@ -136,13 +215,13 @@ export class GameRoom extends Room<GameState> {
             }
         });
 
+
         this.onMessage("addScore", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player) {
-                // Calculate points based on difficulty (max 100 total)
-                // mudah: 5 questions = 20 pts each
-                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-                const pointsPerCorrect = Math.floor(100 / config.targetQuestions); // 20 pts
+                // Calculate points dynamic based on total questions (Max 100)
+                const totalQuestions = this.state.questions.length || 1;
+                const pointsPerCorrect = 100 / totalQuestions;
 
                 player.score = Math.min(100, player.score + pointsPerCorrect);
             }
@@ -152,9 +231,9 @@ export class GameRoom extends Room<GameState> {
             const player = this.state.players.get(client.sessionId);
             if (player) {
                 // Chest gives half points of a normal question
-                const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-                const pointsPerCorrect = Math.floor(100 / config.targetQuestions);
-                const chestPoints = Math.floor(pointsPerCorrect / 2); // 10 pts for easy
+                const totalQuestions = this.state.questions.length || 1;
+                const pointsPerCorrect = 100 / totalQuestions;
+                const chestPoints = pointsPerCorrect / 2;
 
                 player.score = Math.min(100, player.score + chestPoints);
             }
@@ -243,6 +322,17 @@ export class GameRoom extends Room<GameState> {
                     enemy.targetY = 0;
                     console.log(`Enemy ${enemyIndex} engaged by ${client.sessionId}. Movement halted.`);
                 }
+            }
+        });
+
+        // --- Host End Game Handler ---
+        this.onMessage("hostEndGame", (client) => {
+            // Verify that the client is the host
+            if (client.sessionId === this.state.hostId) {
+                console.log(`[GameRoom] Host ${client.sessionId} manually ended the game.`);
+                this.endGame();
+            } else {
+                console.log(`[GameRoom] Non-host ${client.sessionId} attempted to end game. Ignored.`);
             }
         });
     }
@@ -457,6 +547,11 @@ export class GameRoom extends Room<GameState> {
             }
         }
         this.state.players.delete(client.sessionId);
+
+        // Check if game can end now that this player left
+        if (this.state.isGameStarted && !this.state.isGameOver) {
+            this.checkGameEnd();
+        }
     }
 
     onDispose() {
@@ -510,6 +605,34 @@ export class GameRoom extends Room<GameState> {
             // Host gets NO enemies
             if (player.isHost) return;
 
+            // SAFETY: Ensure questions exist
+            if (this.state.questions.length === 0) {
+                console.warn("[GameRoom] No questions found! Adding a fallback question.");
+                const fallbackQ = new Question();
+                fallbackQ.id = 0;
+                fallbackQ.text = "Mengapa game ini tidak memiliki soal?";
+                fallbackQ.options.push("Host Lupa Memilih");
+                fallbackQ.options.push("Koneksi Error");
+                fallbackQ.options.push("Bug Sistem");
+                fallbackQ.options.push("A & C Benar");
+                fallbackQ.correctAnswer = 3;
+                this.state.questions.push(fallbackQ);
+            }
+
+            // Generate Randomized Question Order for this player (Indices)
+            let questionIndices: number[] = [];
+            if (this.state.questions.length > 0) {
+                // Shuffle actual INDICES (0, 1, 2...), not IDs relative to something else
+                questionIndices = Array.from({ length: this.state.questions.length }, (_, k) => k);
+                // Fisher-Yates Shuffle
+                for (let k = questionIndices.length - 1; k > 0; k--) {
+                    const j = Math.floor(Math.random() * (k + 1));
+                    [questionIndices[k], questionIndices[j]] = [questionIndices[j], questionIndices[k]];
+                }
+                // Store in player state
+                questionIndices.forEach(idx => player.questionOrder.push(idx));
+            }
+
             // Use decaying radius logic for enemy placement
             // Consolidate enemy creation to try strict distance first -> then relax if needed
             let enemiesSpawnedForPlayer = 0;
@@ -518,7 +641,15 @@ export class GameRoom extends Room<GameState> {
             for (let i = 0; i < config.enemiesPerPlayer; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
-                enemy.questionId = Math.floor(Math.random() * 10) + 1;
+
+                // Assign Question Index from shuffled order (Cyclic)
+                if (questionIndices.length > 0) {
+                    const orderIndex = i % questionIndices.length;
+                    enemy.questionId = questionIndices[orderIndex];
+                } else {
+                    enemy.questionId = 0;
+                }
+
                 enemy.type = Math.random() < 0.6 ? "skeleton" : "goblin";
 
                 let foundPosition = false;
@@ -606,13 +737,24 @@ export class GameRoom extends Room<GameState> {
     checkGameEnd() {
         // Check if all players are finished
         let allFinished = true;
+        let nonHostCount = 0;
+        let finishedCount = 0;
+
         this.state.players.forEach(player => {
-            if (!player.isHost && !player.isFinished) {
-                allFinished = false;
+            if (!player.isHost) {
+                nonHostCount++;
+                if (player.isFinished) {
+                    finishedCount++;
+                } else {
+                    allFinished = false;
+                }
             }
         });
 
+        console.log(`[CheckGameEnd] Total players: ${this.state.players.size}, Non-host: ${nonHostCount}, Finished: ${finishedCount}, AllFinished: ${allFinished}`);
+
         if (allFinished && this.state.players.size > 0) {
+            console.log("[CheckGameEnd] All players finished! Ending game...");
             this.endGame();
         }
     }
@@ -653,9 +795,13 @@ export class GameRoom extends Room<GameState> {
                 finishTime: player.finishTime,
                 duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0, // Calculate duration
                 correctAnswers: player.correctAnswers,
-                wrongAnswers: player.wrongAnswers
+                wrongAnswers: player.wrongAnswers,
+                // Add Answer History for Supabase
+                currentQuestion: player.answeredQuestions,
+                answers: this.playerAnswers ? (this.playerAnswers.get(player.sessionId) || []) : []
             }));
 
+        console.log("[EndGame] Broadcasting gameEnded with rankings:", rankings.length);
         this.broadcast("gameEnded", { rankings });
     }
 }

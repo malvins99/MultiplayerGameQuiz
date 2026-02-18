@@ -3,7 +3,9 @@ import { Room } from 'colyseus.js';
 import { Router } from '../utils/Router';
 import { TransitionManager } from '../utils/TransitionManager';
 
-export class HostSpectatorScene extends Phaser.Scene {
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
+
+export class HostProgressScene extends Phaser.Scene {
     room!: Room;
     map!: Phaser.Tilemaps.Tilemap;
     playerEntities: { [sessionId: string]: Phaser.GameObjects.Container } = {};
@@ -12,15 +14,17 @@ export class HostSpectatorScene extends Phaser.Scene {
     uiContainer!: HTMLDivElement;
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
+    mapScaleX: number = 1;
+    mapScaleY: number = 1;
 
     constructor() {
-        super('HostSpectatorScene');
+        super('HostProgressScene');
     }
 
     init(data: { room: Room }) {
-        console.log("[Spectator] Initializing with data:", data);
+        console.log("[HostProgress] Initializing with data:", data);
         if (!data || !data.room) {
-            console.error("[Spectator] No room data provided! Redirecting to lobby...");
+            console.error("[HostProgress] No room data provided! Redirecting to lobby...");
             window.location.href = '/';
             return;
         }
@@ -28,7 +32,7 @@ export class HostSpectatorScene extends Phaser.Scene {
     }
 
     preload() {
-        console.log("[Spectator] Preloading...");
+        console.log("[HostProgress] Preloading...");
         if (!this.room) return;
         // Determine map based on difficulty
         const difficulty = this.room.state.difficulty;
@@ -57,24 +61,24 @@ export class HostSpectatorScene extends Phaser.Scene {
     }
 
     create() {
-        console.log("[Spectator] Creating...");
+        console.log("[HostProgress] Creating...");
         if (!this.room) {
-            console.error("[Spectator] Create failed: No room!");
+            console.error("[HostProgress] Create failed: No room!");
             return;
         }
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
-        console.log("[Spectator] Difficulty:", difficulty);
+        console.log("[HostProgress] Difficulty:", difficulty);
         const mapKey = difficulty === 'sedang' ? 'map_medium' : difficulty === 'sulit' ? 'map_hard' : 'map_easy';
-        console.log("[Spectator] Loading map with key:", mapKey);
+        console.log("[HostProgress] Loading map with key:", mapKey);
 
         this.map = this.make.tilemap({ key: mapKey });
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
         const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
 
         if (!tileset1 && !tileset2) {
-            console.error("[Spectator] Failed to load tilesets! Check map keys.");
+            console.error("[HostProgress] Failed to load tilesets! Check map keys.");
         }
 
         const tilesets: Phaser.Tilemaps.Tileset[] = [];
@@ -82,19 +86,19 @@ export class HostSpectatorScene extends Phaser.Scene {
         if (tileset2) tilesets.push(tileset2);
 
         if (tilesets.length > 0) {
-            console.log(`[Spectator] Iterating through ${this.map.layers.length} layers...`);
+            console.log(`[HostProgress] Iterating through ${this.map.layers.length} layers...`);
             this.map.layers.forEach((layerData, index) => {
                 try {
                     // Try to create the layer. createLayer handles the name vs index properly.
                     const layer = this.map.createLayer(layerData.name, tilesets, 0, 0);
                     if (layer) {
-                        console.log(`[Spectator] Successfully rendered layer: ${layerData.name}`);
+                        console.log(`[HostProgress] Successfully rendered layer: ${layerData.name}`);
                     } else {
-                        console.warn(`[Spectator] Layer created as null: ${layerData.name}`);
+                        console.warn(`[HostProgress] Layer created as null: ${layerData.name}`);
                     }
                 } catch (e) {
                     // This might happen for object layers or groups if Phaser doesn't flatten them as expected
-                    console.log(`[Spectator] Note: Could not render layer '${layerData.name}' as a tile layer. This is normal for object/group layers.`);
+                    console.log(`[HostProgress] Note: Could not render layer '${layerData.name}' as a tile layer. This is normal for object/group layers.`);
                 }
             });
         }
@@ -121,36 +125,36 @@ export class HostSpectatorScene extends Phaser.Scene {
         });
 
         // --- Camera Setup ---
+        // --- Camera Setup (Stretch Map to Fit Screen) ---
         const mapW = this.map.widthInPixels || 1920;
         const mapH = this.map.heightInPixels || 1080;
-        this.minZoom = Math.max(this.scale.width / mapW, this.scale.height / mapH);
 
-        console.log(`[Spectator] Map size: ${mapW}x${mapH}, Zoom: ${this.minZoom}`);
+        // Calculate stretch factors to fill the screen exactly
+        this.mapScaleX = this.scale.width / mapW;
+        this.mapScaleY = this.scale.height / mapH;
 
-        this.cameras.main.setBackgroundColor('#1a1a1a');
-        this.cameras.main.centerOn(mapW / 2, mapH / 2);
-        this.cameras.main.setZoom(Math.max(0.6, this.minZoom));
-        this.cameras.main.setBounds(0, 0, mapW, mapH);
+        console.log(`[HostProgress] Stretching Map: ${mapW}x${mapH} -> ${this.scale.width}x${this.scale.height} (Scale: ${this.mapScaleX.toFixed(2)}x, ${this.mapScaleY.toFixed(2)}x)`);
 
-        // Drag Pan
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            this.isDragPan = true;
-            this.dragOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
-        });
-        this.input.on('pointerup', () => this.isDragPan = false);
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.isDragPan) {
-                const cam = this.cameras.main;
-                const sensitivity = 1.0 / cam.zoom;
-                cam.scrollX -= (pointer.x - this.dragOrigin.x) * sensitivity;
-                cam.scrollY -= (pointer.y - this.dragOrigin.y) * sensitivity;
-                this.dragOrigin.set(pointer.x, pointer.y);
-            }
-        });
-        this.input.on('wheel', (pointer: any, gO: any, dx: number, dy: number) => {
-            const newZoom = this.cameras.main.zoom - dy * 0.001;
-            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 2));
-        });
+        // Apply scale to all layers
+        if (this.map.layers) {
+            this.map.layers.forEach(layerData => {
+                if (layerData.tilemapLayer) {
+                    layerData.tilemapLayer.setScale(this.mapScaleX, this.mapScaleY);
+                }
+            });
+        }
+
+        this.cameras.main.setRotation(0);
+        this.cameras.main.roundPixels = false; // Disable roundPixels to help with non-integer scaling gaps
+        this.cameras.main.setBackgroundColor('#5dadff'); // Blue background to hide gaps over water
+        this.cameras.main.centerOn(this.scale.width / 2, this.scale.height / 2);
+        this.cameras.main.setZoom(1);
+
+        // Disable interactions
+        this.input.off('pointerdown');
+        this.input.off('pointerup');
+        this.input.off('pointermove');
+        this.input.off('wheel');
 
         // --- UI Initialization ---
         this.createUI();
@@ -158,7 +162,8 @@ export class HostSpectatorScene extends Phaser.Scene {
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
             if (player.isHost) return;
-            const container = this.add.container(player.x, player.y);
+            // Apply scale to player position
+            const container = this.add.container(player.x * this.mapScaleX, player.y * this.mapScaleY);
             container.setDepth(100);
 
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
@@ -169,7 +174,7 @@ export class HostSpectatorScene extends Phaser.Scene {
 
             this.createNameTag(sessionId, player.name || 'Player', container);
             this.playerEntities[sessionId] = container;
-            console.log(`[Spectator] Added player entity: ${sessionId} (${player.name})`);
+            console.log(`[HostProgress] Added player entity: ${sessionId} (${player.name}) at ${container.x},${container.y}`);
 
             // Target questions based on difficulty
             const diff = this.room.state.difficulty;
@@ -194,16 +199,17 @@ export class HostSpectatorScene extends Phaser.Scene {
             this.disposers.push(player.listen("hairId", updateHair));
 
             const updateProgress = () => {
-                const tag = container.getByName('nameTag') as Phaser.GameObjects.Text;
-                if (tag) {
+                const progressText = container.getByName('progressText') as Phaser.GameObjects.Text;
+                if (progressText) {
                     const answered = player.answeredQuestions || 0;
-                    tag.setText(`${player.name} (${answered}/${target})`);
+                    progressText.setText(`(${answered}/${target})`);
                 }
             };
             updateProgress();
 
             this.disposers.push(player.onChange(() => {
-                container.setData({ targetX: player.x, targetY: player.y });
+                // Apply scale to target position updates
+                container.setData({ targetX: player.x * this.mapScaleX, targetY: player.y * this.mapScaleY });
                 updateProgress();
             }));
         };
@@ -220,20 +226,64 @@ export class HostSpectatorScene extends Phaser.Scene {
             this.updateTimer(data.remaining);
         }));
 
-        this.disposers.push(this.room.onMessage('gameEnded', (data: any) => {
+        this.disposers.push(this.room.onMessage('gameEnded', async (data: any) => {
+            console.log("[HostProgress] Game Ended. Updating Supabase session...");
+
+            // Update Session Status in Supabase B
+            if (this.room && this.room.state && this.room.state.roomCode) {
+                const { error } = await supabaseB
+                    .from(SESSION_TABLE)
+                    .update({
+                        status: 'finished',
+                        ended_at: new Date().toISOString()
+                    })
+                    .eq('game_pin', this.room.state.roomCode);
+
+                if (error) {
+                    console.error("[HostProgress] Failed to update session status in Supabase:", error);
+                } else {
+                    console.log("[HostProgress] Session status updated to 'finished' in Supabase.");
+                }
+
+                // Update Participants Data
+                for (const rank of data.rankings) {
+                    const { error: pError } = await supabaseB
+                        .from(PARTICIPANT_TABLE)
+                        .update({
+                            score: rank.score,
+                            correct: rank.correctAnswers,
+                            duration: rank.duration,
+                            finished_at: rank.finishTime ? new Date(rank.finishTime).toISOString() : null,
+                            completion: 'finished',
+                            answers: rank.answers, // Save detailed answers
+                            current_question: rank.currentQuestion // Save progress
+                        })
+                        .eq('session_id', (this.room as any).metadata?.sessionId || this.room.roomId) // Use metadata session ID
+                        .eq('nickname', rank.name); // Match by name (since we might not have user_id for guests)
+
+                    if (pError) console.error(`[HostProgress] Failed to update participant ${rank.name}:`, pError);
+                }
+            }
+
             if (this.uiContainer && this.uiContainer.parentNode) {
                 document.body.removeChild(this.uiContainer);
             }
             this.registry.set('leaderboardData', data.rankings);
-            TransitionManager.sceneTo(this, 'LeaderboardScene');
+            this.registry.set('isHost', true);
+
+            // Update URL
+            const roomCode = this.room.state.roomCode || 'unknown';
+            Router.navigate(`/host/${roomCode}/leaderboard`);
+
+            TransitionManager.sceneTo(this, 'HostLeaderboardScene');
         }));
 
-        this.time.delayedCall(500, () => this.focusOnAllPlayers());
+        // this.time.delayedCall(500, () => this.focusOnAllPlayers());
 
         // --- Open Transition (Critical Fix) ---
         TransitionManager.open();
 
-        console.log("[Spectator] Create finished.");
+        console.log("[HostProgress] Create finished.");
     }
 
     // Adding helper for background if needed, but let's just stick to UI update
@@ -262,31 +312,72 @@ export class HostSpectatorScene extends Phaser.Scene {
 
 
         this.uiContainer.innerHTML = `
-            <!-- Top Bar: Timer & Controls -->
-            <div style="max-width: 1200px; width: 100%; margin: 10px auto 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.6); border-radius: 16px; border: 1px solid rgba(0,255,136,0.2); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="material-symbols-outlined" style="font-size: 28px; color: #00ff88;">timer</span>
-                    <span id="game-timer" style="font-size: 18px; color: #00ff88;">05:00</span>
-                </div>
-                <button id="spec-end-btn" style="
-                    background: #ff0055; 
-                    border: none; 
-                    padding: 12px 24px; 
-                    color: white; 
-                    cursor: pointer; 
-                    font-family: inherit; 
-                    font-size: 10px; 
-                    text-transform: uppercase; 
-                    border-radius: 8px; 
-                    box-shadow: 0 5px 0 #990033; 
-                    transition: all 0.05s;
-                    position: relative;
-                    outline: none;
-                ">
-                    Akhiri Game
-                </button>
+            <!-- Zigma Logo: Top Left -->
+            <img src="/logo/Zigma.webp" alt="Zigma Logo" style="
+                position: absolute;
+                top: 10px;
+                left: 40px;
+                width: 250px; /* Increased size */
+                height: auto;
+                pointer-events: none;
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            " />
+
+            <!-- GameForSmart Logo: Top Right -->
+            <img src="/logo/gameforsmart.webp" alt="GameForSmart Logo" style="
+                position: absolute;
+                top: 10px;
+                right: 40px;
+                width: 300px; /* Increased size */
+                height: auto;
+                pointer-events: none;
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            " />
+
+            <!-- Timer: Top Center -->
+            <div style="
+                position: absolute; 
+                top: 40px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                display: flex; 
+                align-items: center; 
+                gap: 16px; 
+                text-shadow: 3px 3px 0 #000;
+                pointer-events: none;
+            ">
+                <!-- Icon removed as requested -->
+                <span id="game-timer" style="font-size: 48px; color: #00ff88; font-family: 'Press Start 2P', monospace;">05:00</span>
             </div>
+
+            <!-- End Game Button: Bottom Right -->
+            <button id="spec-end-btn" style="
+                position: absolute;
+                bottom: 40px;
+                right: 40px;
+                background: #ff0055; 
+                border: none; 
+                padding: 16px 32px; 
+                color: white; 
+                cursor: pointer; 
+                font-family: inherit; 
+                font-size: 14px; 
+                text-transform: uppercase; 
+                border-radius: 12px; 
+                box-shadow: 0 6px 0 #990033; 
+                transition: all 0.1s;
+                outline: none;
+                pointer-events: auto;
+            ">
+                Akhiri Game
+            </button>
+
             <style>
+                #spec-end-btn:hover {
+                    filter: brightness(1.1);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 0 #990033;
+                }
                 #spec-end-btn:active {
                     transform: translateY(3px);
                     box-shadow: 0 2px 0 #990033;
@@ -294,7 +385,7 @@ export class HostSpectatorScene extends Phaser.Scene {
             </style>
         `;
 
-        console.log("[Spectator] UI innerHTML set. Appending to body...");
+        console.log("[HostProgress] UI innerHTML set. Appending to body...");
         document.body.appendChild(this.uiContainer);
 
         // Bindings
@@ -511,27 +602,61 @@ export class HostSpectatorScene extends Phaser.Scene {
                 }
             });
         } catch (e) {
-            console.error("[Spectator] Update error:", e);
+            console.error("[HostProgress] Update error:", e);
         }
     }
 
     refreshSubRooms() { }
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
-        const text = this.add.text(0, -42, name, {
-            fontSize: '18px', // Slightly larger for clarity
+        // 1. Name Text (Top) - significantly closer
+        const nameText = this.add.text(0, -50, name, {
+            fontSize: '16px',
             fontFamily: '"Press Start 2P"',
-            color: '#00ff88',
+            color: '#FFFFFF',
             stroke: '#000000',
-            strokeThickness: 3,
+            strokeThickness: 4,
             align: 'center'
         }).setOrigin(0.5);
 
-        // High resolution for text
-        text.setResolution(2);
-        text.setScale(0.5); // Scale down to maintain size but with double resolution (sharper)
+        // 2. Progress Text (Below Name) - significantly closer
+        const progressText = this.add.text(0, -38, '(0/0)', {
+            fontSize: '12px',
+            fontFamily: '"Press Start 2P"',
+            color: '#DDDDDD',
+            stroke: '#000000',
+            strokeThickness: 3,
+            align: 'center'
+        }).setOrigin(0.5).setName('progressText');
 
-        text.setName('nameTag');
-        container.add(text);
+        // 3. Marker (Down Arrow) - touching/just above head
+        const marker = this.add.text(0, -28, '▼', {
+            fontSize: '20px',
+            color: '#FF0055',
+            stroke: '#000000',
+            strokeThickness: 4,
+        }).setOrigin(0.5);
+
+        // Tween for the marker to float slightly
+        this.tweens.add({
+            targets: marker,
+            y: -24,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Set resolution for sharp text
+        nameText.setResolution(2);
+        progressText.setResolution(2);
+        marker.setResolution(2);
+
+        // Scale down to counteract high resolution
+        nameText.setScale(0.5);
+        progressText.setScale(0.5);
+        marker.setScale(0.5);
+
+        container.add([nameText, progressText, marker]);
     }
 }

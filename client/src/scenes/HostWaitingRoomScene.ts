@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
+import { Player } from '../../../server/src/rooms/GameState';
 import { Router } from '../utils/Router';
 import { TransitionManager } from '../utils/TransitionManager';
 import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
 import { QRCodePopup } from '../ui/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../data/characterData';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
 
 export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -170,7 +171,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         this.room.state.players.onRemove(() => this.updateAll());
 
-// Listen for Countdown
+        // Listen for Countdown
         this.room.state.listen("countdown", (val: number) => {
             if (val > 0) {
                 if (this.countdownOverlay) {
@@ -826,6 +827,19 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.isGameStarting = true;
 
         console.log("Game Starting... Transitioning.");
+
+        // UPDATE SUPABASE STATUS TO "ACTIVE" (Only for Host)
+        // Done here to ensure status changes ONLY when game actually starts (after countdown)
+        if (this.isHost && this.room && this.room.state && this.room.state.roomCode) {
+            supabaseB
+                .from(SESSION_TABLE)
+                .update({ status: 'active', started_at: new Date().toISOString() })
+                .eq('game_pin', this.room.state.roomCode)
+                .then(({ error }) => {
+                    if (error) console.error("Failed to set session active:", error);
+                    else console.log("Session ACTIVE. Countdown finished.");
+                });
+        }
 
         // Clean Overlay
         if (this.countdownOverlay) {
