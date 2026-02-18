@@ -10,7 +10,8 @@ import { LeaderboardScene } from './scenes/LeaderboardScene';
 import { QuizSettingScene } from './scenes/QuizSettingScene';
 import { SelectQuizScene } from './scenes/SelectQuizScene';
 
-import { HostSpectatorScene } from './scenes/HostSpectatorScene';
+import { HostProgressScene } from './scenes/HostProgressScene';
+import { HostLeaderboardScene } from './scenes/HostLeaderboardScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -37,7 +38,8 @@ const config: Phaser.Types.Core.GameConfig = {
         UIScene,
         WaitingResultsScene,
         LeaderboardScene,
-        HostSpectatorScene
+        HostLeaderboardScene,
+        HostProgressScene
     ],
     scale: {
         mode: Phaser.Scale.RESIZE,

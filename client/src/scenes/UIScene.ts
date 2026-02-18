@@ -10,8 +10,25 @@ export class UIScene extends Phaser.Scene {
         super({ key: 'UIScene', active: false });
     }
 
+    zigmaLogo!: Phaser.GameObjects.Image;
+    gameForSmartLogo!: Phaser.GameObjects.Image;
+
     create() {
         const screenWidth = this.scale.width;
+
+        // --- Logos ---
+        // Zigma Logo (Top Left)
+        this.zigmaLogo = this.add.image(20, 20, 'logo_zigma'); // Placeholder key, will load in preload or use DOM
+        // Since we are using DOM elements for logos in HostProgress, let's try DOM here too for consistency if possible, 
+        // BUT GameScene/UIScene is canvas based. We should load images in GameScene/preload or use DOM elements overlaid.
+        // Given HostProgress used <img> tags in a div, that's easier. But UIScene is a Phaser Scene.
+        // Let's use DOM elements appended to body like in HostProgressScene for better resolution independence on top of canvas?
+        // OR load them as Phaser keys. 
+        // User requested "GameForSmart" logo.
+        // Let's stick to DOM elements for UI overlay to match HostProgress style if we want high res without managing texture memory for large logos.
+
+        // Actually, let's use the same approach as HostProgressScene: HTML Overlay
+        this.createLogos();
 
         // Create Container positioned at Top Center
         this.scoreContainer = this.add.container(screenWidth / 2, 40);
@@ -65,6 +82,55 @@ export class UIScene extends Phaser.Scene {
 
         // --- Handle Resize ---
         this.scale.on('resize', this.handleResize, this);
+    }
+
+    createLogos() {
+        // Remove existing if any (in case of restart/scene switch)
+        const oldContainer = document.getElementById('player-ui-logos');
+        if (oldContainer) oldContainer.remove();
+
+        const logoContainer = document.createElement('div');
+        logoContainer.id = 'player-ui-logos';
+        logoContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000; /* Ensure on top of canvas */
+        `;
+
+        logoContainer.innerHTML = `
+            <!-- Zigma Logo: Top Left -->
+            <img src="/logo/Zigma.webp" alt="Zigma Logo" style="
+                position: absolute;
+                top: 10px;
+                left: 20px;
+                width: 180px; 
+                height: auto;
+                filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+            " />
+
+            <!-- GameForSmart Logo: Top Right -->
+            <img src="/logo/gameforsmart.webp" alt="GameForSmart Logo" style="
+                position: absolute;
+                top: 10px;
+                right: 20px;
+                width: 220px; 
+                height: auto;
+                filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+            " />
+        `;
+
+        document.body.appendChild(logoContainer);
+
+        // Cleanup on shutdown
+        this.events.once('shutdown', () => {
+            if (logoContainer && logoContainer.parentNode) {
+                logoContainer.parentNode.removeChild(logoContainer);
+            }
+        });
     }
 
     handleResize(gameSize: Phaser.Structs.Size) {

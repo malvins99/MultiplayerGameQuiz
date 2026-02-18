@@ -310,6 +310,13 @@ export class QuizSettingScene extends Phaser.Scene {
         const profile = authService.getStoredProfile();
         const hostId = profile ? profile.id : null;
 
+        // Shuffle and Pick Questions based on settings
+        let questions = [...(this.selectedQuiz.questions || [])];
+        // Simple shuffle
+        questions.sort(() => Math.random() - 0.5);
+        // Limit to question count
+        questions = questions.slice(0, this.settingsQuestionCount);
+
         // 1. Create Session in Supabase B
         try {
             const { data, error } = await supabaseB
@@ -319,10 +326,11 @@ export class QuizSettingScene extends Phaser.Scene {
                     quiz_id: this.selectedQuiz.id,
                     status: 'waiting',
                     question_limit: this.settingsQuestionCount,
-                    total_time_minutes: this.settingsTimer / 60, // Convert seconds to minutes if needed, or store as seconds if schema changes. Schema says minutes.
+                    total_time_minutes: this.settingsTimer / 60,
                     difficulty: this.settingsDifficulty,
                     host_id: hostId,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    current_questions: questions // Save selected questions
                 })
                 .select()
                 .single();
@@ -359,6 +367,7 @@ export class QuizSettingScene extends Phaser.Scene {
                 subject: this.selectedQuiz.category.toLowerCase(),
                 quizId: this.selectedQuiz.id,
                 quizTitle: this.selectedQuiz.title,
+                questions: questions, // PASS THE QUESTIONS!
                 map: mapFile,
                 questionCount: this.settingsQuestionCount,
                 enemyCount: enemyCount,
