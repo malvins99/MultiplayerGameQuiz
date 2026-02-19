@@ -24,7 +24,7 @@ export class QRCodePopup {
         qrContainer.className = 'bg-white p-4 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]'; // Rounded white background for QR
 
         this.qrImage = document.createElement('img');
-        this.qrImage.className = 'w-[600px] h-[600px] object-contain mix-blend-multiply'; // Larger size
+        this.qrImage.className = 'w-[500px] h-[500px] object-contain mix-blend-multiply';
         this.qrImage.alt = "Room QR Code";
 
         qrContainer.appendChild(this.qrImage);

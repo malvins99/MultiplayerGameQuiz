@@ -59,8 +59,6 @@ export class LeaderboardScene extends Phaser.Scene {
         const style = document.createElement('style');
         style.id = 'leaderboard-styles';
         style.innerHTML = `
-            @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
             #leaderboard-ui {
@@ -70,7 +68,7 @@ export class LeaderboardScene extends Phaser.Scene {
                 flex-direction: column;
                 align-items: center;
                 overflow-y: auto;
-                font-family: 'Space Grotesk', sans-serif;
+                font-family: 'Press Start 2P', monospace;
                 padding-bottom: 20px;
                 overflow-x: hidden;
             }
@@ -268,9 +266,9 @@ export class LeaderboardScene extends Phaser.Scene {
 
             /* 3. POINT (Bottom) - MATCHES PODIUM COLORS */
             .podium-score {
-                font-family: 'Outfit', sans-serif; 
-                font-size: 28px;
-                font-weight: 800; 
+                font-family: 'Press Start 2P', monospace; 
+                font-size: 20px;
+                font-weight: 400; 
                 margin-top: auto;
                 margin-bottom: 20px;
                 padding: 10px 22px;
@@ -283,7 +281,7 @@ export class LeaderboardScene extends Phaser.Scene {
             
             /* Rank 1: Gold - Matching Podium */
             .rank-1 .podium-score { 
-                font-size: 32px;
+                font-size: 24px;
                 padding: 12px 26px;
                 background: linear-gradient(180deg, #FFD700 0%, #DAA520 100%); /* Gold gradient */
                 border-color: #B8860B; /* DarkGoldenrod */
@@ -362,15 +360,15 @@ export class LeaderboardScene extends Phaser.Scene {
             .list-rank { font-family: 'Press Start 2P'; font-size: 10px; color: #666; text-align: left; }
             .list-name { font-weight: 700; font-size: 14px; color: #ddd; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .list-time { 
-                font-family: 'Space Grotesk', monospace; 
+                font-family: 'Press Start 2P', monospace; 
                 color: #aaa; 
-                font-weight: 400; font-size: 12px; 
+                font-weight: 400; font-size: 10px; 
                 text-align: center; /* Center time */
             }
             .list-stats { 
-                font-family: 'Outfit', sans-serif; 
+                font-family: 'Press Start 2P', monospace; 
                 color: #4ade80; 
-                font-weight: 800; font-size: 14px; 
+                font-weight: 400; font-size: 12px; 
                 text-align: right; 
             }
         `;
