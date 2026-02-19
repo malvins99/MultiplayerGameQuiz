@@ -1,17 +1,17 @@
 import Phaser from 'phaser';
-import { LoginScene } from './scenes/LoginScene';
-import { LobbyScene } from './scenes/LobbyScene';
-import { HostWaitingRoomScene } from './scenes/HostWaitingRoomScene';
-import { PlayerWaitingRoomScene } from './scenes/PlayerWaitingRoomScene';
-import { GameScene } from './scenes/GameScene';
-import { UIScene } from './scenes/UIScene';
-import { WaitingResultsScene } from './scenes/WaitingResultsScene';
-import { LeaderboardScene } from './scenes/LeaderboardScene';
-import { QuizSettingScene } from './scenes/QuizSettingScene';
-import { SelectQuizScene } from './scenes/SelectQuizScene';
+import { LoginScene } from './scenes/login/page';
+import { LobbyScene } from './scenes/lobby/page';
+import { HostWaitingRoomScene } from './scenes/hostwaitingroom/page';
+import { PlayerWaitingRoomScene } from './scenes/playerwaitingroom/page';
+import { GameScene } from './scenes/game/page';
+import { UIScene } from './scenes/ui/page';
+import { WaitingResultsScene } from './scenes/waitingresults/page';
+import { LeaderboardScene } from './scenes/leaderboard/page';
+import { QuizSettingScene } from './scenes/quizsetting/page';
+import { SelectQuizScene } from './scenes/selectquiz/page';
 
-import { HostProgressScene } from './scenes/HostProgressScene';
-import { HostLeaderboardScene } from './scenes/HostLeaderboardScene';
+import { HostProgressScene } from './scenes/hostprogress/page';
+import { HostLeaderboardScene } from './scenes/hostleaderboard/page';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,

@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { Quiz } from '../data/QuizData';
-import { TransitionManager } from '../utils/TransitionManager';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
-import { authService } from '../services/AuthService';
+import { Router } from '../../utils/Router';
+import { Quiz, fetchQuizById } from '../../data/QuizData';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
+import { authService } from '../../services/AuthService';
 
 export class QuizSettingScene extends Phaser.Scene {
     client!: Client;
@@ -23,13 +23,43 @@ export class QuizSettingScene extends Phaser.Scene {
         super('QuizSettingScene');
     }
 
-    init(data: { quiz: Quiz; client: Client }) {
-        this.selectedQuiz = data.quiz;
+    init(data: { quiz?: Quiz; client: Client }) {
+        this.selectedQuiz = data.quiz || null;
         this.client = data.client;
+
+        // If client is missing (direct refresh), try to reconnect/use passed client 
+        // Note: Client is usually passed from Lobby, but if Lobby started us without data, 
+        // we heavily rely on Lobby doing the initial client setup. 
+        // Lobby currently creates client in init/create, passing it here is fine.
     }
 
-    create() {
+    async create() {
         this.quizSettingsUI = document.getElementById('quiz-settings-ui');
+
+        // Check if we need to restore state from URL
+        if (!this.selectedQuiz) {
+            // Retrieve from localStorage (hidden persistence)
+            const quizId = localStorage.getItem('tempSettingsQuizId');
+
+            if (quizId) {
+                console.log("Restoring quiz state for ID:", quizId);
+                const quiz = await fetchQuizById(quizId);
+                if (quiz) {
+                    this.selectedQuiz = quiz;
+                } else {
+                    console.error("Failed to fetch quiz");
+                    Router.navigate('/host/select-quiz');
+                    this.scene.start('SelectQuizScene', { client: this.client });
+                    return;
+                }
+            } else {
+                // No ID, go back
+                console.warn("No quiz ID found, redirecting.");
+                Router.navigate('/host/select-quiz');
+                this.scene.start('SelectQuizScene', { client: this.client });
+                return;
+            }
+        }
 
         // Show settings UI
         this.showSettingsUI();
@@ -43,8 +73,8 @@ export class QuizSettingScene extends Phaser.Scene {
             titleEl.innerText = this.selectedQuiz.title;
         }
 
-        // Update URL
-        Router.navigate('/host/quiz-setting');
+        // Update URL (ensure param is there if not already)
+
 
         // Listen for browser back
         window.addEventListener('popstate', this.handlePopState);
@@ -378,6 +408,10 @@ export class QuizSettingScene extends Phaser.Scene {
             const room = await this.client.joinOrCreate("game_room", options);
             console.log("Room created!", room);
 
+            // Save persistent session info for refresh recovery
+            localStorage.setItem('currentRoomId', room.id);
+            localStorage.setItem('currentSessionId', room.sessionId);
+
             // Save options for Restart functionality
             this.registry.set('lastGameOptions', options);
 
@@ -386,7 +420,7 @@ export class QuizSettingScene extends Phaser.Scene {
 
             // Navigate to Waiting Room
             this.cleanup();
-            Router.navigate('/host/lobby');
+            Router.navigate('/host/waiting-room'); // Correct route for refresh logic
             this.scene.start('HostWaitingRoomScene', { room, isHost: true });
 
             // Manually open the iris after the new scene is kicked off.

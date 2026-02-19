@@ -23,6 +23,7 @@ export class GameRoom extends Room<GameState> {
         this.setState(new GameState());
 
         this.state.subject = options.subject || "matematika";
+        this.state.difficulty = options.difficulty || "mudah";
         // Use provided room code from client (which matches Supabase session) or generate one
         this.state.roomCode = options.roomCode || this.generateRoomCode();
 
@@ -158,8 +159,12 @@ export class GameRoom extends Room<GameState> {
                 player.answeredQuestions++;
 
                 // Track Answer
-                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
-                this.playerAnswers.get(client.sessionId).push({
+                let answers = this.playerAnswers.get(client.sessionId);
+                if (!answers) {
+                    answers = [];
+                    this.playerAnswers.set(client.sessionId, answers);
+                }
+                answers.push({
                     question_id: data.questionId,
                     answer_id: data.answerId, // Client needs to send this
                     correct: true,
@@ -196,8 +201,12 @@ export class GameRoom extends Room<GameState> {
                 player.answeredQuestions++;
 
                 // Track Answer
-                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
-                this.playerAnswers.get(client.sessionId).push({
+                let answers = this.playerAnswers.get(client.sessionId);
+                if (!answers) {
+                    answers = [];
+                    this.playerAnswers.set(client.sessionId, answers);
+                }
+                answers.push({
                     question_id: data.questionId,
                     answer_id: data.answerId, // Client needs to send this
                     correct: false,

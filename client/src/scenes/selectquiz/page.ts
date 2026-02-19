@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../data/QuizData';
-import { TransitionManager } from '../utils/TransitionManager';
-import { authService } from '../services/AuthService';
+import { Router } from '../../utils/Router';
+import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../../data/QuizData';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { authService } from '../../services/AuthService';
 
 export class SelectQuizScene extends Phaser.Scene {
     client!: Client;
@@ -36,6 +36,13 @@ export class SelectQuizScene extends Phaser.Scene {
 
     create() {
         this.quizSelectionUI = document.getElementById('quiz-selection-ui');
+
+        // Hide UI initially to prevent flash
+        this.hideAllUI();
+
+        // Extra safety: Force hide lobby-ui immediately
+        const lobbyUI = document.getElementById('lobby-ui');
+        if (lobbyUI) lobbyUI.classList.add('hidden');
 
         this.createTooltip();
         this.setupEventListeners();
@@ -516,6 +523,10 @@ export class SelectQuizScene extends Phaser.Scene {
                     TransitionManager.transitionTo(() => {
                         this.hideUI();
                         this.cleanup();
+                        // Add query param for refresh persistence
+                        // Store quiz ID in localStorage to persist across refreshes without showing in URL
+                        localStorage.setItem('tempSettingsQuizId', quiz.id);
+                        Router.navigate('/host/settings');
                         this.scene.start('QuizSettingScene', { quiz, client: this.client });
                     });
                 }
@@ -650,15 +661,16 @@ export class SelectQuizScene extends Phaser.Scene {
 
     // --- NAVIGATION ---
 
-    showQuizSelection() {
-        // Hide other UIs
+    hideAllUI() {
         const uiIds = ['lobby-ui', 'create-room-ui', 'quiz-settings-ui'];
         uiIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.add('hidden');
         });
+        if (this.quizSelectionUI) this.quizSelectionUI.classList.add('hidden');
+    }
 
-        // Show quiz selection
+    showQuizSelection() {
         if (this.quizSelectionUI) {
             this.quizSelectionUI.classList.remove('hidden');
         }

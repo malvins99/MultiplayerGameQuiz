@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { QuizPopup } from '../ui/QuizPopup';
-import { UIScene } from './UIScene'; // Import UI Scene for types
-import { TransitionManager } from '../utils/TransitionManager';
+import { QuizPopup } from '../../ui/QuizPopup';
+import { UIScene } from '../ui/page'; // Import UI Scene for types
+import { TransitionManager } from '../../utils/TransitionManager';
+import { Router } from '../../utils/Router'; // IMPORT ROUTER
 
-import { HTMLControlAdapter } from '../ui/HTMLControlAdapter';
-import { ClickToMoveSystem } from '../systems/ClickToMoveSystem';
+import { HTMLControlAdapter } from '../../ui/HTMLControlAdapter';
+import { ClickToMoveSystem } from '../../systems/ClickToMoveSystem';
 // import { QUESTIONS } from '../dummyQuestions'; // Removed to enforce server questions
 
 export class GameScene extends Phaser.Scene {
@@ -27,7 +28,10 @@ export class GameScene extends Phaser.Scene {
     isZooming: boolean = false;
     controls!: HTMLControlAdapter;
     indicatorContainer: Phaser.GameObjects.Container | null = null;
+
     clickToMove!: ClickToMoveSystem;
+    client?: any;
+    isRestoring: boolean = false;
 
     isGameReady: boolean = false; // Block input until countdown finishes
 
@@ -35,13 +39,77 @@ export class GameScene extends Phaser.Scene {
         super('GameScene');
     }
 
-    init(data: { room: Room }) {
-        this.room = data.room;
+    init(data: { room?: Room, isRestore?: boolean, client?: any }) {
+        if (data.room) {
+            this.room = data.room;
+        }
+
+        if (data.client) {
+            this.client = data.client;
+        }
+
+        if (data.isRestore && !this.room) {
+            this.isRestoring = true;
+        }
+    }
+
+    async restoreRoom(client: any) {
+        const roomId = localStorage.getItem('currentRoomId');
+        const sessionId = localStorage.getItem('currentSessionId');
+
+        if (!roomId || !sessionId) {
+            console.error("Cannot restore game: No saved session info.");
+            Router.navigate('/');
+            this.scene.start('LobbyScene');
+            return;
+        }
+
+        try {
+            console.log("GameScene reconnecting to:", roomId, sessionId);
+            // Show loading placeholder
+            const loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'RECONNECTING...', {
+                fontSize: '32px',
+                color: '#ffffff',
+                fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5);
+
+            this.room = await client.reconnect(roomId, sessionId);
+            console.log("GameScene reconnected!", this.room);
+
+            loadingText.destroy();
+
+            if (this.room) {
+                this.setupGameContent();
+            }
+
+        } catch (e) {
+            console.error("Game Reconnection failed:", e);
+            localStorage.removeItem('currentRoomId');
+            localStorage.removeItem('currentSessionId');
+            alert("Game session expired.");
+            Router.navigate('/');
+            this.scene.start('LobbyScene');
+        }
+    }
+
+    async handleAsyncRestore() {
+        // Use stored client or fallback to global
+        const client = this.client || (this.game as any).networkClient || (window as any).colyseusClient;
+
+        if (client) {
+            await this.restoreRoom(client);
+        } else {
+            console.error("No network client found for restore");
+            Router.navigate('/');
+            this.scene.start('LobbyScene');
+        }
     }
 
     preload() {
-        // Determine map based on difficulty from room state
-        const difficulty = this.room.state.difficulty;
+        // If restoring, room might be null during preload.
+        // We must ensure assets are loaded regardless.
+        // Default to easy map if room not yet available (will reload or rely on cache)
+        const difficulty = this.room?.state?.difficulty || 'mudah';
         let mapKey = 'map_easy';
         let mapFile = 'map_baru1_tetap.tmj';
 
@@ -105,6 +173,23 @@ export class GameScene extends Phaser.Scene {
     }
 
     create() {
+        // --- RECONNECTION CHECK (ASYNC MANEUVER) ---
+        if (!this.room) {
+            if (this.isRestoring) {
+                console.log("Room missing in create, attempting to restore...");
+                this.handleAsyncRestore();
+                return;
+            }
+            console.error("Room missing not in restore mode.");
+            Router.navigate('/');
+            return;
+        }
+
+        this.setupGameContent();
+    }
+
+    // NEW: Wrapper for the original create logic
+    setupGameContent() {
         // DEBUG: Check if textures are loaded
         console.log('[DEBUG] Textures loaded:');
         console.log('  skeleton_idle:', this.textures.exists('skeleton_idle'));
@@ -257,7 +342,7 @@ export class GameScene extends Phaser.Scene {
             // Helper to update hair visual
             const updateHairVisuals = () => {
                 const hairId = player.hairId || 0;
-                import('../data/characterData').then(({ getHairById }) => {
+                import('../../data/characterData').then(({ getHairById }) => {
                     const hairData = getHairById(hairId);
                     if (hairData.id === 0) {
                         hairSprite.setVisible(false);
@@ -336,7 +421,7 @@ export class GameScene extends Phaser.Scene {
                             // Sync Hair Animation
                             const hairId = player.hairId || 0;
                             if (hairId > 0) {
-                                import('../data/characterData').then(({ getHairById }) => {
+                                import('../../data/characterData').then(({ getHairById }) => {
                                     const h = getHairById(hairId);
                                     if (hSprite.anims.currentAnim?.key !== h.walkKey) {
                                         hSprite.play(h.walkKey, true);
@@ -350,7 +435,7 @@ export class GameScene extends Phaser.Scene {
                             // Sync Hair Idle
                             const hairId = player.hairId || 0;
                             if (hairId > 0) {
-                                import('../data/characterData').then(({ getHairById }) => {
+                                import('../../data/characterData').then(({ getHairById }) => {
                                     const h = getHairById(hairId);
                                     if (hSprite.anims.currentAnim?.key !== h.idleKey) {
                                         hSprite.play(h.idleKey, true);
@@ -368,7 +453,9 @@ export class GameScene extends Phaser.Scene {
                 updateHairVisuals();
 
                 // Update name text if it changed
-                this.updateNameTagText(sessionId, player.name);
+                if (player.name) {
+                    this.updateNameTagText(sessionId, player.name);
+                }
 
                 // Update Score if me
                 if (sessionId === this.room.sessionId) {
@@ -748,11 +835,9 @@ export class GameScene extends Phaser.Scene {
             y: -4,
             duration: 600,
             yoyo: true,
-            repeat: -1,
             ease: 'Sine.easeInOut'
         });
     }
-
 
     createNameTag(sessionId: string, name: string, x: number, y: number) {
         // Create container for name tag (Above pointer)
@@ -765,67 +850,36 @@ export class GameScene extends Phaser.Scene {
             fontFamily: '"Press Start 2P", monospace',
             fontSize: '6px',
             color: '#000000',
-            resolution: 2
+            align: 'center'
         });
         nameText.setOrigin(0.5, 0.5);
-        nameText.setName('nameText');
 
-        // Calculate label width based on text
+        // Calculate background width
         const textWidth = nameText.width;
-        const padding = 4;
-        const minMiddleWidth = Math.max(textWidth + padding, 12);
+        const bgWidth = Math.max(30, textWidth + 12); // Minimum 30px
 
-        // Get label asset dimensions
-        const leftImg = this.textures.get('label_left');
-        const rightImg = this.textures.get('label_right');
-        const leftWidth = leftImg.getSourceImage().width;
-        const rightWidth = rightImg.getSourceImage().width;
+        // Create 3-part background (Left, Middle, Right)
+        const left = this.add.image(-(bgWidth / 2), 0, 'label_left').setOrigin(0, 0.5);
+        const middle = this.add.image(-(bgWidth / 2) + 3, 0, 'label_middle').setOrigin(0, 0.5);
+        middle.setDisplaySize(bgWidth - 6, 11); // Stretch middle part
+        const right = this.add.image((bgWidth / 2) - 3, 0, 'label_right').setOrigin(0, 0.5);
 
-        // Create 9-slice label background
-        const labelLeft = this.add.image(-minMiddleWidth / 2 - leftWidth / 2, 0, 'label_left');
-        labelLeft.setOrigin(0.5, 0.5);
+        container.add([left, middle, right, nameText]);
+        container.setData('nameText', nameText); // Store for updates
 
-        const labelMiddle = this.add.image(0, 0, 'label_middle');
-        labelMiddle.setOrigin(0.5, 0.5);
-        labelMiddle.setDisplaySize(minMiddleWidth, labelMiddle.height);
-
-        const labelRight = this.add.image(minMiddleWidth / 2 + rightWidth / 2, 0, 'label_right');
-        labelRight.setOrigin(0.5, 0.5);
-
-        // Add to container (order matters for layering)
-        container.add([labelLeft, labelMiddle, labelRight, nameText]);
-
-        // Store reference
         this.nameTagContainers[sessionId] = container;
     }
 
     updateNameTagText(sessionId: string, newName: string) {
         const container = this.nameTagContainers[sessionId];
-        if (!container) return;
-
-        // Find the text object by name
-        const nameText = container.getByName('nameText') as Phaser.GameObjects.Text;
-        if (nameText && nameText.text !== newName.toUpperCase()) {
-            nameText.setText(newName.toUpperCase());
-
-            // Recalculate label widths
-            const textWidth = nameText.width;
-            const padding = 4;
-            const minMiddleWidth = Math.max(textWidth + padding, 12);
-
-            const leftImg = this.textures.get('label_left');
-            const rightImg = this.textures.get('label_right');
-            const leftWidth = leftImg.getSourceImage().width;
-            const rightWidth = rightImg.getSourceImage().width;
-
-            // Update positions
-            const children = container.list as Phaser.GameObjects.Image[];
-            // children[0] = labelLeft, children[1] = labelMiddle, children[2] = labelRight
-            if (children[0]) children[0].setX(-minMiddleWidth / 2 - leftWidth / 2);
-            if (children[1]) children[1].setDisplaySize(minMiddleWidth, children[1].height);
-            if (children[2]) children[2].setX(minMiddleWidth / 2 + rightWidth / 2);
+        if (container) {
+            const nameText = container.getData('nameText') as Phaser.GameObjects.Text;
+            if (nameText) {
+                nameText.setText(newName.toUpperCase());
+            }
         }
     }
+
 
     triggerQuiz(enemy: any, enemyIndex?: string): boolean {
         // Find question data from Server State
@@ -1248,16 +1302,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     handleEnemyInteraction(enemyId: string) {
-        // Cancel tracking when quiz triggers
-        if (this.clickToMove) {
-            this.clickToMove.cancelMovement();
-        }
+        if (this.isGameReady) {
+            // Stop existing movements
+            (this.currentPlayer.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
+            if (this.clickToMove) {
+                this.clickToMove.cancelMovement();
+            }
 
-        // Triggered by ClickToMoveSystem when snapping finishes
-        const enemyState = this.room.state.enemies[enemyId];
-        if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
-            // Reuse centralized function
-            this.triggerQuiz(enemyState);
+            // Triggered by ClickToMoveSystem when snapping finishes
+            // Use .get() for map schema or direct access for array/object
+            const enemyState = this.room.state.enemies.get(enemyId);
+            if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
+                // Reuse centralized function
+                this.triggerQuiz(enemyState);
+            }
         }
     }
 }

@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { TransitionManager } from '../utils/TransitionManager';
-import { authService } from '../services/AuthService';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
+import { Router } from '../../utils/Router';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { authService } from '../../services/AuthService';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
@@ -17,6 +17,8 @@ export class LobbyScene extends Phaser.Scene {
 
     create() {
         this.initializeClient();
+        // Initially hide UI to prevent flicker on refresh
+        this.toggleUI('');
         this.initializeUI();
         this.setupEventListeners();
 
@@ -206,11 +208,70 @@ export class LobbyScene extends Phaser.Scene {
 
     handleRouting() {
         const path = Router.getPath();
+        console.log("[LobbyScene] Routing check:", path);
+
+        if (path === '/host/select-quiz') {
+            // Close lobby UI explicitly just in case
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+
+            this.scene.start('SelectQuizScene', { client: this.client });
+            return;
+        }
+
+        if (path === '/host/settings') {
+            console.log("[LobbyScene] Quiz Setting refresh detected. Attempting to restore scene.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            this.scene.start('QuizSettingScene', { client: this.client });
+            return;
+        }
+
+        if (path === '/host/waiting-room') {
+            console.log("[LobbyScene] Host Waiting Room refresh detected.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            // Scene must handle reconnection logic itself
+            this.scene.start('HostWaitingRoomScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        if (path === '/player/lobby') {
+            console.log("[LobbyScene] Player Waiting Room refresh detected.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            this.scene.start('PlayerWaitingRoomScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        if (path === '/game') {
+            console.log("[LobbyScene] Game Scene refresh detected.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            this.scene.start('GameScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        if (path === '/player/result') {
+            console.log("[LobbyScene] Result Scene refresh detected.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            this.scene.start('WaitingResultsScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        if (path === '/host/progress') {
+            console.log("[LobbyScene] Host Progress refresh detected.");
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.add('hidden');
+            this.scene.start('HostProgressScene', { client: this.client, isRestore: true });
+            return;
+        }
 
         if (path === '/' || path === '') {
             this.showLobby();
         } else {
-            Router.replace('/');
+            console.log("[LobbyScene] Unknown or state-dependent path:", path);
             this.showLobby();
         }
     }

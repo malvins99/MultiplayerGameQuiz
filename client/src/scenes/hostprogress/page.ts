@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { TransitionManager } from '../utils/TransitionManager';
+import { Router } from '../../utils/Router';
+import { TransitionManager } from '../../utils/TransitionManager';
 
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
 
 export class HostProgressScene extends Phaser.Scene {
     room!: Room;
@@ -21,33 +21,51 @@ export class HostProgressScene extends Phaser.Scene {
         super('HostProgressScene');
     }
 
-    init(data: { room: Room }) {
+    client?: any; // Add client property
+    isRestoring: boolean = false;
+
+    init(data: { room?: Room, isRestore?: boolean, client?: any }) {
         console.log("[HostProgress] Initializing with data:", data);
-        if (!data || !data.room) {
+        if (data.room) {
+            this.room = data.room;
+        }
+
+        if (data.client) {
+            this.client = data.client;
+        }
+
+        if (data.isRestore && !this.room) {
+            console.log("[HostProgress] Restore mode detected.");
+            this.isRestoring = true;
+        } else if (!this.room) {
             console.error("[HostProgress] No room data provided! Redirecting to lobby...");
             window.location.href = '/';
             return;
         }
-        this.room = data.room;
     }
 
     preload() {
         console.log("[HostProgress] Preloading...");
-        if (!this.room) return;
-        // Determine map based on difficulty
-        const difficulty = this.room.state.difficulty;
-        let mapKey = 'map_easy';
-        let mapFile = 'map_baru1_tetap.tmj';
+        if (this.room) {
+            const difficulty = this.room.state.difficulty;
+            let mapKey = 'map_easy';
+            let mapFile = 'map_baru1_tetap.tmj';
 
-        if (difficulty === 'sedang') {
-            mapKey = 'map_medium';
-            mapFile = 'map_baru2.tmj';
-        } else if (difficulty === 'sulit') {
-            mapKey = 'map_hard';
-            mapFile = 'map_baru3.tmj';
+            if (difficulty === 'sedang') {
+                mapKey = 'map_medium';
+                mapFile = 'map_baru2.tmj';
+            } else if (difficulty === 'sulit') {
+                mapKey = 'map_hard';
+                mapFile = 'map_baru3.tmj';
+            }
+            this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
+        } else {
+            // Fallback: Load ALL maps for restoration
+            console.log("[HostProgress] Loading all maps for restoration...");
+            this.load.tilemapTiledJSON('map_easy', '/assets/map_baru1_tetap.tmj');
+            this.load.tilemapTiledJSON('map_medium', '/assets/map_baru2.tmj');
+            this.load.tilemapTiledJSON('map_hard', '/assets/map_baru3.tmj');
         }
-
-        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
         this.load.image('tiles', '/assets/spr_tileset_sunnysideworld_16px.png');
         this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png');
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
@@ -62,10 +80,57 @@ export class HostProgressScene extends Phaser.Scene {
 
     create() {
         console.log("[HostProgress] Creating...");
+
         if (!this.room) {
+            if (this.isRestoring) {
+                this.handleAsyncRestore();
+                return;
+            }
             console.error("[HostProgress] Create failed: No room!");
+            Router.navigate('/');
             return;
         }
+
+        this.setupHostContent();
+    }
+
+    async handleAsyncRestore() {
+        const roomId = localStorage.getItem('currentRoomId');
+        const sessionId = localStorage.getItem('currentSessionId');
+
+        // Use passed client or global one
+        const client = this.client || (window as any).colyseusClient;
+
+        if (!roomId || !sessionId || !client) {
+            console.error("Cannot restore host progress: Missing session info.");
+            Router.navigate('/');
+            return;
+        }
+
+        try {
+            console.log("HostProgress reconnecting to:", roomId, sessionId);
+            // Show loading
+            const loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'RECONNECTING...', {
+                fontSize: '32px',
+                color: '#ffffff',
+                fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5);
+
+            this.room = await client.reconnect(roomId, sessionId);
+            console.log("HostProgress reconnected!", this.room);
+
+            loadingText.destroy();
+            this.setupHostContent();
+
+        } catch (e) {
+            console.error("Host Reconnection failed:", e);
+            localStorage.removeItem('currentRoomId');
+            localStorage.removeItem('currentSessionId');
+            Router.navigate('/');
+        }
+    }
+
+    setupHostContent() {
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
@@ -182,7 +247,7 @@ export class HostProgressScene extends Phaser.Scene {
 
             const updateHair = () => {
                 const hairId = player.hairId || 0;
-                import('../data/characterData').then(({ getHairById }) => {
+                import('../../data/characterData').then(({ getHairById }) => {
                     const h = getHairById(hairId);
                     if (h.id > 0) {
                         const hairFiles: Record<number, string> = { 1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair' };
@@ -283,7 +348,7 @@ export class HostProgressScene extends Phaser.Scene {
         // --- Open Transition (Critical Fix) ---
         TransitionManager.open();
 
-        console.log("[HostProgress] Create finished.");
+        console.log("[HostProgress] Content Setup Finished.");
     }
 
     // Adding helper for background if needed, but let's just stick to UI update

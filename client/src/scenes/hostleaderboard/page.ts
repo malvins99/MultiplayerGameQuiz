@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
-import { TransitionManager } from '../utils/TransitionManager';
-import { Router } from '../utils/Router';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { Router } from '../../utils/Router';
 
 interface RankingEntry {
     rank: number;

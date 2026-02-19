@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { TransitionManager } from '../utils/TransitionManager';
-import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../ui/QRCodePopup';
-import { HAIR_OPTIONS, getHairById } from '../data/characterData';
+import { Router } from '../../utils/Router';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { CharacterSelectPopup } from '../../ui/CharacterSelectPopup';
+import { QRCodePopup } from '../../ui/QRCodePopup';
+import { HAIR_OPTIONS, getHairById } from '../../data/characterData';
 
 export class PlayerWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -40,10 +40,69 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         super('PlayerWaitingRoomScene');
     }
 
-    init(data: { room: Room, isHost: boolean }) {
-        this.room = data.room;
-        this.isHost = data.isHost;
-        this.mySessionId = this.room.sessionId;
+    init(data: { room?: Room, isHost?: boolean, client?: any, isRestore?: boolean }) {
+        if (data.room) {
+            this.room = data.room;
+            this.mySessionId = this.room.sessionId;
+        }
+        this.isHost = data.isHost !== undefined ? data.isHost : false;
+
+        if (data.isRestore && !this.room && data.client) {
+            this.restoreRoom(data.client);
+        }
+    }
+
+    async restoreRoom(client: any) {
+        const roomId = localStorage.getItem('currentRoomId');
+        const sessionId = localStorage.getItem('currentSessionId');
+
+        if (!roomId || !sessionId) {
+            console.error("Cannot restore player room: No saved session info.");
+            Router.navigate('/');
+            this.scene.start('LobbyScene');
+            return;
+        }
+
+        try {
+            console.log("Player reconnecting to room:", roomId, sessionId);
+            this.room = await client.reconnect(roomId, sessionId);
+            console.log("Player reconnected!", this.room);
+            this.mySessionId = this.room.sessionId;
+
+            // Setup room listeners again
+            this.setupRoomListeners();
+
+        } catch (e) {
+            console.error("Player reconnection failed:", e);
+            localStorage.removeItem('currentRoomId');
+            localStorage.removeItem('currentSessionId');
+            alert("Session expired or connection failed.");
+            Router.navigate('/');
+            this.scene.start('LobbyScene');
+        }
+    }
+
+    setupRoomListeners() {
+        // --- Room State Listeners ---
+        this.room.state.listen("hostId", (hostId: string) => {
+            if (hostId === this.mySessionId) {
+                this.scene.start('HostWaitingRoomScene', { room: this.room, isHost: true });
+            }
+            this.updateUILayout();
+        });
+
+        // Player Add/Remove/Change
+        this.room.state.players.onAdd((player: any, key: string) => {
+            this.updateAll();
+            player.listen("name", () => this.updateAll());
+            player.listen("hairId", () => this.updateAll());
+        });
+        this.room.state.players.onRemove(() => this.updateAll());
+
+        // Game Start
+        this.room.onMessage("gameStarted", () => {
+            this.handleGameStart();
+        });
     }
 
     create() {
@@ -79,26 +138,10 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             };
         }
 
-        // --- Room State Listeners ---
-        this.room.state.listen("hostId", (hostId: string) => {
-            if (hostId === this.mySessionId) {
-                this.scene.start('HostWaitingRoomScene', { room: this.room, isHost: true });
-            }
-            this.updateUILayout();
-        });
-
-        // Player Add/Remove/Change
-        this.room.state.players.onAdd((player: any, key: string) => {
-            this.updateAll();
-            player.listen("name", () => this.updateAll());
-            player.listen("hairId", () => this.updateAll());
-        });
-        this.room.state.players.onRemove(() => this.updateAll());
-
-        // Game Start
-        this.room.onMessage("gameStarted", () => {
-            this.handleGameStart();
-        });
+        // Setup listeners if room is ready (normal join)
+        if (this.room) {
+            this.setupRoomListeners();
+        }
 
         // Initialize Character Popup
         this.characterPopup = new CharacterSelectPopup(
@@ -391,7 +434,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         // Render Hair
         if (hairId > 0) {
-            import('../data/characterData').then(({ getHairById }) => {
+            import('../../data/characterData').then(({ getHairById }) => {
                 const hair = getHairById(hairId);
                 if (hair) {
                     const hairLayer = document.createElement('div');

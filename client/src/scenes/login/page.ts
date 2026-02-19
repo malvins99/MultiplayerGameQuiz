@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { Router } from '../utils/Router';
-import { TransitionManager } from '../utils/TransitionManager';
-import { authService } from '../services/AuthService';
+import { Router } from '../../utils/Router';
+import { TransitionManager } from '../../utils/TransitionManager';
+import { authService } from '../../services/AuthService';
 
 export class LoginScene extends Phaser.Scene {
     loginUI: HTMLElement | null = null;
