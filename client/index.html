@@ -47,8 +47,6 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
-    rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -64,7 +62,8 @@
             "surface-dark": "#1a1a20",
           },
           fontFamily: {
-            "display": ["Space Grotesk", "sans-serif"]
+            "display": ["'Press Start 2P'", "monospace"],
+            "sans": ["'Press Start 2P'", "monospace"],
           },
         },
       },
@@ -74,6 +73,28 @@
     body,
     * {
       cursor: url('/assets/cursor_03.png') 0 0, auto !important;
+    }
+
+    /* Global Font Override */
+    body,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    span,
+    button,
+    input,
+    select,
+    textarea {
+      font-family: 'Press Start 2P', monospace !important;
+    }
+
+    /* Exceptions for Material Symbols */
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined' !important;
     }
 
     /* Phaser canvas cursor */
@@ -610,7 +631,7 @@
   </style>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-white">
+<body class="bg-background-light dark:bg-background-dark text-white">
 
   <!-- PHASER CONTAINER -->
   <div id="app"></div>
@@ -683,7 +704,7 @@
     <div class="relative z-10 flex-1 flex flex-col items-center justify-center -mt-64 px-4">
       <!-- Mega Central Logo (Uber Massive - No Shadow) -->
       <div class="mb-0 transform hover:scale-105 transition-transform duration-500">
-        <img src="/logo/Zigma-logo.webp" alt="Zigma Logo" class="h-64 md:h-[500px] w-auto object-contain" />
+        <img src="/logo/Zigma-logo.webp" alt="Zigma Logo" class="h-48 md:h-[400px] w-auto object-contain" />
       </div>
 
       <!-- Action Cards Container (Uber Tight Spacing) -->
@@ -692,14 +713,13 @@
         <div
           class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[40px] p-6 md:p-8 flex flex-col items-center text-center hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 shadow-2xl">
           <div
-            class="w-14 h-14 md:w-16 md:h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:rotate-12 transition-transform">
-            <span class="material-symbols-outlined text-primary text-3xl md:text-4xl"
+            class="w-16 h-16 md:w-20 md:h-20 bg-primary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:rotate-12 transition-transform">
+            <span class="material-symbols-outlined text-primary text-4xl md:text-5xl"
               style="font-variation-settings: 'FILL' 1;">flag</span>
           </div>
-          <h2 class="text-base md:text-lg font-['Press_Start_2P'] text-white mb-2 uppercase tracking-wider">Host Game
-          </h2>
-          <p class="text-white text-[10px] md:text-sm leading-relaxed mb-6 max-w-[220px]">Create your own session
-            and invite or challenge others</p>
+          <h2 class="text-xl md:text-2xl text-white mb-2 uppercase tracking-wider">HOST GAME</h2>
+          <p class="text-white/60 text-[10px] md:text-sm leading-relaxed mb-6 max-w-[220px]">create your own game and
+            invite players</p>
           <button id="create-room-btn"
             class="mt-auto w-full py-3.5 bg-primary text-background-dark font-['Press_Start_2P'] text-[10px] rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,255,85,0.2)]">
             Create Room
@@ -710,14 +730,12 @@
         <div
           class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[40px] p-6 md:p-8 flex flex-col items-center text-center hover:bg-secondary/5 hover:border-secondary/40 transition-all duration-300 shadow-2xl">
           <div
-            class="w-14 h-14 md:w-16 md:h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:-rotate-12 transition-transform">
+            class="w-16 h-16 md:w-20 md:h-20 bg-secondary/20 rounded-2xl flex items-center justify-center mb-5 group-hover:-rotate-12 transition-transform">
             <span class="material-symbols-outlined text-secondary text-4xl md:text-5xl"
               style="font-variation-settings: 'FILL' 1;">group</span>
           </div>
-          <h2 class="text-base md:text-lg font-['Press_Start_2P'] text-white mb-2 uppercase tracking-wider">Join Game
-          </h2>
-          <p class="text-white text-[10px] md:text-sm leading-relaxed mb-6 max-w-[260px]">Enter a 6-digit code to
-            join an existing session</p>
+          <h2 class="text-xl md:text-2xl text-white mb-2 uppercase tracking-wider">JOIN GAME</h2>
+          <p class="text-white/60 text-[10px] md:text-sm leading-relaxed mb-6 max-w-[260px]">enter code to join game</p>
 
           <!-- Code Input Group -->
           <div class="w-full space-y-3 mt-auto">
