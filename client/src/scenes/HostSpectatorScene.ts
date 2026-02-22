@@ -254,8 +254,8 @@ export class HostSpectatorScene extends Phaser.Scene {
             };
             updateProgress();
 
-            this.disposers.push(player.listen("x", (val) => container.setData('targetX', val)));
-            this.disposers.push(player.listen("y", (val) => container.setData('targetY', val)));
+            this.disposers.push(player.listen("x", (val: number) => container.setData('targetX', val)));
+            this.disposers.push(player.listen("y", (val: number) => container.setData('targetY', val)));
             this.disposers.push(player.onChange(() => {
                 updateProgress();
             }));
