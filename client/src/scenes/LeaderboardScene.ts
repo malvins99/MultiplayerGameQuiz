@@ -68,7 +68,7 @@ export class LeaderboardScene extends Phaser.Scene {
                 flex-direction: column;
                 align-items: center;
                 overflow-y: auto;
-                font-family: 'Press Start 2P', monospace;
+                font-family: 'Retro Gaming', monospace;
                 padding-bottom: 20px;
                 overflow-x: hidden;
             }
@@ -188,7 +188,7 @@ export class LeaderboardScene extends Phaser.Scene {
             
             /* Inner text span with ellipsis */
             .podium-name-text {
-                font-family: 'Press Start 2P', monospace;
+                font-family: 'Retro Gaming', monospace;
                 font-size: 10px;
                 color: #ffffff;
                 text-transform: uppercase;
@@ -266,7 +266,7 @@ export class LeaderboardScene extends Phaser.Scene {
 
             /* 3. POINT (Bottom) - MATCHES PODIUM COLORS */
             .podium-score {
-                font-family: 'Press Start 2P', monospace; 
+                font-family: 'Retro Gaming', monospace; 
                 font-size: 20px;
                 font-weight: 400; 
                 margin-top: auto;
@@ -357,16 +357,16 @@ export class LeaderboardScene extends Phaser.Scene {
             }
             .list-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.06); }
             
-            .list-rank { font-family: 'Press Start 2P'; font-size: 10px; color: #666; text-align: left; }
+            .list-rank { font-family: 'Retro Gaming'; font-size: 10px; color: #666; text-align: left; }
             .list-name { font-weight: 700; font-size: 14px; color: #ddd; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .list-time { 
-                font-family: 'Press Start 2P', monospace; 
+                font-family: 'Retro Gaming', monospace; 
                 color: #aaa; 
                 font-weight: 400; font-size: 10px; 
                 text-align: center; /* Center time */
             }
             .list-stats { 
-                font-family: 'Press Start 2P', monospace; 
+                font-family: 'Retro Gaming', monospace; 
                 color: #4ade80; 
                 font-weight: 400; font-size: 12px; 
                 text-align: right; 
@@ -476,7 +476,7 @@ export class LeaderboardScene extends Phaser.Scene {
 
                     // 3. Create New Room
                     try {
-                        this.container.innerHTML = `<div style="display:flex;height:100%;align-items:center;justify-content:center;color:white;font-family:'Press Start 2P'">CREATING ROOM...</div>`;
+                        this.container.innerHTML = `<div style="display:flex;height:100%;align-items:center;justify-content:center;color:white;font-family:'Retro Gaming'">CREATING ROOM...</div>`;
                         const newRoom = await this.client.joinOrCreate("game_room", options);
                         console.log("[DEBUG] New Room created:", newRoom);
 

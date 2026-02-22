@@ -43,7 +43,7 @@ export class GameScene extends Phaser.Scene {
         // Determine map based on difficulty from room state
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
-        let mapFile = 'map_baru1_tetap.tmj';
+        let mapFile = 'map_newest_easy.tmj';
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
@@ -111,6 +111,37 @@ export class GameScene extends Phaser.Scene {
         console.log('  skeleton_walk:', this.textures.exists('skeleton_walk'));
         console.log('  goblin_idle:', this.textures.exists('goblin_idle'));
         console.log('  goblin_walk:', this.textures.exists('goblin_walk'));
+
+        // --- Logo Integration ---
+        const logoStyleId = 'game-logo-styles';
+        if (!document.getElementById(logoStyleId)) {
+            const style = document.createElement('style');
+            style.id = logoStyleId;
+            style.innerHTML = `
+                .game-logo-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 100;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const logoContainer = document.createElement('div');
+        logoContainer.className = 'game-logo-container';
+        logoContainer.innerHTML = `
+            <!-- LOGO TOP LEFT -->
+            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            
+            <!-- LOGO TOP RIGHT -->
+            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+        `;
+        document.body.appendChild(logoContainer);
+        this.events.once('shutdown', () => logoContainer.remove());
 
         // --- UI Scene Launch ---
         this.scene.launch('UIScene');
@@ -214,7 +245,7 @@ export class GameScene extends Phaser.Scene {
         // Goblin Animations
         this.anims.create({
             key: 'goblin_idle',
-            frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: 8 }), // Updated to 9 frames
+            frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: 7 }), // Corrected to 8 frames
             frameRate: 8,
             repeat: -1
         });
@@ -226,7 +257,7 @@ export class GameScene extends Phaser.Scene {
         });
         this.anims.create({
             key: 'goblin_death',
-            frames: this.anims.generateFrameNumbers('goblin_death', { start: 0, end: 12 }),
+            frames: this.anims.generateFrameNumbers('goblin_death', { start: 0, end: 8 }), // Corrected to 9 frames
             frameRate: 8,
             repeat: 0
         });
@@ -320,14 +351,10 @@ export class GameScene extends Phaser.Scene {
                 if (sessionId !== this.room.sessionId) {
                     const entity = this.playerEntities[sessionId];
                     if (entity) {
-                        const dx = player.x - entity.x;
-                        entity.x = player.x;
-                        entity.y = player.y;
+                        const dx = player.x - (entity.getData('targetX') || entity.x);
 
-                        // Update name tag position
-                        if (this.nameTagContainers[sessionId]) {
-                            this.nameTagContainers[sessionId].setPosition(entity.x, entity.y - 35);
-                        }
+                        // Update target for interpolation
+                        entity.setData({ targetX: player.x, targetY: player.y });
 
                         const bSprite = entity.getData('baseSprite') as Phaser.GameObjects.Sprite;
                         const hSprite = entity.getData('hairSprite') as Phaser.GameObjects.Sprite;
@@ -502,10 +529,16 @@ export class GameScene extends Phaser.Scene {
 
             enemySprite.setOrigin(0.5, 0.5);
             // Height is 64px, so anchor at feet (roughly 0.8 to look grounded) or center
-            // Let's stick to center for now but adjust scale if needed.
-            // Original scale 2 was for 16px sprites. For 96x64 sprites, scale 1 is likely fine, or even smaller (0.5).
-            // Let's try scale 1 first.
-            enemySprite.setScale(1);
+            enemySprite.setScale(0); // Start at 0 for spawn animation
+
+            // --- Spawn Animation ---
+            this.tweens.add({
+                targets: enemySprite,
+                scale: 1,
+                duration: 500,
+                ease: 'Back.easeOut'
+            });
+
             enemySprite.setDepth(50); // Ensure above map tiles
             enemySprite.setInteractive();
 
@@ -548,11 +581,11 @@ export class GameScene extends Phaser.Scene {
                     const prevX = enemySprite.getData('prevX') || enemySprite.x;
                     const isMoving = Math.abs(enemy.x - prevX) > 0.1 || Math.abs(enemy.y - enemySprite.y) > 0.1;
 
-                    // Update position
-                    enemySprite.x = enemy.x;
-                    enemySprite.y = enemy.y;
+                    // Update target position for interpolation
+                    enemySprite.setData('targetX', enemy.x);
+                    enemySprite.setData('targetY', enemy.y);
 
-                    // Update data
+                    // Update previous data for logic
                     enemySprite.setData('prevX', enemy.x);
 
                     // Animation Logic
@@ -700,6 +733,16 @@ export class GameScene extends Phaser.Scene {
 
         // --- Click To Move System ---
         this.clickToMove = new ClickToMoveSystem(this);
+
+        // --- Disconnection Handling ---
+        this.room.onLeave((code) => {
+            console.warn(`[GameScene] Disconnected from room (code: ${code})`);
+            // Stop logic if needed or show alert
+            this.isGameReady = false;
+
+            // Optional: return to lobby or show popup
+            // TransitionManager.sceneTo(this, 'LobbyScene');
+        });
     }
 
     createPlayerIndicator() {
@@ -737,7 +780,7 @@ export class GameScene extends Phaser.Scene {
         // Create Container following player
         this.indicatorContainer = this.add.container(
             this.currentPlayer.x,
-            this.currentPlayer.y - 15
+            this.currentPlayer.y - 8
         );
         this.indicatorContainer.setDepth(200);
 
@@ -749,7 +792,7 @@ export class GameScene extends Phaser.Scene {
         // Floating Animation
         this.tweens.add({
             targets: indicator,
-            y: -4,
+            y: -2,
             duration: 600,
             yoyo: true,
             repeat: -1,
@@ -760,13 +803,13 @@ export class GameScene extends Phaser.Scene {
 
     createNameTag(sessionId: string, name: string, x: number, y: number) {
         // Create container for name tag (Above pointer)
-        const container = this.add.container(x, y - 35);
+        const container = this.add.container(x, y - 21);
         container.setDepth(150);
         container.setScale(0.9); // Shrink slightly (but not too much)
 
         // Create pixel text first to measure width
         const nameText = this.add.text(0, 0, name.toUpperCase(), {
-            fontFamily: '"Press Start 2P", monospace',
+            fontFamily: '"Retro Gaming", monospace',
             fontSize: '6px',
             color: '#000000',
             resolution: 2
@@ -1043,13 +1086,11 @@ export class GameScene extends Phaser.Scene {
         let hitEnemy = false;
 
         // --- Chest Interaction Check (TOUCH) ---
-        // Iterate over chest containers to check distance
         Object.keys(this.chestContainers).forEach(key => {
             const index = Number(key);
             const chestContainer = this.chestContainers[index];
             if (chestContainer && chestContainer.visible) {
                 const dist = Phaser.Math.Distance.Between(this.currentPlayer.x, this.currentPlayer.y, chestContainer.x, chestContainer.y);
-                // 40px radius for touch interaction
                 if (dist < 40) {
                     this.handleChestInteraction(index);
                 }
@@ -1071,19 +1112,11 @@ export class GameScene extends Phaser.Scene {
                         const qData = questions.find((q: any) => q.id === this.activeQuestionId);
 
                         if (qData) {
-                            // Derive name from type
                             const name = (enemyState.type || 'ENEMY').toUpperCase();
                             this.quizPopup.show(qData, name);
-
-                            // Start Combat Camera
                             this.startCombatCamera(enemySprite.x, enemySprite.y);
-
                             hitEnemy = true;
-
-                            // Cancel tracking when quiz triggers
-                            if (this.clickToMove) {
-                                this.clickToMove.cancelMovement();
-                            }
+                            if (this.clickToMove) this.clickToMove.cancelMovement();
                         }
                     }
                 }
@@ -1095,68 +1128,44 @@ export class GameScene extends Phaser.Scene {
         // --- Click To Move Logic ---
         this.clickToMove.update(delta);
 
-        // Sync valid click movement to server and local prediction
         if (this.clickToMove.isMovingByClick()) {
-            this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
+            // Sync valid click movement to server
+            if (this.room && this.room.connection.isOpen) {
+                this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
+            }
 
             // Sync indicators
             if (this.indicatorContainer) {
-                this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 15);
+                this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 8);
             }
             if (this.nameTagContainers[this.room.sessionId]) {
-                this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 35);
+                this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 21);
             }
-
             return; // Skip WASD logic if moving by click
-        } else {
-            // If WASD key is pressed, CANCEL click movement
-            const nav = this.controls.getNav();
-            if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown ||
-                this.input.keyboard?.addKey('W').isDown || this.input.keyboard?.addKey('A').isDown ||
-                this.input.keyboard?.addKey('S').isDown || this.input.keyboard?.addKey('D').isDown ||
-                nav.left || nav.right || nav.up || nav.down) {
-                if (this.clickToMove) this.clickToMove.cancelMovement();
-            }
+        }
+
+        // If WASD key is pressed, CANCEL click movement
+        const nav = this.controls.getNav();
+        if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown ||
+            this.input.keyboard?.addKey('W').isDown || this.input.keyboard?.addKey('A').isDown ||
+            this.input.keyboard?.addKey('S').isDown || this.input.keyboard?.addKey('D').isDown ||
+            nav.left || nav.right || nav.up || nav.down) {
+            if (this.clickToMove) this.clickToMove.cancelMovement();
         }
 
         // Simple movement logic
-        const speed = 130; // Reduced from 200
+        const speed = 130;
         const velocity = { x: 0, y: 0 };
         const inputPayload = {
-            left: false,
-            right: false,
-            up: false,
-            down: false,
+            left: false, right: false, up: false, down: false
         };
-        let isMoving = false;
 
-        const nav = this.controls.getNav();
+        if (this.cursors.left.isDown || this.input.keyboard?.addKey('A').isDown || nav.left) inputPayload.left = true;
+        else if (this.cursors.right.isDown || this.input.keyboard?.addKey('D').isDown || nav.right) inputPayload.right = true;
 
-        if (this.cursors.left.isDown || this.input.keyboard?.addKey('A').isDown || nav.left) {
-            inputPayload.left = true;
-            const b = this.currentPlayer.getData('baseSprite');
-            const h = this.currentPlayer.getData('hairSprite');
-            if (b) b.setFlipX(true);
-            if (h) h.setFlipX(true);
-            isMoving = true;
-        } else if (this.cursors.right.isDown || this.input.keyboard?.addKey('D').isDown || nav.right) {
-            inputPayload.right = true;
-            const b = this.currentPlayer.getData('baseSprite');
-            const h = this.currentPlayer.getData('hairSprite');
-            if (b) b.setFlipX(false);
-            if (h) h.setFlipX(false);
-            isMoving = true;
-        }
+        if (this.cursors.up.isDown || this.input.keyboard?.addKey('W').isDown || nav.up) inputPayload.up = true;
+        else if (this.cursors.down.isDown || this.input.keyboard?.addKey('S').isDown || nav.down) inputPayload.down = true;
 
-        if (this.cursors.up.isDown || this.input.keyboard?.addKey('W').isDown || nav.up) {
-            inputPayload.up = true;
-            isMoving = true;
-        } else if (this.cursors.down.isDown || this.input.keyboard?.addKey('S').isDown || nav.down) {
-            inputPayload.down = true;
-            isMoving = true;
-        }
-
-        // Apply velocity based on inputPayload
         if (inputPayload.left) velocity.x -= 1;
         if (inputPayload.right) velocity.x += 1;
         if (inputPayload.up) velocity.y -= 1;
@@ -1170,7 +1179,6 @@ export class GameScene extends Phaser.Scene {
             this.currentPlayer.x += velocity.x * speed * (delta / 1000);
             this.currentPlayer.y += velocity.y * speed * (delta / 1000);
 
-            // Animate Children (Base + Hair) - NOT Container
             const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
             const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
 
@@ -1179,7 +1187,6 @@ export class GameScene extends Phaser.Scene {
                 if (velocity.x !== 0) base.setFlipX(velocity.x < 0);
             }
             if (hair && hair.visible) {
-                // Infer key from current idle/walk or data
                 const currentKey = hair.anims.currentAnim?.key || '';
                 const baseKey = currentKey.split('_')[0];
                 if (baseKey && baseKey !== 'walk' && baseKey !== 'idle') {
@@ -1188,56 +1195,67 @@ export class GameScene extends Phaser.Scene {
                 if (velocity.x !== 0) hair.setFlipX(velocity.x < 0);
             }
 
-            this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
-
-            // Update Indicator Position
-            if (this.indicatorContainer) {
-                this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 15);
+            if (this.room && this.room.connection.isOpen) {
+                this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
             }
 
-            // Update Current Player's Name Tag Position
+            if (this.indicatorContainer) this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 8);
             if (this.nameTagContainers[this.room.sessionId]) {
-                this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 35);
+                this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 21);
             }
         } else {
-            // Idle Logic
             const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
             const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
-
             if (base) base.play('idle', true);
             if (hair && hair.visible) {
                 const currentKey = hair.anims.currentAnim?.key || '';
                 const baseKey = currentKey.split('_')[0];
-                if (baseKey) hair.play(baseKey + '_idle', true);
+                if (currentKey && !currentKey.includes('idle')) hair.play(baseKey + '_idle', true);
             }
         }
+
+        // --- Enemy Interpolation & Other Player Sync ---
+        Object.keys(this.enemyEntities).forEach(id => {
+            const enemy = this.enemyEntities[id];
+            const tx = enemy.getData('targetX');
+            const ty = enemy.getData('targetY');
+            if (tx !== undefined && ty !== undefined) {
+                enemy.x += (tx - enemy.x) * 0.1;
+                enemy.y += (ty - enemy.y) * 0.1;
+            }
+        });
+
+        Object.keys(this.playerEntities).forEach(sid => {
+            if (sid !== this.room.sessionId) {
+                const entity = this.playerEntities[sid];
+                if (entity) {
+                    const tx = entity.getData('targetX');
+                    const ty = entity.getData('targetY');
+                    if (tx !== undefined && ty !== undefined) {
+                        entity.x += (tx - entity.x) * 0.1;
+                        entity.y += (ty - entity.y) * 0.1;
+                    }
+                    if (this.nameTagContainers[sid]) {
+                        this.nameTagContainers[sid].setPosition(entity.x, entity.y - 21);
+                    }
+                }
+            }
+        });
     }
 
     handleEnemyInteraction(enemyId: string) {
-        // Cancel tracking when quiz triggers
-        if (this.clickToMove) {
-            this.clickToMove.cancelMovement();
-        }
-
-        // Triggered by ClickToMoveSystem when snapping finishes
+        if (this.clickToMove) this.clickToMove.cancelMovement();
         const enemyState = this.room.state.enemies[enemyId];
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
             this.activeQuestionId = enemyState.questionId;
-
             const questions = QUESTIONS;
             const qData = questions.find((q: any) => q.id === this.activeQuestionId);
-
             if (qData) {
-                // Derive name from type
                 const name = (enemyState.type || 'ENEMY').toUpperCase();
                 this.quizPopup.show(qData, name);
-
-                // Start Combat Camera
-                if (enemySprite) {
-                    this.startCombatCamera(enemySprite.x, enemySprite.y);
-                }
+                if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);
             }
         }
     }

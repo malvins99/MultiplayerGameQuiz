@@ -2,12 +2,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const mapFiles = ['map_baru1.tmj', 'map_baru2.tmj', 'map_baru3.tmj'];
+const mapFiles = ['map_baru1_tetap.tmj', 'map_baru2.tmj', 'map_baru3.tmj', 'map_newest_easy.tmj', 'map_easy_sementara.tmj'];
 const assetsDir = path.join(__dirname, 'client/public/assets');
 
-// Correct dimensions from check_image_dim.js: 1024 x 1024
-const IMG_WIDTH = 1024;
-const IMG_HEIGHT = 1024;
+// Image dimensions
+const BG_WIDTH = 1024;
+const BG_HEIGHT = 1024;
+const FOREST_WIDTH = 320;
+const FOREST_HEIGHT = 576;
 
 mapFiles.forEach(file => {
     const filePath = path.join(assetsDir, file);
@@ -20,28 +22,42 @@ mapFiles.forEach(file => {
         const rawData = fs.readFileSync(filePath, 'utf8');
         const mapData = JSON.parse(rawData);
 
-        console.log(`Paching ${file} with correct image dimensions...`);
+        console.log(`Patching ${file}...`);
 
         if (mapData.tilesets) {
             mapData.tilesets = mapData.tilesets.map(tileset => {
-                // Check if this is our target tileset (either by name or has the specific image or has source)
-                // We want to force fix if it has 'source' or if it matches our image
-                if (tileset.source || (tileset.image && tileset.image.includes('spr_tileset_sunnysideworld_16px.png'))) {
-
-                    console.log(`  - Fixing tileset ${tileset.name || 'unnamed'}`);
-
+                // Fix Standard 16px Tileset
+                if (tileset.name === 'spr_tileset_sunnysideworld_16px' || (tileset.image && tileset.image.includes('spr_tileset_sunnysideworld_16px.png'))) {
+                    console.log(`  - Fixing standard tileset`);
                     return {
-                        firstgid: tileset.firstgid,
-                        name: "spr_tileset_sunnysideworld_16px", // Force correct name
+                        ...tileset,
+                        name: "spr_tileset_sunnysideworld_16px",
                         image: "spr_tileset_sunnysideworld_16px.png",
-                        imagewidth: IMG_WIDTH,
-                        imageheight: IMG_HEIGHT,
+                        imagewidth: BG_WIDTH,
+                        imageheight: BG_HEIGHT,
                         tilewidth: 16,
                         tileheight: 16,
                         spacing: 0,
                         margin: 0,
-                        tilecount: (IMG_WIDTH / 16) * (IMG_HEIGHT / 16),
-                        columns: IMG_WIDTH / 16
+                        tilecount: (BG_WIDTH / 16) * (BG_HEIGHT / 16),
+                        columns: BG_WIDTH / 16
+                    };
+                }
+                // Fix Forest Tileset
+                if (tileset.name === 'spr_tileset_sunnysideworld_forest_32px' || (tileset.image && tileset.image.includes('spr_tileset_sunnysideworld_forest_32px.png'))) {
+                    console.log(`  - Fixing forest tileset`);
+                    return {
+                        ...tileset,
+                        name: "spr_tileset_sunnysideworld_forest_32px",
+                        image: "spr_tileset_sunnysideworld_forest_32px.png",
+                        imagewidth: FOREST_WIDTH,
+                        imageheight: FOREST_HEIGHT,
+                        tilewidth: 16, // Wait, tiled shows 16 for width/height in tileset data even for "32px" named tileset? Check!
+                        tileheight: 16,
+                        spacing: 0,
+                        margin: 0,
+                        tilecount: (FOREST_WIDTH / 16) * (FOREST_HEIGHT / 16),
+                        columns: FOREST_WIDTH / 16
                     };
                 }
                 return tileset;

@@ -14,6 +14,7 @@ const LOBBY_MAX_PLAYERS = 20;
 export class GameRoom extends Room<GameState> {
     // Track which spawn points have been used
     private usedSpawnIndices: Set<number> = new Set();
+    private cachedMapData: any = null;
 
     onCreate(options: any) {
         this.setState(new GameState());
@@ -318,10 +319,13 @@ export class GameRoom extends Room<GameState> {
                     let nextY = enemy.y + vy * moveDist;
 
                     // Boundary check
+                    const maxX = this.cachedMapData ? this.cachedMapData.mapWidth : 2000;
+                    const maxY = this.cachedMapData ? this.cachedMapData.mapHeight : 1120;
+
                     if (nextX < 50) nextX = 50;
-                    if (nextX > 1550) nextX = 1550;
+                    if (nextX > maxX - 50) nextX = maxX - 50;
                     if (nextY < 50) nextY = 50;
-                    if (nextY > 1550) nextY = 1550;
+                    if (nextY > maxY - 50) nextY = maxY - 50;
 
                     enemy.x = nextX;
                     enemy.y = nextY;
@@ -341,7 +345,7 @@ export class GameRoom extends Room<GameState> {
         const candidates: { x: number, y: number, dist: number }[] = [];
 
         // Load map data to get zone info
-        const mapData = MapParser.loadMapData(this.state.difficulty);
+        const mapData = this.cachedMapData || MapParser.loadMapData(this.state.difficulty);
         let zone = { x: 50, y: 50, width: 1500, height: 1500 }; // Default global bounds
 
         // If enemy has a valid spawn zone index, use that zone
@@ -474,7 +478,8 @@ export class GameRoom extends Room<GameState> {
         }
 
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
-        const mapData = MapParser.loadMapData(this.state.difficulty);
+        this.cachedMapData = MapParser.loadMapData(this.state.difficulty);
+        const mapData = this.cachedMapData;
 
         // Minimum distance between enemies to prevent overlap (in pixels)
         const MIN_ENEMY_DISTANCE = 96; // Increased from 48px to 96px

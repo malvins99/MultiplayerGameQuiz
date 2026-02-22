@@ -14,7 +14,7 @@ export class UIScene extends Phaser.Scene {
         const screenWidth = this.scale.width;
 
         // Create Container positioned at Top Center
-        this.scoreContainer = this.add.container(screenWidth / 2, 40);
+        this.scoreContainer = this.add.container(screenWidth / 2, 70);
         this.scoreContainer.setScrollFactor(0);
         this.scoreContainer.setDepth(100);
 
@@ -45,7 +45,7 @@ export class UIScene extends Phaser.Scene {
 
         // Score Text
         this.scoreText = this.add.text(0, 0, '0', {
-            fontFamily: '"Press Start 2P", monospace',
+            fontFamily: '"Retro Gaming", monospace',
             fontSize: '24px',
             color: '#4a3d2e',
             align: 'center'
@@ -55,7 +55,7 @@ export class UIScene extends Phaser.Scene {
 
         // Timer Text (below score box)
         this.timerText = this.add.text(0, 40, '05:00', {
-            fontFamily: '"Press Start 2P", monospace',
+            fontFamily: '"Retro Gaming", monospace',
             fontSize: '12px',
             color: '#666666',
             align: 'center'
@@ -69,7 +69,7 @@ export class UIScene extends Phaser.Scene {
 
     handleResize(gameSize: Phaser.Structs.Size) {
         if (this.scoreContainer) {
-            this.scoreContainer.setPosition(gameSize.width / 2, 40);
+            this.scoreContainer.setPosition(gameSize.width / 2, 70);
         }
     }
 
@@ -86,7 +86,7 @@ export class UIScene extends Phaser.Scene {
             0,
             `+${scoreDiff}`,
             {
-                fontFamily: '"Press Start 2P", monospace',
+                fontFamily: '"Retro Gaming", monospace',
                 fontSize: '14px',
                 color: '#4ade80',
                 stroke: '#166534',

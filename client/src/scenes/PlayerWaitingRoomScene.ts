@@ -152,10 +152,10 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
-                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
                     10
                 </div>
-                <div class="text-white/50 font-['Press_Start_2P'] text-xs md:text-sm mt-4 tracking-widest uppercase">
+                <div class="text-white/50 font-['Retro_Gaming'] text-xs md:text-sm mt-4 tracking-widest uppercase">
                     Get Ready!
                 </div>
             </div>
@@ -246,11 +246,11 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 }
                 .player-count-value {
                     color: #00ff88;
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     font-size: 14px;
                 }
                 .neon-title-standard {
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     font-size: 38px;
                     color: #00ff88;
                     text-shadow: 0 0 15px rgba(0, 255, 136, 0.4), 3px 3px 0px #000;
@@ -276,7 +276,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 .pill-you {
                     background: #00ff88;
                     color: black;
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     font-size: 8px;
                     padding: 5px 20px;
                     border-radius: 100px;
@@ -291,7 +291,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     justify-content: center;
                     border: 4px solid #000;
                     cursor: pointer;
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     text-transform: uppercase;
                     transition: transform 0.1s;
                 }
@@ -518,7 +518,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-bold uppercase ${textClass} font-['Press_Start_2P'] tracking-tight">${subRoom.id}</span>
+                        <span class="text-sm font-bold uppercase ${textClass} font-['Retro_Gaming'] tracking-tight">${subRoom.id}</span>
                         <div class="px-2 py-1 bg-black/60 rounded text-[10px] font-bold text-white/80 border border-white/5">
                             ${playerCount}/${subRoom.capacity}
                         </div>
@@ -528,7 +528,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                         ${playerListHTML}
                     </div>
 
-                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide ${btnVisibility}">
+                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Retro_Gaming'] tracking-wide ${btnVisibility}">
                         ${btnText}
                     </button>
                 </div>
@@ -603,7 +603,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     
                     <!-- Player Name -->
                     <div style="text-align: center; width: 100%;">
-                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Retro Gaming', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                             ${player.name || 'PLAYER'}
                         </span>
                     </div>

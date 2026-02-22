@@ -298,7 +298,7 @@ export class QuizSettingScene extends Phaser.Scene {
         if (!this.selectedQuiz) return;
 
         // MAP CONFIGURATION
-        let mapFile = 'map_baru1_tetap.tmj'; // Default Mudah
+        let mapFile = 'map_easy_sementara.tmj'; // Default Mudah
         if (this.settingsDifficulty === 'sedang') mapFile = 'map_baru3.tmj';
         if (this.settingsDifficulty === 'sulit') mapFile = 'map_baru3.tmj';
 

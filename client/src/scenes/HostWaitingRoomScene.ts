@@ -226,7 +226,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Room Code -->
                     <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
-                        <span id="host-room-code" class="text-4xl text-primary font-['Press_Start_2P'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
+                        <span id="host-room-code" class="text-4xl text-primary font-['Retro_Gaming'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
                         <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
@@ -239,7 +239,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- URL Box -->
                     <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative">
-                        <span id="host-join-url" class="text-[8px] text-secondary font-['Press_Start_2P'] whitespace-nowrap mr-2 select-all">https://...</span>
+                        <span id="host-join-url" class="text-[8px] text-secondary font-['Retro_Gaming'] whitespace-nowrap mr-2 select-all">https://...</span>
                         <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
                             <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
                         </div>
@@ -256,17 +256,17 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-6 border-b-2 border-purple-500/20 pb-4">
                         <div class="flex items-center gap-4">
-                            <h2 id="host-player-count" class="text-2xl text-secondary font-['Press_Start_2P'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                            <h2 id="host-player-count" class="text-2xl text-secondary font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
                         </div>
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-[30px] h-[52px] flex items-center justify-center bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                            <button id="host-back-btn" class="px-[30px] h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                 EXIT
                             </button>
 
                             <!-- Start Button -->
-                            <button id="host-start-btn" class="px-8 py-3 bg-primary text-black font-['Press_Start_2P'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer">
+                            <button id="host-start-btn" class="px-8 py-3 bg-primary text-black font-['Retro_Gaming'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer">
                                 Start
                             </button>
                         </div>
@@ -279,7 +279,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10">
                                 <span class="material-symbols-outlined text-6xl text-white/20">person_add</span>
                             </div>
-                            <p class="text-white/30 font-['Press_Start_2P'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
+                            <p class="text-white/30 font-['Retro_Gaming'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
                         </div>
                         
                         <!-- Grid Container -->
@@ -296,16 +296,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     
                     <span class="material-symbols-outlined text-6xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">warning</span>
                     
-                    <h3 class="text-xl text-white font-['Press_Start_2P'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
-                    <p class="text-white/60 font-['Press_Start_2P'] text-[10px] mb-8 leading-loose">
+                    <h3 class="text-xl text-white font-['Retro_Gaming'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
+                    <p class="text-white/60 font-['Retro_Gaming'] text-[10px] mb-8 leading-loose">
                         Room will be destroyed and all players disconnected.
                     </p>
 
                     <div class="flex gap-4 justify-center">
-                        <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
+                        <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
                             NO
                         </button>
-                        <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
+                        <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
                             YES
                         </button>
                     </div>
@@ -319,10 +319,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
-                <div id="countdown-text" class="text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                <div id="countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
                     10
                 </div>
-                <div class="text-white/50 font-['Press_Start_2P'] text-sm mt-4 tracking-widest uppercase">
+                <div class="text-white/50 font-['Retro_Gaming'] text-sm mt-4 tracking-widest uppercase">
                     Game Starting...
                 </div>
             </div>
@@ -606,7 +606,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             const headerText = document.getElementById('waiting-header-text');
             if (headerText) {
                 headerText.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Retro Gaming'; font-size: 20px;">
                         <span style="color: #00ff88;">${totalPlayers}</span>
                         <span style="color: white; opacity: 0.9;">${labelText}</span>
                     </div>
@@ -667,7 +667,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-bold uppercase ${textClass} font-['Press_Start_2P'] tracking-tight">${subRoom.id}</span>
+                        <span class="text-sm font-bold uppercase ${textClass} font-['Retro_Gaming'] tracking-tight">${subRoom.id}</span>
                         <div class="px-2 py-1 bg-black/60 rounded text-[10px] font-bold text-white/80 border border-white/5">
                             ${playerCount}/${subRoom.capacity}
                         </div>
@@ -677,7 +677,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         ${playerListHTML}
                     </div>
 
-                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide ${btnVisibility}">
+                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Retro_Gaming'] tracking-wide ${btnVisibility}">
                         ${btnText}
                     </button>
                 </div>
@@ -792,7 +792,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     
                     <!-- Player Name -->
                     <div style="text-align: center; width: 100%; padding: 0 2px;">
-                        <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                        <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Retro Gaming', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                             ${player.name || 'PLAYER'}
                         </span>
                     </div>

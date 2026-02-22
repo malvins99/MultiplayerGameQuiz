@@ -33,7 +33,7 @@ export class HostSpectatorScene extends Phaser.Scene {
         // Determine map based on difficulty
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
-        let mapFile = 'map_baru1_tetap.tmj';
+        let mapFile = 'map_newest_easy.tmj';
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
@@ -99,6 +99,37 @@ export class HostSpectatorScene extends Phaser.Scene {
             });
         }
 
+        // --- Logo Integration ---
+        const logoStyleId = 'spectator-logo-styles';
+        if (!document.getElementById(logoStyleId)) {
+            const style = document.createElement('style');
+            style.id = logoStyleId;
+            style.innerHTML = `
+                .spectator-logo-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 100;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const logoContainer = document.createElement('div');
+        logoContainer.className = 'spectator-logo-container';
+        logoContainer.innerHTML = `
+            <!-- LOGO TOP LEFT -->
+            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            
+            <!-- LOGO TOP RIGHT -->
+            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+        `;
+        document.body.appendChild(logoContainer);
+        this.disposers.push(() => logoContainer.remove());
+
         // --- Animations ---
         if (!this.anims.exists('idle')) {
             this.anims.create({
@@ -121,16 +152,36 @@ export class HostSpectatorScene extends Phaser.Scene {
         });
 
         // --- Camera Setup ---
-        const mapW = this.map.widthInPixels || 1920;
-        const mapH = this.map.heightInPixels || 1080;
-        this.minZoom = Math.max(this.scale.width / mapW, this.scale.height / mapH);
+        // --- Camera Setup ---
+        const updateCamera = () => {
+            const mapW = this.map.widthInPixels || 1920;
+            const mapH = this.map.heightInPixels || 1080;
 
-        console.log(`[Spectator] Map size: ${mapW}x${mapH}, Zoom: ${this.minZoom}`);
+            // Calculate zoom to COVER the screen (like CSS object-fit: cover)
+            // We take the larger ratio to ensure no black bars
+            const zoomX = this.scale.width / mapW;
+            const zoomY = this.scale.height / mapH;
+            this.minZoom = Math.max(zoomX, zoomY);
 
-        this.cameras.main.setBackgroundColor('#1a1a1a');
-        this.cameras.main.centerOn(mapW / 2, mapH / 2);
-        this.cameras.main.setZoom(Math.max(0.6, this.minZoom));
-        this.cameras.main.setBounds(0, 0, mapW, mapH);
+            console.log(`[Spectator] Map: ${mapW}x${mapH}, Screen: ${this.scale.width}x${this.scale.height}, Zoom: ${this.minZoom}`);
+
+            this.cameras.main.setBackgroundColor('#1a1a1a');
+            this.cameras.main.centerOn(mapW / 2, mapH / 2);
+
+            // Apply zoom
+            this.cameras.main.setZoom(this.minZoom);
+
+            // Set bounds to map size
+            this.cameras.main.setBounds(0, 0, mapW, mapH);
+        };
+
+        updateCamera();
+
+        // Handle Window Resize
+        this.scale.on('resize', () => {
+            console.log("Window resized, updating camera...");
+            updateCamera();
+        });
 
         // Drag Pan
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -149,7 +200,8 @@ export class HostSpectatorScene extends Phaser.Scene {
         });
         this.input.on('wheel', (pointer: any, gO: any, dx: number, dy: number) => {
             const newZoom = this.cameras.main.zoom - dy * 0.001;
-            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 2));
+            // Allow zooming out only up to the minimum cover zoom
+            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 3));
         });
 
         // --- UI Initialization ---
@@ -202,8 +254,9 @@ export class HostSpectatorScene extends Phaser.Scene {
             };
             updateProgress();
 
+            this.disposers.push(player.listen("x", (val) => container.setData('targetX', val)));
+            this.disposers.push(player.listen("y", (val) => container.setData('targetY', val)));
             this.disposers.push(player.onChange(() => {
-                container.setData({ targetX: player.x, targetY: player.y });
                 updateProgress();
             }));
         };
@@ -254,7 +307,7 @@ export class HostSpectatorScene extends Phaser.Scene {
             display: flex;
             flex-direction: column;
             padding: 20px 40px;
-            font-family: 'Press Start 2P', monospace;
+            font-family: 'Retro Gaming', monospace;
             color: white;
             z-index: 9999; /* Force to top */
             background: transparent;
@@ -262,8 +315,14 @@ export class HostSpectatorScene extends Phaser.Scene {
 
 
         this.uiContainer.innerHTML = `
+            <!-- LOGO TOP LEFT -->
+            <img src="/logo/Zigma-logo.webp" style="position: absolute; top: -60px; left: -65px; width: 384px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none;" />
+            
+            <!-- LOGO TOP RIGHT -->
+            <img src="/logo/gameforsmart.webp" style="position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
+
             <!-- Top Bar: Timer & Controls -->
-            <div style="max-width: 1200px; width: 100%; margin: 10px auto 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.6); border-radius: 16px; border: 1px solid rgba(0,255,136,0.2); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="max-width: 1200px; width: 100%; margin: 90px auto 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.6); border-radius: 16px; border: 1px solid rgba(0,255,136,0.2); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="material-symbols-outlined" style="font-size: 28px; color: #00ff88;">timer</span>
                     <span id="game-timer" style="font-size: 18px; color: #00ff88;">05:00</span>
@@ -326,7 +385,7 @@ export class HostSpectatorScene extends Phaser.Scene {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Press Start 2P', monospace;
+            font-family: 'Retro Gaming', monospace;
             opacity: 0;
             transition: opacity 0.25s ease;
             pointer-events: auto;
@@ -424,7 +483,9 @@ export class HostSpectatorScene extends Phaser.Scene {
         const noBtn = popup.querySelector('#popup-no') as HTMLButtonElement;
 
         yesBtn.onclick = () => {
-            this.room.send('hostEndGame');
+            if (this.room && this.room.connection.isOpen) {
+                this.room.send('hostEndGame');
+            }
             closePopup();
         };
         noBtn.onclick = closePopup;
@@ -432,17 +493,13 @@ export class HostSpectatorScene extends Phaser.Scene {
     }
 
     updateTimer(remainingMs: number) {
-        const timerEl = document.getElementById('game-timer');
-        if (timerEl) {
-            const totalSeconds = Math.ceil(remainingMs / 1000);
-            const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-            const s = (totalSeconds % 60).toString().padStart(2, '0');
-            timerEl.innerText = `${m}:${s}`;
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-            if (totalSeconds <= 30) {
-                timerEl.style.color = '#ff0055';
-            }
-        }
+        const timerElement = document.getElementById('game-timer');
+        if (timerElement) timerElement.innerText = formatted;
     }
 
     focusOnAllPlayers() {
@@ -518,9 +575,9 @@ export class HostSpectatorScene extends Phaser.Scene {
     refreshSubRooms() { }
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
-        const text = this.add.text(0, -42, name, {
+        const text = this.add.text(0, -30, name, {
             fontSize: '18px', // Slightly larger for clarity
-            fontFamily: '"Press Start 2P"',
+            fontFamily: '"Retro Gaming"',
             color: '#00ff88',
             stroke: '#000000',
             strokeThickness: 3,

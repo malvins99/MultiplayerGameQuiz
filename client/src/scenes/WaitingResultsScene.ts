@@ -44,7 +44,7 @@ export class WaitingResultsScene extends Phaser.Scene {
                     align-items: center;
                     justify-content: center;
                     z-index: 9999;
-                    font-family: 'Press Start 2P', monospace;
+                    font-family: 'Retro Gaming', monospace;
                     color: #00ff88;
                 }
                 .waiting-spinner {
