@@ -43,9 +43,16 @@ export class LobbyScene extends Phaser.Scene {
 
         if (!host) {
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            host = window.location.hostname === 'localhost'
-                ? 'ws://localhost:2567'
-                : `${protocol}://${window.location.host}`;
+            const defaultPort = '2567';
+
+            // In production (Railway), window.location.host includes the domain.
+            // In local development, it might be localhost:5173 or an IP:5173.
+            // We want to connect to the server which is on port 2567.
+            if (window.location.hostname === 'localhost' || /^(\d+\.){3}\d+$/.test(window.location.hostname)) {
+                host = `${protocol}://${window.location.hostname}:${defaultPort}`;
+            } else {
+                host = `${protocol}://${window.location.host}`;
+            }
         }
 
         console.log("Connecting to Colyseus server:", host);

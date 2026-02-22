@@ -41,12 +41,18 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     }
 
     init(data: { room: Room, isHost: boolean }) {
+        if (!data || !data.room) {
+            console.warn("[PlayerWaitingRoom] No room data provided. Redirecting to Lobby...");
+            this.scene.start('LobbyScene');
+            return;
+        }
         this.room = data.room;
         this.isHost = data.isHost;
         this.mySessionId = this.room.sessionId;
     }
 
     create() {
+        if (!this.room) return;
         // Grab DOM elements
         this.waitingUI = document.getElementById('waiting-ui');
 

@@ -42,12 +42,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     }
 
     init(data: { room: Room, isHost: boolean }) {
+        if (!data || !data.room) {
+            console.warn("[HostWaitingRoom] No room data provided. Redirecting to Lobby...");
+            this.scene.start('LobbyScene');
+            return;
+        }
         this.room = data.room;
         this.isHost = data.isHost;
         this.mySessionId = this.room.sessionId;
     }
 
     create() {
+        if (!this.room) return;
         // Inject shared styles (play-idle)
         const styleId = 'waiting-room-common-styles';
         if (!document.getElementById(styleId)) {
