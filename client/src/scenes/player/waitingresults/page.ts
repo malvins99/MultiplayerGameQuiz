@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { Router } from '../../utils/Router';
-import { supabase } from '../../lib/supabase';
+import { Router } from '../../../utils/Router';
+import { supabase } from '../../../lib/supabase';
 
 // Interfaces for Room State (simplified)
 interface PlayerSync {

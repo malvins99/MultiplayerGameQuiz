@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
-import { Router } from '../../utils/Router';
-import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../../data/QuizData';
-import { TransitionManager } from '../../utils/TransitionManager';
-import { authService } from '../../services/AuthService';
+import { Router } from '../../../utils/Router';
+import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { authService } from '../../../services/AuthService';
 
 export class SelectQuizScene extends Phaser.Scene {
     client!: Client;
@@ -523,9 +523,9 @@ export class SelectQuizScene extends Phaser.Scene {
                     TransitionManager.transitionTo(() => {
                         this.hideUI();
                         this.cleanup();
-                        // Add query param for refresh persistence
-                        // Store quiz ID in localStorage to persist across refreshes without showing in URL
+                        // Simpan ID ke localStorage agar URL tetap bersih (/host/settings) tapi refresh tetap jalan
                         localStorage.setItem('tempSettingsQuizId', quiz.id);
+                        // Navigate ke URL bersih
                         Router.navigate('/host/settings');
                         this.scene.start('QuizSettingScene', { quiz, client: this.client });
                     });

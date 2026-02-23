@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { QuizPopup } from '../../ui/QuizPopup';
+import { QuizPopup } from '../../../ui/QuizPopup';
 import { UIScene } from '../ui/page'; // Import UI Scene for types
-import { TransitionManager } from '../../utils/TransitionManager';
-import { Router } from '../../utils/Router'; // IMPORT ROUTER
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { Router } from '../../../utils/Router'; // IMPORT ROUTER
 
-import { HTMLControlAdapter } from '../../ui/HTMLControlAdapter';
-import { ClickToMoveSystem } from '../../systems/ClickToMoveSystem';
+import { HTMLControlAdapter } from '../../../ui/HTMLControlAdapter';
+import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
 // import { QUESTIONS } from '../dummyQuestions'; // Removed to enforce server questions
 
 export class GameScene extends Phaser.Scene {
@@ -342,7 +342,7 @@ export class GameScene extends Phaser.Scene {
             // Helper to update hair visual
             const updateHairVisuals = () => {
                 const hairId = player.hairId || 0;
-                import('../../data/characterData').then(({ getHairById }) => {
+                import('../../../data/characterData').then(({ getHairById }) => {
                     const hairData = getHairById(hairId);
                     if (hairData.id === 0) {
                         hairSprite.setVisible(false);
@@ -421,7 +421,7 @@ export class GameScene extends Phaser.Scene {
                             // Sync Hair Animation
                             const hairId = player.hairId || 0;
                             if (hairId > 0) {
-                                import('../../data/characterData').then(({ getHairById }) => {
+                                import('../../../data/characterData').then(({ getHairById }) => {
                                     const h = getHairById(hairId);
                                     if (hSprite.anims.currentAnim?.key !== h.walkKey) {
                                         hSprite.play(h.walkKey, true);
@@ -435,7 +435,7 @@ export class GameScene extends Phaser.Scene {
                             // Sync Hair Idle
                             const hairId = player.hairId || 0;
                             if (hairId > 0) {
-                                import('../../data/characterData').then(({ getHairById }) => {
+                                import('../../../data/characterData').then(({ getHairById }) => {
                                     const h = getHairById(hairId);
                                     if (hSprite.anims.currentAnim?.key !== h.idleKey) {
                                         hSprite.play(h.idleKey, true);

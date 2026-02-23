@@ -43,15 +43,35 @@ export class LoginScene extends Phaser.Scene {
             const profile = authService.getStoredProfile();
             if (profile) {
                 // Already logged in, go to lobby directly
-                this.hideLoginUI();
                 this.hideAuthLoading();
-                this.scene.start('LobbyScene');
+
+                // IMPORTANT: Do NOT force navigate to '/' if we are already on a deep link!
+                // Let handleRouting in LobbyScene take care of it.
+                this.navigateToLobby(false);
                 return;
             }
         }
 
-        // Not authenticated - always show login
-        Router.navigate('/login');
+        // Not authenticated
+
+        // 1. Check if we are landing on a Join URL (e.g. from QR Code)
+        const currentPath = Router.getPath();
+
+        // Regex to capture /join/CODE
+        const joinMatch = currentPath.match(/^\/join\/([a-zA-Z0-9]+)\/?$/);
+        if (joinMatch && joinMatch[1]) {
+            const code = joinMatch[1];
+            console.log("🚀 [LoginScene] Detected entry via Join URL:", code);
+            console.log("Saving pending join code to localStorage before login redirect.");
+            localStorage.setItem('pendingJoinRoomCode', code);
+        }
+
+        // 2. Enforce Redirect to /login
+        if (currentPath !== '/login' && !currentPath.startsWith('/login')) {
+            console.log("Redirecting unauthenticated user to /login from:", currentPath);
+            Router.navigate('/login');
+        }
+
         this.showLoginUI();
 
         // Listen for route changes
@@ -125,20 +145,6 @@ export class LoginScene extends Phaser.Scene {
             return;
         }
 
-        // Validate email format or username (alphanumeric)
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-        const isUsername = /^[a-zA-Z0-9_]{3,20}$/.test(identifier);
-
-        if (!isEmail && !isUsername) {
-            this.showError('Please enter a valid email or username');
-            return;
-        }
-
-        if (password.length < 6) {
-            this.showError('Password must be at least 6 characters');
-            return;
-        }
-
         // Show loading state
         this.setLoadingState(true, 'Logging in...');
 
@@ -149,8 +155,7 @@ export class LoginScene extends Phaser.Scene {
 
         if (result.success && result.profile) {
             console.log('Login successful:', result.profile.username);
-
-            // Navigate to lobby
+            // Navigate to lobby with priority check for pending joins
             this.navigateToLobby();
         } else {
             this.showError(result.error || 'Login failed');
@@ -159,23 +164,17 @@ export class LoginScene extends Phaser.Scene {
 
     async handleGoogleLogin() {
         if (this.isLoading) return;
-
         console.log('Google Login initiated');
-
         this.setLoadingState(true, 'Redirecting to Google...');
-
         const result = await authService.loginWithGoogle();
-
         if (!result.success) {
             this.setLoadingState(false);
             this.showError(result.error || 'Google login failed');
         }
-        // If successful, the page will redirect to Google
     }
 
     setLoadingState(loading: boolean, message?: string) {
         this.isLoading = loading;
-
         const loginBtn = document.getElementById('login-btn');
         const googleLoginBtn = document.getElementById('google-login-btn');
         const emailInput = document.getElementById('login-email') as HTMLInputElement;
@@ -183,9 +182,7 @@ export class LoginScene extends Phaser.Scene {
 
         if (loading) {
             if (loginBtn) {
-                loginBtn.innerHTML = `
-                    <span class="animate-pulse">${message || 'LOGGING IN...'}</span>
-                `;
+                loginBtn.innerHTML = `<span class="animate-pulse">${message || 'LOGGING IN...'}</span>`;
                 loginBtn.setAttribute('disabled', 'true');
                 loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
@@ -197,10 +194,7 @@ export class LoginScene extends Phaser.Scene {
             if (passwordInput) passwordInput.disabled = true;
         } else {
             if (loginBtn) {
-                loginBtn.innerHTML = `
-                    <span class="material-symbols-outlined">login</span>
-                    LOGIN
-                `;
+                loginBtn.innerHTML = `<span class="material-symbols-outlined">login</span> LOGIN`;
                 loginBtn.removeAttribute('disabled');
                 loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -213,11 +207,30 @@ export class LoginScene extends Phaser.Scene {
         }
     }
 
-    navigateToLobby() {
+    navigateToLobby(shouldNavigateToRoot: boolean = true) {
         TransitionManager.transitionTo(() => {
-            Router.navigate('/');
+            const pendingCode = localStorage.getItem('pendingJoinRoomCode');
+            let autoJoinCode: string | null = null;
+
+            if (pendingCode && pendingCode.trim().length > 0) {
+                const cleanCode = pendingCode.trim();
+                console.log("🚀 [LoginScene] Restoring pending join:", cleanCode);
+
+                // Set URL to join path
+                Router.navigate(`/join/${cleanCode}`);
+                autoJoinCode = cleanCode;
+            } else if (shouldNavigateToRoot) {
+                // Normal login without pending code
+                Router.navigate('/');
+            } else {
+                // Already authenticated at specific URL, keep current path
+                console.log("[LoginScene] Preserving current path:", Router.getPath());
+            }
+
             this.hideLoginUI();
-            this.scene.start('LobbyScene');
+
+            // Start LobbyScene, passing the code if it exists
+            this.scene.start('LobbyScene', { autoJoinCode });
         });
     }
 

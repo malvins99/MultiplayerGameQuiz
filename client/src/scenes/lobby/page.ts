@@ -15,28 +15,76 @@ export class LobbyScene extends Phaser.Scene {
         super('LobbyScene');
     }
 
+    private pendingJoinCode: string | null = null;
+    private didExit: boolean = false;
+
+    init(data?: { autoJoinCode?: string, didExit?: boolean }) {
+        // Reset state on init
+        this.pendingJoinCode = null;
+        this.didExit = !!data?.didExit;
+
+        if (this.didExit) {
+            console.log("🚀 [LobbyScene] User exited deliberately. Auto-join disabled.");
+            // Ensure storage is clear
+            localStorage.removeItem('pendingJoinRoomCode');
+            return;
+        }
+
+        if (data?.autoJoinCode) {
+            this.pendingJoinCode = data.autoJoinCode;
+            console.log("[LobbyScene] Received auto-join code via Scene Data:", this.pendingJoinCode);
+            // IMPORTANT: Clear storage to prevent "zombie" auto-joins when returning to lobby later
+            localStorage.removeItem('pendingJoinRoomCode');
+        } else {
+            // Fallback: Check local storage directly if scene data missing
+            const stored = localStorage.getItem('pendingJoinRoomCode');
+            if (stored) {
+                this.pendingJoinCode = stored;
+                console.log("[LobbyScene] Received auto-join code via localStorage fallback:", stored);
+                // Consume it
+                localStorage.removeItem('pendingJoinRoomCode');
+            }
+        }
+    }
+
     create() {
         this.initializeClient();
-        // Initially hide UI to prevent flicker on refresh
+
+        // 1. Initialize UI (Hidden)
         this.toggleUI('');
         this.initializeUI();
         this.setupEventListeners();
 
-        // Check routing on load
+        // Safety Check: If we just exited via button, STOP here and show lobby.
+        if (this.didExit) {
+            this.showLobby();
+            window.addEventListener('popstate', () => this.handleRouting());
+            // Force URL clean if needed
+            if (!Router.is('/')) Router.replace('/');
+            return;
+        }
+
+        // 2. Explicit Scene Data Check (Highest Priority)
+        // This handles cases where data is passed directly via scene.start
+        if (this.pendingJoinCode) {
+            const code = this.pendingJoinCode;
+            this.pendingJoinCode = null; // Clear local var
+            console.log("🚀 [LobbyScene] Executing pending join (Scene Data Priority):", code);
+            this.processAutoJoinWithVisuals(code);
+            return;
+        }
+
+        // 3. Process Auto-Join (Storage / URL / Regex)
+        const autoJoinTriggered = this.initializeAutoJoin();
+
+        if (autoJoinTriggered) {
+            console.log("🚀 [LobbyScene] Auto-join sequence initiated. Pausing normal routing.");
+            return;
+        }
+
+        // 3. Normal Routing Flow (if no auto-join)
         window.addEventListener('popstate', () => this.handleRouting());
         this.handleRouting();
-
-        // Check for Room Code in URL (Auto-Join from QR)
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomCode = urlParams.get('room');
-        if (roomCode) {
-            console.log("Auto-joining room from URL:", roomCode);
-            this.handleJoinRoom(roomCode);
-            // Clean URL
-            const url = new URL(window.location.href);
-            url.searchParams.delete('room');
-            window.history.replaceState({}, '', url);
-        }
     }
 
     initializeClient() {
@@ -56,16 +104,105 @@ export class LobbyScene extends Phaser.Scene {
 
     initializeUI() {
         this.lobbyUI = document.getElementById('lobby-ui');
-
-        // --- Populate User Profile Widget ---
         this.populateUserProfile();
 
-        // --- Populate Nickname Input ---
         const profile = authService.getStoredProfile();
         const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
         if (profile && nicknameInput) {
             nicknameInput.value = profile.nickname || profile.fullname || profile.username || '';
         }
+    }
+
+    initializeAutoJoin(): boolean {
+        // A. Check Pending Code from Scene Data or LocalStorage (via init)
+        if (this.pendingJoinCode) {
+            const code = this.pendingJoinCode;
+            this.pendingJoinCode = null; // consume
+            console.log("🚀 [LobbyScene] Auto-join source: PENDING DATA/STORAGE ->", code);
+            this.processAutoJoinWithVisuals(code);
+            return true;
+        }
+
+        // B. Check Router Match for /join/:code
+        const joinMatch = Router.match('/join/:roomCode');
+        if (joinMatch && joinMatch.roomCode) {
+            console.log("🚀 [LobbyScene] Auto-join source: ROUTER MATCH ->", joinMatch.roomCode);
+            this.processAutoJoinWithVisuals(joinMatch.roomCode);
+            return true;
+        }
+
+        // C. Check Manual Regex (Fallback)
+        const rawPath = window.location.pathname;
+        const manualMatch = rawPath.match(/^\/join\/([a-zA-Z0-9]+)\/?$/);
+        if (manualMatch && manualMatch[1]) {
+            console.log("🚀 [LobbyScene] Auto-join source: MANUAL REGEX ->", manualMatch[1]);
+            this.processAutoJoinWithVisuals(manualMatch[1]);
+            return true;
+        }
+
+        // D. Check Query Param ?room=CODE
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryCode = urlParams.get('room');
+        if (queryCode) {
+            console.log("🚀 [LobbyScene] Auto-join source: QUERY PARAM ->", queryCode);
+            // Clean URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('room');
+            window.history.replaceState({}, '', url);
+
+            this.processAutoJoinWithVisuals(queryCode);
+            return true;
+        }
+
+        return false;
+    }
+
+    processAutoJoinWithVisuals(code: string) {
+        this.showJoinLoading(`Joining Room ${code}...`);
+
+        // Check Auth
+        const profile = authService.getStoredProfile();
+
+        if (!profile) {
+            console.log("⚠️ [LobbyScene] Auto-join paused. User not logged in.");
+            localStorage.setItem('pendingJoinRoomCode', code);
+
+            // Redirect to Login
+            setTimeout(() => {
+                this.hideJoinLoading();
+                Router.navigate('/login');
+                this.scene.start('LoginScene');
+            }, 500);
+            return;
+        }
+
+        // Robust name extraction
+        const joinName = profile.nickname || profile.fullname || profile.username || profile.email?.split('@')[0] || 'Player';
+
+        console.log("✅ [LobbyScene] Authenticated. Attempting join as:", joinName);
+        console.log("✅ [LobbyScene] Room Code:", code);
+
+        // Pre-fill inputs just in case we fall back to lobby
+        const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
+        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
+        if (codeInput) codeInput.value = code;
+        if (nicknameInput) nicknameInput.value = joinName;
+
+        // Execute Join
+        setTimeout(() => {
+            this.handleJoinRoom(code, joinName)
+                .then(() => {
+                    this.hideJoinLoading();
+                    // If successful, handleJoinRoom navigates away.
+                    // If it stays here (e.g. error caught inside), we might need to hide loading.
+                })
+                .catch(err => {
+                    console.error("Auto-join failed:", err);
+                    this.hideJoinLoading();
+                    this.showLobby();
+                    alert("Gagal bergabung otomatis: " + (err.message || "Unknown error"));
+                });
+        }, 1000);
     }
 
     populateUserProfile() {
@@ -75,23 +212,35 @@ export class LobbyScene extends Phaser.Scene {
         const avatarFallback = document.getElementById('lobby-user-avatar-fallback');
 
         if (profile) {
-            // Set username
             if (nameEl) {
                 nameEl.innerText = profile.nickname || profile.fullname || profile.username || profile.email || 'Guest';
             }
-
-            // Set avatar
             if (avatarEl && profile.avatar_url) {
                 avatarEl.src = profile.avatar_url;
                 avatarEl.classList.remove('hidden');
                 if (avatarFallback) avatarFallback.classList.add('hidden');
-
                 avatarEl.onerror = () => {
                     avatarEl.classList.add('hidden');
                     if (avatarFallback) avatarFallback.classList.remove('hidden');
                 };
             }
         }
+    }
+
+    // --- LOADING HELPERS ---
+    showJoinLoading(msg: string) {
+        const overlay = document.getElementById('auth-loading-overlay');
+        const text = document.getElementById('auth-loading-text');
+
+        this.toggleUI('');
+
+        if (text) text.innerText = msg;
+        if (overlay) overlay.classList.remove('hidden');
+    }
+
+    hideJoinLoading() {
+        const overlay = document.getElementById('auth-loading-overlay');
+        if (overlay) overlay.classList.add('hidden');
     }
 
     setupEventListeners() {
@@ -158,17 +307,9 @@ export class LobbyScene extends Phaser.Scene {
             if (logoutModal) logoutModal.classList.add('hidden');
         };
 
-        if (lobbyLogoutBtn) {
-            lobbyLogoutBtn.onclick = () => showLogoutModal();
-        }
-
-        if (logoutCancelBtn) {
-            logoutCancelBtn.onclick = () => hideLogoutModal();
-        }
-
-        if (logoutModalBackdrop) {
-            logoutModalBackdrop.onclick = () => hideLogoutModal();
-        }
+        if (lobbyLogoutBtn) lobbyLogoutBtn.onclick = () => showLogoutModal();
+        if (logoutCancelBtn) logoutCancelBtn.onclick = () => hideLogoutModal();
+        if (logoutModalBackdrop) logoutModalBackdrop.onclick = () => hideLogoutModal();
 
         if (logoutConfirmBtn) {
             logoutConfirmBtn.onclick = async () => {
@@ -207,73 +348,119 @@ export class LobbyScene extends Phaser.Scene {
     // --- NAVIGATION ---
 
     handleRouting() {
-        const path = Router.getPath();
-        console.log("[LobbyScene] Routing check:", path);
+        console.log("[LobbyScene] Routing check:", Router.getPath());
 
-        if (path === '/host/select-quiz') {
-            // Close lobby UI explicitly just in case
+        const hidelobby = () => {
             const lobbyUI = document.getElementById('lobby-ui');
             if (lobbyUI) lobbyUI.classList.add('hidden');
+        };
 
+        // ── /host/select-quiz ────────────────────────────────
+        if (Router.is('/host/select-quiz')) {
+            hidelobby();
             this.scene.start('SelectQuizScene', { client: this.client });
             return;
         }
 
-        if (path === '/host/settings') {
-            console.log("[LobbyScene] Quiz Setting refresh detected. Attempting to restore scene.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
+        // ── /host/settings/:quizId ───────────────────────────
+        const settingsMatch = Router.match('/host/settings/:quizId');
+        if (settingsMatch) {
+            hidelobby();
+            this.scene.start('QuizSettingScene', { client: this.client, quizId: settingsMatch.quizId });
+            return;
+        }
+        if (Router.is('/host/settings')) {
+            hidelobby();
             this.scene.start('QuizSettingScene', { client: this.client });
             return;
         }
 
-        if (path === '/host/waiting-room') {
-            console.log("[LobbyScene] Host Waiting Room refresh detected.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
-            // Scene must handle reconnection logic itself
-            this.scene.start('HostWaitingRoomScene', { client: this.client, isRestore: true });
-            return;
-        }
-
-        if (path === '/player/lobby') {
-            console.log("[LobbyScene] Player Waiting Room refresh detected.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
-            this.scene.start('PlayerWaitingRoomScene', { client: this.client, isRestore: true });
-            return;
-        }
-
-        if (path === '/game') {
-            console.log("[LobbyScene] Game Scene refresh detected.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
-            this.scene.start('GameScene', { client: this.client, isRestore: true });
-            return;
-        }
-
-        if (path === '/player/result') {
-            console.log("[LobbyScene] Result Scene refresh detected.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
-            this.scene.start('WaitingResultsScene', { client: this.client, isRestore: true });
-            return;
-        }
-
-        if (path === '/host/progress') {
+        // ── /host/progress ───────────────────────────────────
+        if (Router.is('/host/progress')) {
             console.log("[LobbyScene] Host Progress refresh detected.");
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.add('hidden');
+            hidelobby();
             this.scene.start('HostProgressScene', { client: this.client, isRestore: true });
             return;
         }
 
-        if (path === '/' || path === '') {
-            this.showLobby();
-        } else {
-            console.log("[LobbyScene] Unknown or state-dependent path:", path);
-            this.showLobby();
+        // ── /host/:roomCode/lobby ───────────────────────────────
+        const hostLobbyMatch = Router.match('/host/:roomCode/lobby');
+        if (hostLobbyMatch) {
+            console.log("[LobbyScene] Host Lobby refresh detected.", hostLobbyMatch.roomCode);
+            hidelobby();
+            this.scene.start('HostWaitingRoomScene', { client: this.client, isRestore: true });
+            return;
         }
+
+        // ── /host/:roomCode/leaderboard ──────────────────────
+        const hostLbMatch = Router.match('/host/:roomCode/leaderboard');
+        if (hostLbMatch) {
+            console.log("[LobbyScene] Host Leaderboard restore, roomCode:", hostLbMatch.roomCode);
+            hidelobby();
+            this.scene.start('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode: hostLbMatch.roomCode });
+            return;
+        }
+
+        // ── /player/lobby ────────────────────────────────────
+        if (Router.is('/player/lobby')) {
+            console.log("[LobbyScene] Player Waiting Room refresh detected.");
+            hidelobby();
+            this.scene.start('PlayerWaitingRoomScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        // ── /game ─────────────────────────────────────────────
+        if (Router.is('/game')) {
+            console.log("[LobbyScene] Game Scene refresh detected.");
+            hidelobby();
+            this.scene.start('GameScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        // ── /player/result ───────────────────────────────────
+        if (Router.is('/player/result')) {
+            console.log("[LobbyScene] Result Scene refresh detected.");
+            hidelobby();
+            this.scene.start('WaitingResultsScene', { client: this.client, isRestore: true });
+            return;
+        }
+
+        // ── Explicit Auto-Join (from Scene Data or pending localStorage) ──
+        if (this.pendingJoinCode) {
+            const code = this.pendingJoinCode;
+            this.pendingJoinCode = null;
+
+            console.log("[LobbyScene] Processing explicit auto-join:", code);
+            this.processAutoJoinWithVisuals(code);
+            return;
+        }
+
+        // ── /join/:roomCode (QR Scan) ────────────────────────
+        const joinMatch = Router.match('/join/:roomCode');
+        if (joinMatch) {
+            console.log("[LobbyScene] Auto-join route detected:", joinMatch.roomCode);
+            this.processAutoJoinWithVisuals(joinMatch.roomCode);
+            return;
+        }
+
+        // ── / (lobby utama) ──────────────────────────────────
+        // Only show lobby if explicit root OR empty path
+        if (Router.is('/') || Router.getPath() === '') {
+            // Last ditch check for localStorage
+            const pendingCode = localStorage.getItem('pendingJoinRoomCode');
+            if (pendingCode) {
+                console.log("[LobbyScene] Found pending join code, restoring join flow:", pendingCode);
+                // process without removing yet, let initialized logic handle visuals
+                this.initializeAutoJoin();
+                return;
+            }
+            this.showLobby();
+            return;
+        }
+
+        // ── Fallback ─────────────────────────────────────────
+        console.warn("[LobbyScene] Unknown path, fallback to lobby:", Router.getPath());
+        this.showLobby();
     }
 
     showLobby() {
@@ -287,8 +474,11 @@ export class LobbyScene extends Phaser.Scene {
             const el = document.getElementById(uiId);
             if (el) el.classList.add('hidden');
         });
-        const target = document.getElementById(id);
-        if (target) target.classList.remove('hidden');
+
+        if (id) {
+            const target = document.getElementById(id);
+            if (target) target.classList.remove('hidden');
+        }
     }
 
     // --- ACTIONS ---
@@ -335,20 +525,37 @@ export class LobbyScene extends Phaser.Scene {
 
             const userId = profile.id;
 
-            const { error: partError } = await supabaseB
+            // Cek apakah sudah pernah join (untuk rejoin case)
+            const { data: existingParticipant } = await supabaseB
                 .from(PARTICIPANT_TABLE)
-                .insert({
-                    session_id: sessionData.id,
-                    nickname: nickname,
-                    user_id: userId,
-                    joined_at: new Date().toISOString(),
-                    score: 0
-                });
+                .select('id')
+                .eq('session_id', sessionData.id)
+                .eq('user_id', userId)
+                .maybeSingle();
 
-            if (partError) {
-                console.error("Participant registration error:", partError);
-                alert("Failed to join session. Name might be taken or connection error.");
-                return;
+            if (!existingParticipant) {
+                // Belum pernah join → INSERT baru
+                const { error: partError } = await supabaseB
+                    .from(PARTICIPANT_TABLE)
+                    .insert({
+                        session_id: sessionData.id,
+                        nickname: nickname,
+                        user_id: userId,
+                        joined_at: new Date().toISOString(),
+                        score: 0
+                    });
+
+                if (partError) {
+                    console.error("Participant registration error:", partError);
+                    alert("Gagal bergabung ke sesi. Coba lagi.");
+                    return;
+                }
+            } else {
+                // Sudah pernah join → update nickname saja (rejoin)
+                await supabaseB
+                    .from(PARTICIPANT_TABLE)
+                    .update({ nickname: nickname, joined_at: new Date().toISOString() })
+                    .eq('id', existingParticipant.id);
             }
 
             // 3. Join Colyseus Room
@@ -357,9 +564,14 @@ export class LobbyScene extends Phaser.Scene {
 
             if (targetRoom) {
                 const room = await this.client.joinById(targetRoom.roomId, {
-                    name: nickname, // Matches GameRoom options
-                    sessionId: sessionData.id // Pass session ID
+                    name: nickname,
+                    sessionId: sessionData.id
                 });
+
+                // Simpan session untuk restore setelah refresh (Colyseus v0.15)
+                localStorage.setItem('currentRoomId', room.id);
+                localStorage.setItem('currentSessionId', room.sessionId);
+                localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
 
                 this.lobbyUI?.classList.add('hidden');
 

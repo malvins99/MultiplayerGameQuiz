@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import { Room, Client } from 'colyseus.js';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
-import { Player } from '../../../../server/src/rooms/GameState';
-import { Router } from '../../utils/Router';
-import { TransitionManager } from '../../utils/TransitionManager';
-import { CharacterSelectPopup } from '../../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../../ui/QRCodePopup';
-import { HAIR_OPTIONS, getHairById } from '../../data/characterData';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
+import { Player } from '../../../../../server/src/rooms/GameState';
+import { Router } from '../../../utils/Router';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
+import { QRCodePopup } from '../../../ui/QRCodePopup';
+import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
+import QRCode from 'qrcode';
 
 export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -56,40 +57,89 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     }
 
     async restoreRoom(client: any) {
-        const roomId = localStorage.getItem('currentRoomId');
-        const sessionId = localStorage.getItem('currentSessionId');
+        // Retrieve stored session details
+        const reconnectionToken = localStorage.getItem('currentReconnectionToken');
+        const savedRoomId = localStorage.getItem('currentRoomId');
+        const savedSessionId = localStorage.getItem('currentSessionId');
 
-        if (!roomId || !sessionId) {
-            console.error("Cannot restore room: No saved session info.");
-            Router.navigate('/');
-            this.scene.start('LobbyScene');
+        if (!savedRoomId) {
+            console.warn("Cannot restore room: No room ID saved.");
+            this.cleanupAndGoLobby();
             return;
         }
 
         try {
-            console.log("Attempting to reconnect to room:", roomId, sessionId);
-            // Reconnect using roomId and stored sessionId
-            this.room = await client.reconnect(roomId, sessionId);
-            console.log("Reconnected successfully!", this.room);
+            console.log("Attempting to restore session...");
+
+            // 1. Try Reconnect (Preferred)
+            if (reconnectionToken) {
+                try {
+                    this.room = await client.reconnect(reconnectionToken);
+                    console.log("Reconnected successfully!", this.room);
+                } catch (e) {
+                    console.warn("Reconnection failed, trying joinById...", e);
+                    // Fallthrow to step 2
+                }
+            }
+
+            // 2. Try JoinById (Fallback if token expired but room alive)
+            if (!this.room && savedRoomId) {
+                const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+                const name = profile.nickname || profile.fullname || "Player";
+
+                // Try to rejoin with existing session link if possible
+                this.room = await client.joinById(savedRoomId, {
+                    name,
+                    sessionId: savedSessionId // Hint to server we are this user
+                });
+                console.log("Re-joined successfully via ID!", this.room);
+            }
+
+            if (!this.room) throw new Error("Could not restore room (both reconnect and joinById failed)");
+
             this.mySessionId = this.room.sessionId;
 
-            // Re-run create logic now that we have a room
-            // Since create() might have run already with null room, we need to be careful.
-            // Best approach: If room was missing in create(), it should have waited or shown loading.
-            // Let's call a method to initialize room listeners.
+            // ⚠️ Save new connection details
+            localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken);
+            localStorage.setItem('currentRoomId', this.room.id);
+            localStorage.setItem('currentSessionId', this.room.sessionId);
+
+            // Pasang semua listener setelah reconnect berhasil
             this.setupRoomListeners();
+            this.setupStateListeners();
             this.updateRoomCode();
             this.updateHostStatus();
+            this.updateAll();
 
         } catch (e) {
-            console.error("Reconnection failed:", e);
+            console.warn("Restore failed (Room likely closed):", e);
             localStorage.removeItem('currentRoomId');
             localStorage.removeItem('currentSessionId');
-            alert("Session expired or connection failed.");
-            Router.navigate('/');
-            this.scene.start('LobbyScene');
+            localStorage.removeItem('currentReconnectionToken');
+
+            // Optional: Show "Session Expired" alert instead of silent redirect?
+            alert("Sesi telah berakhir atau server di-restart via refresh.");
+            this.cleanupAndGoLobby();
         }
     }
+
+    /** Bersihkan UI dan kembali ke lobby */
+    cleanupAndGoLobby() {
+        // Sembunyikan waiting-ui agar tidak ghost di atas lobby
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        const waitingUiEl = document.getElementById('waiting-ui');
+        if (waitingUiEl) waitingUiEl.classList.add('hidden');
+
+        // Hapus countdown overlay jika ada
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
+        Router.navigate('/');
+        this.scene.start('LobbyScene');
+    }
+
 
     setupRoomListeners() {
         if (!this.room) return;
@@ -116,6 +166,70 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.room.onMessage("start_game", (message) => {
             console.log("Game start message received!");
             // this.startCountdown(); // Removed as method doesn't exist, overlay handled by state listener
+        });
+    }
+
+    /**
+     * Pasang semua room.state.listen dan room.onMessage listener.
+     * Dipanggil dari create() jika room sudah ada, atau dari restoreRoom() setelah reconnect.
+     */
+    setupStateListeners() {
+        if (!this.room) return;
+
+        this.room.state.listen("roomCode", (code: string) => {
+            if (this.roomCodeEl) this.roomCodeEl.innerText = code || '------';
+            this.updateQrCode(code);
+            this.updateJoinUrl(code);
+        });
+
+        this.room.state.listen("hostId", (hostId: string) => {
+            // Only reload if we are absolutely sure we are NOT the host anymore
+            // AND we were supposed to be the host.
+            // But be careful: upon reconnection, hostId might be reassigned differently if we joined as a "new" client.
+            // Best to just update UI unless strictly required.
+            if (this.isHost && hostId !== this.mySessionId) {
+                console.warn("Host ID changed and does not match my session ID.");
+                // alert("Host status lost."); // Optional feedback
+            }
+            this.updateHostStatus();
+        });
+
+        this.room.state.subRooms.onAdd((subRoom: any) => {
+            this.updateRoomList();
+            subRoom.playerIds.onAdd(() => this.updateAll());
+            subRoom.playerIds.onRemove(() => this.updateAll());
+        });
+
+        this.room.state.players.onAdd((player: any, key: string) => {
+            this.updateAll();
+            player.listen("name", () => this.updateAll());
+            player.listen("hairId", () => this.updateAll());
+            player.listen("subRoomId", () => this.updateAll());
+        });
+
+        this.room.state.players.onRemove(() => this.updateAll());
+
+        // Listen for Countdown
+        this.room.state.listen("countdown", (val: number) => {
+            if (val > 0) {
+                if (this.countdownOverlay) {
+                    this.countdownOverlay.classList.remove('hidden');
+                    this.countdownOverlay.style.opacity = '1';
+                }
+                if (this.countdownText) this.countdownText.innerText = val.toString();
+            } else if (val === 0) {
+                if (this.countdownText) this.countdownText.innerText = "GO!";
+            }
+        });
+
+        // Listen for Game Start (State)
+        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+            if (isStarted) this.handleGameStart();
+        });
+
+        // Listen for Game Start (Message)
+        this.room.onMessage("gameStarted", () => {
+            this.handleGameStart();
         });
     }
 
@@ -160,13 +274,15 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.backBtn = document.getElementById('waiting-back-btn');
         }
 
-        // Display Room Code (if room exists)
+        // Setup room jika sudah tersedia (alur normal, bukan restore)
         if (this.room) {
             this.updateRoomCode();
             this.setupRoomListeners();
+            this.setupStateListeners(); // Pasang semua state listener
+            this.updateAll();           // Update UI langsung
         }
 
-        // Setup Host UI
+        // Setup Host UI (ada guard di dalam method jika room null)
         this.updateHostStatus();
 
         // --- Event Listeners ---
@@ -213,64 +329,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             });
         }
 
-        // --- Room State Listeners ---
-
-        this.room.state.listen("roomCode", (code: string) => {
-            if (this.roomCodeEl) this.roomCodeEl.innerText = code || '------';
-            this.updateQrCode(code);
-            this.updateJoinUrl(code);
-        });
-
-        this.room.state.listen("hostId", (hostId: string) => {
-            if (hostId !== this.mySessionId && this.isHost) {
-                window.location.reload(); // Host lost status
-            } else if (hostId !== this.mySessionId && !this.isHost) {
-                // Player logic
-            }
-            this.updateHostStatus();
-        });
-
-        this.room.state.subRooms.onAdd((subRoom: any) => {
-            this.updateRoomList();
-            subRoom.playerIds.onAdd(() => this.updateAll());
-            subRoom.playerIds.onRemove(() => this.updateAll());
-        });
-
-        this.room.state.players.onAdd((player: any, key: string) => {
-            this.updateAll();
-            player.listen("name", () => this.updateAll());
-            player.listen("hairId", () => this.updateAll());
-            player.listen("subRoomId", () => this.updateAll());
-        });
-
-        this.room.state.players.onRemove(() => this.updateAll());
-
-        // Listen for Countdown
-        this.room.state.listen("countdown", (val: number) => {
-            if (val > 0) {
-                if (this.countdownOverlay) {
-                    this.countdownOverlay.classList.remove('hidden');
-                    // Reset opacity if it was hidden
-                    this.countdownOverlay.style.opacity = '1';
-                }
-                if (this.countdownText) this.countdownText.innerText = val.toString();
-            } else if (val === 0) {
-                // Countdown finished, wait for start
-                if (this.countdownText) this.countdownText.innerText = "GO!";
-            }
-        });
-
-        // Listen for Game Start (State)
-        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
-            if (isStarted) this.handleGameStart();
-        });
-
-        // Listen for Game Start (Message)
-        this.room.onMessage("gameStarted", () => {
-            this.handleGameStart();
-        });
-
-        this.updateAll();
+        // State listeners dipindah ke setupStateListeners()
+        // Dipanggil di atas jika this.room ada, atau di restoreRoom() setelah reconnect
 
         // --- Character & QR Popup (Only for Player) ---
         if (!this.isHost) {
@@ -560,7 +620,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         // Render Hair
         if (hairId > 0) {
-            import('../../data/characterData').then(({ getHairById }) => {
+            import('../../../data/characterData').then(({ getHairById }) => {
                 const hair = getHairById(hairId);
                 if (hair) {
                     const hairLayer = document.createElement('div');
@@ -610,9 +670,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         }
 
         // Clear local storage session
-        // Clear local storage session
         localStorage.removeItem('currentRoomId');
         localStorage.removeItem('currentSessionId');
+        localStorage.removeItem('currentReconnectionToken'); // v0.15 token
 
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
         const lobbyUI = document.getElementById('lobby-ui');
@@ -636,6 +696,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     }
 
     updateAll() {
+        if (!this.room) return; // Guard: room belum siap (sedang restore)
         this.updatePlayerGrid();
 
         const myPlayer = this.room.state.players.get(this.mySessionId);
@@ -650,17 +711,45 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.roomCodeEl.innerText = code || '------';
         }
         this.updateQrCode(code);
+        this.updateJoinUrl(code);
     }
 
     updateQrCode(code: string) {
         if (this.roomQrCode && code) {
-            const url = `${window.location.origin}?room=${code}`;
-            // Increased size for better resolution (500x500)
-            this.roomQrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(url)}`;
+            const domain = window.location.origin; // e.g. http://localhost:5173 
+            // Join URL format: domain + /join/ + roomCode
+            // Or simpler: use existing query param logic if you prefer
+            // "http://localhost:5173/join/248927" is modern
+            // But let's stick to the existing URL logic first to be safe: `${domain}?room=${code}`
+            // Or use the Join Page URL directly? 
+            // In step 675, join URL logic uses query param: `${window.location.origin}?room=${code}`.
+            // Let's keep it consistent.
+
+            const url = `${domain}/join/${code}`; // Let's use clean URL format if supported, or stick to query.
+            // Wait, previous code used ?room=code.
+            // The image user shared shows "http://localhost:5173/join/248927".
+            // So I should use that format!
+
+            // Generate QR
+            QRCode.toDataURL(url, {
+                width: 500,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            })
+                .then(dataUrl => {
+                    if (this.roomQrCode) this.roomQrCode.src = dataUrl;
+                })
+                .catch(err => {
+                    console.error("QR Gen Error:", err);
+                });
         }
     }
 
     updateHostStatus() {
+        if (!this.room) return; // Guard: room belum siap (sedang restore)
         const isCurrentHost = this.room.state.hostId === this.mySessionId;
 
         // Count only non-host players
@@ -769,7 +858,84 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         };
     }
 
+    showKickConfirm(sessionId: string, playerName: string) {
+        // Hapus modal lama
+        document.getElementById('kick-confirm-modal')?.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'kick-confirm-modal';
+        modal.style.cssText = `
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.15s ease;
+        `;
+
+        modal.innerHTML = `
+            <style>
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+                #kick-box {
+                    animation: shake 0.3s ease-in-out;
+                    background: #1a1a2e;
+                    border: 3px solid #ef4444; /* red-500 */
+                    border-radius: 16px;
+                    box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
+                    padding: 30px;
+                    text-align: center;
+                    min-width: 300px;
+                }
+                .btn-c-red {
+                    background: #ef4444; border-bottom: 4px solid #b91c1c; color: white;
+                    font-family: 'Press Start 2P'; font-size: 10px; padding: 12px 20px; border-radius: 8px;
+                    cursor: pointer; transition: all 0.1s;
+                }
+                .btn-c-red:active { border-bottom-width: 0; transform: translateY(4px); }
+                .btn-c-gray {
+                    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;
+                    font-family: 'Press Start 2P'; font-size: 10px; padding: 12px 20px; border-radius: 8px;
+                    cursor: pointer; transition: all 0.1s;
+                }
+                .btn-c-gray:hover { background: rgba(255,255,255,0.2); }
+            </style>
+            <div id="kick-box">
+                <span class="material-symbols-outlined text-red-500 text-[48px] mb-4">block</span>
+                <h2 class="text-red-500 font-bold mb-2 font-['Press_Start_2P'] text-sm">KICK PLAYER?</h2>
+                <p class="text-white/70 text-xs mb-6 font-['Press_Start_2P'] leading-relaxed">
+                    Keluarkan <span class="text-white font-bold">${playerName}</span><br>dari ruangan?
+                </p>
+                <div class="flex justify-center gap-3">
+                    <button id="cancel-kick" class="btn-c-gray">BATAL</button>
+                    <button id="confirm-kick" class="btn-c-red">KICK!</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        document.getElementById('cancel-kick')?.addEventListener('click', () => {
+            modal.remove();
+        });
+
+        document.getElementById('confirm-kick')?.addEventListener('click', () => {
+            modal.remove();
+            this.room.send("kickPlayer", { sessionId });
+        });
+    }
+
     updatePlayerGrid() {
+        // Expose kick function globally so onclick works
+        (window as any).confirmKick = (sessionId: string, playerName: string) => {
+            this.showKickConfirm(sessionId, playerName);
+        };
+
         const gridEl = this.isHost ? document.getElementById('host-player-grid') : document.getElementById('player-grid');
         if (!gridEl) return;
 
@@ -815,8 +981,37 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             const isMe = player.sessionId === this.mySessionId;
             const borderClass = isMe ? 'border: 2px solid #00ff88; box-shadow: 0 0 15px rgba(0,255,136,0.3);' : 'border: 1px solid rgba(255,255,255,0.05);';
 
+            // Kick Button (Host Only)
+            let kickButtonHTML = '';
+            if (this.isHost && !isMe) {
+                kickButtonHTML = `
+                    <button class="kick-btn" onclick="window.confirmKick('${player.sessionId}', '${player.name}')" 
+                        style="
+                            position: absolute; top: -6px; right: -6px;
+                            width: 24px; height: 24px;
+                            background: #ef4444; border: 2px solid #b91c1c;
+                            border-radius: 50%; color: white;
+                            display: flex; align-items: center; justify-content: center;
+                            cursor: pointer; z-index: 10;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                            opacity: 0;
+                            transform: scale(0.8);
+                            pointer-events: none;
+                        "
+                        onmouseover="this.style.transform='scale(1.1)'"
+                        onmouseout="this.style.transform='scale(1)'"
+                    >
+                        <span class="material-symbols-outlined" style="font-size: 16px; font-weight: bold;">close</span>
+                    </button>
+                `;
+            }
+
             html += `
-                <div style="
+                <div 
+                    onmouseenter="const b=this.querySelector('.kick-btn'); if(b){b.style.opacity='1'; b.style.pointerEvents='auto'; b.style.transform='scale(1)';}"
+                    onmouseleave="const b=this.querySelector('.kick-btn'); if(b){b.style.opacity='0'; b.style.pointerEvents='none'; b.style.transform='scale(0.8)';}"
+                    style="
                     background: rgba(20, 20, 35, 0.9); 
                     ${borderClass}
                     padding: 12px; 
@@ -833,6 +1028,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     margin: 0 auto;
                     transition: transform 0.2s ease;
                 ">
+                    ${kickButtonHTML}
+                    
                     <!-- Character (Middle) -->
                     <div style="width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
                          <div style="
@@ -850,6 +1047,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             "></div>
                             <!-- Hair Layer -->
                             ${(() => {
+                    // Menggunakan getHairById yang sudah diimport di atas file
                     const hair = getHairById(player.hairId || 0);
                     if (player.hairId > 0 && hair) {
                         return `
@@ -928,8 +1126,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
             if (this.isHost) {
-                Router.navigate('/host/spectator');
-                TransitionManager.sceneTo(this, 'HostSpectatorScene', { room: this.room });
+                Router.navigate('/host/progress');
+                TransitionManager.sceneTo(this, 'HostProgressScene', { room: this.room });
             } else {
                 Router.navigate('/game');
                 this.scene.start('GameScene', { room: this.room });

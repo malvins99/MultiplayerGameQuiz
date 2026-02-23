@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { Router } from '../../utils/Router';
-import { TransitionManager } from '../../utils/TransitionManager';
-import { CharacterSelectPopup } from '../../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../../ui/QRCodePopup';
-import { HAIR_OPTIONS, getHairById } from '../../data/characterData';
+import { Router } from '../../../utils/Router';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
+import { QRCodePopup } from '../../../ui/QRCodePopup';
+import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 
 export class PlayerWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -53,33 +53,49 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     }
 
     async restoreRoom(client: any) {
-        const roomId = localStorage.getItem('currentRoomId');
-        const sessionId = localStorage.getItem('currentSessionId');
+        const reconnectionToken = localStorage.getItem('currentReconnectionToken');
 
-        if (!roomId || !sessionId) {
-            console.error("Cannot restore player room: No saved session info.");
-            Router.navigate('/');
-            this.scene.start('LobbyScene');
+        if (!reconnectionToken) {
+            console.warn("Cannot restore player room: No reconnection token saved.");
+            this.cleanupAndGoLobby();
             return;
         }
 
         try {
-            console.log("Player reconnecting to room:", roomId, sessionId);
-            this.room = await client.reconnect(roomId, sessionId);
+            console.log("Player reconnecting with token...");
+            this.room = await client.reconnect(reconnectionToken);
             console.log("Player reconnected!", this.room);
             this.mySessionId = this.room.sessionId;
+
+            // Perbarui token setelah reconnect berhasil
+            localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken);
 
             // Setup room listeners again
             this.setupRoomListeners();
 
         } catch (e) {
-            console.error("Player reconnection failed:", e);
+            console.warn("Player reconnection failed:", e);
             localStorage.removeItem('currentRoomId');
             localStorage.removeItem('currentSessionId');
-            alert("Session expired or connection failed.");
-            Router.navigate('/');
-            this.scene.start('LobbyScene');
+            localStorage.removeItem('currentReconnectionToken');
+            this.cleanupAndGoLobby();
         }
+    }
+
+    /** Bersihkan UI dan kembali ke lobby (tanpa ghost waiting-ui) */
+    cleanupAndGoLobby() {
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        const waitingUiEl = document.getElementById('waiting-ui');
+        if (waitingUiEl) waitingUiEl.classList.add('hidden');
+
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
+        document.getElementById('exit-confirm-modal')?.remove();
+        Router.navigate('/');
+        this.scene.start('LobbyScene');
     }
 
     setupRoomListeners() {
@@ -102,6 +118,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         // Game Start
         this.room.onMessage("gameStarted", () => {
             this.handleGameStart();
+        });
+
+        // Kicked by Host
+        this.room.onMessage("kicked", (payload: any) => {
+            // Langsung keluar tanpa alert
+            this.leaveRoom();
         });
     }
 
@@ -126,7 +148,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         // Setup Event Listeners
         if (this.backBtn) {
             this.backBtn.onclick = () => {
-                this.leaveRoom();
+                this.showExitConfirm();
             };
         }
 
@@ -432,7 +454,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         // Render Hair
         if (hairId > 0) {
-            import('../../data/characterData').then(({ getHairById }) => {
+            import('../../../data/characterData').then(({ getHairById }) => {
                 const hair = getHairById(hairId);
                 if (hair) {
                     const hairLayer = document.createElement('div');
@@ -452,13 +474,123 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         }
     }
 
+    showExitConfirm() {
+        // Hapus modal lama jika ada
+        document.getElementById('exit-confirm-modal')?.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'exit-confirm-modal';
+        modal.style.cssText = `
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.75);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.15s ease;
+        `;
+        modal.innerHTML = `
+            <style>
+                @keyframes popIn {
+                    from { transform: scale(0.85); opacity: 0; }
+                    to   { transform: scale(1);    opacity: 1; }
+                }
+                #exit-confirm-box {
+                    animation: popIn 0.2s cubic-bezier(.34,1.56,.64,1);
+                    background: #1a1a2e;
+                    border: 3px solid #ef4444;
+                    border-radius: 16px;
+                    box-shadow: 0 0 40px rgba(239,68,68,0.3), 0 20px 60px rgba(0,0,0,0.8);
+                    padding: 36px 40px;
+                    text-align: center;
+                    min-width: 320px;
+                    max-width: 90vw;
+                }
+                #exit-confirm-box h2 {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 14px;
+                    color: #ef4444;
+                    margin-bottom: 12px;
+                    line-height: 1.6;
+                }
+                #exit-confirm-box p {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    color: rgba(255,255,255,0.6);
+                    margin-bottom: 28px;
+                    line-height: 1.8;
+                }
+                .exit-btn-row {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: center;
+                }
+                .btn-cancel-exit {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    padding: 12px 24px;
+                    background: rgba(255,255,255,0.08);
+                    border: 2px solid rgba(255,255,255,0.15);
+                    border-radius: 10px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                }
+                .btn-cancel-exit:hover { background: rgba(255,255,255,0.15); }
+                .btn-confirm-exit {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    padding: 12px 24px;
+                    background: #ef4444;
+                    border: 2px solid #b91c1c;
+                    border-radius: 10px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    border-bottom-width: 4px;
+                }
+                .btn-confirm-exit:hover { filter: brightness(1.15); }
+                .btn-confirm-exit:active { border-bottom-width: 2px; transform: translateY(2px); }
+            </style>
+            <div id="exit-confirm-box">
+                <h2>⚠ KELUAR?</h2>
+                <p>Kamu akan meninggalkan<br>ruangan ini.</p>
+                <div class="exit-btn-row">
+                    <button class="btn-cancel-exit" id="exit-cancel-btn">BATAL</button>
+                    <button class="btn-confirm-exit" id="exit-confirm-btn">YA, KELUAR</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Klik di luar modal → tutup
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        document.getElementById('exit-cancel-btn')?.addEventListener('click', () => {
+            modal.remove();
+        });
+
+        document.getElementById('exit-confirm-btn')?.addEventListener('click', () => {
+            modal.remove();
+            this.leaveRoom();
+        });
+    }
+
     leaveRoom() {
         if (this.room) {
             this.room.leave();
         }
+
+        // Hapus session data
+        localStorage.removeItem('currentRoomId');
+        localStorage.removeItem('currentSessionId');
+        localStorage.removeItem('currentReconnectionToken');
+
+        // IMPORTANT: Clear any zombie pending join codes so we don't auto-join again
+        localStorage.removeItem('pendingJoinRoomCode');
+
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
-        // Remove overlay
         if (this.countdownOverlay) {
             this.countdownOverlay.remove();
             this.countdownOverlay = null;
@@ -466,8 +598,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
-        Router.navigate('/');
-        this.scene.start('LobbyScene');
+
+        // Use replace to prevent "Back" from re-joining
+        Router.replace('/');
+
+        // Explicitly tell lobby we are exiting so it doesn't auto-join
+        this.scene.start('LobbyScene', { didExit: true });
     }
 
     showCopyFeedback() {

@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { Router } from '../../utils/Router';
-import { TransitionManager } from '../../utils/TransitionManager';
+import { Router } from '../../../utils/Router';
+import { TransitionManager } from '../../../utils/TransitionManager';
 
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 
 export class HostProgressScene extends Phaser.Scene {
     room!: Room;
@@ -247,7 +247,7 @@ export class HostProgressScene extends Phaser.Scene {
 
             const updateHair = () => {
                 const hairId = player.hairId || 0;
-                import('../../data/characterData').then(({ getHairById }) => {
+                import('../../../data/characterData').then(({ getHairById }) => {
                     const h = getHairById(hairId);
                     if (h.id > 0) {
                         const hairFiles: Record<number, string> = { 1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair' };

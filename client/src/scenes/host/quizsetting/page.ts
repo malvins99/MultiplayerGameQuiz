@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
-import { Router } from '../../utils/Router';
-import { Quiz, fetchQuizById } from '../../data/QuizData';
-import { TransitionManager } from '../../utils/TransitionManager';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
-import { authService } from '../../services/AuthService';
+import { Router } from '../../../utils/Router';
+import { Quiz, fetchQuizById } from '../../../data/QuizData';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
+import { authService } from '../../../services/AuthService';
 
 export class QuizSettingScene extends Phaser.Scene {
     client!: Client;
@@ -408,9 +408,10 @@ export class QuizSettingScene extends Phaser.Scene {
             const room = await this.client.joinOrCreate("game_room", options);
             console.log("Room created!", room);
 
-            // Save persistent session info for refresh recovery
+            // Save persistent session info for refresh recovery (Colyseus v0.15 API)
             localStorage.setItem('currentRoomId', room.id);
             localStorage.setItem('currentSessionId', room.sessionId);
+            localStorage.setItem('currentReconnectionToken', room.reconnectionToken); // v0.15 reconnect token
 
             // Save options for Restart functionality
             this.registry.set('lastGameOptions', options);
@@ -420,7 +421,7 @@ export class QuizSettingScene extends Phaser.Scene {
 
             // Navigate to Waiting Room
             this.cleanup();
-            Router.navigate('/host/waiting-room'); // Correct route for refresh logic
+            Router.navigate(`/host/${roomCode}/lobby`); // Correct route for refresh logic
             this.scene.start('HostWaitingRoomScene', { room, isHost: true });
 
             // Manually open the iris after the new scene is kicked off.
