@@ -343,9 +343,19 @@ export class HostSpectatorScene extends Phaser.Scene {
             <img src="/logo/gameforsmart.webp" style="position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
 
             <!-- Centered Top Timer -->
-            <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; text-shadow: 0 0 15px rgba(0,255,136,0.4);">
-                <span class="material-symbols-outlined" style="font-size: 48px; color: #00ff88;">timer</span>
-                <span id="game-timer" style="font-size: 42px; color: #00ff88; font-weight: bold;">05:00</span>
+            <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px;">
+                <span id="timer-icon" class="material-symbols-outlined" style="font-size: 48px; color: #ffffff; filter: drop-shadow(0 0 2px black) drop-shadow(0 0 2px black);">timer</span>
+                <span id="game-timer" style="
+                    font-size: 48px; 
+                    color: #ffffff; 
+                    font-weight: bold; 
+                    text-shadow: 
+                        -2px -2px 0 #000,  
+                         2px -2px 0 #000,
+                        -2px  2px 0 #000,
+                         2px  2px 0 #000,
+                         0 0 15px rgba(255,255,255,0.2);
+                ">05:00</span>
             </div>
 
             <!-- Volume Toggle (Bottom Left) -->
