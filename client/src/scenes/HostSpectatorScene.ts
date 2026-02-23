@@ -12,6 +12,7 @@ export class HostSpectatorScene extends Phaser.Scene {
     uiContainer!: HTMLDivElement;
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
+    isMuted: boolean = false;
 
     constructor() {
         super('HostSpectatorScene');
@@ -274,13 +275,13 @@ export class HostSpectatorScene extends Phaser.Scene {
                     progressBar.clear();
                     // Background bar
                     progressBar.fillStyle(0x000000, 0.5);
-                    progressBar.fillRect(-20, 2, 40, 6);
+                    progressBar.fillRect(0, 0, 40, 6);
                     // Fill bar
                     progressBar.fillStyle(0x00ff88, 1);
-                    progressBar.fillRect(-20, 2, 40 * progress, 6);
+                    progressBar.fillRect(0, 0, 40 * progress, 6);
                     // Border
                     progressBar.lineStyle(1, 0x000000, 1);
-                    progressBar.strokeRect(-20, 2, 40, 6);
+                    progressBar.strokeRect(0, 0, 40, 6);
                 }
             };
             updateProgress();
@@ -341,35 +342,63 @@ export class HostSpectatorScene extends Phaser.Scene {
             <!-- LOGO TOP RIGHT -->
             <img src="/logo/gameforsmart.webp" style="position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
 
-            <!-- Top Bar: Timer & Controls -->
-            <div style="max-width: 1200px; width: 100%; margin: 90px auto 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; background: rgba(0,0,0,0.6); border-radius: 16px; border: 1px solid rgba(0,255,136,0.2); pointer-events: auto; backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="material-symbols-outlined" style="font-size: 28px; color: #00ff88;">timer</span>
-                    <span id="game-timer" style="font-size: 18px; color: #00ff88;">05:00</span>
-                </div>
-                <button id="spec-end-btn" style="
-                    background: #ff0055; 
-                    border: none; 
-                    padding: 12px 24px; 
-                    color: white; 
-                    cursor: pointer; 
-                    font-family: inherit; 
-                    font-size: 10px; 
-                    text-transform: uppercase; 
-                    border-radius: 8px; 
-                    box-shadow: 0 5px 0 #990033; 
-                    transition: all 0.05s;
-                    position: relative;
-                    outline: none;
-                ">
-                    Akhiri Game
-                </button>
+            <!-- Centered Top Timer -->
+            <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; text-shadow: 0 0 15px rgba(0,255,136,0.4);">
+                <span class="material-symbols-outlined" style="font-size: 48px; color: #00ff88;">timer</span>
+                <span id="game-timer" style="font-size: 42px; color: #00ff88; font-weight: bold;">05:00</span>
             </div>
+
+            <!-- Volume Toggle (Bottom Left) -->
+            <button id="spec-volume-btn" style="
+                position: absolute; 
+                bottom: 40px; 
+                left: 40px; 
+                background: rgba(0,0,0,0.6); 
+                border: 2px solid rgba(0,255,136,0.3); 
+                color: #00ff88; 
+                width: 64px; 
+                height: 64px; 
+                border-radius: 50%; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                pointer-events: auto;
+                backdrop-filter: blur(4px);
+                transition: all 0.2s;
+            ">
+                <span id="volume-icon" class="material-symbols-outlined" style="font-size: 32px;">volume_up</span>
+            </button>
+
+            <!-- Akhiri Game Button (Bottom Right) -->
+            <button id="spec-end-btn" style="
+                position: absolute; 
+                bottom: 40px; 
+                right: 40px; 
+                background: #ff0055; 
+                border: none; 
+                padding: 18px 36px; 
+                color: white; 
+                cursor: pointer; 
+                font-family: inherit; 
+                font-size: 14px; 
+                text-transform: uppercase; 
+                border-radius: 12px; 
+                box-shadow: 0 6px 0 #990033; 
+                pointer-events: auto;
+                transition: all 0.05s;
+                letter-spacing: 1px;
+            ">
+                Akhiri Game
+            </button>
+
             <style>
+                #spec-end-btn:hover { background: #ff1a66; }
                 #spec-end-btn:active {
                     transform: translateY(3px);
-                    box-shadow: 0 2px 0 #990033;
+                    box-shadow: 0 3px 0 #990033;
                 }
+                #spec-volume-btn:hover { background: rgba(0,255,136,0.1); border-color: #00ff88; }
             </style>
         `;
 
@@ -380,6 +409,17 @@ export class HostSpectatorScene extends Phaser.Scene {
         const endBtn = document.getElementById('spec-end-btn');
         if (endBtn) {
             endBtn.onclick = () => this.showEndGamePopup();
+        }
+
+        const volumeBtn = document.getElementById('spec-volume-btn');
+        const volumeIcon = document.getElementById('volume-icon');
+        if (volumeBtn && volumeIcon) {
+            volumeBtn.onclick = () => {
+                this.isMuted = !this.isMuted;
+                volumeIcon.innerText = this.isMuted ? 'volume_off' : 'volume_up';
+                // Note: Logic for actual Phaser sound muting can be added here
+                console.log("[Spectator] Audio Muted:", this.isMuted);
+            };
         }
 
         this.events.once('shutdown', () => {
@@ -595,34 +635,37 @@ export class HostSpectatorScene extends Phaser.Scene {
     refreshSubRooms() { }
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
+        // High resolution base
+        const resolution = 4;
+
         // Name Text (Top)
-        const nameText = this.add.text(0, -32, name, {
-            fontSize: '14px', // Reduced base size because container is scaled 2x
+        const nameText = this.add.text(-20, -50, name, {
+            fontSize: '12px',
             fontFamily: '"Retro Gaming"',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
-            align: 'center'
-        }).setOrigin(0.5);
+            align: 'left'
+        }).setOrigin(0, 0.5);
         nameText.setName('nameTag');
-        nameText.setResolution(2);
+        nameText.setResolution(resolution);
 
-        // Progress Graphics (Middle)
-        const progressBar = this.add.graphics();
-        progressBar.setName('progressBar');
-
-        // Progress Text (Bottom)
-        const progressText = this.add.text(0, -18, '0/0', {
-            fontSize: '10px',
+        // Progress Text (Middle)
+        const progressText = this.add.text(-20, -35, '0/0', {
+            fontSize: '9px',
             fontFamily: '"Retro Gaming"',
             color: '#00ff88',
             stroke: '#000000',
             strokeThickness: 2,
-            align: 'center'
-        }).setOrigin(0.5);
+            align: 'left'
+        }).setOrigin(0, 0.5);
         progressText.setName('progressText');
-        progressText.setResolution(2);
+        progressText.setResolution(resolution);
 
-        container.add([nameText, progressBar, progressText]);
+        // Progress Graphics (Bottom)
+        const progressBar = this.add.graphics({ x: -20, y: -25 });
+        progressBar.setName('progressBar');
+
+        container.add([nameText, progressText, progressBar]);
     }
 }
