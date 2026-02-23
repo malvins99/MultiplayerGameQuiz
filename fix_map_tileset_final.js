@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const mapFiles = ['map_baru1_tetap.tmj', 'map_baru2.tmj', 'map_baru3.tmj', 'map_newest_easy.tmj', 'map_easy_sementara.tmj'];
+const mapFiles = ['map_baru1_tetap.tmj', 'map_baru2.tmj', 'map_baru3.tmj', 'map_newest_easy.tmj', 'map_easy_sementara.tmj', 'map_newest_easy_nomor1.tmj'];
 const assetsDir = path.join(__dirname, 'client/public/assets');
 
 // Image dimensions

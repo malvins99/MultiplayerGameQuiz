@@ -33,7 +33,7 @@ export class HostSpectatorScene extends Phaser.Scene {
         // Determine map based on difficulty
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
-        let mapFile = 'map_newest_easy.tmj';
+        let mapFile = 'map_newest_easy_nomor1.tmj';
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
