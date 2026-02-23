@@ -207,10 +207,26 @@ export class HostSpectatorScene extends Phaser.Scene {
         // --- UI Initialization ---
         this.createUI();
 
+        // --- Colyseus Message Listeners (Register early for robustness) ---
+        this.disposers.push(this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
+            this.updateTimer(data.remaining);
+        }));
+
+        this.disposers.push(this.room.onMessage('gameEnded', (data: any) => {
+            if (this.uiContainer && this.uiContainer.parentNode) {
+                document.body.removeChild(this.uiContainer);
+            }
+            this.registry.set('leaderboardData', data.rankings);
+            TransitionManager.sceneTo(this, 'LeaderboardScene');
+        }));
+
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
             if (player.isHost) return;
+            const container = this.add.container(player.x, player.y);
+            container.setDepth(100);
             container.setScale(2); // Double the size for host spectator
+
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
             const hairSprite = this.add.sprite(0, 0, '').setVisible(false);
 
@@ -284,17 +300,6 @@ export class HostSpectatorScene extends Phaser.Scene {
             }
         }));
 
-        this.disposers.push(this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
-            this.updateTimer(data.remaining);
-        }));
-
-        this.disposers.push(this.room.onMessage('gameEnded', (data: any) => {
-            if (this.uiContainer && this.uiContainer.parentNode) {
-                document.body.removeChild(this.uiContainer);
-            }
-            this.registry.set('leaderboardData', data.rankings);
-            TransitionManager.sceneTo(this, 'LeaderboardScene');
-        }));
 
         this.time.delayedCall(500, () => this.focusOnAllPlayers());
 

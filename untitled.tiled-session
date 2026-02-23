@@ -23,15 +23,20 @@
                 35,
                 2
             ],
-            "scale": 2,
-            "selectedLayer": 24,
+            "expandedObjectLayers": [
+                6,
+                3,
+                8
+            ],
+            "scale": 0.33,
+            "selectedLayer": 25,
             "viewCenter": {
-                "x": 1411.75,
-                "y": 241.75
+                "x": 898.4848484848484,
+                "y": 527.2727272727273
             }
         },
         "client/public/assets/map_baru1_tetap.tmj#spr_tileset_sunnysideworld_16px": {
-            "scaleInDock": 2
+            "scaleInDock": 3
         },
         "client/public/assets/map_baru1_tetap.tmj#spr_tileset_sunnysideworld_forest_32px": {
             "scaleInDock": 1
