@@ -210,9 +210,7 @@ export class HostSpectatorScene extends Phaser.Scene {
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
             if (player.isHost) return;
-            const container = this.add.container(player.x, player.y);
-            container.setDepth(100);
-
+            container.setScale(2); // Double the size for host spectator
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
             const hairSprite = this.add.sprite(0, 0, '').setVisible(false);
 
@@ -247,9 +245,26 @@ export class HostSpectatorScene extends Phaser.Scene {
 
             const updateProgress = () => {
                 const tag = container.getByName('nameTag') as Phaser.GameObjects.Text;
-                if (tag) {
-                    const answered = player.answeredQuestions || 0;
-                    tag.setText(`${player.name} (${answered}/${target})`);
+                const progressText = container.getByName('progressText') as Phaser.GameObjects.Text;
+                const progressBar = container.getByName('progressBar') as Phaser.GameObjects.Graphics;
+
+                const answered = player.answeredQuestions || 0;
+                const progress = Phaser.Math.Clamp(answered / target, 0, 1);
+
+                if (tag) tag.setText(player.name || 'Player');
+                if (progressText) progressText.setText(`${answered}/${target}`);
+
+                if (progressBar) {
+                    progressBar.clear();
+                    // Background bar
+                    progressBar.fillStyle(0x000000, 0.5);
+                    progressBar.fillRect(-20, 2, 40, 6);
+                    // Fill bar
+                    progressBar.fillStyle(0x00ff88, 1);
+                    progressBar.fillRect(-20, 2, 40 * progress, 6);
+                    // Border
+                    progressBar.lineStyle(1, 0x000000, 1);
+                    progressBar.strokeRect(-20, 2, 40, 6);
                 }
             };
             updateProgress();
@@ -575,20 +590,34 @@ export class HostSpectatorScene extends Phaser.Scene {
     refreshSubRooms() { }
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
-        const text = this.add.text(0, -30, name, {
-            fontSize: '18px', // Slightly larger for clarity
+        // Name Text (Top)
+        const nameText = this.add.text(0, -32, name, {
+            fontSize: '14px', // Reduced base size because container is scaled 2x
             fontFamily: '"Retro Gaming"',
-            color: '#00ff88',
+            color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
             align: 'center'
         }).setOrigin(0.5);
+        nameText.setName('nameTag');
+        nameText.setResolution(2);
 
-        // High resolution for text
-        text.setResolution(2);
-        text.setScale(0.5); // Scale down to maintain size but with double resolution (sharper)
+        // Progress Graphics (Middle)
+        const progressBar = this.add.graphics();
+        progressBar.setName('progressBar');
 
-        text.setName('nameTag');
-        container.add(text);
+        // Progress Text (Bottom)
+        const progressText = this.add.text(0, -18, '0/0', {
+            fontSize: '10px',
+            fontFamily: '"Retro Gaming"',
+            color: '#00ff88',
+            stroke: '#000000',
+            strokeThickness: 2,
+            align: 'center'
+        }).setOrigin(0.5);
+        progressText.setName('progressText');
+        progressText.setResolution(2);
+
+        container.add([nameText, progressBar, progressText]);
     }
 }
