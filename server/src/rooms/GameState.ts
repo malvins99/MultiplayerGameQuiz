@@ -15,6 +15,7 @@ export class Enemy extends Schema {
     @type("number") restUntil: number = 0; // Timestamp when rest ends (0 = not resting)
     @type("number") spawnZoneIndex: number = -1; // Index of the spawn zone this enemy belongs to
     @type("boolean") isBusy: boolean = false; // True if engaged in a quiz
+    @type("number") lastRecalc: number = 0; // Timestamp of last flee waypoint recalculation
 }
 
 export class Question extends Schema {
@@ -36,6 +37,8 @@ export class Chest extends Schema {
 export class Player extends Schema {
     @type("number") x!: number;
     @type("number") y!: number;
+    @type("number") targetX: number = 0; // Where the player is moving to
+    @type("number") targetY: number = 0;
     @type("string") name!: string;
     @type("number") hairId: number = 0;
     @type("number") score: number = 0;

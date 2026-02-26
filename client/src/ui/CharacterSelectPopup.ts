@@ -64,7 +64,7 @@ export class CharacterSelectPopup {
 
         // Style Name Label
         this.nameLabel = document.createElement('div');
-        this.nameLabel.className = 'text-white font-bold uppercase tracking-widest text-lg font-["Press_Start_2P"] text-center mt-2';
+        this.nameLabel.className = 'text-white font-bold uppercase tracking-widest text-lg font-["Retro_Gaming"] text-center mt-2';
         this.nameLabel.innerText = 'DEFAULT';
 
         // Add style for animation if not exists
@@ -104,7 +104,7 @@ export class CharacterSelectPopup {
         footer.className = 'flex justify-end pt-2';
 
         this.okBtn = document.createElement('button');
-        this.okBtn.className = 'px-12 py-4 bg-primary text-black font-bold text-xl uppercase pixel-btn-green border-2 border-black font-["Press_Start_2P"] tracking-widest hover:brightness-110 active:translate-y-1 transition-all rounded-xl shadow-lg';
+        this.okBtn.className = 'px-12 py-4 bg-primary text-black font-bold text-xl uppercase pixel-btn-green border-2 border-black font-["Retro_Gaming"] tracking-widest hover:brightness-110 active:translate-y-1 transition-all rounded-xl shadow-lg';
         this.okBtn.innerText = 'OK';
 
         footer.appendChild(this.okBtn);

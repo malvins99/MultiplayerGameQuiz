@@ -65,6 +65,16 @@ export class ClickToMoveSystem {
 
         // 2. Start Movement Logic
         this.startMovement(targetX, targetY);
+
+        // 3. Inform server of the intent (target position)
+        if ((this.scene as any).room && (this.scene as any).room.connection.isOpen) {
+            (this.scene as any).room.send("movePlayer", {
+                x: (this.scene as any).currentPlayer.x,
+                y: (this.scene as any).currentPlayer.y,
+                targetX: targetX,
+                targetY: targetY
+            });
+        }
     }
 
     private startMovement(targetX: number, targetY: number) {
@@ -182,6 +192,16 @@ export class ClickToMoveSystem {
         if (dist < 5) {
             // Reached destination
             this.finishMovement();
+
+            // Notify server we arrived
+            if ((this.scene as any).room && (this.scene as any).room.connection.isOpen) {
+                (this.scene as any).room.send("movePlayer", {
+                    x: player.x,
+                    y: player.y,
+                    targetX: 0,
+                    targetY: 0
+                });
+            }
             return;
         }
 

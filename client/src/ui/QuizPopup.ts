@@ -103,7 +103,7 @@ export class QuizPopup {
                 position: fixed; bottom: 20px; left: 0; width: 100%;
                 display: flex; justify-content: center; align-items: flex-end;
                 pointer-events: none; z-index: 2000;
-                font-family: "Press Start 2P", monospace; image-rendering: pixelated;
+                font-family: "Retro Gaming", monospace; image-rendering: pixelated;
             }
             .rpg-overlay-v2.hidden { display: none; }
 

@@ -97,7 +97,7 @@ export class SelectQuizScene extends Phaser.Scene {
             grid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-16 gap-4">
                     <div class="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    <p class="text-white/50 font-['Press_Start_2P'] text-[10px]">Loading quizzes...</p>
+                    <p class="text-white/50 font-['Retro_Gaming'] text-[10px]">Loading quizzes...</p>
                 </div>
             `;
         }
@@ -139,7 +139,7 @@ export class SelectQuizScene extends Phaser.Scene {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
+        btn.className = "w-full text-left px-4 py-3 text-xs font-['Retro_Gaming'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
 
@@ -451,11 +451,11 @@ export class SelectQuizScene extends Phaser.Scene {
                     <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
                         <span class="material-symbols-outlined text-3xl text-white/20">search_off</span>
                     </div>
-                    <p class="text-white/70 font-['Press_Start_2P'] text-[10px] uppercase mb-2 tracking-widest">
+                    <p class="text-white/70 font-['Retro_Gaming'] text-[10px] uppercase mb-2 tracking-widest">
                         Quiz Tidak Ditemukan
                     </p>
                     
-                    <button id="reset-filters-btn" class="px-6 py-3 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-['Press_Start_2P'] text-[10px] uppercase rounded-lg transition-all flex items-center gap-2">
+                    <button id="reset-filters-btn" class="px-6 py-3 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-['Retro_Gaming'] text-[10px] uppercase rounded-lg transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">refresh</span>
                         Reset Filter
                     </button>
@@ -481,15 +481,15 @@ export class SelectQuizScene extends Phaser.Scene {
 
                 <div class="relative z-10 flex justify-between items-start mb-6">
                     <!-- Pixel Font Badge -->
-                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none">${quiz.category}</span>
+                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Retro_Gaming'] leading-none">${quiz.category}</span>
                     
                     <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
-                <!-- Font Title: Press Start 2P -->
-                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Press_Start_2P'] tracking-tight text-[12px]">
+                <!-- Font Title: Retro Gaming -->
+                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Retro_Gaming'] tracking-tight text-[12px]">
                     <span class="quiz-title-tooltip-trigger">${quiz.title}</span>
                 </h3>
                 
@@ -602,7 +602,7 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!t) {
             t = document.createElement('div');
             t.id = 'custom-quiz-tooltip';
-            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-primary text-white text-[10px] font-bold font-['Press_Start_2P'] rounded-lg shadow-[0_0_15px_rgba(0,255,85,0.3)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
+            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-primary text-white text-[10px] font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(0,255,85,0.3)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
             document.body.appendChild(t);
         }
         this.tooltip = t;
