@@ -964,3 +964,6 @@ export class GameRoom extends Room<GameState> {
         this.broadcast("gameEnded", { rankings });
     }
 }
+
+
+//ikan
