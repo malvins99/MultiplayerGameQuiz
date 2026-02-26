@@ -38,7 +38,7 @@ export class WASDIndicator extends Phaser.GameObjects.Container {
         // Text
         const text = this.scene.add.text(0, 0, label, {
             fontSize: '24px', // Larger font
-            fontFamily: '"Press Start 2P", monospace',
+            fontFamily: '"Retro Gaming", monospace',
             color: '#ffffff'
         }).setOrigin(0.5);
 
