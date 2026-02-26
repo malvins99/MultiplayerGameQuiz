@@ -416,15 +416,31 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (this.startBtn) {
             this.startBtn.classList.remove('hidden');
             this.startBtn.onclick = () => {
-                console.log("[Host] Start Game Clicked - Instant response.");
+                console.log("[Host] Start Game Clicked - Updating Supabase and signalling server.");
 
                 // 1. Instant Visual Feedback
-                TransitionManager.ensureClosed();     // Close iris immediately (no 650ms wait)
-                TransitionManager.setCountdownText('10'); // Show first number immediately
+                TransitionManager.ensureClosed();
+                TransitionManager.setCountdownText('10');
 
                 // 2. Parallel Processing
-                this.room.send("startGame"); // Signal server
-                this.handleGameStart();      // Navigate to GameScene
+                this.room.send("startGame");
+
+                // IF HOST: SET SESSION ACTIVE IN SUPABASE
+                if (this.isHost) {
+                    supabaseB
+                        .from(SESSION_TABLE)
+                        .update({ status: 'active', started_at: new Date().toISOString() })
+                        .eq('game_pin', this.room.state.roomCode)
+                        .then(({ error }) => {
+                            if (error) console.error("Failed to set session active in Supabase:", error);
+                            else console.log("Supabase Session set to ACTIVE.");
+                        });
+                }
+
+                // NAVIGATION is handled by handleGameStart which is triggered by this.room.send("startGame")
+                // but we also call it directly for instant response if needed, 
+                // but normally handleGameStart is better.
+                this.handleGameStart();
             };
         }
     }

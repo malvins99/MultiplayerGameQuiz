@@ -195,7 +195,16 @@ export class QuizPopup {
                 min-height: 50px; display: flex; align-items: center;
             }
             .rpg-btn:hover { background: #eaddc5; transform: translateY(-2px); box-shadow: 0 4px 0 #2e2216; }
-            .rpg-btn:active { background: #c3b08d; transform: translateY(2px); box-shadow: none; }
+            .rpg-btn-img {
+                padding: 8px; justify-content: center; align-items: center; 
+                height: 140px; /* Taller for images */
+                display: flex; flex-direction: column; 
+            }
+            .rpg-answer-img {
+                max-width: 100%; max-height: 100px; 
+                object-fit: contain; pointer-events: none;
+                border-radius: 4px; border: 2px solid #b8a685;
+            }
 
             .hidden { display: none !important; }
             
@@ -319,6 +328,7 @@ export class QuizPopup {
 
     renderOptions() {
         const labels = ['A', 'B', 'C', 'D'];
+        const isImageMode = this.currentData.answerType === 'image';
 
         // Helper to get option text safely
         const options = [
@@ -329,12 +339,39 @@ export class QuizPopup {
         ];
 
         options.forEach((opt: string, idx: number) => {
+            // if (!opt) return; // Removed strict check to debug
+
             const btn = document.createElement('button');
-            btn.className = 'rpg-btn';
             btn.dataset.idx = idx.toString();
-            btn.innerText = `${labels[idx]}. ${opt}`;
 
             this.buttonElements[idx] = btn;
+
+            if (isImageMode) {
+                btn.className = 'rpg-btn rpg-btn-img';
+                // Image Answer
+                const img = document.createElement('img');
+                img.src = opt;
+                img.className = 'rpg-answer-img';
+                img.onerror = () => { img.src = 'https://placehold.co/100x100?text=Error'; }; // Fallback
+
+                // Optional Label Overlay
+                const label = document.createElement('span');
+                label.innerText = labels[idx];
+                label.style.position = 'absolute';
+                label.style.top = '5px';
+                label.style.left = '5px';
+                label.style.background = '#4b3d28';
+                label.style.color = '#e4d5b7';
+                label.style.padding = '2px 6px';
+                label.style.fontSize = '12px';
+                label.style.borderRadius = '2px';
+
+                btn.appendChild(img);
+                btn.appendChild(label);
+            } else {
+                btn.className = 'rpg-btn';
+                btn.innerText = `${labels[idx]}. ${opt || "..."}`;
+            }
 
             btn.onpointerup = (e) => {
                 e.stopPropagation();
