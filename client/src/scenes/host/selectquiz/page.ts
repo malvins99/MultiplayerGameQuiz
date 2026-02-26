@@ -480,27 +480,25 @@ export class SelectQuizScene extends Phaser.Scene {
 
             let badgeColor = 'bg-primary/10 text-primary border border-primary/20';
 
-            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-colors duration-200 cursor-pointer relative overflow-hidden";
+            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
 
             card.innerHTML = `
-                <!-- Background Gradient (Subtle Green on Hover) logic removed or kept subtle -->
+                <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                <div class="relative z-10 flex justify-between items-start mb-6">
-                    <!-- Pixel Font Badge -->
-                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none">${quiz.category}</span>
+                <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
+                    <!-- Pixel Font Badge - Adjusted text size for mobile -->
+                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-[8px] md:text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
+                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                        <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
-                <!-- Font Title: Press Start 2P -->
-                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Press_Start_2P'] tracking-tight text-[12px]">
-                    <span class="quiz-title-tooltip-trigger">${quiz.title}</span>
-                </h3>
-                
-                <div class="h-4"></div> 
+                <!-- Title - Flow dynamically with flex-grow -->
+                <div class="relative z-10 font-bold text-white mt-auto pt-4 group-hover:text-primary transition-colors leading-[1.8] font-['Press_Start_2P'] tracking-tight text-[10px] sm:text-[12px] break-words whitespace-normal w-full flex-grow">
+                    <span class="quiz-title-tooltip-trigger inline-block w-full">${quiz.title}</span>
+                </div>
             `;
 
             // Tooltip Logic

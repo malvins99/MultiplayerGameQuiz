@@ -379,6 +379,76 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     from { background-position: 0 0; }
                     to { background-position: -864px 0; }
                 }
+
+                /* Responsive Additions */
+                .logo-tl {
+                    position: absolute;
+                    top: -60px;
+                    left: -65px;
+                    width: 24rem; /* 384px */
+                }
+                .logo-tr {
+                    position: absolute;
+                    top: 0.5rem;
+                    right: 0.5rem;
+                    width: 16rem; /* 256px */
+                }
+                .player-grid-responsive {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+                    gap: 12px;
+                    padding: 10px;
+                    width: 100%;
+                    justify-content: center;
+                }
+                .player-card-wrapper {
+                    aspect-ratio: 1 / 1.1;
+                    width: 100%;
+                    max-width: 148px;
+                    margin: 0 auto;
+                }
+                
+                @media (max-width: 768px) {
+                    .logo-tl {
+                        top: -20px;
+                        left: -20px;
+                        width: 12rem;
+                    }
+                    .logo-tr {
+                        top: 0.5rem;
+                        right: 0.5rem;
+                        width: 8rem;
+                    }
+                    .player-content-box {
+                        margin-top: 30px;
+                        padding: 15px;
+                        min-height: 200px;
+                        flex: 1;
+                        max-height: calc(100vh - 180px);
+                        margin-bottom: 80px;
+                    }
+                    .fixed.bottom-10 {
+                        bottom: 1.5rem !important;
+                    }
+                    .btn-exit-standard {
+                        padding: 0 16px;
+                        height: 48px;
+                        font-size: 10px;
+                    }
+                    .btn-choose-char-green {
+                        padding: 0 16px;
+                        height: 48px;
+                        font-size: 10px;
+                    }
+                    .player-grid-responsive {
+                        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                        gap: 8px;
+                        padding: 5px;
+                    }
+                    .player-card-wrapper {
+                        max-width: 100%;
+                    }
+                }
             `;
             document.head.appendChild(style);
         }
@@ -387,12 +457,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
-            <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 pt-20 overflow-hidden">
+            <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
                 <div class="player-content-box">
                     <!-- Standard Header Section (Inside Box) -->
@@ -404,14 +474,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- Player Grid -->
-                    <div id="player-grid" class="flex-1 overflow-y-auto custom-scrollbar px-2">
+                    <div id="player-grid" class="flex-1 overflow-y-auto custom-scrollbar px-2 player-grid-responsive">
                         <!-- Player items injected here -->
                     </div>
                 </div>
             </div>
 
             <!-- Sticky Bottom Buttons -->
-            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
+            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30 w-[90%] md:w-auto justify-center">
                 <!-- EXIT Button (Red Host Style) -->
                 <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
                     EXIT
@@ -732,6 +802,13 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             }
         });
 
+        // Ensure current player is always first
+        players.sort((a, b) => {
+            if (a.sessionId === this.mySessionId) return -1;
+            if (b.sessionId === this.mySessionId) return 1;
+            return 0; // maintain original order for other players
+        });
+
         this.updateUILayout();
 
         let html = '';
@@ -742,12 +819,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             const youPill = isMe ? '<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 pill-you">YOU</div>' : '';
 
             html += `
-                <div class="${cardClass}" style="
-                    aspect-ratio: 1 / 1.1;
-                    width: 100%;
-                    max-width: 148px;
-                    margin: 0 auto;
-                ">
+                <div class="${cardClass} player-card-wrapper">
                     <!-- Character (Middle) -->
                     <div style="width: 76px; height: 76px; background: radial-gradient(circle, rgba(0,212,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
                          <div style="
@@ -793,14 +865,6 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         });
 
         this.playerGridEl.innerHTML = html;
-        this.playerGridEl.style.cssText = `
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-            gap: 12px;
-            padding: 10px;
-            width: 100%;
-            justify-content: center;
-        `;
 
         // Expose name update globally
         (window as any).updatePlayerName = (name: string) => {

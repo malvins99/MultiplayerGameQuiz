@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Room, Client } from 'colyseus.js';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
+import { supabase } from '../../../lib/supabase';
 import { Player } from '../../../../../server/src/rooms/GameState';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
@@ -38,6 +39,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     characterPopup: CharacterSelectPopup | null = null;
     characterPreviewEl: HTMLElement | null = null;
     qrPopup: QRCodePopup | null = null;
+
+    // Group Management State
+    allFetchedGroups: any[] = [];
+    selectedGroups: Map<string, any> = new Map();
+    groupSearchQuery: string = '';
+
+    // Friend Management State
+    allFetchedFriends: any[] = [];
+    selectedFriends: Map<string, any> = new Map();
+    friendSearchQuery: string = '';
 
     constructor() {
         super('HostWaitingRoomScene');
@@ -84,7 +95,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             // 2. Try JoinById (Fallback if token expired but room alive)
             if (!this.room && savedRoomId) {
-                const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+                const profile = JSON.parse(localStorage.getItem('game_user_profile') || '{}');
                 const name = profile.nickname || profile.fullname || "Player";
 
                 // Try to rejoin with existing session link if possible
@@ -136,11 +147,56 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.countdownOverlay = null;
         }
 
-        Router.navigate('/');
+        Router.navigate('/host/select-quiz');
         this.scene.start('LobbyScene');
     }
 
+    /** Muncullkan Notifikasi Toast Kustom */
+    showToast(message: string, isError: boolean = false) {
+        let toastContainer = document.getElementById('zigma-toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'zigma-toast-container';
+            toastContainer.className = 'fixed top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-[99999] pointer-events-none';
+            document.body.appendChild(toastContainer);
+        }
 
+        const toast = document.createElement('div');
+        // Zigma game theme: glowing borders, press start font
+        const bgColor = isError ? 'bg-red-950/90' : 'bg-black/90';
+        const borderColor = isError ? 'border-red-500' : 'border-primary';
+        const textColor = isError ? 'text-red-400' : 'text-primary';
+        const shadowColor = isError ? 'shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'shadow-[0_0_15px_rgba(0,255,136,0.5)]';
+        const icon = isError ? 'error' : 'check_circle';
+
+        toast.className = `flex items-center gap-3 px-6 py-4 md:px-8 md:py-5 rounded-xl border-2 ${bgColor} ${borderColor} ${shadowColor} transform translate-y-[-100%] opacity-0 transition-all duration-300 ease-out pointer-events-auto backdrop-blur-sm`;
+
+        toast.innerHTML = `
+            <span class="material-symbols-outlined ${textColor} text-xl md:text-2xl">${icon}</span>
+            <span class="text-white font-['Press_Start_2P'] text-[8px] md:text-[10px] leading-snug max-w-[250px] md:max-w-[400px] break-words">
+                ${message}
+            </span>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-[-100%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+        });
+
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-[-100%]', 'opacity-0');
+            setTimeout(() => {
+                if (toastContainer?.contains(toast)) {
+                    toastContainer.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
     setupRoomListeners() {
         if (!this.room) return;
 
@@ -346,22 +402,22 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.waitingUI.innerHTML = `
             <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
             
-            <div class="relative z-10 flex h-screen w-full flex-row p-6 gap-6 font-display">
+            <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
                 <!-- LOGO TOP LEFT -->
-                <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+                <img src="/logo/Zigma-logo.webp" class="absolute w-24 md:w-96 top-2 left-2 md:-top-[60px] md:-left-[65px] z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
 
                 <!-- LOGO TOP RIGHT -->
-                <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+                <img src="/logo/gameforsmart.webp" class="absolute w-28 md:w-64 top-2 right-2 md:top-2 md:right-2 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
                 <!-- Back Button REMOVED -->
 
                 <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-1/3 min-w-[350px] max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-6 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-16 bg-opacity-90 backdrop-blur-sm">
+                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative mt-4 md:mt-16 shrink-0 bg-opacity-90 backdrop-blur-sm shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
 
                     <!-- Room Code -->
-                    <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
-                        <span id="host-room-code" class="text-4xl text-primary font-['Press_Start_2P'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
+                    <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-3 md:p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
+                        <span id="host-room-code" class="text-3xl md:text-4xl text-primary font-['Press_Start_2P'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
                         <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
@@ -385,23 +441,31 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 bg-surface-dark border-4 border-primary/30 rounded-3xl p-8 flex flex-col shadow-[0_0_30px_rgba(0,255,85,0.1)] relative overflow-hidden mt-16 bg-opacity-90 backdrop-blur-sm">
-                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-surface-dark border-4 border-primary/30 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_0_30px_rgba(0,255,85,0.1)] relative bg-opacity-90 backdrop-blur-sm shadow-[0_4px_30px_rgba(0,0,0,0.5)] md:mt-16">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none overflow-hidden rounded-3xl"></div>
 
                     <!-- Header -->
-                    <div class="flex items-center justify-between mb-6 border-b-2 border-purple-500/20 pb-4">
+                    <div class="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 border-b-2 border-purple-500/20 pb-4 gap-4 md:gap-0 z-10 w-full">
                         <div class="flex items-center gap-4">
-                            <h2 id="host-player-count" class="text-2xl text-secondary font-['Press_Start_2P'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                            <h2 id="host-player-count" class="text-xl md:text-2xl text-secondary font-['Press_Start_2P'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                            <div class="flex gap-2">
+                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-primary/50 text-white flex items-center justify-center rounded-xl hover:bg-white/10 hover:border-primary transition-all shadow-[0_0_15px_rgba(0,255,85,0.2)]">
+                                    <span class="material-symbols-outlined text-xl md:text-2xl text-primary">group</span>
+                                </button>
+                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-primary/50 text-white flex items-center justify-center rounded-xl hover:bg-white/10 hover:border-primary transition-all shadow-[0_0_15px_rgba(0,255,85,0.2)]">
+                                    <span class="material-symbols-outlined text-xl md:text-2xl text-primary">person_add</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-[30px] h-[52px] flex items-center justify-center bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
                                 EXIT
                             </button>
 
                             <!-- Start Button -->
-                            <button id="host-start-btn" class="px-8 py-3 bg-primary text-black font-['Press_Start_2P'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer">
+                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-primary text-black font-['Press_Start_2P'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer shrink-0">
                                 Start
                             </button>
                         </div>
@@ -418,7 +482,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         </div>
                         
                         <!-- Grid Container -->
-                        <div id="host-player-grid" class="grid grid-cols-3 xl:grid-cols-4 gap-4 w-full h-full overflow-y-auto custom-scrollbar p-2 hidden"></div>
+                        <div id="host-player-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 w-full h-full overflow-y-auto custom-scrollbar p-2 hidden z-10 relative"></div>
                     </div>
                 </section>
                 </section>
@@ -442,6 +506,106 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         </button>
                         <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
                             YES
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MANAGE GROUPS MODAL (NEW DESIGN) -->
+            <div id="host-manage-users-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm z-[60]">
+                <div class="bg-surface-dark border-4 border-primary rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,255,136,0.2)] relative overflow-hidden flex flex-col max-h-[85vh]">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center mb-6 z-10 shrink-0">
+                        <h3 class="text-lg md:text-xl text-white font-['Press_Start_2P'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-3xl">group</span>
+                            Invite Groups
+                        </h3>
+                        <button id="close-manage-users-btn" class="text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
+                            <span class="material-symbols-outlined text-2xl">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-primary transition-colors">
+                        <input type="text" id="group-search-input" placeholder="Search group..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Press_Start_2P'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <button id="group-search-btn" class="w-10 h-10 rounded-lg bg-primary/20 text-primary border border-primary/50 flex items-center justify-center hover:bg-primary hover:text-black transition-all cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-lg">search</span>
+                        </button>
+                    </div>
+
+                    <!-- Selected Groups -->
+                    <div id="selected-groups-container" class="shrink-0 flex flex-col gap-3 relative z-10 hidden mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-primary font-['Press_Start_2P'] text-[9px] uppercase tracking-wide">SELECTED</span>
+                            <span id="selected-groups-count" class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[8px] font-['Press_Start_2P'] border border-primary/30">0</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="selected-groups-list"></div>
+                        <div class="w-full h-[1px] bg-white/10 mt-2"></div>
+                    </div>
+
+                    <!-- List Area -->
+                    <div id="manage-users-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
+                        <button id="cancel-invite-groups-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Press_Start_2P'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
+                            CANCEL
+                        </button>
+                        <button id="confirm-invite-groups-btn" class="px-7 py-3 bg-primary text-black font-['Press_Start_2P'] font-bold text-[10px] rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,136,0.3)] cursor-pointer opacity-50 pointer-events-none">
+                            INVITE
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD USER MODAL -->
+            <div id="host-add-user-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm z-[60]">
+                <div class="bg-surface-dark border-4 border-secondary rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden flex flex-col max-h-[85vh]">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center mb-6 z-10 shrink-0">
+                        <h3 class="text-lg md:text-xl text-white font-['Press_Start_2P'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
+                            <span class="material-symbols-outlined text-secondary text-3xl">person_add</span>
+                            Invite Friends
+                        </h3>
+                        <button id="close-add-user-btn" class="text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
+                            <span class="material-symbols-outlined text-2xl">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-secondary transition-colors">
+                        <input type="text" id="friend-search-input" placeholder="Search friend..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Press_Start_2P'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <button id="friend-search-btn" class="w-10 h-10 rounded-lg bg-secondary/20 text-secondary border border-secondary/50 flex items-center justify-center hover:bg-secondary hover:text-black transition-all cursor-pointer shrink-0">
+                            <span class="material-symbols-outlined text-lg">search</span>
+                        </button>
+                    </div>
+
+                    <!-- Selected Friends -->
+                    <div id="selected-friends-container" class="shrink-0 flex flex-col gap-3 relative z-10 mb-4 hidden">
+                        <div class="flex items-center gap-2">
+                            <span class="text-secondary font-['Press_Start_2P'] text-[9px] uppercase tracking-wide">SELECTED</span>
+                            <span id="selected-friends-count" class="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-[8px] font-['Press_Start_2P'] border border-secondary/30">0</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="selected-friends-list">
+                        </div>
+                        <div class="w-full h-[1px] bg-white/10 mt-2"></div>
+                    </div>
+
+                    <!-- List Area -->
+                    <div id="manage-friends-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
+                        <button id="cancel-invite-friends-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Press_Start_2P'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
+                            CANCEL
+                        </button>
+                        <button id="confirm-invite-friends-btn" class="px-7 py-3 bg-secondary text-black font-['Press_Start_2P'] font-bold text-[10px] rounded-xl border-b-4 border-cyan-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] cursor-pointer opacity-50 pointer-events-none">
+                            INVITE
                         </button>
                     </div>
                 </div>
@@ -538,6 +702,613 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 this.room.send("startGame");
             };
         }
+
+        // Host manage users button binding
+        const manageUsersBtn = document.getElementById('host-manage-users-btn');
+        const manageUsersModal = document.getElementById('host-manage-users-modal');
+        const closeManageUsersBtn = document.getElementById('close-manage-users-btn');
+
+        if (manageUsersBtn && manageUsersModal) {
+            manageUsersBtn.onclick = () => {
+                manageUsersModal.classList.remove('hidden');
+                this.updateManageUsersList();
+            };
+        }
+        if (closeManageUsersBtn && manageUsersModal) {
+            closeManageUsersBtn.onclick = () => {
+                manageUsersModal.classList.add('hidden');
+            };
+        }
+
+        // Host add user button binding
+        const addUserBtn = document.getElementById('host-add-user-btn');
+        const addUserModal = document.getElementById('host-add-user-modal');
+        const closeAddUserBtn = document.getElementById('close-add-user-btn');
+        const modalInviteCode = document.getElementById('modal-invite-code');
+        const modalCopyLinkBtn = document.getElementById('modal-copy-link-btn');
+
+        if (addUserBtn && addUserModal) {
+            addUserBtn.onclick = () => {
+                addUserModal.classList.remove('hidden');
+                this.updateFriendsList();
+            };
+        }
+        if (closeAddUserBtn && addUserModal) {
+            closeAddUserBtn.onclick = () => {
+                addUserModal.classList.add('hidden');
+            };
+        }
+        if (modalCopyLinkBtn) {
+            modalCopyLinkBtn.onclick = () => {
+                const url = document.getElementById('host-join-url')?.innerText;
+                if (url) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        const iconSpan = modalCopyLinkBtn.querySelector('.material-symbols-outlined');
+                        const textSpan = modalCopyLinkBtn.querySelector('span:last-child') as HTMLElement;
+                        if (iconSpan && textSpan) {
+                            const origIcon = iconSpan.innerHTML;
+                            const origText = textSpan.innerText;
+                            iconSpan.innerHTML = 'check';
+                            iconSpan.classList.add('text-secondary');
+                            textSpan.innerText = 'COPIED!';
+                            textSpan.classList.add('text-secondary');
+                            setTimeout(() => {
+                                iconSpan.innerHTML = origIcon;
+                                iconSpan.classList.remove('text-secondary');
+                                textSpan.innerText = origText;
+                                textSpan.classList.remove('text-secondary');
+                            }, 2000);
+                        }
+                    });
+                }
+            };
+        }
+    }
+
+    async updateManageUsersList() {
+        const listContainer = document.getElementById('manage-users-list');
+        if (!listContainer) return;
+
+        // Show loading state
+        listContainer.innerHTML = `
+            <div class="py-12 flex flex-col items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-4xl text-gray-300 animate-spin">refresh</span>
+                <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
+                    Loading groups...
+                </span>
+            </div>
+        `;
+
+        try {
+            const profileStr = localStorage.getItem('game_user_profile');
+            let userId = null;
+            if (profileStr) {
+                const profile = JSON.parse(profileStr);
+                userId = profile.id;
+            }
+
+            if (!userId) {
+                listContainer.innerHTML = `
+                    <div class="py-12 flex flex-col items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-4xl text-gray-300">groups</span>
+                        <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
+                            Please login to<br>view groups.
+                        </span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Fetch groups where user is creator
+            const { data: createdGroups, error: errCreated } = await supabase
+                .from('groups')
+                .select('*')
+                .eq('creator_id', userId);
+
+            // Fetch groups where user is member
+            const { data: memberGroupsObj, error: errMemberObj } = await supabase
+                .from('groups')
+                .select('*')
+                .contains('members', JSON.stringify([{ user_id: userId }]));
+
+            const { data: memberGroupsStr } = await supabase
+                .from('groups')
+                .select('*')
+                .contains('members', JSON.stringify([userId]));
+
+            const allGroupsMap = new Map();
+
+            if (createdGroups && !errCreated) {
+                createdGroups.forEach(g => allGroupsMap.set(g.id, g));
+            }
+            if (memberGroupsObj && !errMemberObj) {
+                memberGroupsObj.forEach(g => allGroupsMap.set(g.id, g));
+            }
+            if (memberGroupsStr) {
+                memberGroupsStr.forEach(g => allGroupsMap.set(g.id, g));
+            }
+
+            const groups = Array.from(allGroupsMap.values());
+
+            // Extract unique creator IDs
+            const creatorIds = Array.from(new Set(groups.map((g: any) => g.creator_id).filter(id => !!id)));
+
+            // Fetch profiles for creators
+            let profilesMap = new Map();
+            if (creatorIds.length > 0) {
+                const { data: profilesData } = await supabase
+                    .from('profiles')
+                    .select('id, username')
+                    .in('id', creatorIds);
+                if (profilesData) {
+                    profilesData.forEach(p => profilesMap.set(p.id, p));
+                }
+            }
+
+            // Calculate canInvite and creatorName
+            this.allFetchedGroups = groups.map((group: any) => {
+                let canInvite = false;
+                if (group.creator_id === userId) {
+                    canInvite = true;
+                } else if (Array.isArray(group.members)) {
+                    const memberObj = group.members.find((m: any) => m.user_id === userId);
+                    if (memberObj && (memberObj.role === 'owner' || memberObj.role === 'admin')) {
+                        canInvite = true;
+                    }
+                }
+                const creatorProfile = profilesMap.get(group.creator_id);
+                const creatorName = creatorProfile?.username || 'Creator';
+                return { ...group, canInvite, creatorName };
+            });
+
+            // Bind global handlers only once
+            if (!(window as any).toggleSelectGroup) {
+                (window as any).toggleSelectGroup = (groupId: string) => {
+                    if (this.selectedGroups.has(groupId)) {
+                        this.selectedGroups.delete(groupId);
+                    } else {
+                        const grp = this.allFetchedGroups.find(g => g.id === groupId);
+                        if (grp) this.selectedGroups.set(groupId, grp);
+                    }
+                    this.renderManageUsersList();
+                    this.renderSelectedGroups();
+                };
+
+                (window as any).removeSelectedGroup = (groupId: string) => {
+                    this.selectedGroups.delete(groupId);
+                    this.renderManageUsersList();
+                    this.renderSelectedGroups();
+                };
+
+                const searchInput = document.getElementById('group-search-input') as HTMLInputElement;
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        this.groupSearchQuery = (e.target as HTMLInputElement).value.toLowerCase();
+                        this.renderManageUsersList();
+                    });
+                }
+
+                const searchBtn = document.getElementById('group-search-btn');
+                if (searchBtn) {
+                    searchBtn.onclick = () => {
+                        this.renderManageUsersList();
+                    };
+                }
+
+                const confirmBtn = document.getElementById('confirm-invite-groups-btn');
+                if (confirmBtn) {
+                    confirmBtn.onclick = async () => {
+                        if (this.selectedGroups.size > 0) {
+                            try {
+                                const profileStr = localStorage.getItem('game_user_profile');
+                                const currentRoomId = localStorage.getItem('currentRoomId'); // This is the 6-digit code
+                                if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
+                                const profile = JSON.parse(profileStr);
+
+                                const notificationsToInsert: any[] = [];
+
+                                this.selectedGroups.forEach((group) => {
+                                    if (Array.isArray(group.members)) {
+                                        group.members.forEach((member: any) => {
+                                            // Don't invite yourself
+                                            if (member.user_id !== profile.id) {
+                                                notificationsToInsert.push({
+                                                    user_id: member.user_id,
+                                                    actor_id: profile.id,
+                                                    type: 'sessionGroup',
+                                                    entity_type: 'session',
+                                                    from_group_id: group.id,
+                                                    content: {
+                                                        message: `${profile.username || 'Someone'} invited your group to a game!`,
+                                                        roomCode: currentRoomId
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+
+                                if (notificationsToInsert.length > 0) {
+                                    const { error } = await supabase.from('notifications').insert(notificationsToInsert);
+                                    if (error) throw error;
+                                }
+
+                                this.showToast(`Successfully sent invites to ${this.selectedGroups.size} groups!`);
+                                const modal = document.getElementById('host-manage-users-modal');
+                                if (modal) modal.classList.add('hidden');
+                                this.selectedGroups.clear();
+                                this.renderSelectedGroups();
+                                this.renderManageUsersList();
+
+                            } catch (error: any) {
+                                console.error('Failed to send group invites:', error);
+                                this.showToast('Failed to send invites: ' + (error?.message || String(error)), true);
+                            }
+                        }
+                    };
+                }
+
+                const cancelBtn = document.getElementById('cancel-invite-groups-btn');
+                if (cancelBtn) {
+                    cancelBtn.onclick = () => {
+                        const modal = document.getElementById('host-manage-users-modal');
+                        if (modal) modal.classList.add('hidden');
+                    };
+                }
+            }
+
+            this.selectedGroups.clear();
+            this.groupSearchQuery = '';
+            const searchInput = document.getElementById('group-search-input') as HTMLInputElement;
+            if (searchInput) searchInput.value = '';
+
+            this.renderManageUsersList();
+            this.renderSelectedGroups();
+
+        } catch (error) {
+            console.error("Error fetching groups:", error);
+            listContainer.innerHTML = `
+                <div class="py-12 flex flex-col items-center justify-center gap-3">
+                    <span class="material-symbols-outlined text-4xl text-gray-300">error</span>
+                    <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
+                        Failed to load groups.
+                    </span>
+                </div>
+            `;
+        }
+    }
+
+    renderManageUsersList() {
+        const listContainer = document.getElementById('manage-users-list');
+        if (!listContainer) return;
+
+        let filteredGroups = this.allFetchedGroups;
+        if (this.groupSearchQuery.trim() !== '') {
+            filteredGroups = filteredGroups.filter(g => (g.name || '').toLowerCase().includes(this.groupSearchQuery));
+        }
+
+        if (filteredGroups.length === 0) {
+            listContainer.innerHTML = `
+                <div class="py-12 flex flex-col items-center justify-center gap-3">
+                    <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
+                    <span class="text-white/30 font-['Press_Start_2P'] text-[9px] leading-loose text-center px-4">
+                        ${this.allFetchedGroups.length === 0 ? "You haven't joined<br>any groups yet." : "No groups found<br>for your search."}
+                    </span>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        filteredGroups.forEach((group: any) => {
+            const name = group.name || 'Unnamed Group';
+            const avatar = group.avatar_url || '/logo/gameforsmart.webp';
+            const memberCount = Array.isArray(group.members) ? group.members.length + 1 : 1;
+            const isSelected = this.selectedGroups.has(group.id);
+            const canInvite = group.canInvite;
+            const creatorNameText = group.creatorName || 'Creator';
+
+            let btnHtml = '';
+            if (canInvite) {
+                if (isSelected) {
+                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,255,136,0.3)] flex items-center justify-center gap-1.5 hover:bg-green-400">
+                        <span class="material-symbols-outlined text-[10px]">check</span> ADDED
+                    </button>`;
+                } else {
+                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary/20 hover:bg-primary border border-primary text-primary hover:text-black rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                        ADD
+                    </button>`;
+                }
+            } else {
+                btnHtml = `<div class="px-3 py-2 text-white/30 font-['Press_Start_2P'] text-[7px] md:text-[8px] bg-white/5 border border-white/5 rounded-lg flex items-center justify-center min-w-[70px]">MEMBER</div>`;
+            }
+
+            html += `
+                <div class="flex items-center justify-between p-3 md:p-4 bg-black/40 border border-white/10 rounded-xl hover:border-primary/50 transition-colors group">
+                    <div class="flex flex-col gap-1.5 overflow-hidden pr-2 justify-center">
+                        <span class="text-white font-['Press_Start_2P'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
+                        <div class="flex items-center gap-4 text-white/50 font-['Press_Start_2P'] text-[6px] md:text-[7px] px-1">
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[10px] mb-0.5">group</span>
+                                <span>${memberCount}</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-primary/70">
+                                <span class="material-symbols-outlined text-[9px] mb-0.5">edit</span>
+                                <span class="truncate max-w-[80px]">${creatorNameText}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${btnHtml}
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+    }
+
+    renderSelectedGroups() {
+        const container = document.getElementById('selected-groups-container');
+        const list = document.getElementById('selected-groups-list');
+        const count = document.getElementById('selected-groups-count');
+        const confirmBtn = document.getElementById('confirm-invite-groups-btn');
+
+        if (!container || !list || !count || !confirmBtn) return;
+
+        if (this.selectedGroups.size === 0) {
+            container.classList.add('hidden');
+            confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        count.innerText = `${this.selectedGroups.size}`;
+        confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+        let html = '';
+        this.selectedGroups.forEach((group, id) => {
+            const name = group.name || 'Unnamed';
+            html += `
+                <div class="flex items-center gap-1.5 bg-primary/20 text-primary border border-primary/50 px-3 py-2 rounded-lg text-[9px] font-['Press_Start_2P'] shadow-[0_0_10px_rgba(0,255,136,0.1)] transition-transform hover:scale-105">
+                    <span class="truncate max-w-[120px]">${name}</span>
+                    <button onclick="window.removeSelectedGroup('${id}')" class="flex items-center justify-center hover:bg-primary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-primary">
+                        <span class="material-symbols-outlined !text-[12px]">close</span>
+                    </button>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    }
+
+    async updateFriendsList() {
+        const listContainer = document.getElementById('manage-friends-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = `
+            <div class="py-12 flex flex-col items-center justify-center gap-3">
+                <span class="material-symbols-outlined text-3xl animate-spin text-secondary">refresh</span>
+                <span class="text-white/50 font-['Press_Start_2P'] text-[8px] tracking-widest uppercase">Loading Friends...</span>
+            </div>
+        `;
+
+        try {
+            const profileStr = localStorage.getItem('game_user_profile');
+            let userId = null;
+            if (profileStr) {
+                const profile = JSON.parse(profileStr);
+                userId = profile.id;
+            }
+
+            if (!userId) {
+                listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Press_Start_2P'] text-[10px]">Please login first.</div>`;
+                return;
+            }
+
+            const { data: friendshipsData, error: friendshipsError } = await supabase
+                .from('friendships')
+                .select('*')
+                .eq('addressee_id', userId)
+                .eq('status', 'accepted');
+
+            if (friendshipsError) {
+                console.error("Error fetching friendships:", friendshipsError);
+                throw friendshipsError;
+            }
+
+            if (!friendshipsData || friendshipsData.length === 0) {
+                this.allFetchedFriends = [];
+            } else {
+                const friendIds = friendshipsData.map((f: any) =>
+                    f.requester_id === userId ? f.addressee_id : f.requester_id
+                );
+
+                const { data: profilesData, error: profilesError } = await supabase
+                    .from('profiles')
+                    .select('id, username')
+                    .in('id', friendIds);
+
+                if (profilesError) {
+                    console.error("Error fetching friend profiles:", profilesError);
+                    throw profilesError;
+                }
+
+                this.allFetchedFriends = (profilesData || []).map((p: any) => ({
+                    id: p.id,
+                    username: p.username || 'Unknown'
+                }));
+            }
+
+            // Bind global handlers only once
+            if (!(window as any).toggleSelectFriend) {
+                (window as any).toggleSelectFriend = (friendId: string) => {
+                    if (this.selectedFriends.has(friendId)) {
+                        this.selectedFriends.delete(friendId);
+                    } else {
+                        const friend = this.allFetchedFriends.find(f => f.id === friendId);
+                        if (friend) this.selectedFriends.set(friendId, friend);
+                    }
+                    this.renderSelectedFriends();
+                    this.renderFriendsList();
+                };
+
+                (window as any).removeSelectedFriend = (friendId: string) => {
+                    this.selectedFriends.delete(friendId);
+                    this.renderSelectedFriends();
+                    this.renderFriendsList();
+                };
+            }
+
+            this.selectedFriends.clear();
+            this.friendSearchQuery = '';
+            const searchInput = document.getElementById('friend-search-input') as HTMLInputElement;
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.oninput = (e: any) => {
+                    this.friendSearchQuery = e.target.value.toLowerCase();
+                    this.renderFriendsList();
+                };
+            }
+
+            const confirmFriendsBtn = document.getElementById('confirm-invite-friends-btn');
+            if (confirmFriendsBtn) {
+                confirmFriendsBtn.onclick = async () => {
+                    if (this.selectedFriends.size > 0) {
+                        try {
+                            const profileStr = localStorage.getItem('game_user_profile');
+                            const currentRoomId = localStorage.getItem('currentRoomId'); // This is the 6-digit code
+                            if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
+                            const profile = JSON.parse(profileStr);
+
+                            const notificationsToInsert = Array.from(this.selectedFriends.values()).map(friend => ({
+                                user_id: friend.id,
+                                actor_id: profile.id,
+                                type: 'sessionFriend',
+                                entity_type: 'session',
+                                content: {
+                                    message: `${profile.username || 'A friend'} invited you to join a game!`,
+                                    roomCode: currentRoomId
+                                }
+                            }));
+
+                            if (notificationsToInsert.length > 0) {
+                                const { error } = await supabase.from('notifications').insert(notificationsToInsert);
+                                if (error) throw error;
+                            }
+
+                            this.showToast(`Successfully sent invites to ${this.selectedFriends.size} friends!`);
+                            const modal = document.getElementById('host-add-user-modal');
+                            if (modal) modal.classList.add('hidden');
+                            this.selectedFriends.clear();
+                            this.renderSelectedFriends();
+                            this.renderFriendsList();
+
+                        } catch (error: any) {
+                            console.error('Failed to send friend invites:', error);
+                            this.showToast('Failed to send invites: ' + (error?.message || String(error)), true);
+                        }
+                    }
+                };
+            }
+
+            const cancelBtn = document.getElementById('cancel-invite-friends-btn');
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    document.getElementById('host-add-user-modal')?.classList.add('hidden');
+                }
+            }
+
+            this.renderFriendsList();
+            this.renderSelectedFriends();
+
+        } catch (error: any) {
+            console.error('Failed to load friends list:', error);
+            listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Press_Start_2P'] text-[10px] leading-loose">Failed to load friends.<br/>${error?.message || String(error)}</div>`;
+        }
+    }
+
+    renderFriendsList() {
+        const listContainer = document.getElementById('manage-friends-list');
+        if (!listContainer) return;
+
+        let filteredFriends = this.allFetchedFriends;
+        if (this.friendSearchQuery.trim() !== '') {
+            filteredFriends = filteredFriends.filter(f => (f.username || '').toLowerCase().includes(this.friendSearchQuery));
+        }
+
+        if (filteredFriends.length === 0) {
+            listContainer.innerHTML = `
+                <div class="py-12 flex flex-col items-center justify-center gap-3">
+                    <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
+                    <span class="text-white/30 font-['Press_Start_2P'] text-[9px] leading-loose text-center px-4">
+                        ${this.allFetchedFriends.length === 0 ? "You don't have<br>any friends yet." : "No friends found<br>for your search."}
+                    </span>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        filteredFriends.forEach((friend: any) => {
+            const name = friend.username;
+            const isSelected = this.selectedFriends.has(friend.id);
+            const statusText = 'Friend';
+            const statusColor = 'text-white/50';
+
+            let btnHtml = '';
+            if (isSelected) {
+                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,212,255,0.3)] flex items-center justify-center gap-1.5 hover:bg-cyan-400">
+                    <span class="material-symbols-outlined text-[10px]">check</span> ADDED
+                </button>`;
+            } else {
+                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary/20 hover:bg-secondary border border-secondary text-secondary hover:text-black rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                    ADD
+                </button>`;
+            }
+
+            html += `
+                <div class="flex items-center justify-between p-3 md:p-4 bg-black/40 border border-white/10 rounded-xl hover:border-secondary/50 transition-colors group">
+                    <div class="flex flex-col gap-2 overflow-hidden pr-2 justify-center">
+                        <span class="text-white font-['Press_Start_2P'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
+                        <span class="${statusColor} font-['Press_Start_2P'] text-[7px] md:text-[8px] px-1">${statusText}</span>
+                    </div>
+                    ${btnHtml}
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+    }
+
+    renderSelectedFriends() {
+        const container = document.getElementById('selected-friends-container');
+        const list = document.getElementById('selected-friends-list');
+        const count = document.getElementById('selected-friends-count');
+        const confirmBtn = document.getElementById('confirm-invite-friends-btn');
+
+        if (!container || !list || !count || !confirmBtn) return;
+
+        if (this.selectedFriends.size === 0) {
+            container.classList.add('hidden');
+            confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        count.innerText = `${this.selectedFriends.size}`;
+        confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+        let html = '';
+        this.selectedFriends.forEach((friend, id) => {
+            const name = friend.username || 'Unknown';
+            html += `
+                <div class="flex items-center gap-1.5 bg-secondary/20 text-secondary border border-secondary/50 px-3 py-2 rounded-lg text-[9px] font-['Press_Start_2P'] shadow-[0_0_10px_rgba(0,212,255,0.1)] transition-transform hover:scale-105">
+                    <span class="truncate max-w-[120px]">${name}</span>
+                    <button onclick="window.removeSelectedFriend('${id}')" class="flex items-center justify-center hover:bg-secondary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-secondary">
+                        <span class="material-symbols-outlined !text-[12px]">close</span>
+                    </button>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
     }
 
     setupCharacterCustomization() {
@@ -677,7 +1448,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
-        Router.navigate('/');
+        Router.navigate('/host/select-quiz');
         this.scene.start('LobbyScene');
         // Clean up overlay
         if (this.countdownOverlay) {
@@ -703,6 +1474,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (myPlayer) {
             this.updateCharacterPreview(myPlayer.hairId || 0);
         }
+
+        // Refresh Manage Users list if the modal is open
+        const manageUsersModal = document.getElementById('host-manage-users-modal');
+        if (manageUsersModal && !manageUsersModal.classList.contains('hidden')) {
+            this.updateManageUsersList();
+        }
     }
 
     updateRoomCode() {
@@ -720,12 +1497,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             // Join URL format: domain + /join/ + roomCode
             // Or simpler: use existing query param logic if you prefer
             // "http://localhost:5173/join/248927" is modern
-            // But let's stick to the existing URL logic first to be safe: `${domain}?room=${code}`
+            // But let's stick to the existing URL logic first to be safe: `${ domain }?room = ${ code } `
             // Or use the Join Page URL directly? 
-            // In step 675, join URL logic uses query param: `${window.location.origin}?room=${code}`.
+            // In step 675, join URL logic uses query param: `${ window.location.origin }?room = ${ code } `.
             // Let's keep it consistent.
 
-            const url = `${domain}/join/${code}`; // Let's use clean URL format if supported, or stick to query.
+            const url = `${domain} /join/${code} `; // Let's use clean URL format if supported, or stick to query.
             // Wait, previous code used ?room=code.
             // The image user shared shows "http://localhost:5173/join/248927".
             // So I should use that format!
@@ -764,7 +1541,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             const hostHeader = document.getElementById('host-player-count');
             if (hostHeader) {
                 const label = totalPlayers === 1 ? 'Player' : 'Player';
-                hostHeader.innerText = `${totalPlayers} ${label}`;
+                hostHeader.innerText = `${totalPlayers} ${label} `;
             }
         } else {
             // Player view header logic (Existing)
@@ -772,11 +1549,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             const headerText = document.getElementById('waiting-header-text');
             if (headerText) {
                 headerText.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;">
-                        <span style="color: #00ff88;">${totalPlayers}</span>
-                        <span style="color: white; opacity: 0.9;">${labelText}</span>
-                    </div>
-                `;
+            < div style = "display: flex; align-items: center; gap: 12px; font-family: 'Press Start 2P'; font-size: 20px;" >
+                <span style="color: #00ff88;" > ${totalPlayers} </span>
+                    < span style = "color: white; opacity: 0.9;" > ${labelText} </span>
+                        </div>
+                            `;
             }
         }
 
@@ -809,7 +1586,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             const btnText = isMyRoom ? 'JOINED' : isFull ? 'FULL' : 'JOIN';
             // Host cannot join rooms
-            const action = (this.isHost || isFull || isMyRoom) ? '' : `onclick="window.switchRoom('${subRoom.id}')"`;
+            const action = (this.isHost || isFull || isMyRoom) ? '' : `onclick = "window.switchRoom('${subRoom.id}')"`;
             const btnVisibility = this.isHost ? 'invisible' : '';
 
             // Get player names
@@ -821,10 +1598,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     const isMe = sessionId === this.mySessionId;
                     const nameColor = isMe ? 'text-primary' : 'text-white/70';
                     playerListHTML += `
-                        <div class="flex items-center gap-2 ${nameColor} text-[10px] font-bold uppercase truncate">
-                            <span class="material-symbols-outlined text-[10px] opacity-70">person</span>
+            < div class="flex items-center gap-2 ${nameColor} text-[10px] font-bold uppercase truncate" >
+                <span class="material-symbols-outlined text-[10px] opacity-70" > person </span>
                             ${player.name}
-                        </div>`;
+        </div>`;
                     count++;
                 }
             });
@@ -985,22 +1762,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             let kickButtonHTML = '';
             if (this.isHost && !isMe) {
                 kickButtonHTML = `
-                    <button class="kick-btn" onclick="window.confirmKick('${player.sessionId}', '${player.name}')" 
-                        style="
-                            position: absolute; top: -6px; right: -6px;
-                            width: 24px; height: 24px;
-                            background: #ef4444; border: 2px solid #b91c1c;
-                            border-radius: 50%; color: white;
-                            display: flex; align-items: center; justify-content: center;
-                            cursor: pointer; z-index: 10;
-                            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-                            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                            opacity: 0;
-                            transform: scale(0.8);
-                            pointer-events: none;
-                        "
-                        onmouseover="this.style.transform='scale(1.1)'"
-                        onmouseout="this.style.transform='scale(1)'"
+                    <button class="kick-btn absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 border-2 border-red-700 rounded-full text-white flex items-center justify-center cursor-pointer z-10 shadow-md transition-all duration-300 opacity-100 pointer-events-auto md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:!scale-110"
+                        onclick="window.confirmKick('${player.sessionId}', '${player.name}')" 
                     >
                         <span class="material-symbols-outlined" style="font-size: 16px; font-weight: bold;">close</span>
                     </button>
@@ -1008,25 +1771,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             }
 
             html += `
-                <div 
-                    onmouseenter="const b=this.querySelector('.kick-btn'); if(b){b.style.opacity='1'; b.style.pointerEvents='auto'; b.style.transform='scale(1)';}"
-                    onmouseleave="const b=this.querySelector('.kick-btn'); if(b){b.style.opacity='0'; b.style.pointerEvents='none'; b.style.transform='scale(0.8)';}"
+                <div class="group relative flex flex-col items-center justify-center p-3 gap-2.5 rounded-2xl w-full max-w-[140px] mx-auto aspect-[1/1.1] transition-transform duration-200"
                     style="
                     background: rgba(20, 20, 35, 0.9); 
                     ${borderClass}
-                    padding: 12px; 
-                    border-radius: 16px; 
-                    display: flex; 
-                    flex-direction: column; 
-                    align-items: center; 
-                    justify-content: center;
-                    gap: 10px; 
-                    position: relative; 
-                    aspect-ratio: 1 / 1.1;
-                    width: 100%;
-                    max-width: 140px;
-                    margin: 0 auto;
-                    transition: transform 0.2s ease;
                 ">
                     ${kickButtonHTML}
                     

@@ -404,8 +404,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 timer: this.settingsTimer
             };
 
-            // 2. Create/Join Room on Colyseus
-            const room = await this.client.joinOrCreate("game_room", options);
+            // 2. Create Room on Colyseus
+            const room = await this.client.create("game_room", options);
             console.log("Room created!", room);
 
             // Save persistent session info for refresh recovery (Colyseus v0.15 API)
