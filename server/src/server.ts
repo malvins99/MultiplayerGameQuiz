@@ -23,7 +23,7 @@ const gameServer = new Server({
 });
 
 // Register Room Handlers
-gameServer.define("game_room", GameRoom);
+gameServer.define("game_room", GameRoom).filterBy(['roomCode']);
 
 // Register Colyseus monitor
 app.use("/colyseus", monitor());

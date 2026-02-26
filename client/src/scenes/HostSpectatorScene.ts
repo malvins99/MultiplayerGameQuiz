@@ -13,6 +13,7 @@ export class HostSpectatorScene extends Phaser.Scene {
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
     isMuted: boolean = false;
+    private resizeListener: (() => void) | null = null;
 
     constructor() {
         super('HostSpectatorScene');
@@ -26,6 +27,38 @@ export class HostSpectatorScene extends Phaser.Scene {
             return;
         }
         this.room = data.room;
+
+        // Store room in registry for reliable cleanup by other scenes
+        this.registry.set('room', this.room);
+
+        // Register message listeners directly on room (NOT in disposers)
+        // These stay alive as long as the room connection is alive.
+        // They get cleaned up automatically when room.leave() is called.
+        console.log(`[Spectator][Room:${this.room.id}] Registering timerUpdate handler. SessionId: ${this.room.sessionId}`);
+        this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
+            this.updateTimer(data.remaining);
+        });
+
+        this.room.onMessage('gameEnded', (data: any) => {
+            console.log(`[Spectator][Room:${this.room.id}] Game ended. Leaving room and transitioning...`);
+
+            if (this.uiContainer && this.uiContainer.parentNode) {
+                document.body.removeChild(this.uiContainer);
+            }
+
+            const isHost = this.room.sessionId === this.room.state.hostId;
+            this.registry.set('isHost', isHost);
+            this.registry.set('leaderboardData', data.rankings);
+
+            // Store sessionId before leaving so LeaderboardScene can still use it
+            this.registry.set('mySessionId', this.room.sessionId);
+
+            // Leave the room NOW so no more timerUpdate messages arrive
+            this.room.leave();
+            this.registry.set('room', null);
+
+            TransitionManager.sceneTo(this, 'LeaderboardScene');
+        });
     }
 
     preload() {
@@ -58,7 +91,7 @@ export class HostSpectatorScene extends Phaser.Scene {
     }
 
     create() {
-        console.log("[Spectator] Creating...");
+        console.log(`[Spectator][Room:${this.room?.id}] Creating... SessionId: ${this.room?.sessionId}`);
         if (!this.room) {
             console.error("[Spectator] Create failed: No room!");
             return;
@@ -155,6 +188,8 @@ export class HostSpectatorScene extends Phaser.Scene {
         // --- Camera Setup ---
         // --- Camera Setup ---
         const updateCamera = () => {
+            if (!this.cameras || !this.cameras.main || !this.map) return;
+
             const mapW = this.map.widthInPixels || 1920;
             const mapH = this.map.heightInPixels || 1080;
 
@@ -179,10 +214,11 @@ export class HostSpectatorScene extends Phaser.Scene {
         updateCamera();
 
         // Handle Window Resize
-        this.scale.on('resize', () => {
+        this.resizeListener = () => {
             console.log("Window resized, updating camera...");
             updateCamera();
-        });
+        };
+        this.scale.on('resize', this.resizeListener);
 
         // Drag Pan
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -207,19 +243,6 @@ export class HostSpectatorScene extends Phaser.Scene {
 
         // --- UI Initialization ---
         this.createUI();
-
-        // --- Colyseus Message Listeners (Register early for robustness) ---
-        this.disposers.push(this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
-            this.updateTimer(data.remaining);
-        }));
-
-        this.disposers.push(this.room.onMessage('gameEnded', (data: any) => {
-            if (this.uiContainer && this.uiContainer.parentNode) {
-                document.body.removeChild(this.uiContainer);
-            }
-            this.registry.set('leaderboardData', data.rankings);
-            TransitionManager.sceneTo(this, 'LeaderboardScene');
-        }));
 
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
@@ -307,7 +330,7 @@ export class HostSpectatorScene extends Phaser.Scene {
         // --- Open Transition (Critical Fix) ---
         TransitionManager.open();
 
-        console.log("[Spectator] Create finished.");
+        console.log(`[Spectator][Room:${this.room.id}] Create finished.`);
     }
 
     // Adding helper for background if needed, but let's just stick to UI update
@@ -433,6 +456,9 @@ export class HostSpectatorScene extends Phaser.Scene {
         }
 
         this.events.once('shutdown', () => {
+            if (this.resizeListener) {
+                this.scale.off('resize', this.resizeListener);
+            }
             this.disposers.forEach(d => d());
             this.disposers = [];
             if (this.uiContainer && this.uiContainer.parentNode) {

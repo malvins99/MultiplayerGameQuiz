@@ -5,8 +5,8 @@ import { HostWaitingRoomScene } from './scenes/HostWaitingRoomScene';
 import { PlayerWaitingRoomScene } from './scenes/PlayerWaitingRoomScene';
 import { GameScene } from './scenes/GameScene';
 import { UIScene } from './scenes/UIScene';
-import { WaitingResultsScene } from './scenes/WaitingResultsScene';
 import { LeaderboardScene } from './scenes/LeaderboardScene';
+import { ResultScene } from './scenes/ResultScene';
 import { QuizSettingScene } from './scenes/QuizSettingScene';
 import { SelectQuizScene } from './scenes/SelectQuizScene';
 
@@ -16,6 +16,15 @@ const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     pixelArt: true,
     roundPixels: true,
+    antialias: false,
+    antialiasGL: false,
+    render: {
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true,
+        powerPreference: 'high-performance',
+        batchSize: 2000
+    },
     width: window.innerWidth,
     height: window.innerHeight,
     parent: 'app',
@@ -35,8 +44,8 @@ const config: Phaser.Types.Core.GameConfig = {
         PlayerWaitingRoomScene,
         GameScene,
         UIScene,
-        WaitingResultsScene,
         LeaderboardScene,
+        ResultScene,
         HostSpectatorScene
     ],
     scale: {

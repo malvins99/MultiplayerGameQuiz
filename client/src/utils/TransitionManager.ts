@@ -41,6 +41,73 @@ export const TransitionManager = {
     },
 
     /**
+     * Ensures the iris is closed and active without triggering closing animations if already active.
+     */
+    ensureClosed() {
+        const overlay = document.getElementById('transition-overlay');
+        if (!overlay) return;
+
+        overlay.classList.add('overlay-active');
+        overlay.classList.add('iris-close');
+        overlay.classList.remove('iris-open');
+    },
+
+    /**
+     * Sets or updates the countdown text on the black overlay.
+     */
+    setCountdownText(text: string) {
+        const overlay = document.getElementById('transition-overlay');
+        if (!overlay) return;
+
+        let el = document.getElementById('transition-countdown');
+        if (!text) {
+            if (el) el.remove();
+            return;
+        }
+
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'transition-countdown';
+            el.style.position = 'absolute';
+            el.style.inset = '0';
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.fontFamily = '"Retro Gaming", monospace';
+            el.style.fontSize = '180px';
+            el.style.color = '#00ff55';
+            el.style.zIndex = '10001';
+            el.style.textShadow = '0 0 30px rgba(0, 255, 85, 0.5)';
+            el.style.transition = 'transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            el.style.pointerEvents = 'none';
+            overlay.appendChild(el);
+        }
+
+        const oldText = el.innerText;
+        el.innerText = text;
+
+        // Auto-scale font size if text is long
+        if (text.length > 5) {
+            el.style.fontSize = '40px';
+        } else {
+            el.style.fontSize = '180px';
+        }
+
+        if (text === 'GO!' || text === '10') {
+            el.style.color = text === 'GO!' ? '#fff' : '#00ff55';
+        }
+
+        // Pulse animation ONLY if it's a number (for countdown)
+        const isNumber = !isNaN(parseInt(text)) && text.length <= 2;
+        if (oldText !== text && isNumber) {
+            el.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                if (el) el.style.transform = 'scale(1)';
+            }, 100);
+        }
+    },
+
+    /**
      * Opens the Iris (Reveals content).
      */
     open() {
@@ -54,69 +121,24 @@ export const TransitionManager = {
         setTimeout(() => {
             overlay.classList.remove('iris-open');
             overlay.classList.remove('overlay-active');
-            // Remove any countdown text
+            // Remove any countdown or waiting text
             const countEl = document.getElementById('transition-countdown');
             if (countEl) countEl.remove();
+            const waitEl = document.getElementById('transition-waiting');
+            if (waitEl) waitEl.remove();
         }, 800);
     },
 
     /**
-     * Runs a countdown on the black overlay, then opens.
+     * Legacy: Kept for compatibility but we move to server-side countdown
      */
     runGameStartSequence(callback: () => void) {
-        const overlay = document.getElementById('transition-overlay');
-        if (!overlay) {
-            this.customOpen(); // Fallback
-            return;
-        }
-
-        // Ensure we are closed and active
-        overlay.classList.add('overlay-active');
-        overlay.classList.add('iris-close'); // Ensure closed state
-
-        // Create Countdown Element
-        let count = 3; // 3 Seconds is snappier than 5, but user asked for 5?
-        // User asked: "countdown sampai 5" -> So 5.
-        count = 5;
-
-        let el = document.getElementById('transition-countdown');
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'transition-countdown';
-            el.style.position = 'absolute';
-            el.style.top = '50%';
-            el.style.left = '50%';
-            el.style.transform = 'translate(-50%, -50%)';
-            el.style.fontFamily = '"Retro Gaming", monospace';
-            el.style.fontSize = '150px';
-            el.style.color = '#00ff55';
-            el.style.zIndex = '10001';
-            overlay.appendChild(el);
-        }
-
-        el.innerText = String(count);
-
-        const interval = setInterval(() => {
-            count--;
-            if (count > 0) {
-                if (el) el.innerText = String(count);
-                // Simple pulse?
-                if (el) {
-                    el.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    setTimeout(() => { if (el) el.style.transform = 'translate(-50%, -50%) scale(1)'; }, 100);
-                }
-            } else {
-                clearInterval(interval);
-                if (el) {
-                    el.innerText = 'GO!';
-                    el.style.color = '#fff';
-                }
-                setTimeout(() => {
-                    this.open();
-                    callback(); // Signal game to start input
-                }, 500);
-            }
-        }, 1000);
+        this.ensureClosed();
+        this.setCountdownText('READY?');
+        setTimeout(() => {
+            this.open();
+            callback();
+        }, 1500);
     },
 
     // Legacy auto-transition support (keep existing API if not used manually)
@@ -136,6 +158,70 @@ export const TransitionManager = {
             overlay.classList.remove('overlay-active');
             overlay.classList.remove('iris-close');
         }
+    },
+
+    /**
+     * Shows a professional loading/waiting state with a spinner.
+     */
+    showWaiting(text: string) {
+        const overlay = document.getElementById('transition-overlay');
+        if (!overlay) return;
+
+        // Ensure countdown/text is cleared
+        const countEl = document.getElementById('transition-countdown');
+        if (countEl) countEl.remove();
+
+        let el = document.getElementById('transition-waiting');
+        if (!text) {
+            if (el) el.remove();
+            return;
+        }
+
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'transition-waiting';
+            el.style.position = 'absolute';
+            el.style.top = '50%';
+            el.style.left = '50%';
+            el.style.transform = 'translate(-50%, -50%)';
+            el.style.display = 'flex';
+            el.style.flexDirection = 'column';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.zIndex = '10001';
+            el.style.pointerEvents = 'none';
+            overlay.appendChild(el);
+        }
+
+        el.innerHTML = `
+            <style>
+                .tm-spinner {
+                    width: 60px;
+                    height: 60px;
+                    border: 5px solid rgba(0, 255, 85, 0.1);
+                    border-top-color: #00ff55;
+                    border-radius: 50%;
+                    animation: tm-spin 1s linear infinite;
+                    margin-bottom: 24px;
+                    filter: drop-shadow(0 0 10px rgba(0, 255, 85, 0.5));
+                }
+                @keyframes tm-spin {
+                    to { transform: rotate(360deg); }
+                }
+                .tm-waiting-text {
+                    font-family: "Retro Gaming", monospace;
+                    font-size: 20px;
+                    color: #00ff55;
+                    text-align: center;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    text-shadow: 0 0 15px rgba(0, 255, 85, 0.4);
+                    white-space: nowrap;
+                }
+            </style>
+            <div class="tm-spinner"></div>
+            <div class="tm-waiting-text">${text}</div>
+        `;
     },
 
     /**

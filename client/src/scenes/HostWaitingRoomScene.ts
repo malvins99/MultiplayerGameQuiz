@@ -50,10 +50,30 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.room = data.room;
         this.isHost = data.isHost;
         this.mySessionId = this.room.sessionId;
+        this.isGameStarting = false; // Reset for restarts
+
+        // Store room in registry for reliable cleanup by other scenes
+        this.registry.set('room', this.room);
+        console.log(`[HostWaitingRoom][Room:${this.room.id}] Initialized. SessionId: ${this.room.sessionId}`);
+
+        // Register timerUpdate handler EARLY so the room always has one.
+        // This prevents "onMessage() not registered" warnings when the server
+        // starts broadcasting timerUpdate before the Spectator/Game scene loads.
+        // NOTE: Colyseus onMessage STACKS handlers, so this stays active
+        // alongside the Spectator/Game scene's handler. That's fine for no-ops.
+        this.room.onMessage('timerUpdate', () => {
+            // No-op: actual timer UI is handled by HostSpectatorScene or GameScene
+        });
     }
 
     create() {
         if (!this.room) return;
+
+        // Update URL for this scene
+        if (this.isHost) {
+            Router.navigate('/host/waiting');
+        }
+
         // Inject shared styles (play-idle)
         const styleId = 'waiting-room-common-styles';
         if (!document.getElementById(styleId)) {
@@ -177,23 +197,25 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.room.state.players.onRemove(() => this.updateAll());
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number) => {
+        this.room.state.listen("countdown", (val: number, previousVal: number) => {
             if (val > 0) {
-                if (this.countdownOverlay) {
-                    this.countdownOverlay.classList.remove('hidden');
-                    // Reset opacity if it was hidden
-                    this.countdownOverlay.style.opacity = '1';
-                }
-                if (this.countdownText) this.countdownText.innerText = val.toString();
-            } else if (val === 0) {
-                // Countdown finished, wait for start
-                if (this.countdownText) this.countdownText.innerText = "GO!";
+                // If countdown started, but we haven't navigated yet (should happen for players), ensure navigation
+                TransitionManager.ensureClosed();
+                TransitionManager.setCountdownText(val.toString());
+            } else if (val === 0 && (previousVal || 0) > 0) {
+                TransitionManager.setCountdownText("GO!");
+            } else {
+                TransitionManager.setCountdownText("");
             }
         });
 
         // Listen for Game Start (State)
         this.room.state.listen("isGameStarted", (isStarted: boolean) => {
-            if (isStarted) this.handleGameStart();
+            if (isStarted) {
+                // Ensure text is cleared when game starts
+                TransitionManager.setCountdownText("");
+                this.handleGameStart();
+            }
         });
 
         // Listen for Game Start (Message)
@@ -319,23 +341,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             </div>
         `;
 
-        // Create Countdown Overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
-        overlay.innerHTML = `
-            <div class="flex flex-col items-center animate-bounce">
-                <div id="countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
-                    10
-                </div>
-                <div class="text-white/50 font-['Retro_Gaming'] text-sm mt-4 tracking-widest uppercase">
-                    Game Starting...
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        this.countdownOverlay = overlay;
-        this.countdownText = document.getElementById('countdown-text');
+        // Remove local countdown overlay if it exists (we use TransitionManager now)
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
 
         // Re-assign references
         this.roomCodeEl = document.getElementById('host-room-code');
@@ -406,7 +416,15 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (this.startBtn) {
             this.startBtn.classList.remove('hidden');
             this.startBtn.onclick = () => {
-                this.room.send("startGame");
+                console.log("[Host] Start Game Clicked - Instant response.");
+
+                // 1. Instant Visual Feedback
+                TransitionManager.ensureClosed();     // Close iris immediately (no 650ms wait)
+                TransitionManager.setCountdownText('10'); // Show first number immediately
+
+                // 2. Parallel Processing
+                this.room.send("startGame"); // Signal server
+                this.handleGameStart();      // Navigate to GameScene
             };
         }
     }

@@ -121,18 +121,26 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.createCountdownOverlay();
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number) => {
+        this.room.state.listen("countdown", (val: number, previousVal: number) => {
             if (val > 0) {
-                if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
-                if (this.countdownText) this.countdownText.innerText = val.toString();
-            } else if (val === 0) {
-                if (this.countdownText) this.countdownText.innerText = "GO!";
+                TransitionManager.ensureClosed();
+                TransitionManager.setCountdownText(val.toString());
+
+                // Immediately transition to GameScene so it can load in background
+                this.handleGameStart();
+            } else if (val === 0 && (previousVal || 0) > 0) {
+                TransitionManager.setCountdownText("GO!");
+            } else {
+                TransitionManager.setCountdownText("");
             }
         });
 
         // Listen for State Start
         this.room.state.listen("isGameStarted", (isStarted: boolean) => {
-            if (isStarted) this.handleGameStart();
+            if (isStarted) {
+                TransitionManager.setCountdownText("");
+                this.handleGameStart();
+            }
         });
     }
 
@@ -140,35 +148,13 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         if (this.isGameStarting) return;
         this.isGameStarting = true;
 
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
-        }
-
-        TransitionManager.close(() => {
-            if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            Router.navigate('/game');
-            this.scene.start('GameScene', { room: this.room });
-        });
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        Router.navigate('/game');
+        this.scene.start('GameScene', { room: this.room });
     }
 
     createCountdownOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'player-countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
-        overlay.innerHTML = `
-            <div class="flex flex-col items-center animate-bounce">
-                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
-                    10
-                </div>
-                <div class="text-white/50 font-['Retro_Gaming'] text-xs md:text-sm mt-4 tracking-widest uppercase">
-                    Get Ready!
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        this.countdownOverlay = overlay;
-        this.countdownText = document.getElementById('player-countdown-text');
+        // Removed: Using global TransitionManager countdown
     }
 
     setupPlayerUI() {

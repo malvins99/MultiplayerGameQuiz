@@ -37,6 +37,39 @@ export class GameScene extends Phaser.Scene {
 
     init(data: { room: Room }) {
         this.room = data.room;
+        // Store room in registry for reliable cleanup by other scenes
+        this.registry.set('room', this.room);
+        console.log(`[GameScene][Room:${this.room.id}] Initialized. SessionId: ${this.room.sessionId}`);
+
+        // --- BACKGROUND LOADING SYNC ---
+        // Ensure screen is closed and showing countdown EVEN DURING PRELOAD
+        if (this.room.state.countdown > 0) {
+            TransitionManager.ensureClosed();
+            TransitionManager.setCountdownText(this.room.state.countdown.toString());
+        }
+
+        // Listen for Countdown updates during preload
+        this.room.state.listen("countdown", (val: number, previousVal: number) => {
+            if (val > 0) {
+                TransitionManager.ensureClosed();
+                TransitionManager.setCountdownText(val.toString());
+            } else if (val === 0 && (previousVal || 0) > 0) {
+                TransitionManager.setCountdownText("GO!");
+            }
+        });
+
+        // Listen for Game Start state during preload
+        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+            if (isStarted && this.isGameReady) { // isGameReady set in create()
+                this.revealGame();
+            }
+        });
+    }
+
+    private revealGame() {
+        console.log("Game Ready & Started! Opening Iris.");
+        TransitionManager.setCountdownText("");
+        TransitionManager.open();
     }
 
     preload() {
@@ -147,16 +180,13 @@ export class GameScene extends Phaser.Scene {
         this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');
 
-        // --- Start Countdown (Block Input) ---
-        // Uses global transition manager for consistent look
-        // The game logically starts now, but we want 5s countdown
-        this.isGameReady = false;
+        // --- Final Reveal Check ---
+        this.isGameReady = true; // Assets finished loading
 
-        // This function will display countdown over the CLOSED iris, then open it.
-        TransitionManager.runGameStartSequence(() => {
-            console.log("Game Started! Input unlocked.");
-            this.isGameReady = true;
-        });
+        // If server already started the game while we were preloading, open now
+        if (this.room.state.isGameStarted) {
+            this.revealGame();
+        }
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
@@ -175,19 +205,26 @@ export class GameScene extends Phaser.Scene {
         if (tilesets.length > 0) {
             this.map.layers.forEach(layerData => {
                 try {
-                    // Check if layer already exists (to prevent "Layer ID already exists" error)
                     const existingLayer = this.map.getLayer(layerData.name);
-                    if (existingLayer && existingLayer.tilemapLayer) {
-                        // Already initialized, skip
-                        return;
+                    if (existingLayer && existingLayer.tilemapLayer) return;
+
+                    const layer = this.map.createLayer(layerData.name, tilesets, 0, 0);
+                    if (layer) {
+                        layer.setX(0);
+                        layer.setY(0);
                     }
-                    this.map.createLayer(layerData.name, tilesets, 0, 0);
                 } catch (e) {
                     console.warn(`Skipping layer render: ${layerData.name}`, e);
                 }
             });
-        } else {
-            console.error("Could not load tilesets properly!");
+        }
+
+        // Force NEAREST filtering on the tileset textures
+        if (this.textures.exists('tiles')) {
+            this.textures.get('tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        }
+        if (this.textures.exists('forest_tiles')) {
+            this.textures.get('forest_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
         }
 
         // --- Animations ---
@@ -323,9 +360,10 @@ export class GameScene extends Phaser.Scene {
 
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = container as any; // Cast container to sprite compatible for camera
-                this.cameras.main.startFollow(this.currentPlayer);
+                this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2); // Smooth follow (fixes bleeding)
                 this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
                 this.cameras.main.setZoom(2);
+                this.cameras.main.roundPixels = true; // Reinforce rounding
 
                 // Initial Score Update
                 const uiScene = this.scene.get('UIScene') as UIScene;
@@ -590,6 +628,10 @@ export class GameScene extends Phaser.Scene {
 
                     // Animation Logic
                     const type = enemy.type === 'goblin' ? 'goblin' : 'skeleton';
+
+                    // Robust safety check for animations during scene transitions
+                    if (!enemySprite.anims) return;
+
                     const currentAnim = enemySprite.anims.currentAnim?.key;
 
                     if (isMoving) {
@@ -630,49 +672,8 @@ export class GameScene extends Phaser.Scene {
                         });
                     }
                     enemySprite.setData('wasFleeing', enemy.isFleeing);
-
-                    // --- Trail Dots Rendering ---
-                    // Clear existing trail
-                    const existingTrail = enemySprite.getData('trail') as Phaser.GameObjects.Group | null;
-                    if (existingTrail) {
-                        existingTrail.clear(true, true);
-                    }
-
-                    // Draw trail if enemy has a target waypoint
-                    if (enemy.targetX > 0 && enemy.targetY > 0) {
-                        const trail = existingTrail || this.add.group();
-                        const startX = enemy.x;
-                        const startY = enemy.y;
-                        const endX = enemy.targetX;
-                        const endY = enemy.targetY;
-
-                        // Calculate distance and number of dots
-                        const dist = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-                        const dotSpacing = 30; // px between dots
-                        const numDots = Math.floor(dist / dotSpacing);
-
-                        for (let i = 1; i <= numDots; i++) {
-                            const t = i / (numDots + 1);
-                            const dotX = startX + (endX - startX) * t;
-                            const dotY = startY + (endY - startY) * t;
-
-                            const dot = this.add.image(dotX, dotY, 'select_dots');
-                            dot.setScale(1.2); // Increased visibility
-                            dot.setAlpha(1);
-                            dot.setDepth(40);
-                            trail.add(dot);
-                        }
-
-                        enemySprite.setData('trail', trail);
-                    }
                 } else {
                     // Handle death
-                    // Clear trail on death
-                    const existingTrail = enemySprite.getData('trail') as Phaser.GameObjects.Group | null;
-                    if (existingTrail) {
-                        existingTrail.clear(true, true);
-                    }
-
                     // If we want to play death anim, ensure we don't snap back to idle
                     if (enemySprite.anims.currentAnim?.key.includes('death')) return;
 
@@ -715,17 +716,42 @@ export class GameScene extends Phaser.Scene {
 
         // Player finished (answered all questions)
         this.room.onMessage('playerFinished', () => {
-            console.log('Player finished! Showing waiting screen...');
-            // Store room reference for WaitingResultsScene
-            this.registry.set('room', this.room);
-            this.scene.start('WaitingResultsScene');
+            console.log('Player finished! Handling transition...');
+
+            // Check for other players
+            let activePlayerCount = 0;
+            this.room.state.players.forEach((p: any) => {
+                if (!p.isHost) activePlayerCount++;
+            });
+
+            if (activePlayerCount > 1) {
+                // Multiplayer: Close Iris and show waiting text with spinner
+                TransitionManager.close(() => {
+                    TransitionManager.showWaiting("MENUNGGU PEMAIN LAIN...");
+                });
+            } else {
+                // Solo: Just close Iris
+                TransitionManager.close(() => {
+                    // Stays black until gameEnded arrives
+                });
+            }
         });
 
         // Game ended (all players finished or timer expired)
         this.room.onMessage('gameEnded', (data: { rankings: any[] }) => {
-            console.log('Game ended! Showing leaderboard...', data.rankings);
+            console.log('Game ended! Showing results...', data.rankings);
+
+            // Determine if I am host
+            const isHost = this.room.sessionId === this.room.state.hostId;
+            this.registry.set('isHost', isHost);
             this.registry.set('leaderboardData', data.rankings);
-            this.scene.start('LeaderboardScene');
+
+            // Host goes to Leaderboard, Player goes to Result
+            if (isHost) {
+                this.scene.start('LeaderboardScene');
+            } else {
+                this.scene.start('ResultScene');
+            }
         });
 
         // --- Player Indicator (Floating Arrow) ---
@@ -748,7 +774,7 @@ export class GameScene extends Phaser.Scene {
     createPlayerIndicator() {
         if (this.currentPlayer) {
             // Update camera to follow player
-            this.cameras.main.startFollow(this.currentPlayer);
+            this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
 
             // Add collision/overlap with enemies for manual triggering
             this.physics.add.overlap(
@@ -970,7 +996,10 @@ export class GameScene extends Phaser.Scene {
                 console.log("Sending wrongAnswer to server");
                 // Wrong answer logic is same for both (no points, opportunity lost)
                 if (!isFromChest) {
-                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId });
+                    this.room.send("wrongAnswer", {
+                        questionId: this.activeQuestionId,
+                        enemyIndex: this.activeEnemyId
+                    });
                     this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
                 }
             }
@@ -1067,7 +1096,7 @@ export class GameScene extends Phaser.Scene {
 
         // Immediately start following player with smooth lerp (no blink)
         if (this.currentPlayer) {
-            this.cameras.main.startFollow(this.currentPlayer, true, 0.1, 0.1);
+            this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
         }
     }
 
@@ -1077,13 +1106,11 @@ export class GameScene extends Phaser.Scene {
         // BLOCK INPUT IF COUNTDOWN RUNNING
         if (!this.isGameReady) return;
 
-        // Block movement if quiz is open
-        if (this.quizPopup.isVisible()) {
-            return;
-        }
-
         // --- Interaction Check ---
         let hitEnemy = false;
+
+        // Block interaction if quiz is open
+        const isQuizOpen = this.quizPopup.isVisible();
 
         // --- Chest Interaction Check (TOUCH) ---
         Object.keys(this.chestContainers).forEach(key => {
@@ -1091,7 +1118,7 @@ export class GameScene extends Phaser.Scene {
             const chestContainer = this.chestContainers[index];
             if (chestContainer && chestContainer.visible) {
                 const dist = Phaser.Math.Distance.Between(this.currentPlayer.x, this.currentPlayer.y, chestContainer.x, chestContainer.y);
-                if (dist < 40) {
+                if (dist < 40 && !isQuizOpen) {
                     this.handleChestInteraction(index);
                 }
             }
@@ -1102,7 +1129,7 @@ export class GameScene extends Phaser.Scene {
             const enemySprite = this.enemyEntities[key];
             if (enemySprite && enemySprite.active && enemySprite.visible) {
                 const dist = Phaser.Math.Distance.Between(this.currentPlayer.x, this.currentPlayer.y, enemySprite.x, enemySprite.y);
-                if (dist < 50) {
+                if (dist < 15 && !isQuizOpen) {
                     const enemyState = this.room.state.enemies[key as any];
                     if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(key)) {
                         this.activeEnemyId = key;
@@ -1126,7 +1153,9 @@ export class GameScene extends Phaser.Scene {
         if (hitEnemy) return;
 
         // --- Click To Move Logic ---
-        this.clickToMove.update(delta);
+        if (!isQuizOpen) {
+            this.clickToMove.update(delta);
+        }
 
         if (this.clickToMove.isMovingByClick()) {
             // Sync valid click movement to server
@@ -1145,14 +1174,17 @@ export class GameScene extends Phaser.Scene {
         }
 
         // If WASD key is pressed, CANCEL click movement
-        const nav = this.controls.getNav();
-        if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown ||
-            this.input.keyboard?.addKey('W').isDown || this.input.keyboard?.addKey('A').isDown ||
-            this.input.keyboard?.addKey('S').isDown || this.input.keyboard?.addKey('D').isDown ||
-            nav.left || nav.right || nav.up || nav.down) {
-            if (this.clickToMove) this.clickToMove.cancelMovement();
+        if (!isQuizOpen) {
+            const nav = this.controls.getNav();
+            if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown ||
+                this.input.keyboard?.addKey('W').isDown || this.input.keyboard?.addKey('A').isDown ||
+                this.input.keyboard?.addKey('S').isDown || this.input.keyboard?.addKey('D').isDown ||
+                nav.left || nav.right || nav.up || nav.down) {
+                if (this.clickToMove) this.clickToMove.cancelMovement();
+            }
         }
 
+        // Simple movement logic
         // Simple movement logic
         const speed = 130;
         const velocity = { x: 0, y: 0 };
@@ -1160,11 +1192,14 @@ export class GameScene extends Phaser.Scene {
             left: false, right: false, up: false, down: false
         };
 
-        if (this.cursors.left.isDown || this.input.keyboard?.addKey('A').isDown || nav.left) inputPayload.left = true;
-        else if (this.cursors.right.isDown || this.input.keyboard?.addKey('D').isDown || nav.right) inputPayload.right = true;
+        if (!isQuizOpen) {
+            const nav = this.controls.getNav();
+            if (this.cursors.left.isDown || this.input.keyboard?.addKey('A').isDown || nav.left) inputPayload.left = true;
+            else if (this.cursors.right.isDown || this.input.keyboard?.addKey('D').isDown || nav.right) inputPayload.right = true;
 
-        if (this.cursors.up.isDown || this.input.keyboard?.addKey('W').isDown || nav.up) inputPayload.up = true;
-        else if (this.cursors.down.isDown || this.input.keyboard?.addKey('S').isDown || nav.down) inputPayload.down = true;
+            if (this.cursors.up.isDown || this.input.keyboard?.addKey('W').isDown || nav.up) inputPayload.up = true;
+            else if (this.cursors.down.isDown || this.input.keyboard?.addKey('S').isDown || nav.down) inputPayload.down = true;
+        }
 
         if (inputPayload.left) velocity.x -= 1;
         if (inputPayload.right) velocity.x += 1;
@@ -1219,9 +1254,18 @@ export class GameScene extends Phaser.Scene {
             const enemy = this.enemyEntities[id];
             const tx = enemy.getData('targetX');
             const ty = enemy.getData('targetY');
-            if (tx !== undefined && ty !== undefined) {
+
+            // Only move if enemy is still active/alive and has a target
+            const enemyState = this.room.state.enemies[id as any];
+            const isAlive = enemyState ? enemyState.isAlive : true;
+
+            if (isAlive && tx !== undefined && ty !== undefined) {
                 enemy.x += (tx - enemy.x) * 0.1;
                 enemy.y += (ty - enemy.y) * 0.1;
+            } else if (!isAlive) {
+                // If not alive, clear velocity/interpolation to prevent sliding
+                enemy.setData('targetX', enemy.x);
+                enemy.setData('targetY', enemy.y);
             }
         });
 
