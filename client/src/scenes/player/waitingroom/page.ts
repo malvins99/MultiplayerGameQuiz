@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { TransitionManager } from '../utils/TransitionManager';
-import { CharacterSelectPopup } from '../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../ui/QRCodePopup';
-import { HAIR_OPTIONS, getHairById } from '../data/characterData';
+import { Router } from '../../../utils/Router';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
+import { QRCodePopup } from '../../../ui/QRCodePopup';
+import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 
 export class PlayerWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -40,51 +40,65 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         super('PlayerWaitingRoomScene');
     }
 
-    init(data: { room: Room, isHost: boolean }) {
-        if (!data || !data.room) {
-            console.warn("[PlayerWaitingRoom] No room data provided. Redirecting to Lobby...");
-            this.scene.start('LobbyScene');
-            return;
+    init(data: { room?: Room, isHost?: boolean, client?: any, isRestore?: boolean }) {
+        if (data.room) {
+            this.room = data.room;
+            this.mySessionId = this.room.sessionId;
         }
-        this.room = data.room;
-        this.isHost = data.isHost;
-        this.mySessionId = this.room.sessionId;
+        this.isHost = data.isHost !== undefined ? data.isHost : false;
+
+        if (data.isRestore && !this.room && data.client) {
+            this.restoreRoom(data.client);
+        }
     }
 
-    create() {
-        if (!this.room) return;
-        // Grab DOM elements
-        this.waitingUI = document.getElementById('waiting-ui');
+    async restoreRoom(client: any) {
+        const reconnectionToken = localStorage.getItem('currentReconnectionToken');
 
-        // Hide lobby, show waiting room
-        const lobbyUI = document.getElementById('lobby-ui');
-        if (lobbyUI) lobbyUI.classList.add('hidden');
-        if (this.waitingUI) {
-            this.waitingUI.classList.remove('hidden');
-            this.setupPlayerUI(); // Inject new HTML structure
+        if (!reconnectionToken) {
+            console.warn("Cannot restore player room: No reconnection token saved.");
+            this.cleanupAndGoLobby();
+            return;
         }
 
-        // Re-grab new elements after injection
-        this.playerGridEl = document.getElementById('player-grid');
-        this.playerCountEl = document.getElementById('player-count-value');
-        this.nameInput = document.getElementById('header-player-name') as HTMLInputElement;
-        this.backBtn = document.getElementById('player-back-btn');
+        try {
+            console.log("Player reconnecting with token...");
+            this.room = await client.reconnect(reconnectionToken);
+            console.log("Player reconnected!", this.room);
+            this.mySessionId = this.room.sessionId;
 
-        // Setup Event Listeners
-        if (this.backBtn) {
-            this.backBtn.onclick = () => {
-                this.leaveRoom();
-            };
+            // Perbarui token setelah reconnect berhasil
+            localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken);
+
+            // Setup room listeners again
+            this.setupRoomListeners();
+
+        } catch (e) {
+            console.warn("Player reconnection failed:", e);
+            localStorage.removeItem('currentRoomId');
+            localStorage.removeItem('currentSessionId');
+            localStorage.removeItem('currentReconnectionToken');
+            this.cleanupAndGoLobby();
+        }
+    }
+
+    /** Bersihkan UI dan kembali ke lobby (tanpa ghost waiting-ui) */
+    cleanupAndGoLobby() {
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        const waitingUiEl = document.getElementById('waiting-ui');
+        if (waitingUiEl) waitingUiEl.classList.add('hidden');
+
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
         }
 
-        const chooseCharBtn = document.getElementById('player-choose-char-btn');
-        if (chooseCharBtn) {
-            chooseCharBtn.onclick = () => {
-                const myPlayer = this.room.state.players.get(this.mySessionId);
-                this.characterPopup?.show(myPlayer?.hairId || 0);
-            };
-        }
+        document.getElementById('exit-confirm-modal')?.remove();
+        Router.navigate('/');
+        this.scene.start('LobbyScene');
+    }
 
+    setupRoomListeners() {
         // --- Room State Listeners ---
         this.room.state.listen("hostId", (hostId: string) => {
             if (hostId === this.mySessionId) {
@@ -106,6 +120,51 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             this.handleGameStart();
         });
 
+        // Kicked by Host
+        this.room.onMessage("kicked", (payload: any) => {
+            // Langsung keluar tanpa alert
+            this.leaveRoom();
+        });
+    }
+
+    create() {
+        // Grab DOM elements
+        this.waitingUI = document.getElementById('waiting-ui');
+
+        // Hide lobby, show waiting room
+        const lobbyUI = document.getElementById('lobby-ui');
+        if (lobbyUI) lobbyUI.classList.add('hidden');
+        if (this.waitingUI) {
+            this.waitingUI.classList.remove('hidden');
+            this.setupPlayerUI(); // Inject new HTML structure
+        }
+
+        // Re-grab new elements after injection
+        this.playerGridEl = document.getElementById('player-grid');
+        this.playerCountEl = document.getElementById('player-count-value');
+        this.nameInput = document.getElementById('header-player-name') as HTMLInputElement;
+        this.backBtn = document.getElementById('player-back-btn');
+
+        // Setup Event Listeners
+        if (this.backBtn) {
+            this.backBtn.onclick = () => {
+                this.showExitConfirm();
+            };
+        }
+
+        const chooseCharBtn = document.getElementById('player-choose-char-btn');
+        if (chooseCharBtn) {
+            chooseCharBtn.onclick = () => {
+                const myPlayer = this.room.state.players.get(this.mySessionId);
+                this.characterPopup?.show(myPlayer?.hairId || 0);
+            };
+        }
+
+        // Setup listeners if room is ready (normal join)
+        if (this.room) {
+            this.setupRoomListeners();
+        }
+
         // Initialize Character Popup
         this.characterPopup = new CharacterSelectPopup(
             HAIR_OPTIONS,
@@ -121,26 +180,18 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.createCountdownOverlay();
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number, previousVal: number) => {
+        this.room.state.listen("countdown", (val: number) => {
             if (val > 0) {
-                TransitionManager.ensureClosed();
-                TransitionManager.setCountdownText(val.toString());
-
-                // Immediately transition to GameScene so it can load in background
-                this.handleGameStart();
-            } else if (val === 0 && (previousVal || 0) > 0) {
-                TransitionManager.setCountdownText("GO!");
-            } else {
-                TransitionManager.setCountdownText("");
+                if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
+                if (this.countdownText) this.countdownText.innerText = val.toString();
+            } else if (val === 0) {
+                if (this.countdownText) this.countdownText.innerText = "GO!";
             }
         });
 
         // Listen for State Start
         this.room.state.listen("isGameStarted", (isStarted: boolean) => {
-            if (isStarted) {
-                TransitionManager.setCountdownText("");
-                this.handleGameStart();
-            }
+            if (isStarted) this.handleGameStart();
         });
     }
 
@@ -148,13 +199,35 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         if (this.isGameStarting) return;
         this.isGameStarting = true;
 
-        if (this.waitingUI) this.waitingUI.classList.add('hidden');
-        Router.navigate('/game');
-        this.scene.start('GameScene', { room: this.room });
+        if (this.countdownOverlay) {
+            this.countdownOverlay.remove();
+            this.countdownOverlay = null;
+        }
+
+        TransitionManager.close(() => {
+            if (this.waitingUI) this.waitingUI.classList.add('hidden');
+            Router.navigate('/game');
+            this.scene.start('GameScene', { room: this.room });
+        });
     }
 
     createCountdownOverlay() {
-        // Removed: Using global TransitionManager countdown
+        const overlay = document.createElement('div');
+        overlay.id = 'player-countdown-overlay';
+        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
+        overlay.innerHTML = `
+            <div class="flex flex-col items-center animate-bounce">
+                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                    10
+                </div>
+                <div class="text-white/50 font-['Press_Start_2P'] text-xs md:text-sm mt-4 tracking-widest uppercase">
+                    Get Ready!
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        this.countdownOverlay = overlay;
+        this.countdownText = document.getElementById('player-countdown-text');
     }
 
     setupPlayerUI() {
@@ -238,11 +311,11 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 }
                 .player-count-value {
                     color: #00ff88;
-                    font-family: 'Retro Gaming';
+                    font-family: 'Press Start 2P';
                     font-size: 14px;
                 }
                 .neon-title-standard {
-                    font-family: 'Retro Gaming';
+                    font-family: 'Press Start 2P';
                     font-size: 38px;
                     color: #00ff88;
                     text-shadow: 0 0 15px rgba(0, 255, 136, 0.4), 3px 3px 0px #000;
@@ -268,7 +341,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 .pill-you {
                     background: #00ff88;
                     color: black;
-                    font-family: 'Retro Gaming';
+                    font-family: 'Press Start 2P';
                     font-size: 8px;
                     padding: 5px 20px;
                     border-radius: 100px;
@@ -283,7 +356,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     justify-content: center;
                     border: 4px solid #000;
                     cursor: pointer;
-                    font-family: 'Retro Gaming';
+                    font-family: 'Press Start 2P';
                     text-transform: uppercase;
                     transition: transform 0.1s;
                 }
@@ -306,6 +379,76 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     from { background-position: 0 0; }
                     to { background-position: -864px 0; }
                 }
+
+                /* Responsive Additions */
+                .logo-tl {
+                    position: absolute;
+                    top: -60px;
+                    left: -65px;
+                    width: 24rem; /* 384px */
+                }
+                .logo-tr {
+                    position: absolute;
+                    top: 0.5rem;
+                    right: 0.5rem;
+                    width: 16rem; /* 256px */
+                }
+                .player-grid-responsive {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+                    gap: 12px;
+                    padding: 10px;
+                    width: 100%;
+                    justify-content: center;
+                }
+                .player-card-wrapper {
+                    aspect-ratio: 1 / 1.1;
+                    width: 100%;
+                    max-width: 148px;
+                    margin: 0 auto;
+                }
+                
+                @media (max-width: 768px) {
+                    .logo-tl {
+                        top: -20px;
+                        left: -20px;
+                        width: 12rem;
+                    }
+                    .logo-tr {
+                        top: 0.5rem;
+                        right: 0.5rem;
+                        width: 8rem;
+                    }
+                    .player-content-box {
+                        margin-top: 30px;
+                        padding: 15px;
+                        min-height: 200px;
+                        flex: 1;
+                        max-height: calc(100vh - 180px);
+                        margin-bottom: 80px;
+                    }
+                    .fixed.bottom-10 {
+                        bottom: 1.5rem !important;
+                    }
+                    .btn-exit-standard {
+                        padding: 0 16px;
+                        height: 48px;
+                        font-size: 10px;
+                    }
+                    .btn-choose-char-green {
+                        padding: 0 16px;
+                        height: 48px;
+                        font-size: 10px;
+                    }
+                    .player-grid-responsive {
+                        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                        gap: 8px;
+                        padding: 5px;
+                    }
+                    .player-card-wrapper {
+                        max-width: 100%;
+                    }
+                }
             `;
             document.head.appendChild(style);
         }
@@ -314,12 +457,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
-            <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 pt-20 overflow-hidden">
+            <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
                 <div class="player-content-box">
                     <!-- Standard Header Section (Inside Box) -->
@@ -331,14 +474,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- Player Grid -->
-                    <div id="player-grid" class="flex-1 overflow-y-auto custom-scrollbar px-2">
+                    <div id="player-grid" class="flex-1 overflow-y-auto custom-scrollbar px-2 player-grid-responsive">
                         <!-- Player items injected here -->
                     </div>
                 </div>
             </div>
 
             <!-- Sticky Bottom Buttons -->
-            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30">
+            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30 w-[90%] md:w-auto justify-center">
                 <!-- EXIT Button (Red Host Style) -->
                 <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
                     EXIT
@@ -381,7 +524,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         // Render Hair
         if (hairId > 0) {
-            import('../data/characterData').then(({ getHairById }) => {
+            import('../../../data/characterData').then(({ getHairById }) => {
                 const hair = getHairById(hairId);
                 if (hair) {
                     const hairLayer = document.createElement('div');
@@ -401,13 +544,123 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         }
     }
 
+    showExitConfirm() {
+        // Hapus modal lama jika ada
+        document.getElementById('exit-confirm-modal')?.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'exit-confirm-modal';
+        modal.style.cssText = `
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.75);
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.15s ease;
+        `;
+        modal.innerHTML = `
+            <style>
+                @keyframes popIn {
+                    from { transform: scale(0.85); opacity: 0; }
+                    to   { transform: scale(1);    opacity: 1; }
+                }
+                #exit-confirm-box {
+                    animation: popIn 0.2s cubic-bezier(.34,1.56,.64,1);
+                    background: #1a1a2e;
+                    border: 3px solid #ef4444;
+                    border-radius: 16px;
+                    box-shadow: 0 0 40px rgba(239,68,68,0.3), 0 20px 60px rgba(0,0,0,0.8);
+                    padding: 36px 40px;
+                    text-align: center;
+                    min-width: 320px;
+                    max-width: 90vw;
+                }
+                #exit-confirm-box h2 {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 14px;
+                    color: #ef4444;
+                    margin-bottom: 12px;
+                    line-height: 1.6;
+                }
+                #exit-confirm-box p {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    color: rgba(255,255,255,0.6);
+                    margin-bottom: 28px;
+                    line-height: 1.8;
+                }
+                .exit-btn-row {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: center;
+                }
+                .btn-cancel-exit {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    padding: 12px 24px;
+                    background: rgba(255,255,255,0.08);
+                    border: 2px solid rgba(255,255,255,0.15);
+                    border-radius: 10px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                }
+                .btn-cancel-exit:hover { background: rgba(255,255,255,0.15); }
+                .btn-confirm-exit {
+                    font-family: 'Press Start 2P', monospace;
+                    font-size: 9px;
+                    padding: 12px 24px;
+                    background: #ef4444;
+                    border: 2px solid #b91c1c;
+                    border-radius: 10px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    border-bottom-width: 4px;
+                }
+                .btn-confirm-exit:hover { filter: brightness(1.15); }
+                .btn-confirm-exit:active { border-bottom-width: 2px; transform: translateY(2px); }
+            </style>
+            <div id="exit-confirm-box">
+                <h2>⚠ KELUAR?</h2>
+                <p>Kamu akan meninggalkan<br>ruangan ini.</p>
+                <div class="exit-btn-row">
+                    <button class="btn-cancel-exit" id="exit-cancel-btn">BATAL</button>
+                    <button class="btn-confirm-exit" id="exit-confirm-btn">YA, KELUAR</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Klik di luar modal → tutup
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        document.getElementById('exit-cancel-btn')?.addEventListener('click', () => {
+            modal.remove();
+        });
+
+        document.getElementById('exit-confirm-btn')?.addEventListener('click', () => {
+            modal.remove();
+            this.leaveRoom();
+        });
+    }
+
     leaveRoom() {
         if (this.room) {
             this.room.leave();
         }
+
+        // Hapus session data
+        localStorage.removeItem('currentRoomId');
+        localStorage.removeItem('currentSessionId');
+        localStorage.removeItem('currentReconnectionToken');
+
+        // IMPORTANT: Clear any zombie pending join codes so we don't auto-join again
+        localStorage.removeItem('pendingJoinRoomCode');
+
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
-        // Remove overlay
         if (this.countdownOverlay) {
             this.countdownOverlay.remove();
             this.countdownOverlay = null;
@@ -415,8 +668,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
-        Router.navigate('/');
-        this.scene.start('LobbyScene');
+
+        // Use replace to prevent "Back" from re-joining
+        Router.replace('/');
+
+        // Explicitly tell lobby we are exiting so it doesn't auto-join
+        this.scene.start('LobbyScene', { didExit: true });
     }
 
     showCopyFeedback() {
@@ -510,7 +767,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-bold uppercase ${textClass} font-['Retro_Gaming'] tracking-tight">${subRoom.id}</span>
+                        <span class="text-sm font-bold uppercase ${textClass} font-['Press_Start_2P'] tracking-tight">${subRoom.id}</span>
                         <div class="px-2 py-1 bg-black/60 rounded text-[10px] font-bold text-white/80 border border-white/5">
                             ${playerCount}/${subRoom.capacity}
                         </div>
@@ -520,7 +777,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                         ${playerListHTML}
                     </div>
 
-                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Retro_Gaming'] tracking-wide ${btnVisibility}">
+                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide ${btnVisibility}">
                         ${btnText}
                     </button>
                 </div>
@@ -545,6 +802,13 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             }
         });
 
+        // Ensure current player is always first
+        players.sort((a, b) => {
+            if (a.sessionId === this.mySessionId) return -1;
+            if (b.sessionId === this.mySessionId) return 1;
+            return 0; // maintain original order for other players
+        });
+
         this.updateUILayout();
 
         let html = '';
@@ -555,12 +819,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             const youPill = isMe ? '<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 pill-you">YOU</div>' : '';
 
             html += `
-                <div class="${cardClass}" style="
-                    aspect-ratio: 1 / 1.1;
-                    width: 100%;
-                    max-width: 148px;
-                    margin: 0 auto;
-                ">
+                <div class="${cardClass} player-card-wrapper">
                     <!-- Character (Middle) -->
                     <div style="width: 76px; height: 76px; background: radial-gradient(circle, rgba(0,212,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
                          <div style="
@@ -595,7 +854,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     
                     <!-- Player Name -->
                     <div style="text-align: center; width: 100%;">
-                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Retro Gaming', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                             ${player.name || 'PLAYER'}
                         </span>
                     </div>
@@ -606,14 +865,6 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         });
 
         this.playerGridEl.innerHTML = html;
-        this.playerGridEl.style.cssText = `
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-            gap: 12px;
-            padding: 10px;
-            width: 100%;
-            justify-content: center;
-        `;
 
         // Expose name update globally
         (window as any).updatePlayerName = (name: string) => {

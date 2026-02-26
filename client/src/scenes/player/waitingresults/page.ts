@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { Router } from '../utils/Router';
-import { supabase } from '../lib/supabase';
+import { Router } from '../../../utils/Router';
+import { supabase } from '../../../lib/supabase';
 
 // Interfaces for Room State (simplified)
 interface PlayerSync {
@@ -41,14 +41,34 @@ export class WaitingResultsScene extends Phaser.Scene {
         Router.navigate('/player/result');
 
         // Check Room State
-        const room = this.registry.get('room');
-        const playerCount = room?.state?.players?.size || 0;
+        let room = this.registry.get('room');
+
+        // REFRESH HANDLING: IF ROOM IS MISSING, TRY TO RECONNECT
+        if (!room) {
+            const roomId = localStorage.getItem('currentRoomId');
+            const sessionId = localStorage.getItem('currentSessionId');
+            if (roomId && sessionId) {
+                // We don't have the client instance here easily to reconnect fully to state.
+                // However, for results, we mostly need the data.
+                // Ideally, we redirect to lobby and let lobby handle standard rejoin, 
+                // BUT user wants to stay on result page.
+                //
+                // Strategy: 
+                // 1. Try to grab client from previous scene? No.
+                // 2. Just show "Session Expired" or try to fetch from DB if we have ID.
+                // 
+                // Better approach implemented in Lobby: Lobby starts this scene with { isRestore: true }
+                // Let's check init data.
+            }
+        }
 
         // Retrieve Player Data (Initial Mock/State)
         let myPlayer: PlayerSync | null = null;
         let gameStartTime = 0;
+        let playerCount = 0;
 
         if (room) {
+            playerCount = room.state.players.size;
             myPlayer = room.state.players.get(room.sessionId);
             gameStartTime = room.state.gameStartTime || Date.now();
         }

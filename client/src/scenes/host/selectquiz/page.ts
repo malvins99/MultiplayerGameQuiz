@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
-import { Router } from '../utils/Router';
-import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../data/QuizData';
-import { TransitionManager } from '../utils/TransitionManager';
-import { authService } from '../services/AuthService';
+import { Router } from '../../../utils/Router';
+import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
+import { TransitionManager } from '../../../utils/TransitionManager';
+import { authService } from '../../../services/AuthService';
 
 export class SelectQuizScene extends Phaser.Scene {
     client!: Client;
@@ -36,6 +36,13 @@ export class SelectQuizScene extends Phaser.Scene {
 
     create() {
         this.quizSelectionUI = document.getElementById('quiz-selection-ui');
+
+        // Hide UI initially to prevent flash
+        this.hideAllUI();
+
+        // Extra safety: Force hide lobby-ui immediately
+        const lobbyUI = document.getElementById('lobby-ui');
+        if (lobbyUI) lobbyUI.classList.add('hidden');
 
         this.createTooltip();
         this.setupEventListeners();
@@ -97,7 +104,7 @@ export class SelectQuizScene extends Phaser.Scene {
             grid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-16 gap-4">
                     <div class="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    <p class="text-white/50 font-['Retro_Gaming'] text-[10px]">Loading quizzes...</p>
+                    <p class="text-white/50 font-['Press_Start_2P'] text-[10px]">Loading quizzes...</p>
                 </div>
             `;
         }
@@ -139,7 +146,7 @@ export class SelectQuizScene extends Phaser.Scene {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-4 py-3 text-xs font-['Retro_Gaming'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
+        btn.className = "w-full text-left px-4 py-3 text-xs font-['Press_Start_2P'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
 
@@ -451,11 +458,11 @@ export class SelectQuizScene extends Phaser.Scene {
                     <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
                         <span class="material-symbols-outlined text-3xl text-white/20">search_off</span>
                     </div>
-                    <p class="text-white/70 font-['Retro_Gaming'] text-[10px] uppercase mb-2 tracking-widest">
+                    <p class="text-white/70 font-['Press_Start_2P'] text-[10px] uppercase mb-2 tracking-widest">
                         Quiz Tidak Ditemukan
                     </p>
                     
-                    <button id="reset-filters-btn" class="px-6 py-3 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-['Retro_Gaming'] text-[10px] uppercase rounded-lg transition-all flex items-center gap-2">
+                    <button id="reset-filters-btn" class="px-6 py-3 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-['Press_Start_2P'] text-[10px] uppercase rounded-lg transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">refresh</span>
                         Reset Filter
                     </button>
@@ -473,27 +480,25 @@ export class SelectQuizScene extends Phaser.Scene {
 
             let badgeColor = 'bg-primary/10 text-primary border border-primary/20';
 
-            card.className = "group bg-surface-dark border border-white/5 p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-colors duration-200 cursor-pointer relative overflow-hidden";
+            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
 
             card.innerHTML = `
-                <!-- Background Gradient (Subtle Green on Hover) logic removed or kept subtle -->
+                <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                <div class="relative z-10 flex justify-between items-start mb-6">
-                    <!-- Pixel Font Badge -->
-                    <span class="px-3 py-2 ${badgeColor} text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Retro_Gaming'] leading-none">${quiz.category}</span>
+                <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
+                    <!-- Pixel Font Badge - Adjusted text size for mobile -->
+                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-[8px] md:text-[10px] font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
+                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                        <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
-                <!-- Font Title: Retro Gaming -->
-                <h3 class="relative z-10 text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors leading-relaxed h-[3.5rem] line-clamp-2 font-['Retro_Gaming'] tracking-tight text-[12px]">
-                    <span class="quiz-title-tooltip-trigger">${quiz.title}</span>
-                </h3>
-                
-                <div class="h-4"></div> 
+                <!-- Title - Flow dynamically with flex-grow -->
+                <div class="relative z-10 font-bold text-white mt-auto pt-4 group-hover:text-primary transition-colors leading-[1.8] font-['Press_Start_2P'] tracking-tight text-[10px] sm:text-[12px] break-words whitespace-normal w-full flex-grow">
+                    <span class="quiz-title-tooltip-trigger inline-block w-full">${quiz.title}</span>
+                </div>
             `;
 
             // Tooltip Logic
@@ -516,6 +521,10 @@ export class SelectQuizScene extends Phaser.Scene {
                     TransitionManager.transitionTo(() => {
                         this.hideUI();
                         this.cleanup();
+                        // Simpan ID ke localStorage agar URL tetap bersih (/host/settings) tapi refresh tetap jalan
+                        localStorage.setItem('tempSettingsQuizId', quiz.id);
+                        // Navigate ke URL bersih
+                        Router.navigate('/host/settings');
                         this.scene.start('QuizSettingScene', { quiz, client: this.client });
                     });
                 }
@@ -602,7 +611,7 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!t) {
             t = document.createElement('div');
             t.id = 'custom-quiz-tooltip';
-            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-primary text-white text-[10px] font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(0,255,85,0.3)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
+            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-primary text-white text-[10px] font-bold font-['Press_Start_2P'] rounded-lg shadow-[0_0_15px_rgba(0,255,85,0.3)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
             document.body.appendChild(t);
         }
         this.tooltip = t;
@@ -650,15 +659,16 @@ export class SelectQuizScene extends Phaser.Scene {
 
     // --- NAVIGATION ---
 
-    showQuizSelection() {
-        // Hide other UIs
+    hideAllUI() {
         const uiIds = ['lobby-ui', 'create-room-ui', 'quiz-settings-ui'];
         uiIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.add('hidden');
         });
+        if (this.quizSelectionUI) this.quizSelectionUI.classList.add('hidden');
+    }
 
-        // Show quiz selection
+    showQuizSelection() {
         if (this.quizSelectionUI) {
             this.quizSelectionUI.classList.remove('hidden');
         }

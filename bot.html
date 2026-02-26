@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bot Simulator</title>
+    <!-- Gunakan versi Colyseus.js v0.15 karena server menggunakan v0.15 -->
+    <script src="https://unpkg.com/colyseus.js@0.15.0/dist/colyseus.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .card {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #e94560;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #a5a5a5;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: none;
+        }
+
+        input {
+            background: #0f3460;
+            color: white;
+            outline: none;
+            border: 1px solid #1f4287;
+        }
+
+        input:focus {
+            border-color: #e94560;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .row>div {
+            flex: 1;
+        }
+
+        button {
+            background: #e94560;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #d03d56;
+        }
+
+        .danger {
+            background: #c0392b;
+        }
+
+        .danger:hover {
+            background: #a53125;
+        }
+
+        #log {
+            background: #0b0b1a;
+            color: #0f0;
+            padding: 15px;
+            height: 350px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            margin-top: 20px;
+            border-radius: 4px;
+            border: 1px solid #1f4287;
+        }
+
+        .log-error {
+            color: #ff4d4d;
+        }
+
+        .log-success {
+            color: #00ff00;
+        }
+
+        .log-warn {
+            color: #ffeb3b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🤖 Simulasi Player Bot</h2>
+
+        <div class="form-group">
+            <label>Server WebSocket URL</label>
+            <input type="text" id="serverUrl" value="ws://localhost:2567">
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>Room Code (6 digit)</label>
+                <input type="text" id="roomCode" placeholder="Contoh: 123456">
+            </div>
+            <div class="form-group">
+                <label>Jumlah Bot</label>
+                <input type="number" id="botCount" value="1" min="1" max="20">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Nama Prefix Bot</label>
+            <input type="text" id="botName" value="DumbBot">
+        </div>
+
+        <button onclick="startBots()">🚀 Spawn Bots</button>
+        <button class="danger" onclick="disconnectAll()">🛑 Kick / Disconnect Semua Bot</button>
+
+        <div id="log">
+            <div style="color: #a5a5a5;">// Log aktivitas bot akan muncul di sini...</div>
+        </div>
+    </div>
+
+    <script>
+        let bots = [];
+
+        function log(msg, type = "normal") {
+            const logDiv = document.getElementById('log');
+            let colorClass = "";
+            if (type === "error") colorClass = "log-error";
+            if (type === "success") colorClass = "log-success";
+            if (type === "warn") colorClass = "log-warn";
+
+            logDiv.innerHTML += `<div class="${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function startBots() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const roomCode = document.getElementById('roomCode').value.trim();
+            const prefix = document.getElementById('botName').value.trim();
+            const count = parseInt(document.getElementById('botCount').value) || 1;
+
+            if (!roomCode) {
+                alert("Room Code tidak boleh kosong!");
+                return;
+            }
+
+            const client = new Colyseus.Client(serverUrl);
+
+            try {
+                log(`Mencari ruang dengan PIN: ${roomCode}...`, "warn");
+
+                // Cari data room yg sesuai dengan pin/roomCode
+                const rooms = await client.getAvailableRooms("game_room");
+                const targetRoom = rooms.find(r => r.metadata?.roomCode === roomCode);
+
+                if (!targetRoom) {
+                    log(`❌ Error: Sesi dengan PIN ${roomCode} tidak ditemukan, atau game sudah dimulai!`, "error");
+                    return;
+                }
+
+                log(`✅ Room ditemukan! Colyseus RoomId: ${targetRoom.roomId}. Bersiap spawn ${count} bot...`, "success");
+
+                let successCount = 0;
+                for (let i = 0; i < count; i++) {
+                    const botName = `${prefix}_${Math.floor(Math.random() * 9999)}`;
+                    // Beri jeda 500ms antar bot agar server host tidak overstres saat sinkronisasi UI
+                    spawnSingleBot(client, targetRoom.roomId, botName, i * 500);
+                }
+            } catch (err) {
+                log(`❌ Terjadi Kesalahan Koneksi: ${err.message}`, "error");
+            }
+        }
+
+        function spawnSingleBot(client, roomId, botName, delay) {
+            setTimeout(async () => {
+                try {
+                    const room = await client.joinById(roomId, { name: botName });
+                    log(`🎉 [${botName}] Berhasil join room! Menunggu instruksi...`, "success");
+                    bots.push(room);
+
+                    // ===== LISTENERS =====
+
+                    room.onMessage("gameStarted", () => {
+                        log(`🎮 [${botName}] Host telah memulai game!`, "warn");
+                    });
+
+                    room.onMessage("playerFinished", () => {
+                        log(`🏆 [${botName}] Instruksi finish diterima!`, "success");
+                    });
+
+                    room.onMessage("kicked", (msg) => {
+                        log(`🥾 [${botName}] Di-kick oleh host: ${msg.message}`, "error");
+                    });
+
+                    room.onLeave((code) => {
+                        log(`🚪 [${botName}] Terputus dari room (Code: ${code}).`, "warn");
+                        // Hapus dari list array bots yang aktif
+                        bots = bots.filter(b => b.id !== room.id);
+                    });
+
+                    room.onError((code, message) => {
+                        log(`⚠️ [${botName}] Koneksi Error: ${message}`, "error");
+                    });
+
+                    // Bot bisa diberi perilaku auto-gerak atau auto-jawab di sini jika ingin simulasi lebih hidup
+                    // setInterval(() => {
+                    //    if (room && room.connection.isOpen) {
+                    //       // Simulasi random check
+                    //    }
+                    // }, 5000);
+
+                } catch (e) {
+                    log(`❌ [${botName}] Gagal join: ${e.message}`, "error");
+                }
+            }, delay);
+        }
+
+        function disconnectAll() {
+            if (bots.length === 0) {
+                log("Tidak ada bot yang sedang terhubung.", "warn");
+                return;
+            }
+            log(`Mendisconnect ${bots.length} bot secara paksa...`, "warn");
+            bots.forEach(room => room.leave());
+            bots = [];
+        }
+    </script>
+</body>
+
+</html>

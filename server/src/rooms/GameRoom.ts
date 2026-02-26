@@ -23,7 +23,12 @@ export class GameRoom extends Room<GameState> {
     onCreate(options: any) {
         this.setState(new GameState());
 
+        // Jangan auto-dispose saat semua client disconnect
+        // (host mungkin refresh → reconnect dalam 30 detik)
+        this.autoDispose = false;
+
         this.state.subject = options.subject || "matematika";
+        this.state.difficulty = options.difficulty || "mudah";
         // Use provided room code from client (which matches Supabase session) or generate one
         this.state.roomCode = options.roomCode || this.generateRoomCode();
 
@@ -161,8 +166,12 @@ export class GameRoom extends Room<GameState> {
                 player.answeredQuestions++;
 
                 // Track Answer
-                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
-                this.playerAnswers.get(client.sessionId).push({
+                let answers = this.playerAnswers.get(client.sessionId);
+                if (!answers) {
+                    answers = [];
+                    this.playerAnswers.set(client.sessionId, answers);
+                }
+                answers.push({
                     question_id: data.questionId,
                     answer_id: data.answerId, // Client needs to send this
                     correct: true,
@@ -194,7 +203,7 @@ export class GameRoom extends Room<GameState> {
             }
         });
 
-       this.onMessage("wrongAnswer", (client, data) => {
+        this.onMessage("wrongAnswer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player && !player.isFinished) {
                 player.hasWrongAnswer = true;
@@ -202,11 +211,15 @@ export class GameRoom extends Room<GameState> {
                 player.wrongAnswers++;
                 player.answeredQuestions++;
 
-                // 1. Fitur Tracking (Dari Versi Kamu/HEAD)
-                if (!this.playerAnswers.has(client.sessionId)) this.playerAnswers.set(client.sessionId, []);
-                this.playerAnswers.get(client.sessionId).push({
+                // Track Answer
+                let answers = this.playerAnswers.get(client.sessionId);
+                if (!answers) {
+                    answers = [];
+                    this.playerAnswers.set(client.sessionId, answers);
+                }
+                answers.push({
                     question_id: data.questionId,
-                    answer_id: data.answerId, 
+                    answer_id: data.answerId,
                     correct: false,
                     timestamp: Date.now()
                 });
@@ -217,7 +230,7 @@ export class GameRoom extends Room<GameState> {
                     const enemy = this.state.enemies[enemyIndex];
                     if (enemy) {
                         enemy.isBusy = false;
-                        enemy.isFleeing = false; 
+                        enemy.isFleeing = false;
                         enemy.targetX = 0;
                         enemy.targetY = 0;
                     }
@@ -303,9 +316,33 @@ export class GameRoom extends Room<GameState> {
             }
         });
 
+        // --- Kick Player Handler ---
+        this.onMessage("kickPlayer", (client, payload) => {
+            const player = this.state.players.get(client.sessionId);
+            if (!player || !player.isHost) return; // Hanya host bisa kick
+
+            const targetSessionId = payload.sessionId;
+            const targetClient = this.clients.find(c => c.sessionId === targetSessionId);
+
+            if (targetClient) {
+                console.log(`[GameRoom] Host kicked player ${targetSessionId}`);
+                targetClient.send("kicked", { message: "You have been kicked by the host." });
+
+                // Tandai client sebagai kicked agar onLeave tidak menunggu reconnect
+                (targetClient as any).kicked = true;
+
+                targetClient.leave(); // Force leave
+            } else {
+                // Handle ghost player (state ada tapi client putus)
+                const targetPlayer = this.state.players.get(targetSessionId);
+                // Jika player offline tapi masih di state, kita bisa force remove atau biarkan timeout
+                // Untuk amannya, biarkan timeout/reconnection logic handle (atau force remove jika perlu)
+            }
+        });
+
         // --- Switch Room Handler ---
-        this.onMessage("switchRoom", (client, data) => {
-            const roomId = data.roomId;
+        this.onMessage("switchRoom", (client, message) => {
+            const roomId = message.roomId;
             const player = this.state.players.get(client.sessionId);
 
             if (player && roomId && roomId !== player.subRoomId) {
@@ -623,17 +660,38 @@ export class GameRoom extends Room<GameState> {
         }
     }
 
-    onLeave(client: Client, consented: boolean) {
-        console.log(client.sessionId, "left!");
+    async onLeave(client: Client, consented: boolean) {
+        console.log(client.sessionId, "left! consented:", consented);
         const player = this.state.players.get(client.sessionId);
+
+        // Cek jika client di-kick secara paksa (flagged)
+        const isKicked = (client as any).kicked === true;
+
+        // Jika disconnect tidak disengaja (refresh/koneksi putus) DAN bukan di-kick
+        if (!consented && !isKicked) {
+            const timeout = player?.isHost ? 30 : 10; // Host 30s, player 10s
+            const role = player?.isHost ? 'Host' : 'Player';
+            console.log(`[GameRoom] ${role} ${client.sessionId} disconnected. Allowing reconnection for ${timeout}s...`);
+            try {
+                await this.allowReconnection(client, timeout);
+                console.log(`[GameRoom] ${role} ${client.sessionId} reconnected!`);
+                return; // Reconnect berhasil, jangan hapus player
+            } catch (e) {
+                console.log(`[GameRoom] ${role} reconnection timed out.`);
+                if (player?.isHost) {
+                    this.disconnect(); // Tutup room jika host tidak kembali
+                    return;
+                }
+                // Player biasa: lanjut hapus dari state
+            }
+        }
+
+        // Hapus player dari state (intentional leave, kicked, atau timeout reconnect)
         if (player) {
-            // Free up spawn index for reuse
             if (player.spawnIndex !== -1) {
                 this.usedSpawnIndices.delete(player.spawnIndex);
                 console.log(`[Spawn] Freed spawn point ${player.spawnIndex} for player ${player.name}`);
             }
-
-            // Remove from sub-room
             const subRoom = this.state.subRooms.find(r => r.id === player.subRoomId);
             if (subRoom) {
                 const idx = subRoom.playerIds.indexOf(client.sessionId);
@@ -642,7 +700,13 @@ export class GameRoom extends Room<GameState> {
         }
         this.state.players.delete(client.sessionId);
 
-        // Check if game can end now that this player left
+        // Jika host intentionally leave → tutup room
+        if (player?.isHost && consented) {
+            console.log(`[GameRoom] Host left intentionally. Disposing room.`);
+            this.disconnect();
+            return;
+        }
+
         if (this.state.isGameStarted && !this.state.isGameOver) {
             this.checkGameEnd();
         }
@@ -900,3 +964,6 @@ export class GameRoom extends Room<GameState> {
         this.broadcast("gameEnded", { rankings });
     }
 }
+
+
+//ikan

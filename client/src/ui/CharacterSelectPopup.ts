@@ -30,19 +30,22 @@ export class CharacterSelectPopup {
         // Popup Card - WIDER (max-w-4xl), Rectangular look
         // Increased max-width significantly
         this.popup = document.createElement('div');
-        this.popup.className = 'bg-[#1a1a20] border-2 border-white/20 w-full max-w-4xl rounded-2xl p-8 transform translate-y-10 transition-transform duration-300 flex flex-col gap-6 shadow-2xl relative';
+        this.popup.className = 'bg-[#1a1a20] border-2 border-white/20 w-[95%] max-w-4xl rounded-xl md:rounded-2xl p-4 md:p-8 max-h-[95vh] overflow-y-auto transform translate-y-10 transition-transform duration-300 flex flex-col gap-4 md:gap-6 shadow-2xl relative';
 
         // Content: Left (Big Preview) | Right (Grid)
         const content = document.createElement('div');
-        content.className = 'flex-1 flex flex-col md:flex-row gap-8 overflow-hidden';
+        content.className = 'flex-1 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden';
 
         // LEFT COLUMN (Preview Box + Name) - Increased width
         const leftContainer = document.createElement('div');
-        leftContainer.className = 'flex flex-col gap-4 items-center justify-center shrink-0 w-80';
+        leftContainer.className = 'flex flex-col gap-2 md:gap-4 items-center justify-center shrink-0 w-full md:w-80';
 
         // Preview Box - Wider Rectangle (w-full of leftContainer)
         const leftCol = document.createElement('div');
-        leftCol.className = 'bg-black/40 border-2 border-white/10 rounded-2xl relative flex items-center justify-center overflow-hidden w-full h-[280px]';
+        leftCol.className = 'bg-black/40 border-2 border-white/10 rounded-xl md:rounded-2xl relative flex items-center justify-center overflow-hidden w-full h-[180px] md:h-[280px]';
+
+        const isMobile = window.innerWidth < 768;
+        const mainScale = isMobile ? 'scale(3.5)' : 'scale(5)';
 
         // We need a container for the sprites
         // Base Character
@@ -51,7 +54,7 @@ export class CharacterSelectPopup {
         baseSprite.style.backgroundImage = `url('/assets/base_idle_strip9.png')`;
         baseSprite.style.backgroundSize = '864px 64px'; // 9 frames * 96
         baseSprite.style.imageRendering = 'pixelated';
-        baseSprite.style.transform = 'scale(5)'; // Keep scale visible
+        baseSprite.style.transform = mainScale; // Keep scale visible
         baseSprite.style.animation = 'play-idle 1s steps(9) infinite';
 
         // Hair Overlay
@@ -59,7 +62,7 @@ export class CharacterSelectPopup {
         this.bigPreview.className = 'absolute w-[96px] h-[64px]';
         this.bigPreview.style.backgroundSize = '864px 64px';
         this.bigPreview.style.imageRendering = 'pixelated';
-        this.bigPreview.style.transform = 'scale(5)';
+        this.bigPreview.style.transform = mainScale;
         this.bigPreview.style.animation = 'play-idle 1s steps(9) infinite';
 
         // Style Name Label
@@ -89,7 +92,7 @@ export class CharacterSelectPopup {
 
         const scrollArea = document.createElement('div');
         // Grid cols 3, but items will be wide rectangles
-        scrollArea.className = 'flex-1 overflow-y-auto custom-scrollbar grid grid-cols-2 md:grid-cols-3 gap-4 content-start';
+        scrollArea.className = 'flex-1 overflow-y-auto custom-scrollbar grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 content-start';
         this.grid = scrollArea;
 
         rightCol.appendChild(scrollArea);
@@ -104,7 +107,7 @@ export class CharacterSelectPopup {
         footer.className = 'flex justify-end pt-2';
 
         this.okBtn = document.createElement('button');
-        this.okBtn.className = 'px-12 py-4 bg-primary text-black font-bold text-xl uppercase pixel-btn-green border-2 border-black font-["Retro_Gaming"] tracking-widest hover:brightness-110 active:translate-y-1 transition-all rounded-xl shadow-lg';
+        this.okBtn.className = 'px-8 md:px-12 py-3 md:py-4 bg-primary text-black font-bold text-lg md:text-xl uppercase pixel-btn-green border-2 border-black font-[\"Retro_Gaming\"] tracking-widest hover:brightness-110 active:translate-y-1 transition-all rounded-lg md:rounded-xl shadow-lg';
         this.okBtn.innerText = 'OK';
 
         footer.appendChild(this.okBtn);
@@ -194,12 +197,15 @@ export class CharacterSelectPopup {
             // - No expanding animation (removed transform/scale)
             // - Unselected: Grayed out/Dimmed (opacity-40 grayscale)
             // - Selected: Full color, Green Border
-            const baseClass = "w-full h-32 border-2 rounded-xl flex items-center justify-center relative overflow-hidden transition-all duration-200";
+            const baseClass = "w-full h-24 md:h-32 border-2 rounded-xl flex items-center justify-center relative overflow-hidden transition-all duration-200";
             const selectedClass = "bg-white/10 border-primary opacity-100 ring-2 ring-primary/20 z-10";
             const unselectedClass = "bg-black/60 border-white/10 opacity-60 hover:opacity-100 hover:border-white/30 grayscale hover:grayscale-0";
 
             btn.className = `${baseClass} ${isSelected ? selectedClass : unselectedClass}`;
             btn.dataset.id = hair.id.toString();
+
+            const isMobile = window.innerWidth < 768;
+            const gridScale = isMobile ? 'scale(2.5)' : 'scale(3)';
 
             // Base layer
             const base = document.createElement('div');
@@ -213,7 +219,7 @@ export class CharacterSelectPopup {
             base.style.backgroundSize = '864px 64px'; // Full strip size
             base.style.backgroundPosition = '0 0'; // Show first frame (idle)
             base.style.imageRendering = 'pixelated';
-            base.style.transform = 'translate(-50%, -50%) scale(3)'; // Scale 3x (Enlarged per request "lingkaran biru")
+            base.style.transform = `translate(-50%, -50%) ${gridScale}`;
 
             btn.appendChild(base);
 
@@ -229,7 +235,7 @@ export class CharacterSelectPopup {
                 layer.style.backgroundSize = '864px 64px';
                 layer.style.backgroundPosition = '0 0';
                 layer.style.imageRendering = 'pixelated';
-                layer.style.transform = 'translate(-50%, -50%) scale(3)'; // Match scale
+                layer.style.transform = `translate(-50%, -50%) ${gridScale}`; // Match scale
 
                 btn.appendChild(layer);
             }
@@ -242,7 +248,7 @@ export class CharacterSelectPopup {
     private updateGridHighlight() {
         Array.from(this.grid.children).forEach((child: any) => {
             const id = parseInt(child.dataset.id);
-            const baseClass = "w-full h-32 border-2 rounded-xl flex items-center justify-center relative overflow-hidden transition-all duration-200";
+            const baseClass = "w-full h-24 md:h-32 border-2 rounded-xl flex items-center justify-center relative overflow-hidden transition-all duration-200";
             const selectedClass = "bg-white/10 border-primary opacity-100 ring-2 ring-primary/20 z-10";
             const unselectedClass = "bg-black/60 border-white/10 opacity-60 hover:opacity-100 hover:border-white/30 grayscale hover:grayscale-0";
 
