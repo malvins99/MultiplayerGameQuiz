@@ -15,8 +15,8 @@ export class RoomService {
         const { difficulty, questionCount, timer, quiz } = options;
 
         // MAP CONFIGURATION
-        let mapFile = 'map_easy_sementara.tmj'; // Default Mudah
-        if (difficulty === 'sedang') mapFile = 'map_baru3.tmj';
+        let mapFile = 'map_newest_easy_nomor1.tmj'; // Match GameScene default
+        if (difficulty === 'sedang') mapFile = 'map_baru2.tmj';
         if (difficulty === 'sulit') mapFile = 'map_baru3.tmj';
 
         // ENEMY COUNT CALCULATION
