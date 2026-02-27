@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Room, Client } from 'colyseus.js';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 import { supabase } from '../../../lib/supabase';
-import { Player } from '../../../../../server/src/rooms/GameState';
+import { Player } from '../../../../../shared/state';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
@@ -58,10 +58,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (data.room) {
             this.room = data.room;
             this.mySessionId = this.room.sessionId;
+            this.registry.set('room', this.room);
         }
-        this.isHost = data.isHost !== undefined ? data.isHost : true; // Default to true if not specified (restoring host scene)
+        this.isHost = data.isHost !== undefined ? data.isHost : true;
 
-        // Handle restore if no room passed but we have client
+        if (this.room) {
+            this.room.onMessage('timerUpdate', () => {
+                // No-op: actual timer UI is handled by HostProgressScene or GameScene
+            });
+        }
+
         if (data.isRestore && !this.room && data.client) {
             this.restoreRoom(data.client);
         }
@@ -1849,10 +1855,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (this.isGameStarting) return;
         this.isGameStarting = true;
 
-        console.log("Game Starting... Transitioning.");
+        console.log("[Host] Game Starting... Transitioning to Spectator Mode.");
 
-        // UPDATE SUPABASE STATUS TO "ACTIVE" (Only for Host)
-        // Done here to ensure status changes ONLY when game actually starts (after countdown)
         if (this.isHost && this.room && this.room.state && this.room.state.roomCode) {
             supabaseB
                 .from(SESSION_TABLE)
@@ -1860,11 +1864,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 .eq('game_pin', this.room.state.roomCode)
                 .then(({ error }) => {
                     if (error) console.error("Failed to set session active:", error);
-                    else console.log("Session ACTIVE. Countdown finished.");
+                    else console.log("Session ACTIVE in Supabase.");
                 });
         }
 
-        // Clean Overlay
         if (this.countdownOverlay) {
             this.countdownOverlay.remove();
             this.countdownOverlay = null;

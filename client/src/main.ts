@@ -5,7 +5,7 @@ import { HostWaitingRoomScene } from './scenes/host/lobby/page';
 import { PlayerWaitingRoomScene } from './scenes/player/waitingroom/page';
 import { GameScene } from './scenes/player/game/page';
 import { UIScene } from './scenes/player/ui/page';
-import { WaitingResultsScene } from './scenes/player/waitingresults/page';
+import { ResultScene } from './scenes/ResultScene';
 import { LeaderboardScene } from './scenes/player/leaderboard/page';
 import { QuizSettingScene } from './scenes/host/quizsetting/page';
 import { SelectQuizScene } from './scenes/host/selectquiz/page';
@@ -48,7 +48,7 @@ const config: Phaser.Types.Core.GameConfig = {
         LeaderboardScene,
         HostLeaderboardScene,
         HostProgressScene,
-        WaitingResultsScene
+        ResultScene
     ],
     scale: {
         mode: Phaser.Scale.RESIZE,

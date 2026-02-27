@@ -421,7 +421,7 @@ export class LobbyScene extends Phaser.Scene {
         if (Router.is('/player/result')) {
             console.log("[LobbyScene] Result Scene refresh detected.");
             hidelobby();
-            this.scene.start('WaitingResultsScene', { client: this.client, isRestore: true });
+            this.scene.start('ResultScene', { client: this.client, isRestore: true });
             return;
         }
 

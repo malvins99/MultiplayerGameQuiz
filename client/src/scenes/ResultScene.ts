@@ -131,7 +131,18 @@ export class ResultScene extends Phaser.Scene {
             .stat-value { font-family: 'Retro Gaming', monospace; font-size: 18px; color: #fff; margin-bottom: 6px; }
             .stat-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
 
-            .lb-footer { position: fixed; top: 50%; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; pointer-events: none; transform: translateY(-50%); z-index: 20; }
+            .lb-footer { 
+                position: fixed; 
+                top: 50%; 
+                left: 0; 
+                width: 100%; 
+                display: flex; 
+                justify-content: space-between; 
+                padding: 0 40px; 
+                pointer-events: none; 
+                transform: translateY(-50%); 
+                z-index: 20; 
+            }
             .nav-btn {
                 pointer-events: auto; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
                 border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 64px; height: 64px;

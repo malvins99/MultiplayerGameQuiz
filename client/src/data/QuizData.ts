@@ -22,6 +22,46 @@ export interface Quiz {
 // --- SUPABASE FUNCTIONS ---
 
 /**
+ * Fetch a single quiz by ID from Supabase.
+ */
+export async function fetchQuizById(id: string): Promise<Quiz | null> {
+    try {
+        const { data, error } = await supabase
+            .from('quizzes')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            console.error('Error fetching quiz by ID:', error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            title: data.title || 'Untitled Quiz',
+            description: data.description || '',
+            category: formatCategory(data.category || 'general'),
+            language: data.language || 'id',
+            image_url: data.image_url || null,
+            cover_image: data.cover_image || null,
+            is_public: data.is_public ?? true,
+            creator_id: data.creator_id,
+            questions: data.questions || [],
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            favorite: data.favorite || [],
+            status: data.status || 'active',
+            played: data.played || 0,
+            questionCount: Array.isArray(data.questions) ? data.questions.length : 0,
+        };
+    } catch (err) {
+        console.error('Unexpected error fetching quiz:', err);
+        return null;
+    }
+}
+
+/**
  * Fetch all quizzes from Supabase `quizzes` table.
  * Only fetches public, non-hidden, non-deleted, active quizzes.
  */
@@ -72,46 +112,6 @@ export async function fetchQuizzesFromSupabase(): Promise<Quiz[]> {
     } catch (err) {
         console.error('Unexpected error fetching quizzes:', err);
         return [];
-    }
-}
-
-/**
- * Fetch a single quiz by ID from Supabase.
- */
-export async function fetchQuizById(quizId: string): Promise<Quiz | null> {
-    try {
-        const { data, error } = await supabase
-            .from('quizzes')
-            .select('id, title, description, category, language, image_url, cover_image, is_public, creator_id, questions, created_at, updated_at, favorite, status, played')
-            .eq('id', quizId)
-            .single();
-
-        if (error || !data) {
-            console.error('Error fetching quiz by ID:', error);
-            return null;
-        }
-
-        return {
-            id: data.id,
-            title: data.title || 'Untitled Quiz',
-            description: data.description || '',
-            category: formatCategory(data.category || 'general'),
-            language: data.language || 'id',
-            image_url: data.image_url || null,
-            cover_image: data.cover_image || null,
-            is_public: data.is_public ?? true,
-            creator_id: data.creator_id,
-            questions: data.questions || [],
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-            favorite: data.favorite || [],
-            status: data.status || 'active',
-            played: data.played || 0,
-            questionCount: Array.isArray(data.questions) ? data.questions.length : 0,
-        };
-    } catch (err) {
-        console.error('Unexpected error fetching quiz by ID:', err);
-        return null;
     }
 }
 

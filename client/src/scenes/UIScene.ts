@@ -5,19 +5,13 @@ export class UIScene extends Phaser.Scene {
     scoreText!: Phaser.GameObjects.Text;
     timerText!: Phaser.GameObjects.Text;
     currentScore: number = 0;
-    zigmaLogo!: Phaser.GameObjects.Image;
 
     constructor() {
         super({ key: 'UIScene', active: false });
     }
 
-
     create() {
         const screenWidth = this.scale.width;
-
-        // --- Logos ---
-        // Zigma Logo (Top Left)
-        this.zigmaLogo = this.add.image(20, 20, 'logo_zigma'); // Placeholder key, will load in preload or use DOM
 
         // Create Container positioned at Top Center
         this.scoreContainer = this.add.container(screenWidth / 2, 70);
@@ -72,7 +66,6 @@ export class UIScene extends Phaser.Scene {
         // --- Handle Resize ---
         this.scale.on('resize', this.handleResize, this);
     }
-
 
     handleResize(gameSize: Phaser.Structs.Size) {
         if (this.scoreContainer) {
