@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Room, Client } from 'colyseus.js';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 import { supabase } from '../../../lib/supabase';
-import { Player } from '../../../../../server/src/rooms/GameState';
+import { Player } from '../../../../../shared/state';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';

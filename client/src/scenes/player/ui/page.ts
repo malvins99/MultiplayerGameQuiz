@@ -5,6 +5,7 @@ export class UIScene extends Phaser.Scene {
     scoreText!: Phaser.GameObjects.Text;
     timerText!: Phaser.GameObjects.Text;
     currentScore: number = 0;
+    zigmaLogo!: Phaser.GameObjects.Image;
 
     constructor() {
         super({ key: 'UIScene', active: false });
