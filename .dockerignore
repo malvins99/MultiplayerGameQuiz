@@ -7,7 +7,8 @@ client
 .vscode
 .idea
 *.log
-build
+# Don't ignore server/build - it will be created during build
+# Don't ignore server/public - it's needed for serving static files
 dist
 .env.local
 .env.development
