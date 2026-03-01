@@ -1564,10 +1564,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     light: '#ffffff'
                 }
             })
-                .then(dataUrl => {
+                .then((dataUrl: string) => {
                     if (this.roomQrCode) this.roomQrCode.src = dataUrl;
                 })
-                .catch(err => {
+                .catch((err: Error) => {
                     console.error("QR Gen Error:", err);
                 });
         }

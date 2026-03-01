@@ -11,9 +11,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "colyseus.js": "^0.15.0",
-    "phaser": "^3.80.0"
+    "phaser": "^3.80.0",
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
   }
