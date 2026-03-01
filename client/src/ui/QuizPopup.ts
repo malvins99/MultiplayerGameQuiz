@@ -272,8 +272,8 @@ export class QuizPopup {
             this.questionImage.classList.add('hidden');
         }
 
-        // Text
-        this.questionText.innerText = questionData.pertanyaan;
+        // Text - support both 'pertanyaan' and 'question'/'text' field names
+        this.questionText.innerText = questionData.pertanyaan || questionData.question || questionData.text || 'No question text';
 
         // Reset Scroll
         this.questionContainer.scrollTop = 0;
@@ -330,13 +330,20 @@ export class QuizPopup {
         const labels = ['A', 'B', 'C', 'D'];
         const isImageMode = this.currentData.answerType === 'image';
 
-        // Helper to get option text safely
-        const options = [
-            this.currentData.jawaban_a,
-            this.currentData.jawaban_b,
-            this.currentData.jawaban_c,
-            this.currentData.jawaban_d
-        ];
+        // Helper to get option text safely - support both formats
+        let options: string[];
+        if (Array.isArray(this.currentData.options) && this.currentData.options.length > 0) {
+            // New format from Colyseus state: options is an array of strings
+            options = this.currentData.options;
+        } else {
+            // Legacy format from Supabase: jawaban_a, jawaban_b, etc.
+            options = [
+                this.currentData.jawaban_a,
+                this.currentData.jawaban_b,
+                this.currentData.jawaban_c,
+                this.currentData.jawaban_d
+            ];
+        }
 
         options.forEach((opt: string, idx: number) => {
             // if (!opt) return; // Removed strict check to debug

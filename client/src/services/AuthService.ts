@@ -41,11 +41,15 @@ export class AuthService {
     private loadStoredSession(): void {
         try {
             const storedProfile = localStorage.getItem(USER_PROFILE_KEY);
+            console.log(`[AuthService] Attempting to load stored profile from ${USER_PROFILE_KEY}`);
             if (storedProfile) {
                 this.currentProfile = JSON.parse(storedProfile);
+                console.log(`[AuthService] Loaded profile for user: ${this.currentProfile?.username || 'unknown'} (ID: ${this.currentProfile?.id})`);
+            } else {
+                console.log(`[AuthService] No stored profile found.`);
             }
         } catch (error) {
-            console.error('Error loading stored session:', error);
+            console.error('[AuthService] Error loading stored session:', error);
         }
     }
 
@@ -340,11 +344,40 @@ export class AuthService {
     }
 
     /**
-     * Check if user is authenticated
+     * Force refresh profile from Supabase (useful after env changes)
+     */
+    async refreshProfile(): Promise<Profile | null> {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                console.warn('[AuthService] No active session to refresh profile from.');
+                return null;
+            }
+
+            console.log('[AuthService] Refreshing profile from Supabase for auth user:', session.user.id);
+            const profile = await this.fetchUserProfile(session.user.id);
+            if (profile) {
+                console.log('[AuthService] Profile refreshed:', { id: profile.id, auth_user_id: profile.auth_user_id, username: profile.username });
+            } else {
+                console.warn('[AuthService] Profile refresh failed - no profile found for auth user:', session.user.id);
+            }
+            return profile;
+        } catch (error) {
+            console.error('[AuthService] Error refreshing profile:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Check if user is authenticated (also refreshes profile)
      */
     async isAuthenticated(): Promise<boolean> {
         try {
             const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                // Auto-refresh profile to keep it in sync
+                await this.refreshProfile();
+            }
             return !!session;
         } catch (error) {
             return false;

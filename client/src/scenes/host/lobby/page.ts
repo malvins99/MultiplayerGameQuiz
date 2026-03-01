@@ -179,7 +179,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         toast.innerHTML = `
             <span class="material-symbols-outlined ${textColor} text-xl md:text-2xl">${icon}</span>
-            <span class="text-white font-['Press_Start_2P'] text-[8px] md:text-[10px] leading-snug max-w-[250px] md:max-w-[400px] break-words">
+            <span class="text-white font-['Retro_Gaming'] text-[8px] md:text-[10px] leading-snug max-w-[250px] md:max-w-[400px] break-words">
                 ${message}
             </span>
         `;
@@ -423,7 +423,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Room Code -->
                     <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-3 md:p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
-                        <span id="host-room-code" class="text-3xl md:text-4xl text-primary font-['Press_Start_2P'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
+                        <span id="host-room-code" class="text-3xl md:text-4xl text-primary font-['Retro_Gaming'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
                         <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
@@ -436,7 +436,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- URL Box -->
                     <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative">
-                        <span id="host-join-url" class="text-[8px] text-secondary font-['Press_Start_2P'] whitespace-nowrap mr-2 select-all">https://...</span>
+                        <span id="host-join-url" class="text-[8px] text-secondary font-['Retro_Gaming'] whitespace-nowrap mr-2 select-all">https://...</span>
                         <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
                             <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
                         </div>
@@ -453,7 +453,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Header -->
                     <div class="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 border-b-2 border-purple-500/20 pb-4 gap-4 md:gap-0 z-10 w-full">
                         <div class="flex items-center gap-4">
-                            <h2 id="host-player-count" class="text-xl md:text-2xl text-secondary font-['Press_Start_2P'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                            <h2 id="host-player-count" class="text-xl md:text-2xl text-secondary font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
                             <div class="flex gap-2">
                                 <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-primary/50 text-white flex items-center justify-center rounded-xl hover:bg-white/10 hover:border-primary transition-all shadow-[0_0_15px_rgba(0,255,85,0.2)]">
                                     <span class="material-symbols-outlined text-xl md:text-2xl text-primary">group</span>
@@ -466,12 +466,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
+                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
                                 EXIT
                             </button>
 
                             <!-- Start Button -->
-                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-primary text-black font-['Press_Start_2P'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer shrink-0">
+                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-primary text-black font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer shrink-0">
                                 Start
                             </button>
                         </div>
@@ -484,7 +484,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10">
                                 <span class="material-symbols-outlined text-6xl text-white/20">person_add</span>
                             </div>
-                            <p class="text-white/30 font-['Press_Start_2P'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
+                            <p class="text-white/30 font-['Retro_Gaming'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
                         </div>
                         
                         <!-- Grid Container -->
@@ -501,16 +501,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     
                     <span class="material-symbols-outlined text-6xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">warning</span>
                     
-                    <h3 class="text-xl text-white font-['Press_Start_2P'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
-                    <p class="text-white/60 font-['Press_Start_2P'] text-[10px] mb-8 leading-loose">
+                    <h3 class="text-xl text-white font-['Retro_Gaming'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
+                    <p class="text-white/60 font-['Retro_Gaming'] text-[10px] mb-8 leading-loose">
                         Room will be destroyed and all players disconnected.
                     </p>
 
                     <div class="flex gap-4 justify-center">
-                        <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
+                        <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
                             NO
                         </button>
-                        <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Press_Start_2P'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
+                        <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
                             YES
                         </button>
                     </div>
@@ -523,7 +523,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
                     <div class="flex justify-between items-center mb-6 z-10 shrink-0">
-                        <h3 class="text-lg md:text-xl text-white font-['Press_Start_2P'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
+                        <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-3xl">group</span>
                             Invite Groups
                         </h3>
@@ -534,7 +534,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Search Input -->
                     <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-primary transition-colors">
-                        <input type="text" id="group-search-input" placeholder="Search group..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Press_Start_2P'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <input type="text" id="group-search-input" placeholder="Search group..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="group-search-btn" class="w-10 h-10 rounded-lg bg-primary/20 text-primary border border-primary/50 flex items-center justify-center hover:bg-primary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
@@ -543,8 +543,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Selected Groups -->
                     <div id="selected-groups-container" class="shrink-0 flex flex-col gap-3 relative z-10 hidden mb-4">
                         <div class="flex items-center gap-2">
-                            <span class="text-primary font-['Press_Start_2P'] text-[9px] uppercase tracking-wide">SELECTED</span>
-                            <span id="selected-groups-count" class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[8px] font-['Press_Start_2P'] border border-primary/30">0</span>
+                            <span class="text-primary font-['Retro_Gaming'] text-[9px] uppercase tracking-wide">SELECTED</span>
+                            <span id="selected-groups-count" class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[8px] font-['Retro_Gaming'] border border-primary/30">0</span>
                         </div>
                         <div class="flex flex-wrap gap-2" id="selected-groups-list"></div>
                         <div class="w-full h-[1px] bg-white/10 mt-2"></div>
@@ -557,10 +557,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Footer -->
                     <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
-                        <button id="cancel-invite-groups-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Press_Start_2P'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
+                        <button id="cancel-invite-groups-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
                             CANCEL
                         </button>
-                        <button id="confirm-invite-groups-btn" class="px-7 py-3 bg-primary text-black font-['Press_Start_2P'] font-bold text-[10px] rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,136,0.3)] cursor-pointer opacity-50 pointer-events-none">
+                        <button id="confirm-invite-groups-btn" class="px-7 py-3 bg-primary text-black font-['Retro_Gaming'] font-bold text-[10px] rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,136,0.3)] cursor-pointer opacity-50 pointer-events-none">
                             INVITE
                         </button>
                     </div>
@@ -573,7 +573,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
                     <div class="flex justify-between items-center mb-6 z-10 shrink-0">
-                        <h3 class="text-lg md:text-xl text-white font-['Press_Start_2P'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
+                        <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-secondary text-3xl">person_add</span>
                             Invite Friends
                         </h3>
@@ -584,7 +584,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Search Input -->
                     <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-secondary transition-colors">
-                        <input type="text" id="friend-search-input" placeholder="Search friend..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Press_Start_2P'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <input type="text" id="friend-search-input" placeholder="Search friend..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="friend-search-btn" class="w-10 h-10 rounded-lg bg-secondary/20 text-secondary border border-secondary/50 flex items-center justify-center hover:bg-secondary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
@@ -593,8 +593,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Selected Friends -->
                     <div id="selected-friends-container" class="shrink-0 flex flex-col gap-3 relative z-10 mb-4 hidden">
                         <div class="flex items-center gap-2">
-                            <span class="text-secondary font-['Press_Start_2P'] text-[9px] uppercase tracking-wide">SELECTED</span>
-                            <span id="selected-friends-count" class="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-[8px] font-['Press_Start_2P'] border border-secondary/30">0</span>
+                            <span class="text-secondary font-['Retro_Gaming'] text-[9px] uppercase tracking-wide">SELECTED</span>
+                            <span id="selected-friends-count" class="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-[8px] font-['Retro_Gaming'] border border-secondary/30">0</span>
                         </div>
                         <div class="flex flex-wrap gap-2" id="selected-friends-list">
                         </div>
@@ -607,10 +607,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Footer -->
                     <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
-                        <button id="cancel-invite-friends-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Press_Start_2P'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
+                        <button id="cancel-invite-friends-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
                             CANCEL
                         </button>
-                        <button id="confirm-invite-friends-btn" class="px-7 py-3 bg-secondary text-black font-['Press_Start_2P'] font-bold text-[10px] rounded-xl border-b-4 border-cyan-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] cursor-pointer opacity-50 pointer-events-none">
+                        <button id="confirm-invite-friends-btn" class="px-7 py-3 bg-secondary text-black font-['Retro_Gaming'] font-bold text-[10px] rounded-xl border-b-4 border-cyan-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] cursor-pointer opacity-50 pointer-events-none">
                             INVITE
                         </button>
                     </div>
@@ -624,11 +624,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
-                <div id="countdown-text" class="text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                <div id="countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
                     10
-                </div>
-                <div class="text-white/50 font-['Press_Start_2P'] text-sm mt-4 tracking-widest uppercase">
-                    Game Starting...
                 </div>
             </div>
         `;
@@ -788,12 +785,16 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         try {
             const profileStr = localStorage.getItem('game_user_profile');
             let userId = null;
+            let authUserId = null;
             if (profileStr) {
                 const profile = JSON.parse(profileStr);
                 userId = profile.id;
+                authUserId = profile.auth_user_id || null;
+
             }
 
             if (!userId) {
+                console.warn("[Lobby] No userId found in localStorage 'game_user_profile'");
                 listContainer.innerHTML = `
                     <div class="py-12 flex flex-col items-center justify-center gap-3">
                         <span class="material-symbols-outlined text-4xl text-gray-300">groups</span>
@@ -805,33 +806,46 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 return;
             }
 
-            // Fetch groups where user is creator
-            const { data: createdGroups, error: errCreated } = await supabase
-                .from('groups')
-                .select('*')
-                .eq('creator_id', userId);
 
-            // Fetch groups where user is member
-            const { data: memberGroupsObj, error: errMemberObj } = await supabase
-                .from('groups')
-                .select('*')
-                .contains('members', JSON.stringify([{ user_id: userId }]));
 
-            const { data: memberGroupsStr } = await supabase
-                .from('groups')
-                .select('*')
-                .contains('members', JSON.stringify([userId]));
+            // Build list of IDs to try (profile.id + auth_user_id)
+            const idsToTry = [userId];
+            if (authUserId && authUserId !== userId) {
+                idsToTry.push(authUserId);
+            }
+
 
             const allGroupsMap = new Map();
 
-            if (createdGroups && !errCreated) {
-                createdGroups.forEach(g => allGroupsMap.set(g.id, g));
-            }
-            if (memberGroupsObj && !errMemberObj) {
-                memberGroupsObj.forEach(g => allGroupsMap.set(g.id, g));
-            }
-            if (memberGroupsStr) {
-                memberGroupsStr.forEach(g => allGroupsMap.set(g.id, g));
+            for (const tryId of idsToTry) {
+                // Fetch groups where user is creator
+                const { data: createdGroups, error: errCreated } = await supabase
+                    .from('groups')
+                    .select('*')
+                    .eq('creator_id', tryId);
+
+                if (errCreated) console.error(`[Lobby] Error fetching created groups (id=${tryId}):`, errCreated);
+                if (createdGroups) createdGroups.forEach(g => allGroupsMap.set(g.id, g));
+
+                // Fetch groups where user is member (JSONB array of objects with user_id)
+                const { data: memberGroupsObj, error: errMemberObj } = await supabase
+                    .from('groups')
+                    .select('*')
+                    .filter('members', 'cs', `[{"user_id":"${tryId}"}]`);
+
+                if (errMemberObj) console.error(`[Lobby] Error fetching member groups obj (id=${tryId}):`, errMemberObj);
+                if (memberGroupsObj) memberGroupsObj.forEach(g => allGroupsMap.set(g.id, g));
+
+                // Fetch groups where user is member (JSONB array of plain strings)
+                const { data: memberGroupsStr, error: errMemberStr } = await supabase
+                    .from('groups')
+                    .select('*')
+                    .filter('members', 'cs', `["${tryId}"]`);
+
+                if (errMemberStr) console.error(`[Lobby] Error fetching member groups str (id=${tryId}):`, errMemberStr);
+                if (memberGroupsStr) memberGroupsStr.forEach(g => allGroupsMap.set(g.id, g));
+
+
             }
 
             const groups = Array.from(allGroupsMap.values());
@@ -997,7 +1011,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             listContainer.innerHTML = `
                 <div class="py-12 flex flex-col items-center justify-center gap-3">
                     <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
-                    <span class="text-white/30 font-['Press_Start_2P'] text-[9px] leading-loose text-center px-4">
+                    <span class="text-white/30 font-['Retro_Gaming'] text-[9px] leading-loose text-center px-4">
                         ${this.allFetchedGroups.length === 0 ? "You haven't joined<br>any groups yet." : "No groups found<br>for your search."}
                     </span>
                 </div>
@@ -1017,23 +1031,23 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             let btnHtml = '';
             if (canInvite) {
                 if (isSelected) {
-                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,255,136,0.3)] flex items-center justify-center gap-1.5 hover:bg-green-400">
+                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,255,136,0.3)] flex items-center justify-center gap-1.5 hover:bg-green-400">
                         <span class="material-symbols-outlined text-[10px]">check</span> ADDED
                     </button>`;
                 } else {
-                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary/20 hover:bg-primary border border-primary text-primary hover:text-black rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary/20 hover:bg-primary border border-primary text-primary hover:text-black rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
                         ADD
                     </button>`;
                 }
             } else {
-                btnHtml = `<div class="px-3 py-2 text-white/30 font-['Press_Start_2P'] text-[7px] md:text-[8px] bg-white/5 border border-white/5 rounded-lg flex items-center justify-center min-w-[70px]">MEMBER</div>`;
+                btnHtml = `<div class="px-3 py-2 text-white/30 font-['Retro_Gaming'] text-[7px] md:text-[8px] bg-white/5 border border-white/5 rounded-lg flex items-center justify-center min-w-[70px]">MEMBER</div>`;
             }
 
             html += `
                 <div class="flex items-center justify-between p-3 md:p-4 bg-black/40 border border-white/10 rounded-xl hover:border-primary/50 transition-colors group">
                     <div class="flex flex-col gap-1.5 overflow-hidden pr-2 justify-center">
-                        <span class="text-white font-['Press_Start_2P'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
-                        <div class="flex items-center gap-4 text-white/50 font-['Press_Start_2P'] text-[6px] md:text-[7px] px-1">
+                        <span class="text-white font-['Retro_Gaming'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
+                        <div class="flex items-center gap-4 text-white/50 font-['Retro_Gaming'] text-[6px] md:text-[7px] px-1">
                             <div class="flex items-center gap-1">
                                 <span class="material-symbols-outlined text-[10px] mb-0.5">group</span>
                                 <span>${memberCount}</span>
@@ -1074,7 +1088,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.selectedGroups.forEach((group, id) => {
             const name = group.name || 'Unnamed';
             html += `
-                <div class="flex items-center gap-1.5 bg-primary/20 text-primary border border-primary/50 px-3 py-2 rounded-lg text-[9px] font-['Press_Start_2P'] shadow-[0_0_10px_rgba(0,255,136,0.1)] transition-transform hover:scale-105">
+                <div class="flex items-center gap-1.5 bg-primary/20 text-primary border border-primary/50 px-3 py-2 rounded-lg text-[9px] font-['Retro_Gaming'] shadow-[0_0_10px_rgba(0,255,136,0.1)] transition-transform hover:scale-105">
                     <span class="truncate max-w-[120px]">${name}</span>
                     <button onclick="window.removeSelectedGroup('${id}')" class="flex items-center justify-center hover:bg-primary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-primary">
                         <span class="material-symbols-outlined !text-[12px]">close</span>
@@ -1092,40 +1106,68 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         listContainer.innerHTML = `
             <div class="py-12 flex flex-col items-center justify-center gap-3">
                 <span class="material-symbols-outlined text-3xl animate-spin text-secondary">refresh</span>
-                <span class="text-white/50 font-['Press_Start_2P'] text-[8px] tracking-widest uppercase">Loading Friends...</span>
+                <span class="text-white/50 font-['Retro_Gaming'] text-[8px] tracking-widest uppercase">Loading Friends...</span>
             </div>
         `;
 
         try {
             const profileStr = localStorage.getItem('game_user_profile');
             let userId = null;
+            let authUserId = null;
             if (profileStr) {
                 const profile = JSON.parse(profileStr);
                 userId = profile.id;
+                authUserId = profile.auth_user_id || null;
+                console.log("[Lobby] Friends - Profile:", { id: userId, auth_user_id: authUserId });
             }
 
             if (!userId) {
-                listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Press_Start_2P'] text-[10px]">Please login first.</div>`;
+                console.warn("[Lobby] No userId found for friends list");
+                listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px]">Please login first.</div>`;
                 return;
             }
 
-            const { data: friendshipsData, error: friendshipsError } = await supabase
-                .from('friendships')
-                .select('*')
-                .eq('addressee_id', userId)
-                .eq('status', 'accepted');
 
-            if (friendshipsError) {
-                console.error("Error fetching friendships:", friendshipsError);
-                throw friendshipsError;
+
+            // Build list of IDs to try
+            const idsToTry = [userId];
+            if (authUserId && authUserId !== userId) {
+                idsToTry.push(authUserId);
             }
 
-            if (!friendshipsData || friendshipsData.length === 0) {
+            let allFriendshipsData: any[] = [];
+
+            for (const tryId of idsToTry) {
+
+
+                // Fetch friendships where user is either requester or addressee
+                const { data: friendshipsData, error: friendshipsError } = await supabase
+                    .from('friendships')
+                    .select('*')
+                    .or(`addressee_id.eq.${tryId},requester_id.eq.${tryId}`)
+                    .eq('status', 'accepted');
+
+                if (friendshipsError) {
+                    console.error(`[Lobby] Error fetching friendships (id=${tryId}):`, friendshipsError);
+                } else {
+                    console.log(`[Lobby] Friendships found for id=${tryId}:`, friendshipsData?.length || 0);
+                    if (friendshipsData) allFriendshipsData.push(...friendshipsData);
+                }
+            }
+
+            // Deduplicate friendships
+            const uniqueFriendships = Array.from(new Map(allFriendshipsData.map(f => [f.id, f])).values());
+            console.log("[Lobby] Total unique friendships:", uniqueFriendships.length);
+
+            if (uniqueFriendships.length === 0) {
                 this.allFetchedFriends = [];
             } else {
-                const friendIds = friendshipsData.map((f: any) =>
-                    f.requester_id === userId ? f.addressee_id : f.requester_id
-                );
+                // Collect the OTHER user's IDs from each friendship
+                const friendIds = uniqueFriendships.map((f: any) => {
+                    // The friend is whichever ID is NOT ours
+                    if (f.requester_id === userId || f.requester_id === authUserId) return f.addressee_id;
+                    return f.requester_id;
+                });
 
                 const { data: profilesData, error: profilesError } = await supabase
                     .from('profiles')
@@ -1227,7 +1269,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         } catch (error: any) {
             console.error('Failed to load friends list:', error);
-            listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Press_Start_2P'] text-[10px] leading-loose">Failed to load friends.<br/>${error?.message || String(error)}</div>`;
+            listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px] leading-loose">Failed to load friends.<br/>${error?.message || String(error)}</div>`;
         }
     }
 
@@ -1244,7 +1286,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             listContainer.innerHTML = `
                 <div class="py-12 flex flex-col items-center justify-center gap-3">
                     <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
-                    <span class="text-white/30 font-['Press_Start_2P'] text-[9px] leading-loose text-center px-4">
+                    <span class="text-white/30 font-['Retro_Gaming'] text-[9px] leading-loose text-center px-4">
                         ${this.allFetchedFriends.length === 0 ? "You don't have<br>any friends yet." : "No friends found<br>for your search."}
                     </span>
                 </div>
@@ -1261,11 +1303,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             let btnHtml = '';
             if (isSelected) {
-                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,212,255,0.3)] flex items-center justify-center gap-1.5 hover:bg-cyan-400">
+                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,212,255,0.3)] flex items-center justify-center gap-1.5 hover:bg-cyan-400">
                     <span class="material-symbols-outlined text-[10px]">check</span> ADDED
                 </button>`;
             } else {
-                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary/20 hover:bg-secondary border border-secondary text-secondary hover:text-black rounded-lg font-['Press_Start_2P'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary/20 hover:bg-secondary border border-secondary text-secondary hover:text-black rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
                     ADD
                 </button>`;
             }
@@ -1273,8 +1315,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="flex items-center justify-between p-3 md:p-4 bg-black/40 border border-white/10 rounded-xl hover:border-secondary/50 transition-colors group">
                     <div class="flex flex-col gap-2 overflow-hidden pr-2 justify-center">
-                        <span class="text-white font-['Press_Start_2P'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
-                        <span class="${statusColor} font-['Press_Start_2P'] text-[7px] md:text-[8px] px-1">${statusText}</span>
+                        <span class="text-white font-['Retro_Gaming'] text-[9px] md:text-[10px] truncate tracking-wide leading-tight px-1">${name}</span>
+                        <span class="${statusColor} font-['Retro_Gaming'] text-[7px] md:text-[8px] px-1">${statusText}</span>
                     </div>
                     ${btnHtml}
                 </div>
@@ -1306,7 +1348,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.selectedFriends.forEach((friend, id) => {
             const name = friend.username || 'Unknown';
             html += `
-                <div class="flex items-center gap-1.5 bg-secondary/20 text-secondary border border-secondary/50 px-3 py-2 rounded-lg text-[9px] font-['Press_Start_2P'] shadow-[0_0_10px_rgba(0,212,255,0.1)] transition-transform hover:scale-105">
+                <div class="flex items-center gap-1.5 bg-secondary/20 text-secondary border border-secondary/50 px-3 py-2 rounded-lg text-[9px] font-['Retro_Gaming'] shadow-[0_0_10px_rgba(0,212,255,0.1)] transition-transform hover:scale-105">
                     <span class="truncate max-w-[120px]">${name}</span>
                     <button onclick="window.removeSelectedFriend('${id}')" class="flex items-center justify-center hover:bg-secondary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-secondary">
                         <span class="material-symbols-outlined !text-[12px]">close</span>
@@ -1616,7 +1658,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-sm font-bold uppercase ${textClass} font-['Press_Start_2P'] tracking-tight">${subRoom.id}</span>
+                        <span class="text-sm font-bold uppercase ${textClass} font-['Retro_Gaming'] tracking-tight">${subRoom.id}</span>
                         <div class="px-2 py-1 bg-black/60 rounded text-[10px] font-bold text-white/80 border border-white/5">
                             ${playerCount}/${subRoom.capacity}
                         </div>
@@ -1626,7 +1668,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         ${playerListHTML}
                     </div>
 
-                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Press_Start_2P'] tracking-wide ${btnVisibility}">
+                    <button ${action} class="w-full py-3 text-xs uppercase rounded-lg border-b-4 active:border-b-0 active:translate-y-1 transition-all ${btnClass} font-['Retro_Gaming'] tracking-wide ${btnVisibility}">
                         ${btnText}
                     </button>
                 </div>
@@ -1686,8 +1728,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             </style>
             <div id="kick-box">
                 <span class="material-symbols-outlined text-red-500 text-[48px] mb-4">block</span>
-                <h2 class="text-red-500 font-bold mb-2 font-['Press_Start_2P'] text-sm">KICK PLAYER?</h2>
-                <p class="text-white/70 text-xs mb-6 font-['Press_Start_2P'] leading-relaxed">
+                <h2 class="text-red-500 font-bold mb-2 font-['Retro_Gaming'] text-sm">KICK PLAYER?</h2>
+                <p class="text-white/70 text-xs mb-6 font-['Retro_Gaming'] leading-relaxed">
                     Keluarkan <span class="text-white font-bold">${playerName}</span><br>dari ruangan?
                 </p>
                 <div class="flex justify-center gap-3">

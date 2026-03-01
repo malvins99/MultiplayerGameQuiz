@@ -6,7 +6,6 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../../../ui/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
-import { QUESTIONS } from '../../../dummyQuestions';
 
 export class GameScene extends Phaser.Scene {
     room!: Room;
@@ -731,18 +730,17 @@ export class GameScene extends Phaser.Scene {
     }
 
     triggerQuiz(enemy: any) {
-        const allQuestions = Object.values(QUESTIONS).flat();
-        let currentQ = allQuestions.find((q: any) => q.id === enemy.questionId);
-
-        if (!currentQ && allQuestions.length > 0) currentQ = allQuestions[0];
+        // Find question data from Colyseus Room State
+        const allQuestions = this.room.state.questions;
+        const currentQ = allQuestions[enemy.questionId];
 
         if (currentQ) {
             const questionData = {
                 id: currentQ.id,
-                question: currentQ.pertanyaan,
-                image: currentQ.image,
-                options: [currentQ.jawaban_a, currentQ.jawaban_b, currentQ.jawaban_c, currentQ.jawaban_d],
-                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban)
+                question: currentQ.text,
+                image: currentQ.imageUrl,
+                options: Array.from(currentQ.options).map(o => String(o || "")),
+                correctAnswer: currentQ.correctAnswer
             };
 
             this.activeQuestionId = questionData.id;
@@ -769,11 +767,12 @@ export class GameScene extends Phaser.Scene {
         const isFromChest = this.isChestPopupVisible;
         if (this.activeEnemyId) this.cooldownEnemies.add(this.activeEnemyId);
 
-        const allQuestions = Object.values(QUESTIONS).flat();
-        const currentQ = allQuestions.find((q: any) => q.id === this.activeQuestionId);
+        // Use Room State Questions
+        const allQuestions = this.room.state.questions;
+        const currentQ = allQuestions[this.activeQuestionId as any];
 
         if (currentQ) {
-            const correctIdx = ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban);
+            const correctIdx = currentQ.correctAnswer;
             const isCorrect = correctIdx === answerIndex;
 
             if (btnElement && this.quizPopup) this.quizPopup.showFeedback(isCorrect, btnElement);
@@ -819,16 +818,16 @@ export class GameScene extends Phaser.Scene {
     }
 
     showRetryQuestionPopup(questionId: number) {
-        const allQuestions = Object.values(QUESTIONS).flat();
-        const qData = allQuestions.find((q: any) => q.id === questionId);
+        const allQuestions = this.room.state.questions;
+        const currentQ = allQuestions[questionId];
 
-        if (qData) {
+        if (currentQ) {
             const questionData = {
-                id: qData.id,
-                question: qData.pertanyaan,
-                image: qData.image,
-                options: [qData.jawaban_a, qData.jawaban_b, qData.jawaban_c, qData.jawaban_d],
-                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(qData.kunci_jawaban)
+                id: currentQ.id,
+                question: currentQ.text,
+                image: currentQ.imageUrl,
+                options: Array.from(currentQ.options),
+                correctAnswer: currentQ.correctAnswer
             };
             this.activeQuestionId = questionId;
             this.isChestPopupVisible = true;
@@ -996,15 +995,17 @@ export class GameScene extends Phaser.Scene {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
             this.activeQuestionId = enemyState.questionId;
-            const allQuestions = Object.values(QUESTIONS).flat();
-            const qData = allQuestions.find((q: any) => q.id === this.activeQuestionId);
-            if (qData) {
+            
+            const allQuestions = this.room.state.questions;
+            const currentQ = allQuestions[enemyState.questionId];
+
+            if (currentQ) {
                 const questionData = {
-                    id: qData.id,
-                    question: qData.pertanyaan,
-                    image: qData.image,
-                    options: [qData.jawaban_a, qData.jawaban_b, qData.jawaban_c, qData.jawaban_d],
-                    correctAnswer: ['a', 'b', 'c', 'd'].indexOf(qData.kunci_jawaban)
+                    id: currentQ.id,
+                    question: currentQ.text,
+                    image: currentQ.imageUrl,
+                    options: Array.from(currentQ.options),
+                    correctAnswer: currentQ.correctAnswer
                 };
                 const name = (enemyState.type || 'ENEMY').toUpperCase();
                 this.quizPopup.show(questionData, name);

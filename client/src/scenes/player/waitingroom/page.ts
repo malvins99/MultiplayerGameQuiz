@@ -180,16 +180,23 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.createCountdownOverlay();
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number) => {
+        this.room.state.listen("countdown", (val: number, previousVal: number) => {
             if (val > 0) {
                 if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
                 if (this.countdownText) this.countdownText.innerText = val.toString();
-            } else if (val === 0) {
+                
+                // --- OPTIMIZATION: Start Game Transition Early ---
+                // Switch to GameScene immediately so it can load in background
+                this.handleGameStart();
+            } else if (val === 0 && (previousVal || 0) > 0) {
                 if (this.countdownText) this.countdownText.innerText = "GO!";
+            } else if (val === 0) {
+                // If it starts at 0 or after GO!, hide
+                if (this.countdownOverlay) this.countdownOverlay.classList.add('hidden');
             }
         });
 
-        // Listen for State Start
+        // Listen for State Start (Still kept as fallback if countdown is skipped)
         this.room.state.listen("isGameStarted", (isStarted: boolean) => {
             if (isStarted) this.handleGameStart();
         });
@@ -204,11 +211,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             this.countdownOverlay = null;
         }
 
-        TransitionManager.close(() => {
-            if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            Router.navigate('/game');
-            this.scene.start('GameScene', { room: this.room });
-        });
+        // --- OPTIMIZATION: Instant Transition ---
+        // We use ensureClosed() to skip the 650ms "close" animation delay
+        // as the countdown is already visible or will be shown by GameScene.
+        TransitionManager.ensureClosed();
+        
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        Router.navigate('/game');
+        this.scene.start('GameScene', { room: this.room });
     }
 
     createCountdownOverlay() {
@@ -217,11 +227,8 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
-                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Press_Start_2P'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
                     10
-                </div>
-                <div class="text-white/50 font-['Press_Start_2P'] text-xs md:text-sm mt-4 tracking-widest uppercase">
-                    Get Ready!
                 </div>
             </div>
         `;
