@@ -637,6 +637,17 @@
         filter: drop-shadow(0 0 20px rgba(0, 255, 85, 0.8));
       }
     }
+
+    .pixel-bg-pattern {
+      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18h2.5v2.5H20zm0-5V13h2.5v2.5H20zM5 20.5V18h2.5v2.5H5zm0-5V13h2.5v2.5H5zm30 0V13h2.5v2.5H35zm0 5V18h2.5v2.5H35zM20 35.5V33h2.5v2.5H20zm0-5V28h2.5v2.5H20zM5 35.5V33h2.5v2.5H5zm0-5V28h2.5v2.5H5zm30 0V28h2.5v2.5H35zm0 5V33h2.5v2.5H35z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    /* Clarity fix for logos */
+    img[src*="logo"] {
+      image-rendering: pixelated;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
   </style>
 </head>
 
@@ -648,12 +659,12 @@
   <!-- CONTROLS OVERLAY -->
   <div id="ui-layer" class="hidden">
     <!-- LOGO TOP LEFT -->
-    <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;"
-      class="absolute w-96 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+    <img src="/logo/Zigma-new-logo.webp" style="top: -30px; left: -40px;"
+      class="absolute w-64 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
 
     <!-- LOGO TOP RIGHT -->
-    <img src="/logo/gameforsmart.webp"
-      class="absolute top-2 right-2 w-64 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+    <img src="/logo/gameforsmart-new-logo.webp" style="top: -45px; right: -15px;"
+      class="absolute w-80 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
     <!-- Virtual D-Pad (Desktop Visuals) -->
     <div id="dpad-container">
@@ -681,10 +692,9 @@
     <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
 
     <!-- Top Navigation -->
-    <div class="relative z-50 flex items-center justify-between p-2 md:p-3 w-full">
-      <!-- Gameforsmart Logo (Enlarged) -->
+    <div class="relative z-50 flex items-center justify-between p-1 md:p-2 w-full">
       <div class="select-none flex items-center">
-        <img src="/logo/gameforsmart.webp" alt="Partner Logo" class="h-14 md:h-20 w-auto object-contain" />
+        <img src="/logo/gameforsmart-new-logo.webp" alt="Partner Logo" class="h-20 md:h-36 w-auto object-contain" />
       </div>
 
       <!-- User Profile & Menu -->
@@ -718,14 +728,14 @@
     </div>
 
     <!-- Main Content (Logo + Cards) -->
-    <div class="relative z-10 flex-1 flex flex-col items-center justify-center -mt-32 px-4 md:-mt-48">
+    <div class="relative z-10 flex-1 flex flex-col items-center justify-center -mt-24 px-4 md:-mt-36">
       <!-- Mega Central Logo (Uber Massive - No Shadow) -->
       <div class="mb-0 transform hover:scale-105 transition-transform duration-500">
-        <img src="/logo/Zigma-logo.webp" alt="Zigma Logo" class="h-48 md:h-[400px] w-auto object-contain" />
+        <img src="/logo/Zigma-new-logo.webp" alt="Zigma Logo" class="h-40 md:h-[340px] w-auto object-contain" />
       </div>
 
       <!-- Action Cards Container (Uber Tight Spacing) -->
-      <div class="flex flex-col md:flex-row gap-6 md:gap-8 w-full max-w-5xl justify-center items-stretch md:-mt-24">
+      <div class="flex flex-col md:flex-row gap-6 md:gap-8 w-full max-w-5xl justify-center items-stretch md:-mt-12">
         <!-- Host Game Card -->
         <div
           class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[40px] p-6 md:p-8 flex flex-col items-center text-center hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 shadow-2xl">
@@ -867,18 +877,26 @@
     <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
 
     <!-- Navbar/Header (Redesigned) -->
-    <nav class="relative z-10 p-6 flex justify-between items-center shrink-0">
-      <!-- Left: Back Button Only -->
-      <button id="quiz-back-btn" class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group">
-        <div
-          class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-black transition-all">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </div>
-        <span class="text-xs font-bold uppercase tracking-widest hidden md:block">Back</span>
-      </button>
+    <nav class="relative z-10 p-6 flex justify-between items-start shrink-0">
+      <!-- Left: Back Button & Logo -->
+      <div class="flex items-start gap-4">
+        <button id="quiz-back-btn"
+          class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group mt-8">
+          <div
+            class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-primary group-hover:bg-primary group-hover:text-black transition-all">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </div>
+          <span class="text-xs font-bold uppercase tracking-widest hidden md:block">Back</span>
+        </button>
 
-      <!-- Right: Empty (Icons moved to filter bar) -->
-      <div></div>
+        <!-- LOGO ZIGMA -->
+        <img src="/logo/Zigma-new-logo.webp" style="top: -30px; left: -40px;"
+          class="absolute w-64 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+      </div>
+
+      <!-- Right: LOGO GFS -->
+      <img src="/logo/gameforsmart-new-logo.webp" style="top: -45px; right: -15px;"
+        class="absolute w-80 z-20 pointer-events-none object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
     </nav>
 
     <!-- Main Content -->
@@ -1282,8 +1300,8 @@
 
     <!-- GameForSmart Logo - Top Right Corner -->
     <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
-      <img src="/logo/gameforsmart.webp" alt="GameForSmart" draggable="false"
-        class="w-32 h-auto md:w-72 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
+      <img src="/logo/gameforsmart-new-logo.webp" alt="GameForSmart" draggable="false"
+        class="w-40 h-auto md:w-96 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
     </div>
     <!-- Fantasy Forest Gradient Overlay -->
     <div class="absolute inset-0 pointer-events-none"

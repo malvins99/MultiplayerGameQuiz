@@ -144,37 +144,6 @@ export class GameScene extends Phaser.Scene {
         console.log('  goblin_idle:', this.textures.exists('goblin_idle'));
         console.log('  goblin_walk:', this.textures.exists('goblin_walk'));
 
-        // --- Logo Integration ---
-        const logoStyleId = 'game-logo-styles';
-        if (!document.getElementById(logoStyleId)) {
-            const style = document.createElement('style');
-            style.id = logoStyleId;
-            style.innerHTML = `
-                .game-logo-container {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    pointer-events: none;
-                    z-index: 100;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        const logoContainer = document.createElement('div');
-        logoContainer.className = 'game-logo-container';
-        logoContainer.innerHTML = `
-            <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-            
-            <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
-        `;
-        document.body.appendChild(logoContainer);
-        this.events.once('shutdown', () => logoContainer.remove());
-
         // --- UI Scene Launch ---
         this.scene.launch('UIScene');
         this.scene.bringToTop('UIScene');

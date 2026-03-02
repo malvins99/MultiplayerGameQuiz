@@ -93,8 +93,8 @@ export class LeaderboardScene extends Phaser.Scene {
                 backdrop-filter: blur(5px);
             }
             .nav-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
-            .logo-left { position: absolute; top: -70px; left: -70px; width: 420px; pointer-events: none; opacity: 0.9; }
-            .logo-right { position: absolute; top: 15px; right: 20px; width: 280px; pointer-events: none; opacity: 0.9; }
+            .logo-left { position: absolute; top: -30px; left: -40px; width: 256px; pointer-events: none; }
+            .logo-right { position: absolute; top: -45px; right: -15px; width: 320px; pointer-events: none; }
         `;
     }
 
@@ -126,8 +126,8 @@ export class LeaderboardScene extends Phaser.Scene {
         }).join('');
 
         this.container.innerHTML = `
-            <img src="/logo/Zigma-logo.webp" class="logo-left" />
-            <img src="/logo/gameforsmart.webp" class="logo-right" />
+            <img src="/logo/Zigma-new-logo.webp" class="logo-left" />
+            <img src="/logo/gameforsmart-new-logo.webp" class="logo-right" />
             <div class="podium-section">${podiumHTML}</div>
             <div class="list-section">${others.map(p => `
                 <div class="list-item">

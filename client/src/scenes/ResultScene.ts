@@ -182,8 +182,8 @@ export class ResultScene extends Phaser.Scene {
             }
             @keyframes flicker { 0%{opacity:0.8} 100%{opacity:1} }
 
-            .logo-left { position: absolute; top: -60px; left: -65px; width: 384px; z-index: 20; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none; }
-            .logo-right { position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none; }
+            .logo-left { position: absolute; top: -40px; left: -50px; width: 288px; z-index: 20; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none; }
+            .logo-right { position: absolute; top: -10px; right: -10px; width: 320px; z-index: 20; object-fit: contain; pointer-events: none; }
         `;
     }
 
@@ -210,10 +210,10 @@ export class ResultScene extends Phaser.Scene {
             </div>
 
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" class="logo-left" />
+            <img src="/logo/Zigma-new-logo.webp" class="logo-left" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="logo-right" />
+            <img src="/logo/gameforsmart-new-logo.webp" class="logo-right" />
 
             <div class="result-card">
                 <div class="result-avatar-container">

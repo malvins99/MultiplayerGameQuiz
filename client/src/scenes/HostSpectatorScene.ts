@@ -156,10 +156,10 @@ export class HostSpectatorScene extends Phaser.Scene {
         logoContainer.className = 'spectator-logo-container';
         logoContainer.innerHTML = `
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-new-logo.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart-new-logo.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
         `;
         document.body.appendChild(logoContainer);
         this.disposers.push(() => logoContainer.remove());
@@ -360,10 +360,10 @@ export class HostSpectatorScene extends Phaser.Scene {
 
         this.uiContainer.innerHTML = `
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo.webp" style="position: absolute; top: -60px; left: -65px; width: 384px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none;" />
+            <img src="/logo/Zigma-new-logo.webp" style="position: absolute; top: -30px; left: -40px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none;" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart.webp" style="position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
+            <img src="/logo/gameforsmart-new-logo.webp" style="position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
 
             <!-- Centered Top Timer -->
             <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px;">
