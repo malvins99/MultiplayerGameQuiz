@@ -40,6 +40,7 @@ export class Player extends Schema {
     @type("number") targetX: number = 0; // Where the player is moving to
     @type("number") targetY: number = 0;
     @type("string") name!: string;
+    @type("string") userId: string = "";
     @type("number") hairId: number = 0;
     @type("number") score: number = 0;
     @type("number") correctAnswers: number = 0;
@@ -77,4 +78,6 @@ export class GameState extends Schema {
     @type("string") roomCode!: string;
     @type("string") hostId!: string; // Track who is the host
     @type("number") countdown: number = 0; // Countdown timer (0 = not running)
+    @type("number") totalTimeMinutes: number = 5;
+    @type("string") questionLimit: string = "all";
 }
