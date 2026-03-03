@@ -8,12 +8,31 @@
         "experimentalDecorators": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
+        "strictPropertyInitialization": false,
+        "useDefineForClassFields": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "noUnusedLocals": false,
-        "noUnusedParameters": false
+        "noUnusedParameters": false,
+        "baseUrl": ".",
+        "paths": {
+            "@colyseus/schema": [
+                "node_modules/@colyseus/schema"
+            ],
+            "@colyseus/schema/*": [
+                "node_modules/@colyseus/schema/*"
+            ]
+        }
+    },
+    "ts-node": {
+        "compilerOptions": {
+            "useDefineForClassFields": false,
+            "experimentalDecorators": true,
+            "emitDecoratorMetadata": true
+        }
     },
     "include": [
-        "src"
+        "src",
+        "../shared"
     ]
 }

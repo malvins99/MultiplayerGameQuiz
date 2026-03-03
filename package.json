@@ -12,8 +12,7 @@
         "node": ">=18.0.0"
     },
     "devDependencies": {
-        "@colyseus/schema": "^2.0.37",
-        "canvas": "^3.2.1",
-        "qrcode": "^1.5.3"
+        "@colyseus/schema": "^2.0.0",
+        "canvas": "^3.2.1"
     }
 }

@@ -6,6 +6,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../../../ui/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
+// Removed legacy QUESTIONS import
 
 export class GameScene extends Phaser.Scene {
     room!: Room;
@@ -143,7 +144,7 @@ export class GameScene extends Phaser.Scene {
         console.log('  goblin_walk:', this.textures.exists('goblin_walk'));
 
         // --- UI Scene Launch ---
-        this.scene.launch('UIScene');
+        this.scene.launch('UIScene', { room: this.room });
         this.scene.bringToTop('UIScene');
 
         // --- Final Reveal Check ---
@@ -730,21 +731,22 @@ export class GameScene extends Phaser.Scene {
     }
 
     triggerQuiz(enemy: any) {
-        // Find question data from Colyseus Room State
-        const allQuestions = this.room.state.questions;
-        const currentQ = allQuestions[enemy.questionId];
+        // Use questions from the server state instead of local dummy data
+        const questions = this.room.state.questions;
+        const qIndex = enemy.questionId;
+        const currentQ = questions[qIndex];
 
         if (currentQ) {
             const questionData = {
-                id: currentQ.id,
+                id: qIndex, // Using the index as ID for mapping feedback
                 question: currentQ.text,
                 image: currentQ.imageUrl,
-                options: Array.from(currentQ.options).map(o => String(o || "")),
+                options: Array.from(currentQ.options), // Convert ArraySchema to regular array
                 correctAnswer: currentQ.correctAnswer
             };
 
-            this.activeQuestionId = questionData.id;
-            let foundKey = null;
+            this.activeQuestionId = qIndex;
+            let foundKey: string | null = null;
             this.room.state.enemies.forEach((val: any, key: string) => {
                 if (val === enemy) foundKey = key;
             });
@@ -767,13 +769,10 @@ export class GameScene extends Phaser.Scene {
         const isFromChest = this.isChestPopupVisible;
         if (this.activeEnemyId) this.cooldownEnemies.add(this.activeEnemyId);
 
-        // Use Room State Questions
-        const allQuestions = this.room.state.questions;
-        const currentQ = allQuestions[this.activeQuestionId as any];
+        const currentQ = this.room.state.questions[this.activeQuestionId!];
 
         if (currentQ) {
-            const correctIdx = currentQ.correctAnswer;
-            const isCorrect = correctIdx === answerIndex;
+            const isCorrect = currentQ.correctAnswer === answerIndex;
 
             if (btnElement && this.quizPopup) this.quizPopup.showFeedback(isCorrect, btnElement);
 
@@ -782,7 +781,6 @@ export class GameScene extends Phaser.Scene {
                     this.room.send("addScoreFromChest", { amount: 10 });
                 } else {
                     this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId });
-                    this.room.send("addScore", { amount: 20 });
                 }
             } else {
                 if (!isFromChest) {
@@ -818,16 +816,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     showRetryQuestionPopup(questionId: number) {
-        const allQuestions = this.room.state.questions;
-        const currentQ = allQuestions[questionId];
+        const qData = this.room.state.questions[questionId];
 
         if (currentQ) {
             const questionData = {
-                id: currentQ.id,
-                question: currentQ.text,
-                image: currentQ.imageUrl,
-                options: Array.from(currentQ.options),
-                correctAnswer: currentQ.correctAnswer
+                id: questionId,
+                question: qData.text,
+                image: qData.imageUrl,
+                options: Array.from(qData.options),
+                correctAnswer: qData.correctAnswer
             };
             this.activeQuestionId = questionId;
             this.isChestPopupVisible = true;
@@ -994,19 +991,17 @@ export class GameScene extends Phaser.Scene {
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
-            this.activeQuestionId = enemyState.questionId;
-            
-            const allQuestions = this.room.state.questions;
-            const currentQ = allQuestions[enemyState.questionId];
-
-            if (currentQ) {
+            const qIndex = enemyState.questionId;
+            const qData = this.room.state.questions[qIndex];
+            if (qData) {
                 const questionData = {
-                    id: currentQ.id,
-                    question: currentQ.text,
-                    image: currentQ.imageUrl,
-                    options: Array.from(currentQ.options),
-                    correctAnswer: currentQ.correctAnswer
+                    id: qIndex,
+                    question: qData.text,
+                    image: qData.imageUrl,
+                    options: Array.from(qData.options),
+                    correctAnswer: qData.correctAnswer
                 };
+                this.activeQuestionId = qIndex;
                 const name = (enemyState.type || 'ENEMY').toUpperCase();
                 this.quizPopup.show(questionData, name);
                 if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);
