@@ -363,7 +363,7 @@ export class HostSpectatorScene extends Phaser.Scene {
             <img src="/logo/Zigma-new-logo.webp" style="position: absolute; top: -30px; left: -40px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none;" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-new-logo.webp" style="position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
+            <img src="/logo/gameforsmart-new-logo.webp" style="position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; object-contain; pointer-events: none;" />
 
             <!-- Centered Top Timer -->
             <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px;">

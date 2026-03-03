@@ -98,8 +98,8 @@ export class ResultScene extends Phaser.Scene {
                 backdrop-filter: blur(5px);
             }
             .nav-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
-            .logo-left { position: absolute; top: -30px; left: -40px; width: 256px; pointer-events: none; }
-            .logo-right { position: absolute; top: -45px; right: -15px; width: 320px; pointer-events: none; }
+            .logo-left { position: absolute; top: -30px; left: -40px; width: 256px; pointer-events: none; z-index: 1000; }
+            .logo-right { position: absolute; top: -45px; right: -15px; width: 320px; pointer-events: none; z-index: 1000; }
         `;
     }
 

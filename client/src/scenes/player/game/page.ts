@@ -117,7 +117,6 @@ export class GameScene extends Phaser.Scene {
         });
 
         // Load Player Indicator
-        this.load.image('indicator', '/assets/indicator.png');
 
         // Load Name Tag Label Assets
         this.load.image('label_left', '/assets/label_left.png');
@@ -650,25 +649,6 @@ export class GameScene extends Phaser.Scene {
                 }
             );
         }
-
-        this.indicatorContainer = this.add.container(
-            this.currentPlayer.x,
-            this.currentPlayer.y - 8
-        );
-        this.indicatorContainer.setDepth(200);
-
-        const indicator = this.add.image(0, 0, 'indicator');
-        indicator.setOrigin(0.5, 1);
-        this.indicatorContainer.add(indicator);
-
-        this.tweens.add({
-            targets: indicator,
-            y: -2,
-            duration: 600,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
     }
 
     createNameTag(sessionId: string, name: string, x: number, y: number) {
@@ -995,7 +975,7 @@ export class GameScene extends Phaser.Scene {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
             this.activeQuestionId = enemyState.questionId;
-            
+
             const allQuestions = this.room.state.questions;
             const currentQ = allQuestions[enemyState.questionId];
 

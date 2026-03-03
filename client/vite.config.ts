@@ -8,7 +8,7 @@ export default defineConfig({
         emptyOutDir: true
     },
     server: {
-        host: '0.0.0.0',
+        host: true,
         port: 5173,
     },
     clearScreen: false,
