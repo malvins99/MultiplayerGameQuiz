@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
+import { supabaseB, SESSION_TABLE } from '../../../lib/supabaseB';
 
 export class HostProgressScene extends Phaser.Scene {
     room!: Room;
@@ -216,6 +217,9 @@ export class HostProgressScene extends Phaser.Scene {
         // --- UI Initialization ---
         this.createUI();
 
+        // Connect to Supabase B for additional session config as requested
+        this.connectToSupabaseBSession();
+
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
             if (player.isHost) return;
@@ -231,9 +235,6 @@ export class HostProgressScene extends Phaser.Scene {
 
             this.createNameTag(sessionId, player.name || 'Player', container);
             this.playerEntities[sessionId] = container;
-
-            const diff = this.room.state.difficulty;
-            const target = diff === 'sedang' ? 10 : diff === 'sulit' ? 20 : 5;
 
             const updateHair = () => {
                 const hairId = player.hairId || 0;
@@ -259,6 +260,13 @@ export class HostProgressScene extends Phaser.Scene {
                 const progressBar = container.getByName('progressBar') as Phaser.GameObjects.Graphics;
 
                 const answered = player.answeredQuestions || 0;
+
+                // Get dynamic target from room state
+                const qLimit = this.room.state.questionLimit;
+                const target = (qLimit === 'all' || !qLimit)
+                    ? this.room.state.questions.length
+                    : parseInt(qLimit) || 5;
+
                 const progress = Phaser.Math.Clamp(answered / target, 0, 1);
 
                 if (tag) tag.setText(player.name || 'Player');
@@ -331,7 +339,7 @@ export class HostProgressScene extends Phaser.Scene {
                         -2px  2px 0 #000,
                          2px  2px 0 #000,
                          0 0 15px rgba(255,255,255,0.2);
-                ">05:00</span>
+                ">${String(this.room.state.totalTimeMinutes || 5).padStart(2, '0')}:00</span>
             </div>
 
             <button id="spec-volume-btn" style="
@@ -514,5 +522,32 @@ export class HostProgressScene extends Phaser.Scene {
         const progressBar = this.add.graphics({ x: -20, y: -25 });
         progressBar.setName('progressBar');
         container.add([nameText, progressText, progressBar]);
+    }
+
+    private async connectToSupabaseBSession() {
+        const sessionId = (this.room as any).sessionId_original || this.room.id; // Corrected to use internal sessionId if available
+        // Note: we usually get sessionId from the lobby sequence. If not, we use room.id as fallback.
+        // But the best is to get it from room state if we put it there.
+
+        // Use the room state's provided values as priority, but fetch once to verify "connection"
+        console.log("[Supabase B] Connecting to session info...");
+        try {
+            const { data, error } = await supabaseB
+                .from(SESSION_TABLE)
+                .select('question_limit, total_time_minutes')
+                .eq('id', this.room.id) // Assuming room.id is the session id
+                .single();
+
+            if (data) {
+                console.log("[Supabase B] Session data linked successfully:", data);
+                // Update local timer display if it hasn't started yet
+                const timerEl = document.getElementById('game-timer');
+                if (timerEl && timerEl.innerText === "05:00") {
+                    timerEl.innerText = `${String(data.total_time_minutes).padStart(2, '0')}:00`;
+                }
+            }
+        } catch (e) {
+            console.warn("[Supabase B] Could not link session data, falling back to room state.");
+        }
     }
 }

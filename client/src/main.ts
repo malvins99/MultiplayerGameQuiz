@@ -5,7 +5,7 @@ import { HostWaitingRoomScene } from './scenes/host/lobby/page';
 import { PlayerWaitingRoomScene } from './scenes/player/waitingroom/page';
 import { GameScene } from './scenes/player/game/page';
 import { UIScene } from './scenes/player/ui/page';
-import { ResultScene } from './scenes/ResultScene';
+import { ResultScene } from './scenes/player/results/page';
 import { LeaderboardScene } from './scenes/player/leaderboard/page';
 import { QuizSettingScene } from './scenes/host/quizsetting/page';
 import { SelectQuizScene } from './scenes/host/selectquiz/page';

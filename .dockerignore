@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+client
+.git
+.gitignore
+*.md
+.vscode
+.idea
+*.log
+# Don't ignore server/build - it will be created during build
+# Don't ignore server/public - it's needed for serving static files
+dist
+.env.local
+.env.development
+.env.test
+

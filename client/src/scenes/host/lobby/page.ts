@@ -2,19 +2,22 @@ import Phaser from 'phaser';
 import { Room, Client } from 'colyseus.js';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 import { supabase } from '../../../lib/supabase';
-import { Player } from '../../../../../shared/state';
+import { Player } from '../../../shared/state';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
 import { QRCodePopup } from '../../../ui/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
-import QRCode from 'qrcode';
+import * as QRCode from 'qrcode';
 
 export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
     isHost: boolean = false;
     mySessionId: string = '';
-    isGameStarting: boolean = false; // Flag to prevent double transition
+    isGameStarting: boolean = false;
+    isManuallyLeaving: boolean = false;
+    isRestore: boolean = false;
+    isReconnecting: boolean = false; // Guard: cegah multiple restoreRoom() berjalan bersamaan
 
     // UI Elements
     waitingUI: HTMLElement | null = null;
@@ -60,83 +63,149 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.mySessionId = this.room.sessionId;
             this.registry.set('room', this.room);
         }
+        if (data.client) {
+            this.registry.set('client', data.client);
+        }
         this.isHost = data.isHost !== undefined ? data.isHost : true;
+
+        // Simpan flag restore — jangan panggil restoreRoom() di sini karena UI belum ada.
+        // Restore akan dipanggil di create() setelah overlay loading muncul.
+        this.isRestore = !!data.isRestore;
 
         if (this.room) {
             this.room.onMessage('timerUpdate', () => {
                 // No-op: actual timer UI is handled by HostProgressScene or GameScene
             });
         }
-
-        if (data.isRestore && !this.room && data.client) {
-            this.restoreRoom(data.client);
-        }
     }
 
     async restoreRoom(client: any) {
-        // Retrieve stored session details
-        const reconnectionToken = localStorage.getItem('currentReconnectionToken');
+        // Guard: cegah multiple restoreRoom() berjalan bersamaan
+        if (this.isReconnecting) {
+            console.warn("[Restore] Already reconnecting, skipping.");
+            return;
+        }
+        this.isReconnecting = true;
+
+        // Tutup room lama yang mati
+        try {
+            if (this.room) {
+                this.room.removeAllListeners?.();
+                this.room.leave?.();
+            }
+        } catch (_) { /* ignore */ }
+        this.room = null as any;
+
         const savedRoomId = localStorage.getItem('currentRoomId');
         const savedSessionId = localStorage.getItem('currentSessionId');
 
         if (!savedRoomId) {
-            console.warn("Cannot restore room: No room ID saved.");
+            console.warn("[Restore] No room ID saved.");
+            this.isReconnecting = false;
             this.cleanupAndGoLobby();
             return;
         }
 
-        try {
-            console.log("Attempting to restore session...");
+        // Delay minimal — beri waktu server menyelesaikan onLeave lama
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-            // 1. Try Reconnect (Preferred)
-            if (reconnectionToken) {
-                try {
-                    this.room = await client.reconnect(reconnectionToken);
-                    console.log("Reconnected successfully!", this.room);
-                } catch (e) {
-                    console.warn("Reconnection failed, trying joinById...", e);
-                    // Fallthrow to step 2
-                }
-            }
+        const maxRetries = 999999;
+        const retryDelay = 2000; // Retry santai setiap 2 detik
 
-            // 2. Try JoinById (Fallback if token expired but room alive)
-            if (!this.room && savedRoomId) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`[Restore] Attempt ${attempt} via joinById...`);
+
                 const profile = JSON.parse(localStorage.getItem('game_user_profile') || '{}');
-                const name = profile.nickname || profile.fullname || "Player";
+                const name = profile.nickname || profile.fullname || "Host";
 
-                // Try to rejoin with existing session link if possible
                 this.room = await client.joinById(savedRoomId, {
                     name,
-                    sessionId: savedSessionId // Hint to server we are this user
+                    sessionId: savedSessionId,
+                    isHost: true
                 });
-                console.log("Re-joined successfully via ID!", this.room);
+
+                // Berhasil!
+                this.mySessionId = this.room.sessionId;
+                localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken ?? '');
+                localStorage.setItem('currentRoomId', this.room.id);
+                localStorage.setItem('currentSessionId', this.room.sessionId);
+
+                const initRestore = () => {
+                    this.setupRoomListeners();
+                    this.setupStateListeners();
+                    this.updateRoomCode();
+                    this.updateHostStatus();
+                    this.updateAll();
+                };
+                if (this.room.state) {
+                    initRestore();
+                } else {
+                    this.room.onStateChange.once(() => initRestore());
+                }
+                console.log(`[Restore] ✅ Session restored on attempt ${attempt}! SessionId: ${this.mySessionId}`);
+
+                this.hideRestoringOverlay();
+                this.isReconnecting = false;
+                return;
+
+            } catch (e: any) {
+                console.warn(`[Restore] Attempt ${attempt} failed:`, e?.message || e);
+                this.room = null as any;
+
+                // Jangan pernah menyerah! Tunggu dan coba lagi
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
             }
+        }
 
-            if (!this.room) throw new Error("Could not restore room (both reconnect and joinById failed)");
+        // Ini secara praktis tidak akan terjangkau karena maxRetries sangat besar
+        this.isReconnecting = false;
+        this.cleanupAndGoLobby();
+    }
 
-            this.mySessionId = this.room.sessionId;
+    /** Layar loading profesional saat restorasi */
+    showRestoringOverlay() {
+        // Hapus jika sudah ada
+        document.getElementById('zigma-restore-overlay')?.remove();
 
-            // ⚠️ Save new connection details
-            localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken);
-            localStorage.setItem('currentRoomId', this.room.id);
-            localStorage.setItem('currentSessionId', this.room.sessionId);
+        const overlay = document.createElement('div');
+        overlay.id = 'zigma-restore-overlay';
+        overlay.className = 'fixed inset-0 z-[100] bg-[#0f0f1a] flex flex-col items-center justify-center';
+        overlay.innerHTML = `
+            <div class="flex flex-col items-center gap-8 animate-pulse">
+                <!-- Glowing Logo/Icon -->
+                <div class="relative">
+                    <div class="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
+                    <span class="material-symbols-outlined text-primary text-[80px] relative drop-shadow-[0_0_20px_rgba(0,255,136,0.5)]">sync</span>
+                </div>
+                
+                <div class="space-y-4 text-center">
+                    <h2 class="text-white font-['Press_Start_2P'] text-sm md:text-base tracking-[4px] uppercase">Restoring Session</h2>
+                    <p class="text-primary/60 font-['Press_Start_2P'] text-[9px] animate-bounce tracking-widest">Syncing with server...</p>
+                </div>
 
-            // Pasang semua listener setelah reconnect berhasil
-            this.setupRoomListeners();
-            this.setupStateListeners();
-            this.updateRoomCode();
-            this.updateHostStatus();
-            this.updateAll();
+                <!-- Progress Bar Style -->
+                <div class="w-64 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10 mt-4">
+                    <div class="h-full bg-primary shadow-[0_0_15px_rgba(0,255,136,0.8)] w-1/2 animate-[loading_2s_infinite_easeInOut]"></div>
+                </div>
+            </div>
+            <style>
+                @keyframes loading {
+                    0% { transform: translateX(-100%); width: 30%; }
+                    50% { width: 60%; }
+                    100% { transform: translateX(350%); width: 30%; }
+                }
+            </style>
+        `;
+        document.body.appendChild(overlay);
+    }
 
-        } catch (e) {
-            console.warn("Restore failed (Room likely closed):", e);
-            localStorage.removeItem('currentRoomId');
-            localStorage.removeItem('currentSessionId');
-            localStorage.removeItem('currentReconnectionToken');
-
-            // Optional: Show "Session Expired" alert instead of silent redirect?
-            alert("Sesi telah berakhir atau server di-restart via refresh.");
-            this.cleanupAndGoLobby();
+    hideRestoringOverlay() {
+        const overlay = document.getElementById('zigma-restore-overlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => overlay.remove(), 500);
         }
     }
 
@@ -229,6 +298,22 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             console.log("Game start message received!");
             // this.startCountdown(); // Removed as method doesn't exist, overlay handled by state listener
         });
+
+        // AUTO RECONNECT logic if connection is lost
+        this.room.onLeave((code) => {
+            console.log(`[Host] Disconnected from room with code: ${code}`);
+            if (code !== 1000 && !this.isGameStarting && !this.isManuallyLeaving) {
+                console.warn("[Host] Connection lost unexpectedly. Attempting to reconnect...");
+                // Null-kan this.room dulu agar restoreRoom() bisa mulai fresh
+                this.room = null as any;
+                const client = this.registry.get('client');
+                if (client) {
+                    this.restoreRoom(client);
+                } else {
+                    console.error("[Host] Cannot auto-reconnect: Client not found in registry.");
+                }
+            }
+        });
     }
 
     /**
@@ -293,6 +378,17 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.room.onMessage("gameStarted", () => {
             this.handleGameStart();
         });
+
+        // Safety net: on first full state change, update room code/QR/URL
+        // This handles the case where listen("roomCode") misses initial value
+        this.room.onStateChange.once((state: any) => {
+            console.log("[onStateChange.once] Full state received, roomCode:", state.roomCode);
+            if (state.roomCode) {
+                if (this.roomCodeEl) this.roomCodeEl.innerText = state.roomCode;
+                this.updateQrCode(state.roomCode);
+                this.updateJoinUrl(state.roomCode);
+            }
+        });
     }
 
     create() {
@@ -320,6 +416,24 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         // IF HOST: Inject Custom Layout
         if (this.isHost) {
             this.createHostLayout();
+            // Map Host specific elements
+            this.roomCodeEl = document.getElementById('host-room-code');
+            this.startBtn = document.getElementById('host-start-btn');
+            this.backBtn = document.getElementById('host-back-btn');
+            this.roomQrCode = document.getElementById('host-qr-img') as HTMLImageElement;
+            this.copyCodeBtn = document.getElementById('copy-code-btn');
+
+            // IF RESTORE: Langsung reconnect di background tanpa overlay loading
+            if (this.isRestore && !this.room) {
+                const client = this.registry.get('client');
+                if (client) {
+                    // Jadwal restoreRoom() di tick berikutnya agar UI sempat dirender browser
+                    setTimeout(() => this.restoreRoom(client), 100);
+                } else {
+                    // Tidak ada client, langsung kembali ke lobby
+                    this.cleanupAndGoLobby();
+                }
+            }
         } else {
             // Player Logic (Original DOM mapping)
             this.roomCodeEl = document.getElementById('display-room-code');
@@ -336,12 +450,27 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.backBtn = document.getElementById('waiting-back-btn');
         }
 
+        // Immediately populate roomCode/QR/link from URL (works even before room reconnect)
+        this.updateRoomCode();
+
         // Setup room jika sudah tersedia (alur normal, bukan restore)
         if (this.room) {
-            this.updateRoomCode();
-            this.setupRoomListeners();
-            this.setupStateListeners(); // Pasang semua state listener
-            this.updateAll();           // Update UI langsung
+            // SAVE TOKEN for future refreshes!
+            localStorage.setItem('currentReconnectionToken', this.room.reconnectionToken);
+            localStorage.setItem('currentRoomId', this.room.id);
+            localStorage.setItem('currentSessionId', this.room.sessionId);
+
+            const initRoom = () => {
+                this.setupRoomListeners();
+                this.setupStateListeners(); // Pasang semua state listener
+                this.updateAll();           // Update UI langsung
+            };
+
+            if (this.room.state) {
+                initRoom();
+            } else {
+                this.room.onStateChange.once(() => initRoom());
+            }
         }
 
         // Setup Host UI (ada guard di dalam method jika room null)
@@ -435,9 +564,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- URL Box -->
-                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative">
-                        <span id="host-join-url" class="text-[8px] text-secondary font-['Retro_Gaming'] whitespace-nowrap mr-2 select-all">https://...</span>
-                        <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
+                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative overflow-hidden">
+                        <span id="host-join-url" class="text-[10px] md:text-xs text-secondary font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
+                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
                             <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
                         </div>
                     </div>
@@ -617,6 +746,26 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
             </div>
         `;
+
+        // Host Exit Confirm Modal
+        const hostExitModal = document.createElement('div');
+        hostExitModal.id = 'host-back-confirm-modal';
+        hostExitModal.className = 'fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm';
+        hostExitModal.innerHTML = `
+            <div class="bg-surface-dark border-4 border-red-500/50 rounded-2xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                <span class="material-symbols-outlined text-5xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">warning</span>
+                <h3 class="text-white font-['Press_Start_2P'] text-sm md:text-base leading-loose mb-6">End Game Wait<br>& Close Room?</h3>
+                <div class="flex flex-col gap-3">
+                    <button id="host-confirm-yes" class="w-full py-4 bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
+                        YES, END GAME
+                    </button>
+                    <button id="host-confirm-no" class="w-full py-4 bg-white/10 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-xs rounded-xl hover:bg-white/20 transition-all cursor-pointer">
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(hostExitModal);
 
         // Create Countdown Overlay
         const overlay = document.createElement('div');
@@ -1485,23 +1634,29 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     }
                 }
             }
-            this.room.leave();
-        }
 
-        // Clear local storage session
-        localStorage.removeItem('currentRoomId');
-        localStorage.removeItem('currentSessionId');
-        localStorage.removeItem('currentReconnectionToken'); // v0.15 token
+            if (this.room) {
+                this.room.send("manualLeave");
+                this.isManuallyLeaving = true;
+                this.room.leave();
+            }
 
-        if (this.waitingUI) this.waitingUI.classList.add('hidden');
-        const lobbyUI = document.getElementById('lobby-ui');
-        if (lobbyUI) lobbyUI.classList.remove('hidden');
-        Router.navigate('/host/select-quiz');
-        this.scene.start('LobbyScene');
-        // Clean up overlay
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
+            // Clear local storage session
+            localStorage.removeItem('currentRoomId');
+            localStorage.removeItem('currentSessionId');
+            localStorage.removeItem('currentReconnectionToken'); // v0.15 token
+
+            if (this.waitingUI) this.waitingUI.classList.add('hidden');
+            const lobbyUI = document.getElementById('lobby-ui');
+            if (lobbyUI) lobbyUI.classList.remove('hidden');
+            Router.navigate('/host/select-quiz');
+            this.scene.start('LobbyScene');
+
+            // Clean up overlay
+            if (this.countdownOverlay) {
+                this.countdownOverlay.remove();
+                this.countdownOverlay = null;
+            }
         }
     }
 
@@ -1515,61 +1670,81 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     }
 
     updateAll() {
-        if (!this.room) return; // Guard: room belum siap (sedang restore)
+        if (!this.room || !this.room.state) return; // Guard: room belum siap (sedang restore)
         this.updatePlayerGrid();
 
         const myPlayer = this.room.state.players.get(this.mySessionId);
         if (myPlayer) {
             this.updateCharacterPreview(myPlayer.hairId || 0);
-        }
-
-        // Refresh Manage Users list if the modal is open
-        const manageUsersModal = document.getElementById('host-manage-users-modal');
-        if (manageUsersModal && !manageUsersModal.classList.contains('hidden')) {
-            this.updateManageUsersList();
+        } else if (this.isHost) {
+            // If host and not in players Map, we might still want to preview something 
+            // but with the server change, the host should now be in the players map.
         }
     }
 
-    updateRoomCode() {
-        const code = this.room.state.roomCode;
-        if (this.roomCodeEl) {
-            this.roomCodeEl.innerText = code || '------';
+    updateRoomCode(retryCount: number = 0) {
+        let code: string | undefined;
+
+        // Priority 1: Extract from URL (always available after refresh)
+        const pathMatch = window.location.pathname.match(/\/host\/(\d+)\/lobby/);
+        if (pathMatch) {
+            code = pathMatch[1];
         }
-        this.updateQrCode(code);
-        this.updateJoinUrl(code);
+
+        // Priority 2: Extract from room state (if connected)
+        if (!code && this.room?.state?.roomCode) {
+            code = this.room.state.roomCode;
+        }
+
+        console.log("updateRoomCode called, code:", code, "retry:", retryCount);
+
+        if (code) {
+            if (this.roomCodeEl) {
+                this.roomCodeEl.innerText = code;
+            }
+            this.updateQrCode(code);
+            this.updateJoinUrl(code);
+        } else if (retryCount < 10) {
+            // State may not be synced yet, retry after a short delay
+            console.log("updateRoomCode: code is empty, retrying in 500ms...");
+            setTimeout(() => {
+                this.updateRoomCode(retryCount + 1);
+            }, 500);
+        } else {
+            console.warn("updateRoomCode: gave up retrying, code is still empty.");
+            if (this.roomCodeEl) {
+                this.roomCodeEl.innerText = '------';
+            }
+        }
     }
 
     updateQrCode(code: string) {
         if (this.roomQrCode && code) {
             const domain = window.location.origin; // e.g. http://localhost:5173 
-            // Join URL format: domain + /join/ + roomCode
-            // Or simpler: use existing query param logic if you prefer
-            // "http://localhost:5173/join/248927" is modern
-            // But let's stick to the existing URL logic first to be safe: `${ domain }?room = ${ code } `
-            // Or use the Join Page URL directly? 
-            // In step 675, join URL logic uses query param: `${ window.location.origin }?room = ${ code } `.
-            // Let's keep it consistent.
-
-            const url = `${domain} /join/${code} `; // Let's use clean URL format if supported, or stick to query.
-            // Wait, previous code used ?room=code.
-            // The image user shared shows "http://localhost:5173/join/248927".
-            // So I should use that format!
+            const url = `${domain}/join/${code}`;
 
             // Generate QR
-            QRCode.toDataURL(url, {
-                width: 500,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#ffffff'
-                }
-            })
-                .then(dataUrl => {
-                    if (this.roomQrCode) this.roomQrCode.src = dataUrl;
+            try {
+                QRCode.toDataURL(url, {
+                    width: 500,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
                 })
-                .catch(err => {
-                    console.error("QR Gen Error:", err);
-                });
+                    .then((dataUrl: string) => {
+                        if (this.roomQrCode) {
+                            this.roomQrCode.src = dataUrl;
+                            this.roomQrCode.classList.remove('hidden'); // make sure it's visible
+                        }
+                    })
+                    .catch((err: any) => {
+                        console.error("QR Gen Error:", err);
+                    });
+            } catch (syncErr) {
+                console.error("Synchronous QR Gen Error:", syncErr);
+            }
         }
     }
 
@@ -1605,12 +1780,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             }
         }
 
-        // -- OLD LOGIC for Player View (Hide unnecessary things if mistakenly shown) --
-        if (!this.isHost) {
-            // Ensure player logic remains active if needed
-        }
     }
-
     updateRoomList() {
         if (!this.roomListEl) return;
 
@@ -1674,12 +1844,14 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
             `;
         });
+        if (this.roomListEl) {
+            this.roomListEl.innerHTML = html;
+        }
 
-        this.roomListEl.innerHTML = html;
-
-        // Expose switch function globally
         (window as any).switchRoom = (roomId: string) => {
-            this.room.send("switchRoom", { roomId });
+            if (this.room) {
+                this.room.send("switchRoom", { roomId });
+            }
         };
     }
 
@@ -1690,14 +1862,14 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         const modal = document.createElement('div');
         modal.id = 'kick-confirm-modal';
         modal.style.cssText = `
-            position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0,0,0,0.8);
-            display: flex; align-items: center; justify-content: center;
-            animation: fadeIn 0.15s ease;
-        `;
+                position: fixed; inset: 0; z-index: 9999;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex; align-items: center; justify-content: center;
+                animation: fadeIn 0.15s ease;
+                `;
 
         modal.innerHTML = `
-            <style>
+                    <style>
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
                     25% { transform: translateX(-5px); }
@@ -1720,24 +1892,24 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 }
                 .btn-c-red:active { border-bottom-width: 0; transform: translateY(4px); }
                 .btn-c-gray {
-                    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;
+                    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white;
                     font-family: 'Press Start 2P'; font-size: 10px; padding: 12px 20px; border-radius: 8px;
                     cursor: pointer; transition: all 0.1s;
                 }
-                .btn-c-gray:hover { background: rgba(255,255,255,0.2); }
-            </style>
-            <div id="kick-box">
-                <span class="material-symbols-outlined text-red-500 text-[48px] mb-4">block</span>
-                <h2 class="text-red-500 font-bold mb-2 font-['Retro_Gaming'] text-sm">KICK PLAYER?</h2>
-                <p class="text-white/70 text-xs mb-6 font-['Retro_Gaming'] leading-relaxed">
-                    Keluarkan <span class="text-white font-bold">${playerName}</span><br>dari ruangan?
-                </p>
-                <div class="flex justify-center gap-3">
-                    <button id="cancel-kick" class="btn-c-gray">BATAL</button>
-                    <button id="confirm-kick" class="btn-c-red">KICK!</button>
-                </div>
-            </div>
-        `;
+                .btn-c-gray:hover { background: rgba(255, 255, 255, 0.2); }
+                </style>
+                    <div id="kick-box">
+                        <span class="material-symbols-outlined text-red-500 text-[48px] mb-4">block</span>
+                        <h2 class="text-red-500 font-bold mb-2 font-['Press_Start_2P'] text-sm">KICK PLAYER ?</h2>
+                        <p class="text-white/70 text-xs mb-6 font-['Press_Start_2P'] leading-relaxed">
+                            Keluarkan <span class="text-white font-bold">${playerName}</span><br>dari ruangan?
+                        </p>
+                        <div class="flex justify-center gap-3">
+                            <button id="cancel-kick" class="btn-c-gray">BATAL</button>
+                            <button id="confirm-kick" class="btn-c-red">KICK!</button>
+                        </div>
+                    </div>
+                `;
 
         document.body.appendChild(modal);
 
@@ -1764,7 +1936,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         const gridEl = this.isHost ? document.getElementById('host-player-grid') : document.getElementById('player-grid');
         if (!gridEl) return;
 
-        // Unified View: Host and Players see ALL players (EXCEPT HOST)
+        // Hanya tampilkan player biasa — host adalah spectator murni, tidak masuk grid
         const players: any[] = [];
         this.room.state.players.forEach((p: any, sessionId: string) => {
             if (!p.isHost) {
@@ -1784,7 +1956,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 if (emptyState) emptyState.classList.remove('hidden');
                 if (gridEl) gridEl.classList.add('hidden');
                 if (this.startBtn) {
-                    this.startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    this.startBtn.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+                    this.startBtn.classList.remove('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1');
                     this.startBtn.onclick = null; // Disable
                 }
                 if (startHint) startHint.classList.remove('hidden');
@@ -1792,7 +1965,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 if (emptyState) emptyState.classList.add('hidden');
                 if (gridEl) gridEl.classList.remove('hidden');
                 if (this.startBtn) {
-                    this.startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    this.startBtn.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+                    this.startBtn.classList.add('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1');
                     this.startBtn.onclick = () => this.room.send("startGame");
                 }
                 if (startHint) startHint.classList.add('hidden');
@@ -1810,39 +1984,39 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             let kickButtonHTML = '';
             if (this.isHost && !isMe) {
                 kickButtonHTML = `
-                    <button class="kick-btn absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 border-2 border-red-700 rounded-full text-white flex items-center justify-center cursor-pointer z-10 shadow-md transition-all duration-300 opacity-100 pointer-events-auto md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:!scale-110"
-                        onclick="window.confirmKick('${player.sessionId}', '${player.name}')" 
+                                                    <button class="kick-btn absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 border-2 border-red-700 rounded-full text-white flex items-center justify-center cursor-pointer z-10 shadow-md transition-all duration-300 opacity-100 pointer-events-auto md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:!scale-110"
+                onclick="window.confirmKick('${player.sessionId}', '${player.name.replace(/'/g, "\\'")}')"
                     >
-                        <span class="material-symbols-outlined" style="font-size: 16px; font-weight: bold;">close</span>
-                    </button>
-                `;
+                    <span class="material-symbols-outlined" style="font-size: 16px; font-weight: bold;">close</span>
+                        </button>
+                            `;
             }
 
             html += `
-                <div class="group relative flex flex-col items-center justify-center p-3 gap-2.5 rounded-2xl w-full max-w-[140px] mx-auto aspect-[1/1.1] transition-transform duration-200"
-                    style="
-                    background: rgba(20, 20, 35, 0.9); 
+                        <div class="group relative flex flex-col items-center justify-center p-3 gap-2.5 rounded-2xl w-full max-w-[140px] mx-auto aspect-[1/1.1] transition-transform duration-200"
+                style="
+                background: rgba(20, 20, 35, 0.9); 
                     ${borderClass}
                 ">
                     ${kickButtonHTML}
-                    
-                    <!-- Character (Middle) -->
+
+                <!-- Character(Middle) -->
                     <div style="width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
-                         <div style="
-                            position: relative;
-                            width: 32px; height: 32px; 
-                            transform: scale(1.6);
-                         ">
-                            <!-- Base Body -->
-                            <div style="
-                                position: absolute; inset: 0;
-                                background-image: url('/assets/base_idle_strip9.png');
-                                background-repeat: no-repeat;
-                                background-position: -32px -16px;
-                                image-rendering: pixelated;
-                            "></div>
-                            <!-- Hair Layer -->
-                            ${(() => {
+                        <div style="
+                position: relative;
+                width: 32px; height: 32px;
+                transform: scale(1.6);
+                ">
+                    <!-- Base Body -->
+                        <div style="
+                position: absolute; inset: 0;
+                background-image: url('/assets/base_idle_strip9.png');
+                background-repeat: no-repeat;
+                background-position: -32px -16px;
+                image-rendering: pixelated;
+                "></div>
+                    <!-- Hair Layer -->
+                        ${(() => {
                     // Menggunakan getHairById yang sudah diimport di atas file
                     const hair = getHairById(player.hairId || 0);
                     if (player.hairId > 0 && hair) {
@@ -1857,18 +2031,19 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                                     `;
                     }
                     return '';
-                })()}
-                         </div>
-                    </div>
-                    
-                    <!-- Player Name -->
-                    <div style="text-align: center; width: 100%; padding: 0 2px;">
-                        <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
-                            ${player.name || 'PLAYER'}
-                        </span>
-                    </div>
+                })()
+                }
                 </div>
-            `;
+                    </div>
+
+                    <!-- Player Name -->
+                        <div style="text-align: center; width: 100%; padding: 0 2px;">
+                            <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                                ${player.name || 'PLAYER'}
+                </span>
+                    </div>
+                    </div>
+                        `;
         });
 
         gridEl.innerHTML = html;
@@ -1880,7 +2055,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 padding: 10px;
                 width: 100%;
                 align-content: start;
-            `;
+                `;
         }
     }
 

@@ -47,6 +47,13 @@
       font-weight: normal;
       font-style: normal;
     }
+
+    @font-face {
+      font-family: 'VT323';
+      src: url('/fonts/VT323-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
   </style>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link
@@ -100,6 +107,44 @@
     /* Exceptions for Material Symbols */
     .material-symbols-outlined {
       font-family: 'Material Symbols Outlined' !important;
+    }
+
+    /* UI specific font override */
+    #login-ui,
+    #lobby-ui {
+      font-size: 1.15rem;
+      /* VT323 global scaling for container */
+    }
+
+    #login-ui,
+    #lobby-ui,
+    #login-ui p,
+    #lobby-ui p,
+    #login-ui h1,
+    #lobby-ui h1,
+    #login-ui h2,
+    #lobby-ui h2,
+    #login-ui h3,
+    #lobby-ui h3,
+    #login-ui h4,
+    #lobby-ui h4,
+    #login-ui h5,
+    #lobby-ui h5,
+    #login-ui h6,
+    #lobby-ui h6,
+    #login-ui span:not(.material-symbols-outlined),
+    #lobby-ui span:not(.material-symbols-outlined),
+    #login-ui button,
+    #lobby-ui button,
+    #login-ui input,
+    #lobby-ui input,
+    #login-ui select,
+    #lobby-ui select,
+    #login-ui a,
+    #lobby-ui a,
+    #login-ui textarea,
+    #lobby-ui textarea {
+      font-family: 'VT323', monospace !important;
     }
 
     /* Phaser canvas cursor */
@@ -676,7 +721,7 @@
   </div>
 
   <!-- LOBBY OVERLAY (Redesigned - No Scroll) -->
-  <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden flex flex-col">
+  <div id="lobby-ui" class="bg-background-dark fixed inset-0 z-10 overflow-hidden flex flex-col hidden">
     <!-- Background Pattern -->
     <div class="absolute inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
 
@@ -697,7 +742,7 @@
               class="material-symbols-outlined text-primary text-base md:text-lg">person</span>
           </div>
           <span id="lobby-user-name"
-            class="text-white font-bold text-[10px] md:text-xs font-['Retro_Gaming'] tracking-tight truncate max-w-[100px] md:max-w-[150px]">Guest</span>
+            class="text-white font-bold text-sm md:text-lg font-['Retro_Gaming'] tracking-tight truncate max-w-[100px] md:max-w-[150px]">Guest</span>
         </div>
 
         <div class="relative">
@@ -708,7 +753,7 @@
           <div id="lobby-menu-dropdown"
             class="hidden absolute top-[calc(100%+8px)] right-0 w-48 bg-[#1a1a20]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top-right scale-95 opacity-0 flex flex-col p-1 z-[60]">
             <button id="lobby-menu-logout-btn"
-              class="w-full text-left px-4 py-3 text-[10px] font-['Retro_Gaming'] hover:bg-white/5 rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center gap-3">
+              class="w-full text-left px-4 py-3 text-lg font-['Retro_Gaming'] hover:bg-white/5 rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center gap-3">
               <span class="material-symbols-outlined text-sm">logout</span> Logout
             </button>
           </div>
@@ -733,11 +778,11 @@
             <span class="material-symbols-outlined text-primary text-4xl md:text-5xl"
               style="font-variation-settings: 'FILL' 1;">flag</span>
           </div>
-          <h2 class="text-xl md:text-2xl text-white mb-2 uppercase tracking-wider">HOST GAME</h2>
-          <p class="text-white/60 text-[10px] md:text-sm leading-relaxed mb-6 max-w-[220px]">create your own game and
+          <h2 class="text-2xl md:text-3xl text-white mb-2 uppercase tracking-wider">HOST GAME</h2>
+          <p class="text-white/60 text-sm md:text-lg leading-relaxed mb-6 max-w-[220px]">create your own game and
             invite players</p>
           <button id="create-room-btn"
-            class="mt-auto w-full py-3.5 bg-primary text-background-dark font-['Retro_Gaming'] text-[10px] rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,255,85,0.2)]">
+            class="mt-auto w-full py-3.5 bg-primary text-background-dark font-['Retro_Gaming'] text-xl rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,255,85,0.2)]">
             Create Room
           </button>
         </div>
@@ -750,25 +795,25 @@
             <span class="material-symbols-outlined text-secondary text-4xl md:text-5xl"
               style="font-variation-settings: 'FILL' 1;">group</span>
           </div>
-          <h2 class="text-xl md:text-2xl text-white mb-2 uppercase tracking-wider">JOIN GAME</h2>
-          <p class="text-white/60 text-[10px] md:text-sm leading-relaxed mb-6 max-w-[260px]">enter code to join game</p>
+          <h2 class="text-2xl md:text-3xl text-white mb-2 uppercase tracking-wider">JOIN GAME</h2>
+          <p class="text-white/60 text-sm md:text-lg leading-relaxed mb-6 max-w-[260px]">enter code to join game</p>
 
           <!-- Code Input Group -->
           <div class="w-full space-y-3 mt-auto">
             <!-- Nickname Input -->
             <div class="relative">
               <input id="lobby-nickname-input"
-                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-sm text-secondary uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all"
+                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-xl text-secondary uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all"
                 placeholder="NICKNAME" type="text" maxlength="12" />
             </div>
 
             <div class="relative">
               <input id="room-code-input"
-                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-lg tracking-[0.3em] text-secondary uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all"
+                class="w-full h-12 bg-black/40 border border-white/10 rounded-2xl focus:border-secondary focus:ring-0 text-center text-2xl tracking-[0.3em] text-secondary uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all"
                 placeholder="CODE" type="text" maxlength="6" />
             </div>
             <button id="join-room-btn"
-              class="w-full py-3.5 bg-secondary text-background-dark font-['Retro_Gaming'] text-[10px] rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,212,255,0.2)]">
+              class="w-full py-3.5 bg-secondary text-background-dark font-['Retro_Gaming'] text-xl rounded-2xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(0,212,255,0.2)]">
               Join
             </button>
           </div>
@@ -900,7 +945,7 @@
           <!-- Search Section (Grow) -->
           <div class="relative flex-grow flex items-center">
             <input id="quiz-search-input"
-              class="w-full h-12 pl-4 pr-12 bg-transparent border-none focus:ring-0 text-white placeholder:text-white/30 font-medium text-sm font-['Retro_Gaming'] tracking-tight"
+              class="w-full h-12 pl-4 pr-12 bg-transparent border-none focus:ring-0 text-white placeholder:text-white/30 font-medium text-xl font-['Retro_Gaming'] tracking-tight"
               placeholder="SEARCH QUIZ..." type="text" />
 
             <!-- Search Icon (Right side of input) -->
@@ -918,10 +963,10 @@
             class="relative min-w-[200px] shrink-0 border-t md:border-t-0 border-white/10 md:border-l md:border-white/10 z-50">
             <!-- Trigger Button -->
             <button id="custom-cat-trigger"
-              class="w-full h-12 flex items-center justify-between pl-4 pr-3 text-white text-xs font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:text-primary transition-colors focus:outline-none group">
+              class="w-full h-12 flex items-center justify-between pl-4 pr-3 text-white text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:text-primary transition-colors focus:outline-none group">
               <span id="custom-cat-selected" class="truncate mr-2">ALL</span>
               <span id="custom-cat-arrow"
-                class="material-symbols-outlined text-sm text-primary transition-transform duration-300 group-hover:scale-110">expand_more</span>
+                class="material-symbols-outlined text-lg text-primary transition-transform duration-300 group-hover:scale-110">expand_more</span>
             </button>
 
             <!-- Custom Dropdown Menu (Hidden by default) -->
@@ -966,8 +1011,8 @@
       <div class="mt-auto pt-4 flex justify-center items-center gap-4 shrink-0 border-t-2 border-white/5">
         <button id="prev-page-btn"
           class="px-4 py-2 bg-black/40 border-2 border-white/10 hover:border-white/40 text-white/60 hover:text-white flex items-center gap-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-          <span class="material-symbols-outlined text-sm">chevron_left</span>
-          <span class="text-xs font-bold uppercase">Prev</span>
+          <span class="material-symbols-outlined text-lg">chevron_left</span>
+          <span class="text-lg font-bold uppercase">Prev</span>
         </button>
 
         <div id="pagination-numbers" class="flex items-center gap-2">
@@ -976,8 +1021,8 @@
 
         <button id="next-page-btn"
           class="px-4 py-2 bg-black/40 border-2 border-white/10 hover:border-white/40 text-white/60 hover:text-white flex items-center gap-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-          <span class="text-xs font-bold uppercase">Next</span>
-          <span class="material-symbols-outlined text-sm">chevron_right</span>
+          <span class="text-lg font-bold uppercase">Next</span>
+          <span class="material-symbols-outlined text-lg">chevron_right</span>
         </button>
       </div>
     </main>
@@ -1078,6 +1123,15 @@
                   <button
                     class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
                     data-value="900" data-label="15 Menit">15 Menit</button>
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="1200" data-label="20 Menit">20 Menit</button>
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="1500" data-label="25 Menit">25 Menit</button>
+                  <button
+                    class="timer-opt w-full text-left px-4 py-3 hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 font-bold font-['Space_Grotesk']"
+                    data-value="1800" data-label="30 Menit">30 Menit</button>
                 </div>
               </div>
             </div>
@@ -1373,7 +1427,7 @@
 
             <!-- Google Login (At the TOP) -->
             <button type="button" id="google-login-btn"
-              class="w-full h-14 bg-white/5 hover:bg-white/10 border-4 border-white/10 hover:border-white/30 text-white font-['Retro_Gaming'] text-[10px] uppercase transition-all rounded-xl flex items-center justify-center gap-3 group">
+              class="w-full h-14 bg-white/5 hover:bg-white/10 border-4 border-white/10 hover:border-white/30 text-white font-['Retro_Gaming'] text-lg uppercase transition-all rounded-xl flex items-center justify-center gap-3 group">
               <!-- Google Icon -->
               <svg class="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                 <path fill="#4285F4"
@@ -1403,7 +1457,7 @@
               </label>
               <div class="relative group">
                 <input id="login-email" type="text" placeholder="player@game.com"
-                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 text-white font-['Retro_Gaming'] text-xs placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
+                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 text-white font-['Retro_Gaming'] text-lg placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
                 <div class="absolute right-4 top-1/2 -translate-y-1/2">
                   <span
                     class="material-symbols-outlined text-white/20 group-focus-within:text-primary transition-colors">mail</span>
@@ -1419,7 +1473,7 @@
               </label>
               <div class="relative group">
                 <input id="login-password" type="password" placeholder="••••••••"
-                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 pr-12 text-white font-['Retro_Gaming'] text-xs placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
+                  class="w-full h-14 bg-black/60 border-4 border-white/10 focus:border-primary focus:ring-0 px-4 pr-12 text-white font-['Retro_Gaming'] text-lg placeholder:text-white/20 transition-all rounded-xl group-hover:border-white/20" />
                 <button type="button" id="password-toggle"
                   class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-primary transition-colors">
                   <span class="material-symbols-outlined">visibility_off</span>
@@ -1429,15 +1483,15 @@
 
             <!-- Login Button -->
             <button type="submit" id="login-btn"
-              class="w-full h-16 bg-primary text-black font-bold text-sm uppercase font-['Retro_Gaming'] border-4 border-black pixel-btn-green active:translate-y-1 transition-all btn-sweep hover:shadow-[0_0_30px_rgba(0,255,85,0.4)] rounded-xl flex items-center justify-center gap-3">
+              class="w-full h-16 bg-primary text-black font-bold text-xl uppercase font-['Retro_Gaming'] border-4 border-black pixel-btn-green active:translate-y-1 transition-all btn-sweep hover:shadow-[0_0_30px_rgba(0,255,85,0.4)] rounded-xl flex items-center justify-center gap-3">
               <span class="material-symbols-outlined">login</span>
               LOGIN
             </button>
 
             <!-- Register Link -->
-            <div class="text-center pt-4 border-t-2 border-white/5">
+            <div class="text-center pt-4 border-t-2 border-white/5 flex flex-col items-center justify-center">
               <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link"
-                class="inline-flex items-center gap-2 text-[9px] font-['Retro_Gaming'] transition-colors group">
+                class="inline-flex items-center justify-center gap-1 transition-colors group whitespace-nowrap text-sm w-full">
                 <span class="text-white/40">DON'T HAVE AN ACCOUNT?</span>
                 <span class="text-primary group-hover:text-white group-hover:underline">REGISTER NOW</span>
                 <span

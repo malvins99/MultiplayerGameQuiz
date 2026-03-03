@@ -77,10 +77,21 @@ export class RoomService {
                 map: mapFile,
                 questionCount: questionCount,
                 enemyCount: enemyCount,
-                timer: timer
+                timer: timer,
+                isHost: true,
+                hostId: hostId,
+                quizDetail: {
+                    title: quiz.title,
+                    category: quiz.category,
+                    language: quiz.language || 'id',
+                    description: quiz.description,
+                    creator_avatar: (quiz as any).creator_avatar || null,
+                    creator_username: (quiz as any).creator_username || 'kizuko'
+                }
             };
 
             // 2. Create/Join Room on Colyseus
+            localStorage.setItem('currentRoomOptions', JSON.stringify(colyseusOptions));
             const room = await client.joinOrCreate("game_room", colyseusOptions);
             console.log("Room created via RoomService!", room);
 
