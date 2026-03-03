@@ -7,6 +7,31 @@ import { GameRoom } from "./rooms/GameRoom";
 
 import path from "path";
 
+// ---- Global Error Handling ----
+// Safety net: prevent server crash from Colyseus internal errors (e.g. protocol edge cases)
+process.on('uncaughtException', (err: any) => {
+    const errorStr = String(err?.message || err || "").toLowerCase();
+    // Swallow known Colyseus/WebSocket transient errors that don't need restart
+    if (
+        errorStr.includes('bytes is not iterable') ||
+        errorStr.includes('econnreset') ||
+        errorStr.includes('epipe') ||
+        errorStr.includes('decode error')
+    ) {
+        console.warn('[Server] Caught non-fatal error (server stays alive):', err?.message || err);
+        return;
+    }
+    // Log unknown errors but keep server running
+    console.error('[Server] Uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (reason: any) => {
+    console.error('[Server] Unhandled rejection:', reason);
+});
+// --------------------------------
+
+
+
 const port = Number(process.env.PORT || 2567);
 const app = express();
 
@@ -20,6 +45,8 @@ app.use(express.static(clientBuildPath));
 const server = http.createServer(app);
 const gameServer = new Server({
     server,
+    pingInterval: 5000, // 5 detik — cukup untuk deteksi disconnect tanpa mengganggu initial handshake
+    pingMaxRetries: 3,
 });
 
 // Register Room Handlers
@@ -35,3 +62,5 @@ app.get("*", (req, res) => {
 
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${port}`);
+// trigger reload
+// trigger reload

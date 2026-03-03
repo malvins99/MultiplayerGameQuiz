@@ -68,41 +68,93 @@ export const TransitionManager = {
         if (!el) {
             el = document.createElement('div');
             el.id = 'transition-countdown';
-            el.style.position = 'absolute';
+            el.style.position = 'fixed';
             el.style.inset = '0';
             el.style.display = 'flex';
+            el.style.flexDirection = 'column';
             el.style.alignItems = 'center';
             el.style.justifyContent = 'center';
-            el.style.fontFamily = '"Retro Gaming", monospace';
-            el.style.fontSize = '180px';
-            el.style.color = '#00ff55';
+            el.style.background = '#000'; // Absolute black base
             el.style.zIndex = '10001';
-            el.style.textShadow = '0 0 30px rgba(0, 255, 85, 0.5)';
-            el.style.transition = 'transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             el.style.pointerEvents = 'none';
+
+            // Base Pattern Layer
+            const pattern = document.createElement('div');
+            pattern.style.position = 'absolute';
+            pattern.style.inset = '0';
+            pattern.style.backgroundImage = 'url("/assets/bg_pattern.png")';
+            pattern.style.backgroundSize = '400px';
+            pattern.style.opacity = '0.07';
+            pattern.style.imageRendering = 'pixelated';
+            el.appendChild(pattern);
+
+            // Perspective Gradient for depth
+            const gradient = document.createElement('div');
+            gradient.style.position = 'absolute';
+            gradient.style.inset = '0';
+            gradient.style.background = 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%)';
+            el.appendChild(gradient);
+
+            // Sub-text (Optional "READY...")
+            const subTitle = document.createElement('div');
+            subTitle.id = 'transition-countdown-subtitle';
+            subTitle.style.position = 'relative';
+            subTitle.style.fontFamily = "'Retro Gaming', monospace";
+            subTitle.style.fontSize = '24px';
+            subTitle.style.color = '#00ff55';
+            subTitle.style.marginBottom = '20px';
+            subTitle.style.opacity = '0.6';
+            subTitle.style.letterSpacing = '10px';
+            subTitle.innerText = 'BATTLE STARTING';
+            el.appendChild(subTitle);
+
+            // Main Text Container
+            const textContent = document.createElement('div');
+            textContent.id = 'transition-countdown-text';
+            textContent.style.position = 'relative';
+            textContent.style.fontFamily = "'Retro Gaming', monospace";
+            textContent.style.fontSize = '180px';
+            textContent.style.color = '#00ff55';
+            textContent.style.textShadow = '0 0 40px rgba(0, 255, 85, 0.6)';
+            textContent.style.transition = 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            el.appendChild(textContent);
+
             overlay.appendChild(el);
         }
 
-        const oldText = el.innerText;
-        el.innerText = text;
+        const textEl = document.getElementById('transition-countdown-text');
+        const subEl = document.getElementById('transition-countdown-subtitle');
+        if (!textEl) return;
+
+        const oldText = textEl.innerText;
+        textEl.innerText = text;
 
         // Auto-scale font size if text is long
         if (text.length > 5) {
-            el.style.fontSize = '40px';
+            textEl.style.fontSize = '60px';
+            if (subEl) subEl.style.display = 'none';
         } else {
-            el.style.fontSize = '180px';
+            textEl.style.fontSize = '180px';
+            if (subEl) subEl.style.display = 'block';
         }
 
-        if (text === 'GO!' || text === '10') {
-            el.style.color = text === 'GO!' ? '#fff' : '#00ff55';
+        // Color Logic
+        if (text === 'GO!' || text === '0') {
+            textEl.style.color = '#fff';
+            textEl.style.textShadow = '0 0 50px #fff';
+            if (subEl) subEl.innerText = 'FIGHT!';
+        } else {
+            textEl.style.color = '#00ff55';
+            textEl.style.textShadow = '0 0 40px rgba(0, 255, 85, 0.6)';
+            if (subEl) subEl.innerText = 'BATTLE STARTING';
         }
 
         // Pulse animation ONLY if it's a number (for countdown)
         const isNumber = !isNaN(parseInt(text)) && text.length <= 2;
         if (oldText !== text && isNumber) {
-            el.style.transform = 'scale(1.3)';
+            textEl.style.transform = 'scale(1.4)';
             setTimeout(() => {
-                if (el) el.style.transform = 'scale(1)';
+                if (textEl) textEl.style.transform = 'scale(1)';
             }, 100);
         }
     },

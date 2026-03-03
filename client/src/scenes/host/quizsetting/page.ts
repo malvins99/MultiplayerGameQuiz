@@ -401,10 +401,20 @@ export class QuizSettingScene extends Phaser.Scene {
                 map: mapFile,
                 questionCount: this.settingsQuestionCount,
                 enemyCount: enemyCount,
-                timer: this.settingsTimer
+                timer: this.settingsTimer,
+                hostId: hostId,
+                quizDetail: {
+                    title: this.selectedQuiz.title,
+                    category: this.selectedQuiz.category,
+                    language: (this.selectedQuiz as any).language || 'id',
+                    description: this.selectedQuiz.description,
+                    creator_avatar: (this.selectedQuiz as any).creator_avatar || null,
+                    creator_username: (this.selectedQuiz as any).creator_username || 'kizuko'
+                }
             };
 
             // 2. Create Room on Colyseus
+            localStorage.setItem('currentRoomOptions', JSON.stringify(options));
             const room = await this.client.create("game_room", options);
             console.log("Room created!", room);
 

@@ -50,6 +50,24 @@ export class LobbyScene extends Phaser.Scene {
     create() {
         this.initializeClient();
 
+        // ⚡ EARLY ROUTE CHECK: Redirect restore routes BEFORE showing any UI
+        // This prevents the HomePage from flashing on refresh
+        const path = Router.getPath();
+        const isRestoreRoute =
+            Router.match('/host/:roomCode/lobby') ||
+            Router.match('/host/:roomCode/leaderboard') ||
+            Router.is('/host/progress') ||
+            Router.is('/player/lobby') ||
+            Router.is('/player/game') ||
+            Router.match('/player/:roomCode/leaderboard');
+
+        if (isRestoreRoute && !this.didExit) {
+            // Sembunyikan SEMUA UI sebelum apapun tampil
+            this.toggleUI('');
+            this.handleRouting();
+            return;
+        }
+
         // 1. Initialize UI (Hidden)
         this.toggleUI('');
         this.initializeUI();
@@ -565,6 +583,7 @@ export class LobbyScene extends Phaser.Scene {
             if (targetRoom) {
                 const room = await this.client.joinById(targetRoom.roomId, {
                     name: nickname,
+                    userId: userId, // Pass Supabase Profile ID
                     sessionId: sessionData.id
                 });
 

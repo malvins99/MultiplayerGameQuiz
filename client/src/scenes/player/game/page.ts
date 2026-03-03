@@ -6,7 +6,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../../../ui/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
-import { QUESTIONS } from '../../../dummyQuestions';
+// Removed legacy QUESTIONS import
 
 export class GameScene extends Phaser.Scene {
     room!: Room;
@@ -144,7 +144,7 @@ export class GameScene extends Phaser.Scene {
         console.log('  goblin_walk:', this.textures.exists('goblin_walk'));
 
         // --- UI Scene Launch ---
-        this.scene.launch('UIScene');
+        this.scene.launch('UIScene', { room: this.room });
         this.scene.bringToTop('UIScene');
 
         // --- Final Reveal Check ---
@@ -731,22 +731,22 @@ export class GameScene extends Phaser.Scene {
     }
 
     triggerQuiz(enemy: any) {
-        const allQuestions = Object.values(QUESTIONS).flat();
-        let currentQ = allQuestions.find((q: any) => q.id === enemy.questionId);
-
-        if (!currentQ && allQuestions.length > 0) currentQ = allQuestions[0];
+        // Use questions from the server state instead of local dummy data
+        const questions = this.room.state.questions;
+        const qIndex = enemy.questionId;
+        const currentQ = questions[qIndex];
 
         if (currentQ) {
             const questionData = {
-                id: currentQ.id,
-                question: currentQ.pertanyaan,
-                image: currentQ.image,
-                options: [currentQ.jawaban_a, currentQ.jawaban_b, currentQ.jawaban_c, currentQ.jawaban_d],
-                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban)
+                id: qIndex, // Using the index as ID for mapping feedback
+                question: currentQ.text,
+                image: currentQ.imageUrl,
+                options: Array.from(currentQ.options), // Convert ArraySchema to regular array
+                correctAnswer: currentQ.correctAnswer
             };
 
-            this.activeQuestionId = questionData.id;
-            let foundKey = null;
+            this.activeQuestionId = qIndex;
+            let foundKey: string | null = null;
             this.room.state.enemies.forEach((val: any, key: string) => {
                 if (val === enemy) foundKey = key;
             });
@@ -769,12 +769,10 @@ export class GameScene extends Phaser.Scene {
         const isFromChest = this.isChestPopupVisible;
         if (this.activeEnemyId) this.cooldownEnemies.add(this.activeEnemyId);
 
-        const allQuestions = Object.values(QUESTIONS).flat();
-        const currentQ = allQuestions.find((q: any) => q.id === this.activeQuestionId);
+        const currentQ = this.room.state.questions[this.activeQuestionId!];
 
         if (currentQ) {
-            const correctIdx = ['a', 'b', 'c', 'd'].indexOf(currentQ.kunci_jawaban);
-            const isCorrect = correctIdx === answerIndex;
+            const isCorrect = currentQ.correctAnswer === answerIndex;
 
             if (btnElement && this.quizPopup) this.quizPopup.showFeedback(isCorrect, btnElement);
 
@@ -783,7 +781,6 @@ export class GameScene extends Phaser.Scene {
                     this.room.send("addScoreFromChest", { amount: 10 });
                 } else {
                     this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId });
-                    this.room.send("addScore", { amount: 20 });
                 }
             } else {
                 if (!isFromChest) {
@@ -819,16 +816,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     showRetryQuestionPopup(questionId: number) {
-        const allQuestions = Object.values(QUESTIONS).flat();
-        const qData = allQuestions.find((q: any) => q.id === questionId);
+        const qData = this.room.state.questions[questionId];
 
         if (qData) {
             const questionData = {
-                id: qData.id,
-                question: qData.pertanyaan,
-                image: qData.image,
-                options: [qData.jawaban_a, qData.jawaban_b, qData.jawaban_c, qData.jawaban_d],
-                correctAnswer: ['a', 'b', 'c', 'd'].indexOf(qData.kunci_jawaban)
+                id: questionId,
+                question: qData.text,
+                image: qData.imageUrl,
+                options: Array.from(qData.options),
+                correctAnswer: qData.correctAnswer
             };
             this.activeQuestionId = questionId;
             this.isChestPopupVisible = true;
@@ -995,17 +991,17 @@ export class GameScene extends Phaser.Scene {
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
-            this.activeQuestionId = enemyState.questionId;
-            const allQuestions = Object.values(QUESTIONS).flat();
-            const qData = allQuestions.find((q: any) => q.id === this.activeQuestionId);
+            const qIndex = enemyState.questionId;
+            const qData = this.room.state.questions[qIndex];
             if (qData) {
                 const questionData = {
-                    id: qData.id,
-                    question: qData.pertanyaan,
-                    image: qData.image,
-                    options: [qData.jawaban_a, qData.jawaban_b, qData.jawaban_c, qData.jawaban_d],
-                    correctAnswer: ['a', 'b', 'c', 'd'].indexOf(qData.kunci_jawaban)
+                    id: qIndex,
+                    question: qData.text,
+                    image: qData.imageUrl,
+                    options: Array.from(qData.options),
+                    correctAnswer: qData.correctAnswer
                 };
+                this.activeQuestionId = qIndex;
                 const name = (enemyState.type || 'ENEMY').toUpperCase();
                 this.quizPopup.show(questionData, name);
                 if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);
