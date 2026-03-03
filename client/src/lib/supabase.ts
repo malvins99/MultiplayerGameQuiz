@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-const supabaseUrl = 'https://humhaknetazvqkovlxdn.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWhha25ldGF6dnFrb3ZseGRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxOTY0ODUsImV4cCI6MjA3NDc3MjQ4NX0.LU9j-zyUOihFE-MAgXY9-cOBPiVJDGFArH5sLpmOTxw';
+const supabaseUrl = import.meta.env.NEXT_PUBLIC_SUPABASE_URL || 'https://humhaknetazvqkovlxdn.supabase.co';
+const supabaseAnonKey = import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1bWhha25ldGF6dnFrb3ZseGRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxOTY0ODUsImV4cCI6MjA3NDc3MjQ4NX0.LU9j-zyUOihFE-MAgXY9-cOBPiVJDGFArH5sLpmOTxw';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
 // Profile interface based on the schema
 export interface Profile {
