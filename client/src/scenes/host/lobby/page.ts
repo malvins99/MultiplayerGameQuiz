@@ -364,6 +364,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     this.countdownOverlay.style.opacity = '1';
                 }
                 if (this.countdownText) this.countdownText.innerText = val.toString();
+
+                // Hide main UI for "full block black" effect
+                if (this.isHost && this.waitingUI) {
+                    this.waitingUI.classList.add('hidden');
+                }
             } else if (val === 0) {
                 if (this.countdownText) this.countdownText.innerText = "GO!";
             }
@@ -770,7 +775,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         // Create Countdown Overlay
         const overlay = document.createElement('div');
         overlay.id = 'countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
+        overlay.className = 'fixed inset-0 z-50 bg-black flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
                 <div id="countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">

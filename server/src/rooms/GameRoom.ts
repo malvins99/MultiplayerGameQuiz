@@ -1037,6 +1037,9 @@ export class GameRoom extends Room<GameState> {
 
         // --- SAVE TO SUPABASE UTAMA ---
         this.saveSessionToMainSupabase(rankings);
+
+        // --- UPDATE STATUS IN SUPABASE B ---
+        this.updateSessionToFinishedInSupabaseB();
     }
 
     private async saveSessionToMainSupabase(rankings: any[]) {
@@ -1218,10 +1221,24 @@ export class GameRoom extends Room<GameState> {
 
     private async syncParticipantToSupabaseB(client: Client) {
         const player = this.state.players.get(client.sessionId);
-        if (!player || !player.userId || !this.sessionId) return;
+        console.log(`[Supabase B] syncParticipantToSupabaseB called for client: ${client.sessionId}. Player exists: ${!!player}. Session ID: ${this.sessionId}`);
+
+        if (!player) {
+            console.log(`[Supabase B] Missing player object for client: ${client.sessionId}`);
+            return;
+        }
+        if (!player.userId) {
+            console.log(`[Supabase B] Missing player.userId for client: ${client.sessionId} (Player Name: ${player.name})`);
+            return;
+        }
+        if (!this.sessionId) {
+            console.log(`[Supabase B] Missing this.sessionId in room`);
+            return;
+        }
 
         try {
             const answers = this.playerAnswers.get(client.sessionId) || [];
+            console.log(`[Supabase B] Updating stats for ${player.userId} in session ${this.sessionId}. Answers so far:`, answers.length);
 
             const updateData = {
                 current_question: player.answeredQuestions,
@@ -1233,14 +1250,17 @@ export class GameRoom extends Room<GameState> {
                 duration: player.isFinished ? Math.round((player.finishTime - this.state.gameStartTime) / 1000) : 0
             };
 
-            const { error } = await supabaseB
+            const { data, error } = await supabaseB
                 .from('participants')
                 .update(updateData)
                 .eq('session_id', this.sessionId)
-                .eq('user_id', player.userId);
+                .eq('user_id', player.userId)
+                .select();
 
             if (error) {
-                console.error(`[Supabase B] Sync failed for ${player.name}:`, error.message);
+                console.error(`[Supabase B] Sync failed for ${player.name}:`, error.message, error);
+            } else {
+                console.log(`[Supabase B] Sync Success for ${player.name}. Affected rows:`, data?.length);
             }
         } catch (e: any) {
             console.error(`[Supabase B] Sync Exception for ${player.name}:`, e.message);
@@ -1265,6 +1285,26 @@ export class GameRoom extends Room<GameState> {
             }
         } catch (e: any) {
             console.error("[Supabase B] Exception syncing started_at:", e.message);
+        }
+    }
+
+    private async updateSessionToFinishedInSupabaseB() {
+        if (!this.sessionId) return;
+        try {
+            console.log("[Supabase B] Updating Session Status to FINISHED:", this.sessionId);
+
+            const { error } = await supabaseB
+                .from('sessions')
+                .update({ status: "finished" })
+                .eq('id', this.sessionId);
+
+            if (error) {
+                console.error("[Supabase B] GAGAL UPDATE STATUS KE FINISHED:", error.message);
+            } else {
+                console.log("[Supabase B] Status 'FINISHED' Berhasil Diperbarui.");
+            }
+        } catch (e: any) {
+            console.error("[Supabase B] Exception on updateSessionToFinishedInSupabaseB:", e.message);
         }
     }
 
