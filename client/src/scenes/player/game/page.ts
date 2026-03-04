@@ -780,11 +780,11 @@ export class GameScene extends Phaser.Scene {
                 if (isFromChest) {
                     this.room.send("addScoreFromChest", { amount: 10 });
                 } else {
-                    this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId });
+                    this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId, answerId: answerIndex });
                 }
             } else {
                 if (!isFromChest) {
-                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId });
+                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId, answerId: answerIndex });
                     this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
                 }
             }
@@ -818,7 +818,7 @@ export class GameScene extends Phaser.Scene {
     showRetryQuestionPopup(questionId: number) {
         const qData = this.room.state.questions[questionId];
 
-        if (currentQ) {
+        if (qData) {
             const questionData = {
                 id: questionId,
                 question: qData.text,

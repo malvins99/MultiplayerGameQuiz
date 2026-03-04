@@ -17,7 +17,6 @@ export class HostLeaderboardScene extends Phaser.Scene {
     private container!: HTMLDivElement;
     private client!: Client;
     private rankings: RankingEntry[] = [];
-    private isHost: boolean = true;
 
     constructor() {
         super({ key: 'HostLeaderboardScene' });
@@ -32,15 +31,9 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         this.container = document.createElement('div');
         this.container.id = 'leaderboard-ui';
-        this.container.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000;';
+        // Force 'Retro Gaming' font family on the container and all children
+        this.container.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; font-family: "Retro Gaming", monospace !important;';
         document.body.appendChild(this.container);
-
-        if (!document.getElementById('leaderboard-styles')) {
-            const style = document.createElement('style');
-            style.id = 'leaderboard-styles';
-            style.innerHTML = this.getGlobalStyles();
-            document.head.appendChild(style);
-        }
 
         this.renderLeaderboard();
         setTimeout(() => TransitionManager.open(), 100);
@@ -57,102 +50,183 @@ export class HostLeaderboardScene extends Phaser.Scene {
         this.client = new Client(host);
     }
 
-    private getGlobalStyles(): string {
-        return `
-            #leaderboard-ui {
-                background: #151515; color: white; display: flex; flex-direction: column; align-items: center;
-                font-family: 'Retro Gaming', monospace; overflow-y: auto; height: 100vh; width: 100vw;
-            }
-            .podium-section { display: flex; justify-content: center; align-items: flex-end; gap: 16px; margin-bottom: 40px; padding-top: 100px; position: relative; }
-            .podium-column { display: flex; flex-direction: column; align-items: center; width: 160px; z-index: 5; }
-            .podium-column.rank-1 { order: 2; z-index: 10; width: 200px; }
-            .podium-column.rank-2 { order: 1; }
-            .podium-column.rank-3 { order: 3; }
-            .podium-body { width: 100%; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-            .rank-1 .podium-body { height: 300px; background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%); }
-            .rank-2 .podium-body { height: 260px; background: linear-gradient(180deg, #E0E0E0 0%, #808080 100%); }
-            .rank-3 .podium-body { height: 220px; background: linear-gradient(180deg, #CD7F32 0%, #8B4513 100%); }
-            .podium-name-text { background: rgba(0,0,0,0.6); padding: 8px 14px; border-radius: 8px; font-size: 10px; color: white; white-space: nowrap; }
-            .podium-avatar { width: 100%; height: 100px; position: relative; display: flex; justify-content: center; align-items: center; }
-            .char-anim { width: 96px; height: 64px; image-rendering: pixelated; position: absolute; transform: scale(4.5); animation: lb-play-idle 1s steps(9) infinite; }
-            @keyframes lb-play-idle { from { background-position: 0 0; } to { background-position: -864px 0; } }
-            .podium-score { font-size: 20px; margin-top: auto; margin-bottom: 20px; padding: 10px 22px; border-radius: 12px; border: 3px solid #4A3000; background: rgba(255,255,255,0.1); }
-            .list-section { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 8px; padding-bottom: 100px; }
-            .list-item { display: grid; grid-template-columns: 50px 1fr 100px 80px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 12px; }
-            .lb-footer {
-                position: fixed;
-                top: 50%;
-                left: 0;
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                padding: 0 40px;
-                pointer-events: none;
-                transform: translateY(-50%);
-                z-index: 100;
-            }
-            .nav-btn {
-                pointer-events: auto;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 50%;
-                width: 72px;
-                height: 72px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                color: white;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                transition: all 0.2s ease;
-                backdrop-filter: blur(5px);
-            }
-            .nav-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
-            .logo-left { position: absolute; top: -60px; left: -65px; width: 384px; pointer-events: none; opacity: 0.9; }
-            .logo-right { position: absolute; top: 8px; right: 8px; width: 256px; pointer-events: none; opacity: 0.9; }
-        `;
-    }
-
     private renderLeaderboard() {
         Router.navigate('/host/leaderboard');
-        const top3 = this.rankings.slice(0, 3);
+        const top3 = [
+            this.rankings[0],
+            this.rankings[1],
+            this.rankings[2]
+        ];
+
         const others = this.rankings.slice(3);
 
         const formatTime = (ms: number) => {
             const s = Math.floor(ms / 1000);
-            return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+            return `${(s / 60 < 1 ? '' : Math.floor(s / 60).toString() + ':')}${(s % 60).toString().padStart(2, '0')}s`;
         };
 
-        const podiumHTML = [1, 0, 2].map(i => {
-            const rankNum = i + 1;
-            const p = top3[i]; 
-            if (!p) return `<div class="podium-column rank-${rankNum}" style="opacity:0"></div>`;
-            const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
+        const getInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
+
+        // Podium Display Order: 2nd, 1st, 3rd
+        const displayOrder = [top3[1], top3[0], top3[2]];
+
+        const podiumsHtml = displayOrder.map((p) => {
+            if (!p) return `<div class="w-[100px] md:w-[150px]"></div>`;
+
+            const rank = p.rank;
+            const isFirst = rank === 1;
+            const isSecond = rank === 2;
+
+            let colorHex = '#cd7f32'; // Bronze
+            let colorBg = 'bg-orange-900/40';
+            let colorGlow = 'rgba(205,127,50,0.5)';
+            let icon = 'military_tech';
+            let height = 'h-32';
+            let width = 'w-[100px] md:w-[140px]';
+            let avatarSize = 'w-16 h-16 text-xl';
+
+            if (isFirst) {
+                colorHex = '#ffcc00'; // Gold
+                colorBg = 'bg-yellow-600/40';
+                colorGlow = 'rgba(255,204,0,0.6)';
+                icon = 'emoji_events';
+                height = 'h-48 md:h-56';
+                width = 'w-[120px] md:w-[180px]';
+                avatarSize = 'w-20 h-20 md:w-24 md:h-24 md:text-4xl';
+            } else if (isSecond) {
+                colorHex = '#c0c0c0'; // Silver
+                colorBg = 'bg-gray-600/40';
+                colorGlow = 'rgba(192,192,192,0.5)';
+                height = 'h-40 md:h-44';
+            }
+
             return `
-                <div class="podium-column rank-${p.rank}">
-                    <div class="podium-body">
-                        <span class="podium-name-text">${p.name}</span>
-                        <div class="podium-avatar">
-                            <div class="char-anim" style="background-image:url('/assets/base_idle_strip9.png')"></div>
-                            ${hairKey ? `<div class="char-anim" style="background-image:url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
+                <div class="flex flex-col items-center relative z-20 group">
+                    ${isFirst ? `
+                    <svg class="absolute -top-14 md:-top-16 w-12 h-12 md:w-16 md:h-16 drop-shadow-[0_0_15px_${colorGlow}] animate-pulse" viewBox="0 0 24 24" style="fill: ${colorHex}; stroke: #000; stroke-width: 1;">
+                        <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
+                    </svg>
+                    ` : ''}
+
+                    <div class="${avatarSize} rounded-2xl bg-black/80 border-4 shadow-[0_0_20px_${colorGlow}] flex items-center justify-center font-bold mb-4 relative backdrop-blur-sm group-hover:-translate-y-2 transition-transform duration-300" style="color: ${colorHex}; border-color: ${colorHex}">
+                        ${getInitials(p.name)}
+                        <div class="absolute -bottom-3 px-3 py-0.5 bg-black text-xs border-2 rounded-lg font-bold flex items-center gap-1" style="border-color: ${colorHex}; color: ${colorHex}">
+                            ${rank}
                         </div>
-                        <div class="podium-score">${p.score}</div>
+                    </div>
+
+                    <div class="text-white text-xs md:text-base mb-2 truncate max-w-[100px] md:max-w-[160px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center">${p.name}</div>
+
+                    <div class="${width} ${height} rounded-t-2xl border-4 border-b-0 flex flex-col items-center justify-center relative overflow-hidden backdrop-blur-md" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg}); box-shadow: inset 0 0 30px ${colorGlow}, 0 -5px 20px ${colorGlow}">
+                        <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10 mix-blend-overlay"></div>
+                        <div class="text-2xl md:text-5xl font-bold mb-2 drop-shadow-[0_0_10px_rgba(0,0,0,1)] relative z-10" style="color: ${colorHex}">${p.score}</div>
+                        <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
                     </div>
                 </div>
             `;
         }).join('');
 
-        this.container.innerHTML = `
-            <img src="/logo/Zigma-logo.webp" class="logo-left" />
-            <img src="/logo/gameforsmart.webp" class="logo-right" />
-            <div class="podium-section">${podiumHTML}</div>
-            <div class="list-section">${others.map(p => `
-                <div class="list-item">
-                    <span>#${p.rank}</span><span>${p.name}</span><span>${formatTime(p.duration)}</span><span>${p.score}</span>
+        const tableHtml = others.map((p) => `
+            <div class="grid grid-cols-[60px_1fr_100px_100px] md:grid-cols-[100px_1fr_150px_150px] p-4 text-white items-center border-b border-white/5 hover:bg-white/5 transition-colors group">
+                <div class="text-center font-bold text-white/50 group-hover:text-primary transition-colors text-xs md:text-base">${p.rank}</div>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-black/40 border-2 border-white/10 flex items-center justify-center font-bold text-xs md:text-sm group-hover:border-primary transition-colors">${getInitials(p.name)}</div>
+                    <div class="font-bold text-xs md:text-base truncate max-w-[120px] md:max-w-[300px]">${p.name}</div>
                 </div>
-            `).join('')}</div>
-            <div class="lb-footer">
-                <button id="lb-home-btn" class="nav-btn"><span class="material-symbols-outlined">home</span></button>
-                <button id="lb-restart-btn" class="nav-btn"><span class="material-symbols-outlined">restart_alt</span></button>
+                <div class="text-center text-primary font-bold text-sm md:text-lg drop-shadow-[0_0_5px_rgba(0,255,85,0.3)]">${p.score}</div>
+                <div class="text-center flex border-white/10 items-center justify-center gap-1 text-white/50 text-xs md:text-sm">
+                    <span class="material-symbols-outlined text-sm">timer</span>
+                    ${formatTime(p.duration)}
+                </div>
+            </div>
+        `).join('');
+
+        this.container.innerHTML = `
+            <div class="fixed inset-0 w-full h-screen overflow-hidden fantasy-bg text-white pointer-events-auto select-none">
+                
+                <!-- GameForSmart Logo - Top Right Corner -->
+                <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
+                    <img src="/logo/gameforsmart.webp" alt="GameForSmart" draggable="false"
+                        class="w-32 h-auto md:w-56 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
+                </div>
+
+                <!-- Zigma Logo - Top Left Corner -->
+                <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
+                    <img src="/logo/Zigma-logo.webp" alt="Zigma" draggable="false"
+                        class="w-24 h-auto md:w-32 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
+                </div>
+
+                <!-- Fantasy Forest Gradient Overlay -->
+                <div class="absolute inset-0 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);"></div>
+
+                <!-- Mystical Fog Layer -->
+                <div class="absolute inset-0 pointer-events-none mystical-fog"></div>
+                <div class="absolute inset-0 pointer-events-none mystical-fog"
+                    style="animation-delay: 5s; animation-direction: reverse;"></div>
+
+                <!-- Magic Firefly Particles -->
+                <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s; animation-duration: 7s;"></div>
+                <div class="firefly" style="top: 60%; left: 85%; animation-delay: 1s; animation-duration: 5s;"></div>
+                <div class="firefly" style="top: 30%; left: 50%; animation-delay: 2s; animation-duration: 6s;"></div>
+                <div class="firefly" style="top: 80%; left: 30%; animation-delay: 0.5s; animation-duration: 8s;"></div>
+                <div class="firefly" style="top: 15%; left: 70%; animation-delay: 1.5s; animation-duration: 7s;"></div>
+
+                <!-- Glowing Orbs -->
+                <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+                <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style="animation-delay: 1s;"></div>
+
+                <!-- Bottom Forest Silhouette -->
+                <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none forest-silhouette opacity-50"></div>
+
+                <!-- MAIN CONTENT AREA -->
+                <div class="relative z-10 w-full h-full flex flex-col items-center pt-24 pb-12 px-4 overflow-y-auto custom-scrollbar">
+                    
+                    <h1 class="text-3xl md:text-5xl font-bold text-primary tracking-widest drop-shadow-[3px_3px_0_rgba(0,0,0,1)] text-center mb-10">
+                        FINAL RESULTS
+                    </h1>
+
+                    <!-- Podiums -->
+                    <div class="flex items-end justify-center gap-2 md:gap-8 mb-12">
+                        ${podiumsHtml}
+                    </div>
+
+                    <!-- Leaderboard Table Card -->
+                    ${others.length > 0 ? `
+                    <div class="w-full max-w-4xl bg-[#1a1a20]/90 backdrop-blur-md border-[3px] border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,255,85,0.1)] overflow-hidden shrink-0 mb-20">
+                        <!-- Header -->
+                        <div class="bg-black/80 border-b-[3px] border-primary/20 relative">
+                            <div class="grid grid-cols-[60px_1fr_100px_100px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[10px] md:text-xs">
+                                <div class="text-center">RANK</div>
+                                <div>PLAYER</div>
+                                <div class="text-center">SCORE</div>
+                                <div class="text-center">TIME</div>
+                            </div>
+                        </div>
+                        
+                        <!-- List -->
+                        <div class="flex flex-col">
+                            ${tableHtml}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- FLOATING ACTIONS (Left & Right) -->
+                <div class="fixed top-[40%] md:top-1/2 left-4 md:left-6 -translate-y-1/2 flex flex-col gap-4 z-50">
+                    <button id="lb-home-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-primary text-white/70 hover:text-primary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,255,85,0.2)]" title="Home">
+                        <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform">home</span>
+                    </button>
+                    <button id="lb-restart-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-secondary text-white/70 hover:text-secondary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,212,255,0.2)]" title="Play Again">
+                        <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:-rotate-180 transition-transform duration-500">restart_alt</span>
+                    </button>
+                </div>
+
+                <div class="fixed top-[40%] md:top-1/2 right-4 md:right-6 -translate-y-1/2 flex flex-col gap-4 z-50">
+                    <button id="lb-stats-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-accent text-white/70 hover:text-accent rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(204,0,255,0.2)]" title="Statistics">
+                        <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform">analytics</span>
+                    </button>
+                </div>
             </div>
         `;
 
@@ -162,6 +236,13 @@ export class HostLeaderboardScene extends Phaser.Scene {
     private attachListeners() {
         const homeBtn = document.getElementById('lb-home-btn');
         const restartBtn = document.getElementById('lb-restart-btn');
+        const statsBtn = document.getElementById('lb-stats-btn');
+
+        if (statsBtn) {
+            statsBtn.onclick = () => {
+                alert("Fitur Statistik lengkap akan segera hadir!");
+            };
+        }
 
         if (homeBtn) {
             homeBtn.onclick = () => TransitionManager.transitionTo(() => {
@@ -186,7 +267,8 @@ export class HostLeaderboardScene extends Phaser.Scene {
                             setTimeout(() => TransitionManager.open(), 600);
                         } catch (e) {
                             alert("Restart error. Returning to lobby.");
-                            this.cleanup(); this.scene.start('LobbyScene');
+                            this.cleanup();
+                            this.scene.start('LobbyScene');
                         }
                     });
                 }
