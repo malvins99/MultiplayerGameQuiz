@@ -127,8 +127,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 if (display) display.innerText = label;
 
                 // Highlight active
-                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
+                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
+                target.classList.add('text-[#4988C4]', 'bg-white/5');
 
                 // Close menu
                 this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
@@ -152,8 +152,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-timer-selected');
                 if (display) display.innerText = label;
 
-                timerOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
+                timerOptions.forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
+                target.classList.add('text-[#4988C4]', 'bg-white/5');
 
                 this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
             });
@@ -176,8 +176,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-question-selected');
                 if (display) display.innerText = label;
 
-                questionOptions.forEach(o => o.classList.remove('text-primary', 'bg-white/5'));
-                target.classList.add('text-primary', 'bg-white/5');
+                questionOptions.forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
+                target.classList.add('text-[#4988C4]', 'bg-white/5');
 
                 this.closeDropdown('settings-question-menu', 'settings-question-arrow');
             });
@@ -201,12 +201,12 @@ export class QuizSettingScene extends Phaser.Scene {
                 if (this.soundEnabled) {
                     if (newToggle) {
                         newToggle.classList.remove('bg-white/10');
-                        newToggle.classList.add('bg-[#34c759]');
+                        newToggle.classList.add('bg-[#1C4D8D]');
                     }
                     if (newKnob) newKnob.classList.add('translate-x-6');
                 } else {
                     if (newToggle) {
-                        newToggle.classList.remove('bg-[#34c759]');
+                        newToggle.classList.remove('bg-[#1C4D8D]');
                         newToggle.classList.add('bg-white/10');
                     }
                     if (newKnob) newKnob.classList.remove('translate-x-6');

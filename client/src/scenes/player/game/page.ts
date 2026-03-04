@@ -798,7 +798,7 @@ export class GameScene extends Phaser.Scene {
     showRetryQuestionPopup(questionId: number) {
         const qData = this.room.state.questions[questionId];
 
-        if (currentQ) {
+        if (qData) {
             const questionData = {
                 id: questionId,
                 question: qData.text,
