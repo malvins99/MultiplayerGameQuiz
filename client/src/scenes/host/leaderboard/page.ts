@@ -61,7 +61,7 @@ export class HostLeaderboardScene extends Phaser.Scene {
         return `
             #leaderboard-ui {
                 background: #151515; color: white; display: flex; flex-direction: column; align-items: center;
-                font-family: 'Retro Gaming', monospace; overflow-y: auto; height: 100vh; width: 100vw;
+                font-family: 'Retro Gaming', monospace; overflow: hidden; height: 100vh; width: 100vw;
             }
             .podium-section { display: flex; justify-content: center; align-items: flex-end; gap: 16px; margin-bottom: 40px; padding-top: 100px; position: relative; }
             .podium-column { display: flex; flex-direction: column; align-items: center; width: 160px; z-index: 5; }
@@ -107,8 +107,8 @@ export class HostLeaderboardScene extends Phaser.Scene {
                 backdrop-filter: blur(5px);
             }
             .nav-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.1); }
-            .logo-left { position: absolute; top: -60px; left: -65px; width: 384px; pointer-events: none; opacity: 0.9; }
-            .logo-right { position: absolute; top: 8px; right: 8px; width: 256px; pointer-events: none; opacity: 0.9; }
+            .logo-left { position: absolute; top: -30px; left: -40px; width: 256px; pointer-events: none; z-index: 1000; }
+            .logo-right { position: absolute; top: -45px; right: -15px; width: 320px; pointer-events: none; z-index: 1000; }
         `;
     }
 
@@ -124,7 +124,7 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         const podiumHTML = [1, 0, 2].map(i => {
             const rankNum = i + 1;
-            const p = top3[i]; 
+            const p = top3[i];
             if (!p) return `<div class="podium-column rank-${rankNum}" style="opacity:0"></div>`;
             const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
             return `
@@ -142,8 +142,8 @@ export class HostLeaderboardScene extends Phaser.Scene {
         }).join('');
 
         this.container.innerHTML = `
-            <img src="/logo/Zigma-logo.webp" class="logo-left" />
-            <img src="/logo/gameforsmart.webp" class="logo-right" />
+            <img src="/logo/Zigma-new-logo.webp" class="logo-left" />
+            <img src="/logo/gameforsmart-new-logo.webp" class="logo-right" />
             <div class="podium-section">${podiumHTML}</div>
             <div class="list-section">${others.map(p => `
                 <div class="list-item">
