@@ -50,7 +50,37 @@ export class HostLeaderboardScene extends Phaser.Scene {
         this.client = new Client(host);
     }
 
+    private getGlobalStyles(): string {
+        return `
+            .podium-avatar { position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+            .char-anim { 
+                width: 96px; 
+                height: 64px; 
+                image-rendering: pixelated; 
+                position: absolute; 
+                transform: scale(3.5); 
+                animation: lb-play-idle 1s steps(9) infinite; 
+            }
+            @keyframes lb-play-idle { 
+                from { background-position: 0 0; } 
+                to { background-position: -864px 0; } 
+            }
+            @media (min-width: 768px) {
+                .char-anim { transform: scale(5); }
+            }
+        `;
+    }
+
     private renderLeaderboard() {
+        // Add the local styles
+        const styleId = 'leaderboard-local-styles';
+        if (!document.getElementById(styleId)) {
+            const s = document.createElement('style');
+            s.id = styleId;
+            s.innerHTML = this.getGlobalStyles();
+            document.head.appendChild(s);
+        }
+
         Router.navigate('/host/leaderboard');
         const top3 = [
             this.rankings[0],
@@ -83,7 +113,7 @@ export class HostLeaderboardScene extends Phaser.Scene {
             let icon = 'military_tech';
             let height = 'h-32';
             let width = 'w-[100px] md:w-[140px]';
-            let avatarSize = 'w-16 h-16 text-xl';
+            let avatarSize = 'w-16 h-16 md:w-24 md:h-24';
 
             if (isFirst) {
                 colorHex = '#ffcc00'; // Gold
@@ -92,13 +122,15 @@ export class HostLeaderboardScene extends Phaser.Scene {
                 icon = 'emoji_events';
                 height = 'h-48 md:h-56';
                 width = 'w-[120px] md:w-[180px]';
-                avatarSize = 'w-20 h-20 md:w-24 md:h-24 md:text-4xl';
+                avatarSize = 'w-20 h-20 md:w-32 md:h-32';
             } else if (isSecond) {
                 colorHex = '#c0c0c0'; // Silver
                 colorBg = 'bg-gray-600/40';
                 colorGlow = 'rgba(192,192,192,0.5)';
                 height = 'h-40 md:h-44';
             }
+
+            const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
 
             return `
                 <div class="flex flex-col items-center relative z-20 group">
@@ -108,9 +140,12 @@ export class HostLeaderboardScene extends Phaser.Scene {
                     </svg>
                     ` : ''}
 
-                    <div class="${avatarSize} rounded-2xl bg-black/80 border-4 shadow-[0_0_20px_${colorGlow}] flex items-center justify-center font-bold mb-4 relative backdrop-blur-sm group-hover:-translate-y-2 transition-transform duration-300" style="color: ${colorHex}; border-color: ${colorHex}">
-                        ${getInitials(p.name)}
-                        <div class="absolute -bottom-3 px-3 py-0.5 bg-black text-xs border-2 rounded-lg font-bold flex items-center gap-1" style="border-color: ${colorHex}; color: ${colorHex}">
+                    <div class="${avatarSize} podium-avatar rounded-2xl bg-black/80 border-4 shadow-[0_0_20px_${colorGlow}] flex items-center justify-center font-bold mb-4 relative backdrop-blur-sm group-hover:-translate-y-2 transition-transform duration-300" style="color: ${colorHex}; border-color: ${colorHex}">
+                        <!-- Character Animation -->
+                        <div class="char-anim" style="background-image: url('/assets/base_idle_strip9.png')"></div>
+                        ${hairKey ? `<div class="char-anim" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
+                        
+                        <div class="absolute -bottom-3 px-3 py-0.5 bg-black text-xs border-2 rounded-lg font-bold flex items-center gap-1 z-30" style="border-color: ${colorHex}; color: ${colorHex}">
                             ${rank}
                         </div>
                     </div>
@@ -146,13 +181,13 @@ export class HostLeaderboardScene extends Phaser.Scene {
                 
                 <!-- GameForSmart Logo - Top Right Corner -->
                 <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
-                    <img src="/logo/gameforsmart.webp" alt="GameForSmart" draggable="false"
+                    <img src="/logo/gameforsmart-new-logo.webp" alt="GameForSmart" draggable="false"
                         class="w-32 h-auto md:w-56 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
                 </div>
 
                 <!-- Zigma Logo - Top Left Corner -->
                 <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
-                    <img src="/logo/Zigma-logo.webp" alt="Zigma" draggable="false"
+                    <img src="/logo/Zigma-new-logo.webp" alt="Zigma" draggable="false"
                         class="w-24 h-auto md:w-32 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
                 </div>
 
@@ -278,6 +313,6 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
     cleanup() {
         if (this.container) this.container.remove();
-        const s = document.getElementById('leaderboard-styles'); if (s) s.remove();
+        const s = document.getElementById('leaderboard-local-styles'); if (s) s.remove();
     }
 }

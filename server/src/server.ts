@@ -79,7 +79,7 @@ app.get("*", (req, res) => {
     res.sendFile(path.join(clientBuildPath, "index.html"));
 });
 
-gameServer.listen(port);
+gameServer.listen(port, "0.0.0.0");
 console.log(`Listening on ws://localhost:${port}`);
 // trigger reload
 // trigger reload

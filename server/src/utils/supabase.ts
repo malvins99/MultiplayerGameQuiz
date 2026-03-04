@@ -7,17 +7,17 @@ const mainUrl = process.env.SUPABASE_UTAMA_URL || process.env.SUPABASE_URL || ''
 const mainKey = process.env.SUPABASE_UTAMA_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 if (!mainUrl || !mainKey) {
-    console.warn("⚠️ SUPABASE_UTAMA_URL or SUPABASE_UTAMA_KEY is not defined in .env! Backend Sync to Main Supabase might fail.");
+    console.warn("⚠️ SUPABASE_UTAMA_URL or SUPABASE_UTAMA_KEY is not defined in .env! Backend Sync to Main Supabase will be disabled.");
 }
 
-export const supabaseUtama = createClient(mainUrl, mainKey);
+export const supabaseUtama = (mainUrl && mainKey) ? createClient(mainUrl, mainKey) : null as any;
 
 // Create connection to Supabase B (Sessions & Participants)
 const bUrl = process.env.SUPABASE_B_URL || '';
 const bKey = process.env.SUPABASE_B_KEY || '';
 
 if (!bUrl || !bKey) {
-    console.warn("⚠️ SUPABASE_B_URL or SUPABASE_B_KEY is not defined in .env! Backend Sync to Supabase B might fail.");
+    console.warn("⚠️ SUPABASE_B_URL or SUPABASE_B_KEY is not defined in .env! Backend Sync to Supabase B will be disabled.");
 }
 
-export const supabaseB = createClient(bUrl, bKey);
+export const supabaseB = (bUrl && bKey) ? createClient(bUrl, bKey) : null as any;

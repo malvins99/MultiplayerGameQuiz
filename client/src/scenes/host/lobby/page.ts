@@ -544,10 +544,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             
             <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
                 <!-- LOGO TOP LEFT -->
-                <img src="/logo/Zigma-logo.webp" class="absolute w-24 md:w-96 top-2 left-2 md:-top-[60px] md:-left-[65px] z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+                <img src="/logo/Zigma-new-logo.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
 
                 <!-- LOGO TOP RIGHT -->
-                <img src="/logo/gameforsmart.webp" class="absolute w-28 md:w-64 top-2 right-2 md:top-2 md:right-2 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+                <img src="/logo/gameforsmart-new-logo.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain" />
 
                 <!-- Back Button REMOVED -->
 
@@ -1176,7 +1176,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         let html = '';
         filteredGroups.forEach((group: any) => {
             const name = group.name || 'Unnamed Group';
-            const avatar = group.avatar_url || '/logo/gameforsmart.webp';
+            const avatar = group.avatar_url || '/logo/gameforsmart-new-logo.webp';
             const memberCount = Array.isArray(group.members) ? group.members.length + 1 : 1;
             const isSelected = this.selectedGroups.has(group.id);
             const canInvite = group.canInvite;

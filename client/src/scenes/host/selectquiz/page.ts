@@ -103,8 +103,8 @@ export class SelectQuizScene extends Phaser.Scene {
         if (grid) {
             grid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-16 gap-4">
-                    <div class="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-                    <p class="text-white/50 font-['Press_Start_2P'] text-lg">Loading quizzes...</p>
+                    <div class="w-10 h-10 border-4 border-[#1C4D8D]/30 border-t-[#4988C4] rounded-full animate-spin"></div>
+                    <p class="text-white/50 font-['Retro_Gaming'] text-lg">Loading quizzes...</p>
                 </div>
             `;
         }
@@ -146,7 +146,7 @@ export class SelectQuizScene extends Phaser.Scene {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-4 py-3 text-lg font-['Press_Start_2P'] hover:bg-white/10 hover:text-primary rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
+        btn.className = "w-full text-left px-4 py-3 text-lg font-['Retro_Gaming'] hover:bg-white/10 hover:text-[#4988C4] rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
 
@@ -172,10 +172,10 @@ export class SelectQuizScene extends Phaser.Scene {
         if (menu) {
             const btns = menu.querySelectorAll('button');
             btns.forEach(b => {
-                b.classList.remove('text-primary', 'bg-white/5');
+                b.classList.remove('text-[#4988C4]', 'bg-white/5');
                 b.classList.add('text-white/70');
                 if (b.dataset.value === value) {
-                    b.classList.add('text-primary', 'bg-white/5');
+                    b.classList.add('text-[#4988C4]', 'bg-white/5');
                     b.classList.remove('text-white/70');
                 }
             });
@@ -319,10 +319,10 @@ export class SelectQuizScene extends Phaser.Scene {
         if (myIcon) {
             if (this.showMyQuizzesOnly) {
                 myIcon.classList.remove('text-white/40');
-                myIcon.classList.add('text-primary');
+                myIcon.classList.add('text-[#4988C4]');
             } else {
                 myIcon.classList.add('text-white/40');
-                myIcon.classList.remove('text-primary');
+                myIcon.classList.remove('text-[#4988C4]');
             }
         }
 
@@ -458,11 +458,11 @@ export class SelectQuizScene extends Phaser.Scene {
                     <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
                         <span class="material-symbols-outlined text-3xl text-white/20">search_off</span>
                     </div>
-                    <p class="text-white/70 font-['Press_Start_2P'] text-lg uppercase mb-2 tracking-widest">
+                    <p class="text-white/70 font-['Retro_Gaming'] text-lg uppercase mb-2 tracking-widest">
                         Quiz Tidak Ditemukan
                     </p>
                     
-                    <button id="reset-filters-btn" class="px-6 py-3 bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-black font-['Press_Start_2P'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
+                    <button id="reset-filters-btn" class="px-6 py-3 bg-[#1C4D8D]/10 border border-[#4988C4]/30 text-[#4988C4] hover:bg-[#1C4D8D] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">refresh</span>
                         Reset Filter
                     </button>
@@ -478,25 +478,25 @@ export class SelectQuizScene extends Phaser.Scene {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
 
-            let badgeColor = 'bg-primary/10 text-primary border border-primary/20';
+            let badgeColor = 'bg-[#BDE8F5] text-[#0F2854] border border-[#4988C4]';
 
-            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-primary hover:bg-[#2a2a30] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
+            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
-                <div class="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-[#1C4D8D]/0 to-[#1C4D8D]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
                     <!-- Pixel Font Badge - Adjusted text size for mobile -->
-                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-sm md:text-base font-bold rounded-lg uppercase tracking-wider font-['Press_Start_2P'] leading-none truncate max-w-[70%]">${quiz.category}</span>
+                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-sm md:text-base font-bold rounded-lg uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-primary/20 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#1C4D8D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
                 <!-- Title - Flow dynamically with flex-grow -->
-                <div class="relative z-10 font-bold text-white mt-auto pt-6 group-hover:text-primary transition-colors leading-[1.8] font-['Press_Start_2P'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full flex-grow">
+                <div class="relative z-10 font-bold text-white mt-auto pt-6 group-hover:text-[#BDE8F5] transition-colors leading-[1.8] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full flex-grow">
                     <span class="quiz-title-tooltip-trigger line-clamp-2 w-full" title="${quiz.title}">${quiz.title}</span>
                 </div>
             `;
@@ -546,7 +546,7 @@ export class SelectQuizScene extends Phaser.Scene {
             const digits = String(tp).length;
             const inputWidth = (digits * 0.75) + 1.2;
             pageNumbers.innerHTML = `
-                <div class="flex items-center gap-1 bg-primary rounded-lg px-2 py-1">
+                <div class="flex items-center gap-1 bg-[#1C4D8D] rounded-lg px-2 py-1">
                     <input
                         id="page-input"
                         type="text"
@@ -554,10 +554,10 @@ export class SelectQuizScene extends Phaser.Scene {
                         autocomplete="off"
                         maxlength="${digits}"
                         value="${this.currentPage}"
-                        class="h-7 text-center p-2 bg-black/30 text-primary font-bold text-lg rounded border border-primary/50 focus:outline-none focus:border-white focus:bg-black/50 transition-colors"
+                        class="h-7 text-center p-2 bg-black/30 text-[#BDE8F5] font-bold text-lg rounded border border-[#4988C4]/50 focus:outline-none focus:border-white focus:bg-black/50 transition-colors"
                         style="width: ${inputWidth}em; -moz-appearance: textfield; appearance: textfield;"
                     />
-                    <span class="text-black font-bold text-lg">/ ${tp}</span>
+                    <span class="text-white font-bold text-lg">/ ${tp}</span>
                 </div>
             `;
 
@@ -611,7 +611,7 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!t) {
             t = document.createElement('div');
             t.id = 'custom-quiz-tooltip';
-            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-primary text-white text-sm font-bold font-['Press_Start_2P'] rounded-lg shadow-[0_0_15px_rgba(0,255,85,0.3)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
+            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-[#1C4D8D] text-white text-sm font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(28,77,141,0.4)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
             document.body.appendChild(t);
         }
         this.tooltip = t;
