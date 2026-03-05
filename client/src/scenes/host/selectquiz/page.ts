@@ -505,23 +505,23 @@ export class SelectQuizScene extends Phaser.Scene {
 
             let badgeColor = 'bg-[#BDE8F5] text-[#0F2854] border border-[#4988C4]';
 
-            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
+            card.className = "group bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-[#1C4D8D]/0 to-[#1C4D8D]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
-                    <!-- Pixel Font Badge - Adjusted text size for mobile -->
-                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-sm md:text-base font-bold rounded-lg uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
+                    <!-- Pixel Font Badge - Adjusted text size to be smaller -->
+                    <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
                     <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#1C4D8D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
-                <!-- Title - Flow dynamically with flex-grow -->
-                <div class="relative z-10 font-bold text-white mt-auto pt-6 group-hover:text-[#BDE8F5] transition-colors leading-[1.8] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full flex-grow">
+                <!-- Title - Adjusted spacing to be closer to badge -->
+                <div class="relative z-10 font-bold text-white -mt-2 group-hover:text-[#BDE8F5] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
                     <span class="quiz-title-tooltip-trigger line-clamp-2 w-full" title="${quiz.title}">${quiz.title}</span>
                 </div>
             `;

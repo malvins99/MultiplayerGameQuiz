@@ -12,15 +12,7 @@ export class QuizSelectionUI {
                 <nav class="relative z-10 p-6 flex justify-between items-start shrink-0">
                 <!-- Left: Back Button & Logo -->
                 <div class="flex items-start gap-4">
-                    <button id="quiz-back-btn"
-                    class="flex items-center gap-3 text-white/50 hover:text-white transition-colors group mt-8">
-                    <div
-                        class="w-10 h-10 rounded-full border-2 border-white/10 flex items-center justify-center group-hover:border-[#4988C4] group-hover:bg-[#1C4D8D] group-hover:text-white transition-all">
-                        <span class="material-symbols-outlined">arrow_back</span>
-                    </div>
-                    <span class="text-xs font-bold uppercase tracking-widest hidden md:block">Back</span>
-                    </button>
-
+                    <!-- Back button removed visually -->
                     <!-- LOGO ZIGMA -->
                     <img src="/logo/Zigma-new-logo.webp" style="top: -30px; left: -40px;"
                     class="absolute w-64 z-20 pointer-events-none object-contain" />
@@ -35,7 +27,7 @@ export class QuizSelectionUI {
                 <main class="relative z-10 max-w-5xl mx-auto px-4 min-h-[calc(100vh-100px)] flex flex-col pb-8">
 
                 <!-- Unified Search & Filter Bar (Reference Image Style) -->
-                <div class="w-full mb-8 shrink-0 relative z-50">
+                <div class="w-full mb-6 shrink-0 relative z-50 mt-8">
                     <!-- Container with Neon Border -->
                     <div
                     class="flex flex-col md:flex-row items-stretch md:items-center bg-black/60 border-2 border-[#1C4D8D]/40 rounded-2xl p-2 gap-2 shadow-[0_0_15px_rgba(28,77,141,0.15)] backdrop-blur-sm">
@@ -101,12 +93,12 @@ export class QuizSelectionUI {
 
                 <!-- Quiz Grid -->
                 <div id="quiz-grid"
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto custom-scrollbar pr-2 pb-20">
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar pr-2 pb-20">
                     <!-- Cards injected via JS -->
                 </div>
 
                 <!-- Pagination -->
-                <div class="mt-auto pt-4 flex justify-center items-center gap-4 shrink-0 border-t-2 border-white/5">
+                <div class=" pt-4 flex justify-center items-center gap-4 shrink-0 border-t-2 border-white/5 -mt-14">
                     <button id="prev-page-btn"
                     class="px-4 py-2 bg-black/40 border-2 border-white/10 hover:border-white/40 text-white/60 hover:text-white flex items-center gap-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                     <span class="material-symbols-outlined text-lg">chevron_left</span>
