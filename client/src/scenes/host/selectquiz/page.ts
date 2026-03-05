@@ -1,19 +1,21 @@
 import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
-import { Quiz, fetchQuizzesFromSupabase, fetchCategoriesFromSupabase, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
+import { Quiz, fetchQuizzesPaginated, fetchCategoriesWithRaw, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
-import { authService } from '../../../services/AuthService';
+import { authService } from '../../../services/auth/AuthService';
 
 export class SelectQuizScene extends Phaser.Scene {
     client!: Client;
 
-    // Quiz Selection State
-    quizzes: Quiz[] = [];
-    filteredQuizzes: Quiz[] = [];
+    // Quiz Selection State (Server-Side Pagination)
+    pageQuizzes: Quiz[] = []; // quizzes for current page only
     currentPage: number = 1;
-    itemsPerPage: number = 6;
+    itemsPerPage: number = 9;
+    totalPages: number = 1;
+    totalCount: number = 0;
     favorites: Set<string> = new Set();
+    rawCategoryMap: Map<string, string> = new Map(); // display label -> raw DB value
 
     // Filters
     searchQuery: string = '';
@@ -66,12 +68,10 @@ export class SelectQuizScene extends Phaser.Scene {
         this.showLoadingState();
 
         try {
-            // Fetch quizzes and categories in parallel from Supabase
-            // Also fetch user favorites if logged in
+            // Fetch categories and user favorites in parallel
             const profile = authService.getStoredProfile();
             const promises: any[] = [
-                fetchQuizzesFromSupabase(),
-                fetchCategoriesFromSupabase()
+                fetchCategoriesWithRaw()
             ];
 
             if (profile) {
@@ -79,20 +79,60 @@ export class SelectQuizScene extends Phaser.Scene {
             }
 
             const results = await Promise.all(promises);
-            const quizzes = results[0];
-            const categories = results[1];
-            const userFavorites = profile ? results[2] : [];
+            const categoryPairs = results[0] as { raw: string; display: string }[];
+            const userFavorites = profile ? results[1] : [];
 
-            this.quizzes = quizzes;
             this.favorites = new Set(userFavorites);
 
-            // Populate category dropdown with Supabase data
-            this.populateCategories(categories);
+            // Build raw category map (display -> raw) for server-side filter
+            this.rawCategoryMap.clear();
+            categoryPairs.forEach(c => this.rawCategoryMap.set(c.display, c.raw));
 
-            // Apply filters and render
-            this.applyFilters();
+            // Populate category dropdown with display labels
+            this.populateCategories(categoryPairs.map(c => c.display));
+
+            // Fetch first page of quizzes from server
+            await this.fetchPage();
         } catch (err) {
             console.error('Failed to load quiz data:', err);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    /**
+     * Fetch quizzes for the current page from the server (offset pagination).
+     */
+    async fetchPage() {
+        this.isLoading = true;
+        this.showLoadingState();
+
+        try {
+            const profile = authService.getStoredProfile();
+
+            // Reverse-map the displayed category back to raw DB value
+            let rawCategory: string | undefined;
+            if (this.selectedCategory) {
+                rawCategory = this.rawCategoryMap.get(this.selectedCategory) || undefined;
+            }
+
+            const result = await fetchQuizzesPaginated({
+                page: this.currentPage,
+                limit: this.itemsPerPage,
+                search: this.searchQuery || undefined,
+                category: rawCategory,
+                favoriteIds: this.showFavoritesOnly ? Array.from(this.favorites) : undefined,
+                creatorId: this.showMyQuizzesOnly && profile ? profile.id : undefined,
+            });
+
+            this.pageQuizzes = result.quizzes;
+            this.totalPages = result.totalPages;
+            this.totalCount = result.totalCount;
+            this.currentPage = result.currentPage;
+
+            this.renderQuizGrid();
+        } catch (err) {
+            console.error('Failed to fetch page:', err);
         } finally {
             this.isLoading = false;
         }
@@ -270,17 +310,16 @@ export class SelectQuizScene extends Phaser.Scene {
             prevBtn.onclick = () => {
                 if (this.currentPage > 1) {
                     this.currentPage--;
-                    this.renderQuizGrid();
+                    this.fetchPage();
                 }
             };
         }
 
         if (nextBtn) {
             nextBtn.onclick = () => {
-                const totalPages = Math.ceil(this.filteredQuizzes.length / this.itemsPerPage);
-                if (this.currentPage < totalPages) {
+                if (this.currentPage < this.totalPages) {
                     this.currentPage++;
-                    this.renderQuizGrid();
+                    this.fetchPage();
                 }
             };
         }
@@ -419,19 +458,9 @@ export class SelectQuizScene extends Phaser.Scene {
     }
 
     applyFilters() {
-        const profile = authService.getStoredProfile();
-        const userId = profile ? profile.id : null;
-
-        this.filteredQuizzes = this.quizzes.filter(q => {
-            const matchesSearch = q.title.toLowerCase().includes(this.searchQuery.toLowerCase());
-            const matchesCategory = this.selectedCategory ? q.category === this.selectedCategory : true;
-            const matchesFav = this.showFavoritesOnly ? this.favorites.has(q.id) : true;
-            const matchesMyQuiz = this.showMyQuizzesOnly ? (userId && q.creator_id === userId) : true;
-
-            return matchesSearch && matchesCategory && matchesFav && matchesMyQuiz;
-        });
-
-        this.renderQuizGrid();
+        // Reset to page 1 when filters change, then fetch from server
+        this.currentPage = 1;
+        this.fetchPage();
     }
 
     renderQuizGrid() {
@@ -444,15 +473,11 @@ export class SelectQuizScene extends Phaser.Scene {
 
         grid.innerHTML = '';
 
-        // Pagination Logic
-        const totalPages = Math.ceil(this.filteredQuizzes.length / this.itemsPerPage);
-        if (this.currentPage > totalPages) this.currentPage = Math.max(1, totalPages);
+        // Server-side pagination: pageQuizzes already contains only current page data
+        const totalPages = this.totalPages;
+        const pageItems = this.pageQuizzes;
 
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        const end = start + this.itemsPerPage;
-        const pageItems = this.filteredQuizzes.slice(start, end);
-
-        if (this.filteredQuizzes.length === 0) {
+        if (pageItems.length === 0) {
             grid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
                     <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
@@ -480,23 +505,23 @@ export class SelectQuizScene extends Phaser.Scene {
 
             let badgeColor = 'bg-[#BDE8F5] text-[#0F2854] border border-[#4988C4]';
 
-            card.className = "group bg-surface-dark border border-white/5 p-5 md:p-6 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[140px] md:min-h-[160px] w-full min-w-0";
+            card.className = "group bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-[#1C4D8D]/0 to-[#1C4D8D]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
-                    <!-- Pixel Font Badge - Adjusted text size for mobile -->
-                    <span class="px-2 py-1.5 md:px-3 md:py-2 ${badgeColor} text-sm md:text-base font-bold rounded-lg uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
+                    <!-- Pixel Font Badge - Adjusted text size to be smaller -->
+                    <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
                     <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#1C4D8D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
-                <!-- Title - Flow dynamically with flex-grow -->
-                <div class="relative z-10 font-bold text-white mt-auto pt-6 group-hover:text-[#BDE8F5] transition-colors leading-[1.8] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full flex-grow">
+                <!-- Title - Adjusted spacing to be closer to badge -->
+                <div class="relative z-10 font-bold text-white -mt-2 group-hover:text-[#BDE8F5] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
                     <span class="quiz-title-tooltip-trigger line-clamp-2 w-full" title="${quiz.title}">${quiz.title}</span>
                 </div>
             `;
@@ -571,7 +596,7 @@ export class SelectQuizScene extends Phaser.Scene {
                         val = tp;
                     }
                     this.currentPage = val;
-                    this.renderQuizGrid();
+                    this.fetchPage();
                 };
 
                 pageInput.addEventListener('input', () => {

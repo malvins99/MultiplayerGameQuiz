@@ -116,6 +116,108 @@ export async function fetchQuizzesFromSupabase(): Promise<Quiz[]> {
 }
 
 /**
+ * Options for server-side paginated quiz fetching.
+ */
+export interface PaginatedQuizOptions {
+    page: number;
+    limit: number;
+    search?: string;
+    category?: string;
+    favoriteIds?: string[];
+    creatorId?: string;
+}
+
+/**
+ * Result from a paginated quiz fetch.
+ */
+export interface PaginatedQuizResult {
+    quizzes: Quiz[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+}
+
+/**
+ * Fetch quizzes with server-side offset pagination.
+ * Data is fetched per page from Supabase using `.range()`.
+ */
+export async function fetchQuizzesPaginated(options: PaginatedQuizOptions): Promise<PaginatedQuizResult> {
+    const { page, limit, search, category, favoriteIds, creatorId } = options;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    try {
+        // Build the query with count
+        let query = supabase
+            .from('quizzes')
+            .select('id, title, description, category, language, image_url, cover_image, is_public, creator_id, questions, created_at, updated_at, favorite, status, played', { count: 'exact' })
+            .eq('is_public', true)
+            .eq('is_hidden', false)
+            .eq('status', 'active')
+            .is('deleted_at', null);
+
+        // Apply search filter (case-insensitive via ilike)
+        if (search && search.trim()) {
+            query = query.ilike('title', `%${search.trim()}%`);
+        }
+
+        // Apply category filter (match raw category from DB)
+        if (category && category.trim()) {
+            query = query.ilike('category', category.trim());
+        }
+
+        // Apply favorite filter (only show quizzes in the favorite list)
+        if (favoriteIds && favoriteIds.length > 0) {
+            query = query.in('id', favoriteIds);
+        }
+
+        // Apply creator filter (my quizzes)
+        if (creatorId) {
+            query = query.eq('creator_id', creatorId);
+        }
+
+        // Order and paginate
+        query = query.order('created_at', { ascending: false }).range(from, to);
+
+        const { data, error, count } = await query;
+
+        if (error) {
+            console.error('Error fetching paginated quizzes:', error);
+            return { quizzes: [], totalCount: 0, totalPages: 0, currentPage: page };
+        }
+
+        const totalCount = count || 0;
+        const totalPages = Math.ceil(totalCount / limit);
+
+        const quizzes: Quiz[] = (data || []).map((row: any) => ({
+            id: row.id,
+            title: row.title || 'Untitled Quiz',
+            description: row.description || '',
+            category: formatCategory(row.category || 'general'),
+            language: row.language || 'id',
+            image_url: row.image_url || null,
+            cover_image: row.cover_image || null,
+            is_public: row.is_public ?? true,
+            creator_id: row.creator_id,
+            questions: row.questions || [],
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            favorite: row.favorite || [],
+            status: row.status || 'active',
+            played: row.played || 0,
+            questionCount: Array.isArray(row.questions) ? row.questions.length : 0,
+        }));
+
+        console.log(`[Paginated] Page ${page}/${totalPages}, showing ${quizzes.length} of ${totalCount} quizzes`);
+        return { quizzes, totalCount, totalPages, currentPage: page };
+
+    } catch (err) {
+        console.error('Unexpected error fetching paginated quizzes:', err);
+        return { quizzes: [], totalCount: 0, totalPages: 0, currentPage: page };
+    }
+}
+
+/**
  * Fetch distinct categories from Supabase `quizzes` table.
  * Only considers public, non-hidden, non-deleted, active quizzes.
  */
@@ -141,6 +243,39 @@ export async function fetchCategoriesFromSupabase(): Promise<string[]> {
         );
 
         return Array.from(categories).sort();
+
+    } catch (err) {
+        console.error('Unexpected error fetching categories:', err);
+        return [];
+    }
+}
+
+/**
+ * Fetch categories with both raw DB value and display label.
+ * Returns array of { raw: 'math', display: 'Matematika' }.
+ */
+export async function fetchCategoriesWithRaw(): Promise<{ raw: string; display: string }[]> {
+    try {
+        const { data, error } = await supabase
+            .from('quizzes')
+            .select('category')
+            .eq('is_public', true)
+            .eq('is_hidden', false)
+            .eq('status', 'active')
+            .is('deleted_at', null);
+
+        if (error || !data) {
+            console.error('Error fetching categories:', error);
+            return [];
+        }
+
+        const uniqueRaw = new Set(
+            data.map((row: any) => (row.category || 'general').toLowerCase())
+        );
+
+        return Array.from(uniqueRaw)
+            .map(raw => ({ raw, display: formatCategory(raw) }))
+            .sort((a, b) => a.display.localeCompare(b.display));
 
     } catch (err) {
         console.error('Unexpected error fetching categories:', err);

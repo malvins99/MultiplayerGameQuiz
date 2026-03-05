@@ -2,8 +2,8 @@ import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
-import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../../../ui/QRCodePopup';
+import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
+import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 
 export class PlayerWaitingRoomScene extends Phaser.Scene {

@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { Client, Room } from 'colyseus.js';
 import { Router } from '../../utils/Router';
 import { TransitionManager } from '../../utils/TransitionManager';
-import { authService } from '../../services/AuthService';
+import { authService } from '../../services/auth/AuthService';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
+import { LobbyUI } from './ui';
 
 export class LobbyScene extends Phaser.Scene {
     client!: Client;
@@ -121,6 +122,7 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     initializeUI() {
+        LobbyUI.render();
         this.lobbyUI = document.getElementById('lobby-ui');
         this.populateUserProfile();
 
