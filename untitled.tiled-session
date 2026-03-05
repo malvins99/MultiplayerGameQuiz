@@ -8,6 +8,23 @@
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "#spr_tileset_sunnysideworld_16px": {
+            "scaleInDock": 2
+        },
+        "C:/Zigma-gamev1/new-project/spr_tileset_sunnysideworld_16px.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/new map/group map.tmx": {
+            "scale": 1,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 965.5,
+                "y": 668.5
+            }
+        },
+        "C:/new map/group map.tmx#spr_tileset_sunnysideworld_16px": {
+            "scaleInDock": 1.5
+        },
         "C:/new-project/spr_deco_coracle_strip4.tsx": {
             "scaleInDock": 1
         },
@@ -20,8 +37,8 @@
         },
         "client/public/assets/map_baru1_tetap.tmj": {
             "expandedGroupLayers": [
-                35,
-                2
+                2,
+                35
             ],
             "expandedObjectLayers": [
                 6,
@@ -29,10 +46,10 @@
                 8
             ],
             "scale": 0.33,
-            "selectedLayer": 25,
+            "selectedLayer": 32,
             "viewCenter": {
-                "x": 898.4848484848484,
-                "y": 527.2727272727273
+                "x": 828.7878787878789,
+                "y": 489.3939393939394
             }
         },
         "client/public/assets/map_baru1_tetap.tmj#spr_tileset_sunnysideworld_16px": {
@@ -57,7 +74,7 @@
             "selectedLayer": 2,
             "viewCenter": {
                 "x": 665.9999999999999,
-                "y": 552.6666666666666
+                "y": 702
             }
         },
         "multiplayer_map.tmj": {
@@ -103,19 +120,19 @@
         },
         "server/src/maps/map_easy.json": {
             "expandedGroupLayers": [
+                2,
                 48,
-                56,
-                3,
-                41,
-                10,
                 42,
-                2
+                3,
+                10,
+                41,
+                56
             ],
             "scale": 0.33,
             "selectedLayer": 15,
             "viewCenter": {
-                "x": 883.3333333333334,
-                "y": 653.030303030303
+                "x": 1980.3030303030305,
+                "y": 119.69696969696969
             }
         },
         "server/src/maps/map_easy.json#spr_tileset_sunnysideworld_16px": {
@@ -146,7 +163,7 @@
             "selectedLayer": 5,
             "viewCenter": {
                 "x": 883,
-                "y": 277
+                "y": 1033
             }
         },
         "untitled1.tmx": {
@@ -157,36 +174,36 @@
             "selectedLayer": 2,
             "viewCenter": {
                 "x": 604.5454545454546,
-                "y": 40.90909090909088
+                "y": 316.66666666666663
             }
         }
     },
     "last.exportedFilePath": "C:/Legends of Learning (LoL)",
     "last.externalTilesetPath": "C:/Legends of Learning (LoL)",
-    "last.imagePath": "C:/Sunnyside_World_ASSET_PACK_V2.1/Sunnyside_World_Assets/Characters/Goblin/PNG",
-    "map.height": 110,
+    "last.imagePath": "C:/Sunnyside_World_ASSET_PACK_V2.1/Sunnyside_World_Assets/Tileset",
+    "map.height": 70,
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,
     "map.tileWidth": 16,
     "map.width": 110,
     "openFiles": [
-        "server/src/maps/map_easy.json",
         "client/public/assets/map_baru1_tetap.tmj"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
-        "server/src/maps/map_easy.json",
+        "map_baru1.tmx",
         "client/public/assets/map_baru1_tetap.tmj",
         "map_baru1.(update).tmj",
+        "server/src/maps/map_easy.json",
+        "untitled.tmx",
+        "untitled1.tmx",
         "multiplayer_map.tmj",
-        "map_baru1.tmx",
         "spr_death_strip13.tsx",
         "spr_caught_strip10.tsx",
-        "base_mining_strip10.tsx",
-        "untitled.tmx",
-        "untitled1.tmx"
+        "base_mining_strip10.tsx"
     ],
+    "tileset.embedInMap": true,
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
         "height": 16,
