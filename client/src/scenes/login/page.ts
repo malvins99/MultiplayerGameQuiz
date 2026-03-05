@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { Router } from '../../utils/Router';
 import { TransitionManager } from '../../utils/TransitionManager';
-import { authService } from '../../services/AuthService';
+import { authService } from '../../services/auth/AuthService';
+import { LoginUI } from './ui';
 
 export class LoginScene extends Phaser.Scene {
     loginUI: HTMLElement | null = null;
@@ -79,6 +80,7 @@ export class LoginScene extends Phaser.Scene {
     }
 
     initializeUI() {
+        LoginUI.render();
         this.loginUI = document.getElementById('login-ui');
     }
 

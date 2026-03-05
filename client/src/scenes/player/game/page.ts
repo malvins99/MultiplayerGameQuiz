@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
-import { QuizPopup } from '../../../ui/QuizPopup';
+import { QuizPopup } from '../../../ui/shared/QuizPopup';
 import { UIScene } from '../ui/page';
 import { TransitionManager } from '../../../utils/TransitionManager';
 
-import { HTMLControlAdapter } from '../../../ui/HTMLControlAdapter';
+import { HTMLControlAdapter } from '../../../ui/shared/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
 // Removed legacy QUESTIONS import
 

@@ -5,8 +5,8 @@ import { supabase } from '../../../lib/supabase';
 import { Player } from '../../../shared/state';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
-import { CharacterSelectPopup } from '../../../ui/CharacterSelectPopup';
-import { QRCodePopup } from '../../../ui/QRCodePopup';
+import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
+import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 import * as QRCode from 'qrcode';
 
@@ -540,7 +540,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         // NEW 2-COLUMN HOST LAYOUT
         this.waitingUI.innerHTML = `
-            <div class="fixed inset-0 pointer-events-none overflow-hidden pixel-bg-pattern opacity-15"></div>
+            <div class="fixed inset-0 pointer-events-none overflow-hidden fantasy-bg opacity-100"></div>
             
             <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
                 <!-- LOGO TOP LEFT -->
@@ -552,12 +552,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <!-- Back Button REMOVED -->
 
                 <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-surface-dark border-4 border-primary/30 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_0_30px_rgba(0,255,85,0.1)] relative mt-4 md:mt-16 shrink-0 bg-opacity-90 backdrop-blur-sm shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
+                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-transparent border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative mt-4 md:mt-16 shrink-0 backdrop-blur-md">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none"></div>
 
                     <!-- Room Code -->
-                    <div class="w-full bg-black/40 border-2 border-primary/50 rounded-xl p-3 md:p-4 flex items-center justify-between relative group hover:border-primary transition-all mb-4">
-                        <span id="host-room-code" class="text-3xl md:text-4xl text-primary font-['Retro_Gaming'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(0,255,85,0.5)]">CODE</span>
+                    <div class="w-full bg-black/40 border-2 border-[#1F7D53]/50 rounded-xl p-3 md:p-4 flex items-center justify-between relative group hover:border-[#9DC08B] transition-all mb-4">
+                        <span id="host-room-code" class="text-3xl md:text-4xl text-white font-['Retro_Gaming'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(157,192,139,0.5)]">CODE</span>
                         <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
@@ -569,10 +569,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- URL Box -->
-                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-secondary/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-secondary transition-all cursor-pointer relative overflow-hidden">
-                        <span id="host-join-url" class="text-[10px] md:text-xs text-secondary font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
-                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
-                            <span class="material-symbols-outlined text-secondary group-hover:text-white text-sm">content_copy</span>
+                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-[#1F7D53]/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-[#9DC08B] transition-all cursor-pointer relative overflow-hidden">
+                        <span id="host-join-url" class="text-[10px] md:text-xs text-white font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
+                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#9DC08B]/10 group-hover:bg-[#9DC08B]/20 transition-colors">
+                            <span class="material-symbols-outlined text-[#9DC08B] group-hover:text-white text-sm">content_copy</span>
                         </div>
                     </div>
 
@@ -581,19 +581,19 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-surface-dark border-4 border-primary/30 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_0_30px_rgba(0,255,85,0.1)] relative bg-opacity-90 backdrop-blur-sm shadow-[0_4px_30px_rgba(0,0,0,0.5)] md:mt-16">
-                    <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none overflow-hidden rounded-3xl"></div>
+                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-transparent border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative backdrop-blur-md md:mt-16">
+                    <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none overflow-hidden rounded-3xl"></div>
 
                     <!-- Header -->
-                    <div class="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 border-b-2 border-purple-500/20 pb-4 gap-4 md:gap-0 z-10 w-full">
+                    <div class="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 border-b-2 border-white/20 pb-4 gap-4 md:gap-0 z-10 w-full">
                         <div class="flex items-center gap-4">
-                            <h2 id="host-player-count" class="text-xl md:text-2xl text-secondary font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(0,212,255,0.5)]">0 Players</h2>
+                            <h2 id="host-player-count" class="text-xl md:text-2xl text-white font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(157,192,139,0.5)]">0 Players</h2>
                             <div class="flex gap-2">
-                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-primary/50 text-white flex items-center justify-center rounded-xl hover:bg-white/10 hover:border-primary transition-all shadow-[0_0_15px_rgba(0,255,85,0.2)]">
-                                    <span class="material-symbols-outlined text-xl md:text-2xl text-primary">group</span>
+                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-black/40 border-2 border-[#1F7D53] text-[#9DC08B] flex items-center justify-center rounded-xl hover:bg-black/60 hover:border-[#9DC08B] transition-all shadow-lg">
+                                    <span class="material-symbols-outlined text-xl md:text-2xl">group</span>
                                 </button>
-                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-primary/50 text-white flex items-center justify-center rounded-xl hover:bg-white/10 hover:border-primary transition-all shadow-[0_0_15px_rgba(0,255,85,0.2)]">
-                                    <span class="material-symbols-outlined text-xl md:text-2xl text-primary">person_add</span>
+                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-black/40 border-2 border-[#1F7D53] text-[#9DC08B] flex items-center justify-center rounded-xl hover:bg-black/60 hover:border-[#9DC08B] transition-all shadow-lg">
+                                    <span class="material-symbols-outlined text-xl md:text-2xl">person_add</span>
                                 </button>
                             </div>
                         </div>
@@ -605,7 +605,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             </button>
 
                             <!-- Start Button -->
-                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-primary text-black font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,85,0.3)] cursor-pointer shrink-0">
+                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-[#9DC08B] text-black font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(157,192,139,0.5)] cursor-pointer shrink-0">
                                 Start
                             </button>
                         </div>
@@ -615,10 +615,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div id="host-player-area" class="flex-1 w-full relative overflow-hidden">
                         <!-- Empty State -->
                         <div id="host-empty-state" class="absolute inset-0 flex flex-col items-center justify-center opacity-50 space-y-4">
-                            <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10">
-                                <span class="material-symbols-outlined text-6xl text-white/20">person_add</span>
+                            <div class="w-24 h-24 rounded-full bg-black/10 flex items-center justify-center border-2 border-black/10">
+                                <span class="material-symbols-outlined text-6xl text-black/50">person_add</span>
                             </div>
-                            <p class="text-white/30 font-['Retro_Gaming'] text-xs tracking-widest animate-pulse">Waiting for players to join...</p>
+                            <p class="text-black/50 font-['Retro_Gaming'] text-xs tracking-widest animate-pulse font-bold">Waiting for players to join...</p>
                         </div>
                         
                         <!-- Grid Container -->

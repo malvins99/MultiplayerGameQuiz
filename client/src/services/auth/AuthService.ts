@@ -1,4 +1,4 @@
-import { supabase, Profile, USER_SESSION_KEY, USER_PROFILE_KEY } from '../lib/supabase';
+import { supabase, Profile, USER_SESSION_KEY, USER_PROFILE_KEY } from '../../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 export interface AuthResult {

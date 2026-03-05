@@ -13,6 +13,25 @@ import { SelectQuizScene } from './scenes/host/selectquiz/page';
 import { HostProgressScene } from './scenes/host/progress/page';
 import { HostLeaderboardScene } from './scenes/host/leaderboard/page';
 
+import { LoginUI } from './scenes/login/ui';
+import { LobbyUI } from './scenes/lobby/ui';
+import { CreateRoomUI } from './scenes/lobby/create-room-ui';
+import { QuizSelectionUI } from './scenes/host/selectquiz/ui';
+import { QuizSettingsUI } from './scenes/host/quizsetting/ui';
+import { WaitingRoomUI } from './scenes/host/lobby/ui';
+import { AuthLoadingUI } from './scenes/login/auth-loading-ui';
+import { GameOverlayUI } from './scenes/player/game/ui';
+
+// Pre-render all global UIs to replace the ones removed from index.html
+LoginUI.render();
+LobbyUI.render();
+CreateRoomUI.render();
+QuizSelectionUI.render();
+QuizSettingsUI.render();
+WaitingRoomUI.render();
+AuthLoadingUI.render();
+GameOverlayUI.render();
+
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     pixelArt: true,

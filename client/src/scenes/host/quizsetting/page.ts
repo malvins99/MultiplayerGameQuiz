@@ -4,7 +4,7 @@ import { Router } from '../../../utils/Router';
 import { Quiz, fetchQuizById } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
-import { authService } from '../../../services/AuthService';
+import { authService } from '../../../services/auth/AuthService';
 
 export class QuizSettingScene extends Phaser.Scene {
     client!: Client;

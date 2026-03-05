@@ -1,7 +1,7 @@
 import { Client } from 'colyseus.js';
-import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../lib/supabaseB';
-import { authService } from './AuthService';
-import { Quiz } from '../data/QuizData';
+import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
+import { authService } from '../auth/AuthService';
+import { Quiz } from '../../data/QuizData';
 
 export interface RoomCreationOptions {
     difficulty: string;
