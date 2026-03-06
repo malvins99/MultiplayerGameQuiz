@@ -82,6 +82,22 @@ export class LoginScene extends Phaser.Scene {
     initializeUI() {
         LoginUI.render();
         this.loginUI = document.getElementById('login-ui');
+
+        // Inject shake animation CSS
+        if (!document.getElementById('login-shake-style')) {
+            const style = document.createElement('style');
+            style.id = 'login-shake-style';
+            style.innerHTML = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    20% { transform: translateX(-6px); }
+                    40% { transform: translateX(6px); }
+                    60% { transform: translateX(-4px); }
+                    80% { transform: translateX(4px); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     setupEventListeners() {
@@ -131,6 +147,15 @@ export class LoginScene extends Phaser.Scene {
                 }
             };
         }
+
+        // Clear error highlight when user starts typing
+        const emailInput = document.getElementById('login-email') as HTMLInputElement;
+        if (emailInput) {
+            emailInput.addEventListener('input', () => this.clearFieldError('email'));
+        }
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => this.clearFieldError('password'));
+        }
     }
 
     async handleLogin() {
@@ -142,10 +167,33 @@ export class LoginScene extends Phaser.Scene {
         const identifier = emailInput?.value?.trim();
         const password = passwordInput?.value;
 
-        if (!identifier || !password) {
-            this.showError('Please fill in all fields');
-            return;
+        // Reset all errors
+        this.clearAllErrors();
+
+        let hasError = false;
+
+        // Validate: email/username
+        if (!identifier) {
+            this.showFieldError('email', 'Required');
+            hasError = true;
+        } else if (identifier.includes('@')) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(identifier)) {
+                this.showFieldError('email', 'Invalid email format');
+                hasError = true;
+            }
         }
+
+        // Validate: password
+        if (!password) {
+            this.showFieldError('password', 'Required');
+            hasError = true;
+        } else if (password.length < 6) {
+            this.showFieldError('password', 'Minimum 6 characters');
+            hasError = true;
+        }
+
+        if (hasError) return;
 
         // Show loading state
         this.setLoadingState(true, 'Logging in...');
@@ -156,22 +204,26 @@ export class LoginScene extends Phaser.Scene {
         this.setLoadingState(false);
 
         if (result.success && result.profile) {
+            this.showToast(`Welcome, ${result.profile.username}!`, 'success');
             console.log('Login successful:', result.profile.username);
-            // Navigate to lobby with priority check for pending joins
-            this.navigateToLobby();
+            setTimeout(() => this.navigateToLobby(), 800);
         } else {
-            this.showError(result.error || 'Login failed');
+            // Map server errors to friendly messages and show as general error
+            const friendlyError = this.mapErrorMessage(result.error || 'Login failed');
+            this.showGeneralError(friendlyError);
         }
     }
 
     async handleGoogleLogin() {
         if (this.isLoading) return;
         console.log('Google Login initiated');
+        this.showToast('Redirecting to Google...', 'info');
         this.setLoadingState(true, 'Redirecting to Google...');
         const result = await authService.loginWithGoogle();
         if (!result.success) {
             this.setLoadingState(false);
-            this.showError(result.error || 'Google login failed');
+            const friendlyError = this.mapErrorMessage(result.error || 'Google login failed');
+            this.showToast(friendlyError, 'error');
         }
     }
 
@@ -236,15 +288,160 @@ export class LoginScene extends Phaser.Scene {
         });
     }
 
-    showError(message: string) {
-        const errorEl = document.getElementById('login-error');
-        if (errorEl) {
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-            setTimeout(() => {
-                errorEl.classList.add('hidden');
-            }, 5000);
+    /** Map Supabase error messages to user-friendly Indonesian messages */
+    mapErrorMessage(error: string): string {
+        const errorMap: Record<string, string> = {
+            'Invalid login credentials': 'Incorrect email/username or password',
+            'Email not confirmed': 'Email not verified, check your inbox',
+            'User not found': 'Account not found',
+            'Username not found': 'Username not found',
+            'Profile not found': 'Profile not found, contact admin',
+            'Profile not found. Please contact support.': 'Profile not found, contact admin',
+            'Your account has been blocked': 'Your account has been blocked',
+            'Login failed': 'Login failed, try again',
+            'Google login failed': 'Google login failed, try again',
+            'No session found': 'Session expired, please login again',
+            'An unexpected error occurred': 'Something went wrong, try again later',
+            'Too many requests': 'Too many attempts, please wait',
+        };
+
+        // Check for partial matches
+        for (const [key, value] of Object.entries(errorMap)) {
+            if (error.toLowerCase().includes(key.toLowerCase())) {
+                return value;
+            }
         }
+
+        return error; // Fallback to original message
+    }
+
+    /** Show inline error below a specific field */
+    showFieldError(field: 'email' | 'password', message: string) {
+        const input = document.getElementById(field === 'email' ? 'login-email' : 'login-password') as HTMLInputElement;
+        const errorEl = document.getElementById(`${field}-error`);
+
+        if (input) {
+            input.classList.add('!border-red-500');
+            input.classList.add('animate-[shake_0.4s_ease-in-out]');
+            setTimeout(() => input.classList.remove('animate-[shake_0.4s_ease-in-out]'), 400);
+        }
+
+        if (errorEl) {
+            const textSpan = errorEl.querySelector('span:last-child');
+            if (textSpan) textSpan.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    /** Clear error from a specific field */
+    clearFieldError(field: 'email' | 'password') {
+        const input = document.getElementById(field === 'email' ? 'login-email' : 'login-password') as HTMLInputElement;
+        const errorEl = document.getElementById(`${field}-error`);
+
+        if (input) {
+            input.classList.remove('!border-red-500');
+        }
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+        }
+    }
+
+    /** Clear all field errors and general error */
+    clearAllErrors() {
+        this.clearFieldError('email');
+        this.clearFieldError('password');
+        const generalError = document.getElementById('login-error');
+        if (generalError) generalError.classList.add('hidden');
+    }
+
+    /** Show general error banner (for server errors) */
+    showGeneralError(message: string) {
+        const errorEl = document.getElementById('login-error');
+        const textEl = document.getElementById('login-error-text');
+        if (errorEl && textEl) {
+            textEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    /** Show clean toast notification */
+    showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
+        // Create or get toast container
+        let container = document.getElementById('login-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'login-toast-container';
+            container.className = 'fixed top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-[9999] pointer-events-none';
+            document.body.appendChild(container);
+        }
+
+        // Config per type
+        const config = {
+            success: {
+                icon: 'check_circle',
+                iconColor: 'text-[#00ff55]',
+                bg: 'bg-[#111]/95',
+                border: 'border-[#1F7D53]/50',
+            },
+            error: {
+                icon: 'error',
+                iconColor: 'text-red-400',
+                bg: 'bg-[#111]/95',
+                border: 'border-red-500/50',
+            },
+            info: {
+                icon: 'info',
+                iconColor: 'text-[#4988C4]',
+                bg: 'bg-[#111]/95',
+                border: 'border-[#4988C4]/50',
+            },
+        }[type];
+
+        const toast = document.createElement('div');
+        toast.className = `
+            flex items-center gap-3 px-5 py-3.5 rounded-xl
+            border ${config.bg} ${config.border}
+            backdrop-blur-xl
+            transform -translate-y-3 opacity-0
+            transition-all duration-300 ease-out
+            pointer-events-auto cursor-pointer
+            max-w-[90vw] md:max-w-[400px]
+        `;
+
+        toast.innerHTML = `
+            <span class="material-symbols-outlined ${config.iconColor} text-xl shrink-0" style="font-variation-settings: 'FILL' 1;">${config.icon}</span>
+            <span class="text-white/90 font-['Retro_Gaming'] text-[9px] md:text-[10px] leading-relaxed flex-1">${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Click to dismiss
+        toast.onclick = () => dismissToast();
+
+        // Animate in
+        requestAnimationFrame(() => {
+            toast.classList.remove('-translate-y-3', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+        });
+
+        // Auto dismiss
+        const dismissToast = () => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('-translate-y-3', 'opacity-0');
+            setTimeout(() => {
+                if (container?.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        };
+
+        const duration = type === 'success' ? 3000 : type === 'error' ? 5000 : 3000;
+        setTimeout(dismissToast, duration);
+    }
+
+    /** @deprecated Use showToast instead */
+    showError(message: string) {
+        this.showToast(message, 'error');
     }
 
     handleRouting() {
@@ -272,9 +469,8 @@ export class LoginScene extends Phaser.Scene {
         if (emailInput) emailInput.value = '';
         if (passwordInput) passwordInput.value = '';
 
-        // Sembunyikan error message jika ada
-        const errorEl = document.getElementById('login-error');
-        if (errorEl) errorEl.classList.add('hidden');
+        // Sembunyikan error messages
+        this.clearAllErrors();
     }
 
     hideLoginUI() {

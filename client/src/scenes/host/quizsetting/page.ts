@@ -69,8 +69,34 @@ export class QuizSettingScene extends Phaser.Scene {
 
         // Set the quiz title
         const titleEl = document.getElementById('settings-quiz-title');
+        const titleExpandBtn = document.getElementById('settings-title-expand-btn');
+        const titleExpandIcon = document.getElementById('settings-title-expand-icon');
+
         if (titleEl && this.selectedQuiz) {
             titleEl.innerText = this.selectedQuiz.title;
+
+            // Use requestAnimationFrame to let the DOM update and calculate heights
+            requestAnimationFrame(() => {
+                // If scrollHeight is greater than clientHeight, it means line-clamp is truncating text
+                if (titleEl.scrollHeight > titleEl.clientHeight) {
+                    if (titleExpandBtn) {
+                        titleExpandBtn.classList.remove('hidden');
+
+                        titleExpandBtn.onclick = () => {
+                            const isExpanded = !titleEl.classList.contains('line-clamp-2');
+                            if (isExpanded) {
+                                // Collapse
+                                titleEl.classList.add('line-clamp-2');
+                                titleExpandIcon?.classList.remove('rotate-180');
+                            } else {
+                                // Expand
+                                titleEl.classList.remove('line-clamp-2');
+                                titleExpandIcon?.classList.add('rotate-180');
+                            }
+                        };
+                    }
+                }
+            });
         }
 
         // Update URL (ensure param is there if not already)
@@ -127,8 +153,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 if (display) display.innerText = label;
 
                 // Highlight active
-                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
-                target.classList.add('text-[#4988C4]', 'bg-white/5');
+                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
+                target.classList.add('text-[#1F7D53]', 'bg-white/5');
 
                 // Close menu
                 this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
@@ -152,8 +178,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-timer-selected');
                 if (display) display.innerText = label;
 
-                timerOptions.forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
-                target.classList.add('text-[#4988C4]', 'bg-white/5');
+                timerOptions.forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
+                target.classList.add('text-[#1F7D53]', 'bg-white/5');
 
                 this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
             });
@@ -176,8 +202,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-question-selected');
                 if (display) display.innerText = label;
 
-                questionOptions.forEach(o => o.classList.remove('text-[#4988C4]', 'bg-white/5'));
-                target.classList.add('text-[#4988C4]', 'bg-white/5');
+                questionOptions.forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
+                target.classList.add('text-[#1F7D53]', 'bg-white/5');
 
                 this.closeDropdown('settings-question-menu', 'settings-question-arrow');
             });
@@ -201,12 +227,12 @@ export class QuizSettingScene extends Phaser.Scene {
                 if (this.soundEnabled) {
                     if (newToggle) {
                         newToggle.classList.remove('bg-white/10');
-                        newToggle.classList.add('bg-[#1C4D8D]');
+                        newToggle.classList.add('bg-[#4C5C2D]');
                     }
                     if (newKnob) newKnob.classList.add('translate-x-6');
                 } else {
                     if (newToggle) {
-                        newToggle.classList.remove('bg-[#1C4D8D]');
+                        newToggle.classList.remove('bg-[#4C5C2D]');
                         newToggle.classList.add('bg-white/10');
                     }
                     if (newKnob) newKnob.classList.remove('translate-x-6');
@@ -251,18 +277,21 @@ export class QuizSettingScene extends Phaser.Scene {
         }
 
         // --- BUAT ROOM BUTTON ---
-        const settingsContinueBtn = document.getElementById('settings-continue-btn');
+        const settingsContinueBtn = document.getElementById('settings-continue-btn') as HTMLButtonElement;
         if (settingsContinueBtn) {
             // Clone to remove old listeners
-            const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLElement;
+            const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLButtonElement;
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
 
             newContinueBtn.onclick = () => {
-                // Use close() to ensure screen stays black during async room creation.
-                // Replaces transitionTo() which would auto-open prematurely.
-                TransitionManager.close(() => {
-                    this.createRoom();
-                });
+                // Change UI to loading state
+                newContinueBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> CREATING...`;
+                newContinueBtn.disabled = true;
+                newContinueBtn.classList.add('opacity-80', 'cursor-not-allowed');
+                newContinueBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+
+                // Call create room directly. UI transition will happen upon success.
+                this.createRoom(newContinueBtn);
             };
         }
     }
@@ -324,7 +353,7 @@ export class QuizSettingScene extends Phaser.Scene {
 
     // --- ROOM CREATION ---
 
-    async createRoom() {
+    async createRoom(btn?: HTMLButtonElement) {
         if (!this.selectedQuiz) return;
 
         // MAP CONFIGURATION
@@ -368,6 +397,12 @@ export class QuizSettingScene extends Phaser.Scene {
             if (error) {
                 console.error("Supabase Session Error:", error);
                 alert("Failed to create game session. Please try again.");
+                if (btn) {
+                    btn.innerHTML = 'CREATE';
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                    btn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+                }
                 return;
             }
 
@@ -426,23 +461,31 @@ export class QuizSettingScene extends Phaser.Scene {
             // Save options for Restart functionality
             this.registry.set('lastGameOptions', options);
 
-            // Hide all overlays
-            this.hideSettingsUI();
+            // Execute scene transition cleanly using TransitionManager closing
+            TransitionManager.close(() => {
+                // Hide all overlays
+                this.hideSettingsUI();
 
-            // Navigate to Waiting Room
-            this.cleanup();
-            Router.navigate(`/host/${roomCode}/lobby`); // Correct route for refresh logic
-            this.scene.start('HostWaitingRoomScene', { room, isHost: true });
+                // Navigate to Waiting Room
+                this.cleanup();
+                Router.navigate(`/host/${roomCode}/lobby`); // Correct route for refresh logic
+                this.scene.start('HostWaitingRoomScene', { room, isHost: true });
 
-            // Manually open the iris after the new scene is kicked off.
-            // This replaces the auto-open from TransitionManager.transitionTo
-            setTimeout(() => {
-                TransitionManager.open();
-            }, 600);
+                // Manually open the iris after the new scene is kicked off.
+                setTimeout(() => {
+                    TransitionManager.open();
+                }, 600);
+            });
 
         } catch (e) {
             console.error("Create room error", e);
             alert("Error creating room. Check console.");
+            if (btn) {
+                btn.innerHTML = 'CREATE';
+                btn.disabled = false;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                btn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+            }
             // If error, we might be stuck on black screen, so force open
             TransitionManager.open();
         }
@@ -466,3 +509,4 @@ export class QuizSettingScene extends Phaser.Scene {
         this.cleanup();
     }
 }
+

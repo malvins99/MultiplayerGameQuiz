@@ -7,11 +7,11 @@ export class GameOverlayUI {
             uiLayer.className = 'hidden';
             uiLayer.innerHTML = `
                 <!-- LOGO TOP LEFT -->
-                <img src="/logo/Zigma-new-logo.webp" style="top: -30px; left: -40px;"
+                <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;"
                 class="absolute w-64 z-20 pointer-events-none object-contain" />
 
                 <!-- LOGO TOP RIGHT -->
-                <img src="/logo/gameforsmart-new-logo.webp" style="top: -45px; right: -15px;"
+                <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;"
                 class="absolute w-80 z-20 pointer-events-none object-contain" />
 
                 <!-- Analog Joystick (Mobile Control) -->

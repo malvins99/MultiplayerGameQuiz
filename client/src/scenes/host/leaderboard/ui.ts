@@ -129,13 +129,13 @@ export class LeaderboardUI {
                 
                 <!-- GameForSmart Logo - Top Right Corner -->
                 <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
-                    <img src="/logo/gameforsmart-new-logo.webp" alt="GameForSmart" draggable="false"
+                    <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart" draggable="false"
                         class="w-32 h-auto md:w-56 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
                 </div>
 
                 <!-- Zigma Logo - Top Left Corner -->
                 <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
-                    <img src="/logo/Zigma-new-logo.webp" alt="Zigma" draggable="false"
+                    <img src="/logo/Zigma-logo-fix.webp" alt="Zigma" draggable="false"
                         class="w-24 h-auto md:w-32 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
                 </div>
 

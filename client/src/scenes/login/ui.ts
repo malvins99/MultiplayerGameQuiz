@@ -56,8 +56,11 @@ export class LoginUI {
 
                             <!-- Form -->
                             <form id="login-form" class="p-6 space-y-5">
-                                <!-- Error Message -->
-                                <div id="login-error" class="hidden bg-red-500/20 border-2 border-red-500/50 text-red-400 text-[10px] font-['Retro_Gaming'] p-3 rounded-xl text-center"></div>
+                                <!-- General Error Message -->
+                                <div id="login-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-['Retro_Gaming'] px-4 py-3 rounded-xl flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm shrink-0" style="font-variation-settings: 'FILL' 1;">error</span>
+                                    <span id="login-error-text"></span>
+                                </div>
 
                                 <!-- Google Login (At the TOP) -->
                                 <button type="button" id="google-login-btn" class="w-full h-12 bg-black/40 border-2 border-[#255F38]/30 rounded-xl flex items-center justify-center px-4 text-white font-bold hover:border-[#1F7D53] transition-all group relative z-10 gap-3">
@@ -74,38 +77,40 @@ export class LoginUI {
                                 <!-- Divider -->
                                 <div class="flex items-center gap-4">
                                     <div class="flex-1 border-t border-white/5"></div>
-                                    <span class="text-white/30 text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
+                                    <span class="text-white text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
                                     <div class="flex-1 border-t border-white/5"></div>
                                 </div>
 
                                 <!-- Email/Username Input -->
                                 <div class="space-y-2 relative">
-                                    <label class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                    <label class="flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
                                         <span class="material-symbols-outlined text-sm text-[#1F7D53]">person</span> EMAIL / USERNAME
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-email" type="text" placeholder="player@game.com" class="w-full h-12 bg-[#27391C]/30 border-2 border-[#255F38]/30 rounded-xl px-4 text-white font-['Space_Grotesk'] text-base placeholder:text-white/20 transition-all hover:border-[#1F7D53] focus:border-[#1F7D53] focus:ring-0 group" />
+                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-12 bg-[#27391C]/30 border-2 border-[#255F38]/30 rounded-xl px-4 text-white font-['Space_Grotesk'] text-base placeholder:text-white/20 transition-all hover:border-[#1F7D53] focus:border-[#1F7D53] focus:ring-0 group" />
                                         <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                            <span class="material-symbols-outlined text-white/30 group-focus-within:text-[#1F7D53] transition-colors">mail</span>
+                                            <span class="material-symbols-outlined text-white group-focus-within:text-[#1F7D53] transition-colors">mail</span>
                                         </div>
                                     </div>
+                                    <p id="email-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
                                 <!-- Password Input -->
                                 <div class="space-y-2 relative">
-                                    <label class="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                    <label class="flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
                                         <span class="material-symbols-outlined text-sm text-[#1F7D53]">lock</span> PASSWORD
                                     </label>
                                     <div class="relative w-full">
                                         <input id="login-password" type="password" placeholder="••••••••" class="w-full h-12 bg-[#27391C]/30 border-2 border-[#255F38]/30 rounded-xl px-4 pr-12 text-white font-['Space_Grotesk'] text-base placeholder:text-white/20 transition-all hover:border-[#1F7D53] focus:border-[#1F7D53] focus:ring-0 group" />
-                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-[#1F7D53] transition-colors">
+                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-[#1F7D53] transition-colors">
                                             <span class="material-symbols-outlined">visibility_off</span>
                                         </button>
                                     </div>
+                                    <p id="password-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
                                 <!-- Login Button -->
-                                <button type="submit" id="login-btn" class="w-full h-14 bg-[#1F7D53] text-white font-bold text-sm uppercase rounded-xl hover:bg-[#1F7D53]/90 hover:scale-[1.02] active:scale-[0.98] transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(31,125,83,0.4)] mt-4">
+                                <button type="submit" id="login-btn" class="w-full h-[52px] flex items-center justify-center bg-[#609966] text-white font-['Retro_Gaming'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer gap-3">
                                     <span class="material-symbols-outlined text-lg">login</span>
                                     LOGIN
                                 </button>
