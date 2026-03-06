@@ -13,7 +13,7 @@ export class SelectQuizScene extends Phaser.Scene {
     currentPage: number = 1;
     itemsPerPage: number = 9;
     totalPages: number = 1;
-    totalCount: number = 0;
+    totalCount: number = -1;
     favorites: Set<string> = new Set();
     rawCategoryMap: Map<string, string> = new Map(); // display label -> raw DB value
 
@@ -141,12 +141,32 @@ export class SelectQuizScene extends Phaser.Scene {
     showLoadingState() {
         const grid = document.getElementById('quiz-grid');
         if (grid) {
-            grid.innerHTML = `
-                <div class="col-span-full flex flex-col items-center justify-center py-16 gap-4">
-                    <div class="w-10 h-10 border-4 border-[#1C4D8D]/30 border-t-[#4988C4] rounded-full animate-spin"></div>
-                    <p class="text-white/50 font-['Retro_Gaming'] text-lg">Loading quizzes...</p>
-                </div>
-            `;
+            let skeletonCount = this.itemsPerPage;
+
+            // If totalCount is known (not reset by filters), calculate remaining items for this page
+            if (this.totalCount !== undefined && this.totalCount !== -1) {
+                const remaining = this.totalCount - (this.currentPage - 1) * this.itemsPerPage;
+                skeletonCount = Math.max(1, Math.min(this.itemsPerPage, remaining));
+            }
+
+            let skeletons = '';
+            for (let i = 0; i < skeletonCount; i++) {
+                skeletons += `
+                    <div class="bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0 animate-pulse">
+                        <div class="flex justify-between items-start shrink-0 gap-2 mb-2">
+                            <!-- Badge Skeleton -->
+                            <div class="w-20 h-5 bg-white/10 rounded"></div>
+                            <!-- Favorite Icon Skeleton -->
+                            <div class="w-10 h-10 shrink-0 rounded-full bg-white/5"></div>
+                        </div>
+                        
+                        <!-- Title Skeleton -->
+                        <div class="w-full h-4 bg-white/10 rounded mt-1"></div>
+                        <div class="w-2/3 h-4 bg-white/10 rounded mt-2"></div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = skeletons;
         }
     }
 
@@ -186,7 +206,7 @@ export class SelectQuizScene extends Phaser.Scene {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-4 py-3 text-lg font-['Retro_Gaming'] hover:bg-white/10 hover:text-[#4988C4] rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group";
+        btn.className = "w-full text-left px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-white/10 hover:text-[#1F7D53] rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group mt-1";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
 
@@ -212,10 +232,10 @@ export class SelectQuizScene extends Phaser.Scene {
         if (menu) {
             const btns = menu.querySelectorAll('button');
             btns.forEach(b => {
-                b.classList.remove('text-[#4988C4]', 'bg-white/5');
+                b.classList.remove('text-[#1F7D53]', 'bg-white/5');
                 b.classList.add('text-white/70');
                 if (b.dataset.value === value) {
-                    b.classList.add('text-[#4988C4]', 'bg-white/5');
+                    b.classList.add('text-[#1F7D53]', 'bg-white/5');
                     b.classList.remove('text-white/70');
                 }
             });
@@ -338,16 +358,16 @@ export class SelectQuizScene extends Phaser.Scene {
         const favBtn = document.getElementById('quiz-filter-fav-btn');
         const favIcon = favBtn?.querySelector('span');
         if (favIcon) {
-            // Usually text-white/40 is default. Active is text-red-500.
+            // Usually text-white/40 is default. Active is text-pink-500.
             // But let's check your original classes. 
-            // Original: text-white/40 group-hover:text-red-500 (hover removed previously)
-            // Active: text-red-500
+            // Original: text-white/40 group-hover:text-pink-500 (hover removed previously)
+            // Active: text-pink-500
 
             if (this.showFavoritesOnly) {
                 favIcon.classList.remove('text-white/40');
-                favIcon.classList.add('text-red-500');
+                favIcon.classList.add('text-pink-500');
             } else {
-                favIcon.classList.remove('text-red-500');
+                favIcon.classList.remove('text-pink-500');
                 favIcon.classList.add('text-white/40');
             }
         }
@@ -355,13 +375,13 @@ export class SelectQuizScene extends Phaser.Scene {
         // Toggle My Quiz Icon Style
         const myQuizBtn = document.getElementById('quiz-filter-my-btn');
         const myIcon = myQuizBtn?.querySelector('span');
-        if (myIcon) {
+        if (myQuizBtn && myIcon) {
             if (this.showMyQuizzesOnly) {
-                myIcon.classList.remove('text-white/40');
-                myIcon.classList.add('text-[#4988C4]');
+                myQuizBtn.classList.add('bg-[#1F7D53]/20', 'border-[#1F7D53]');
+                myIcon.classList.add('text-[#1F7D53]');
             } else {
-                myIcon.classList.add('text-white/40');
-                myIcon.classList.remove('text-[#4988C4]');
+                myQuizBtn.classList.remove('bg-[#1F7D53]/20', 'border-[#1F7D53]');
+                myIcon.classList.remove('text-[#1F7D53]');
             }
         }
 
@@ -460,6 +480,7 @@ export class SelectQuizScene extends Phaser.Scene {
     applyFilters() {
         // Reset to page 1 when filters change, then fetch from server
         this.currentPage = 1;
+        this.totalCount = -1; // Reset to indicate unknown count
         this.fetchPage();
     }
 
@@ -487,7 +508,7 @@ export class SelectQuizScene extends Phaser.Scene {
                         Quiz Tidak Ditemukan
                     </p>
                     
-                    <button id="reset-filters-btn" class="px-6 py-3 bg-[#1C4D8D]/10 border border-[#4988C4]/30 text-[#4988C4] hover:bg-[#1C4D8D] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
+                    <button id="reset-filters-btn" class="px-6 py-3 bg-[#1F7D53]/10 border border-[#1F7D53]/30 text-[#1F7D53] hover:bg-[#1F7D53] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">refresh</span>
                         Reset Filter
                     </button>
@@ -503,26 +524,26 @@ export class SelectQuizScene extends Phaser.Scene {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
 
-            let badgeColor = 'bg-[#BDE8F5] text-[#0F2854] border border-[#4988C4]';
+            let badgeColor = 'bg-[#1F7D53] text-white border border-transparent';
 
-            card.className = "group bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl hover:border-[#1C4D8D] hover:bg-[#1C4D8D]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0";
+            card.className = "group bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl hover:border-[#1F7D53] hover:bg-[#1F7D53]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
-                <div class="absolute inset-0 bg-gradient-to-br from-[#1C4D8D]/0 to-[#1C4D8D]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-[#4C5C2D]/0 to-[#1F7D53]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
                     <!-- Pixel Font Badge - Adjusted text size to be smaller -->
                     <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#1C4D8D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-red-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
+                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#4C5C2D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                        <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-pink-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>
                 
                 <!-- Title - Adjusted spacing to be closer to badge -->
-                <div class="relative z-10 font-bold text-white -mt-2 group-hover:text-[#BDE8F5] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
-                    <span class="quiz-title-tooltip-trigger line-clamp-2 w-full" title="${quiz.title}">${quiz.title}</span>
+                <div class="relative z-10 font-bold text-white -mt-2 group-hover:text-[#A3C4A0] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
+                    <span class="quiz-title-tooltip-trigger line-clamp-2 w-full">${quiz.title}</span>
                 </div>
             `;
 
@@ -571,7 +592,7 @@ export class SelectQuizScene extends Phaser.Scene {
             const digits = String(tp).length;
             const inputWidth = (digits * 0.75) + 1.2;
             pageNumbers.innerHTML = `
-                <div class="flex items-center gap-1 bg-[#1C4D8D] rounded-lg px-2 py-1">
+                <div class="flex items-center gap-1">
                     <input
                         id="page-input"
                         type="text"
@@ -579,10 +600,10 @@ export class SelectQuizScene extends Phaser.Scene {
                         autocomplete="off"
                         maxlength="${digits}"
                         value="${this.currentPage}"
-                        class="h-7 text-center p-2 bg-black/30 text-[#BDE8F5] font-bold text-lg rounded border border-[#4988C4]/50 focus:outline-none focus:border-white focus:bg-black/50 transition-colors"
+                        class="h-7 text-center p-0 bg-transparent text-[#1F7D53] font-bold text-xl rounded-none border-none focus:outline-none focus:ring-0 transition-colors"
                         style="width: ${inputWidth}em; -moz-appearance: textfield; appearance: textfield;"
                     />
-                    <span class="text-white font-bold text-lg">/ ${tp}</span>
+                    <span class="text-white font-bold text-xl">/ ${tp}</span>
                 </div>
             `;
 
@@ -627,6 +648,11 @@ export class SelectQuizScene extends Phaser.Scene {
 
         if (prevBtn) prevBtn.disabled = this.currentPage === 1;
         if (nextBtn) nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
+
+        // Scroll back to top on mobile
+        if (this.quizSelectionUI) {
+            this.quizSelectionUI.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     // --- TOOLTIP ---
@@ -636,7 +662,7 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!t) {
             t = document.createElement('div');
             t.id = 'custom-quiz-tooltip';
-            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-[#1C4D8D] text-white text-sm font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(28,77,141,0.4)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
+            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-[#1F7D53] text-white text-sm font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(28,77,141,0.4)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
             document.body.appendChild(t);
         }
         this.tooltip = t;
@@ -726,3 +752,6 @@ export class SelectQuizScene extends Phaser.Scene {
         this.cleanup();
     }
 }
+
+
+

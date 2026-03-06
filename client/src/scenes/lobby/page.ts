@@ -220,7 +220,7 @@ export class LobbyScene extends Phaser.Scene {
                     console.error("Auto-join failed:", err);
                     this.hideJoinLoading();
                     this.showLobby();
-                    alert("Gagal bergabung otomatis: " + (err.message || "Unknown error"));
+                    this.showJoinError("Auto-join failed: " + (err.message || "Unknown error"));
                 });
         }, 1000);
     }
@@ -504,17 +504,25 @@ export class LobbyScene extends Phaser.Scene {
     // --- ACTIONS ---
 
     async handleJoinRoom(code?: string, nicknameInput?: string) {
+        // Clear previous errors
+        this.clearJoinErrors();
+
         const cleanCode = code ? code.trim() : "";
+        const nickname = nicknameInput ? nicknameInput.trim() : "";
+
+        let hasError = false;
+
         if (!cleanCode || cleanCode.length !== 6) {
-            alert("Please enter a valid 6-digit room code.");
-            return;
+            this.showJoinFieldError('roomcode', 'Enter a valid 6-digit code');
+            hasError = true;
         }
 
-        const nickname = nicknameInput ? nicknameInput.trim() : "";
         if (!nickname) {
-            alert("Please enter your nickname.");
-            return;
+            this.showJoinFieldError('nickname', 'Required');
+            hasError = true;
         }
+
+        if (hasError) return;
 
         try {
             // 1. Verify Session in Supabase B
@@ -526,12 +534,12 @@ export class LobbyScene extends Phaser.Scene {
 
             if (sessionError || !sessionData) {
                 console.error("Session lookup error:", sessionError);
-                alert("Room not found or invalid code.");
+                this.showJoinFieldError('roomcode', 'Room not found');
                 return;
             }
 
             if (sessionData.status !== 'waiting') {
-                alert("This game has already started or finished.");
+                this.showJoinError('Game already started or finished');
                 return;
             }
 
@@ -539,7 +547,7 @@ export class LobbyScene extends Phaser.Scene {
             const profile = authService.getStoredProfile();
 
             if (!profile) {
-                alert("Please login to join the game.");
+                this.showJoinError('Please login first');
                 return;
             }
 
@@ -567,7 +575,7 @@ export class LobbyScene extends Phaser.Scene {
 
                 if (partError) {
                     console.error("Participant registration error:", partError);
-                    alert("Gagal bergabung ke sesi. Coba lagi.");
+                    this.showJoinError('Failed to join, try again');
                     return;
                 }
             } else {
@@ -601,13 +609,53 @@ export class LobbyScene extends Phaser.Scene {
                     this.scene.start('PlayerWaitingRoomScene', { room, isHost: false });
                 });
             } else {
-                alert("Room not found on server (it might be closed).");
+                this.showJoinFieldError('roomcode', 'Room closed or not found');
             }
 
         } catch (e) {
             console.error("Join room error", e);
-            alert("Error joining room.");
+            this.showJoinError('Connection error, try again');
         }
+    }
+
+    // --- JOIN INLINE ERROR HELPERS ---
+
+    showJoinFieldError(field: 'nickname' | 'roomcode', message: string) {
+        const inputId = field === 'nickname' ? 'lobby-nickname-input' : 'room-code-input';
+        const errorId = `${field}-error`;
+
+        const input = document.getElementById(inputId) as HTMLInputElement;
+        const errorEl = document.getElementById(errorId);
+
+        if (input) {
+            input.classList.add('!border-red-500');
+        }
+        if (errorEl) {
+            const textSpan = errorEl.querySelector('span:last-child');
+            if (textSpan) textSpan.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    showJoinError(message: string) {
+        const errorEl = document.getElementById('join-error');
+        if (errorEl) {
+            const textSpan = errorEl.querySelector('span:last-child');
+            if (textSpan) textSpan.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    clearJoinErrors() {
+        ['nickname', 'roomcode', 'join'].forEach(id => {
+            const errorEl = document.getElementById(`${id}-error`);
+            if (errorEl) errorEl.classList.add('hidden');
+        });
+
+        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
+        const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
+        if (nicknameInput) nicknameInput.classList.remove('!border-red-500');
+        if (codeInput) codeInput.classList.remove('!border-red-500');
     }
 }
 

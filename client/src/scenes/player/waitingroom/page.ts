@@ -464,10 +464,10 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-new-logo.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-new-logo.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
 
             <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->

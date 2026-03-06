@@ -116,8 +116,8 @@ export class ResultScene extends Phaser.Scene {
         const hairKey = myEntry.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][myEntry.hairId - 1] : null;
 
         this.container.innerHTML = `
-            <img src="/logo/Zigma-new-logo.webp" class="logo-left" />
-            <img src="/logo/gameforsmart-new-logo.webp" class="logo-right" />
+            <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-right" />
             <div class="result-card">
                 <div class="result-avatar-container">
                     <div class="char-anim" style="background-image:url('/assets/base_idle_strip9.png')"></div>

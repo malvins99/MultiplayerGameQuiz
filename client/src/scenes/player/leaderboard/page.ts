@@ -126,8 +126,8 @@ export class LeaderboardScene extends Phaser.Scene {
         }).join('');
 
         this.container.innerHTML = `
-            <img src="/logo/Zigma-new-logo.webp" class="logo-left" />
-            <img src="/logo/gameforsmart-new-logo.webp" class="logo-right" />
+            <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-right" />
             <div class="podium-section">${podiumHTML}</div>
             <div class="list-section">${others.map(p => `
                 <div class="list-item">

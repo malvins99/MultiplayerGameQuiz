@@ -1,6 +1,5 @@
 node_modules
 npm-debug.log
-client
 .git
 .gitignore
 *.md

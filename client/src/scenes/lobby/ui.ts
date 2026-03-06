@@ -31,8 +31,8 @@ export class LobbyUI {
                 <!-- Top Navigation -->
                 <div class="relative z-50 flex items-start justify-between p-4 md:p-6 w-full">
                     <div class="select-none flex items-start">
-                        <img src="/logo/gameforsmart-new-logo.webp" alt="Partner Logo"
-                            class="h-16 md:h-[130px] w-auto object-contain -mt-7 -ms-2" draggable="false" />
+                        <img src="/logo/gameforsmart-logo-fix.webp" alt="Partner Logo"
+                            class="h-12 md:h-[130px] w-auto object-contain mt-1 md:-mt-5 -ms-2" draggable="false" />
                     </div>
 
                     <!-- User Profile & Menu -->
@@ -60,28 +60,28 @@ export class LobbyUI {
                 </div>
 
                 <!-- Main Content (Logo + Cards) -->
-                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-4 px-4 md:justify-center md:-mt-48 pb-8">
-                    <!-- Mega Central Logo (Uber Massive - No Shadow) -->
-                    <div class="mb-4 md:-mb-10 md:-mt-24 transform hover:scale-105 transition-transform duration-500 z-10">
-                        <img src="/logo/Zigma-new-logo.webp" alt="Zigma Logo" class="h-36 md:h-[360px] w-auto object-contain" draggable="false" />
+                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-0 px-4 md:justify-center md:-mt-48 pb-6">
+                    <!-- Mega Central Logo -->
+                    <div class="mb-2 md:-mb-10 md:-mt-24 transform hover:scale-105 transition-transform duration-500 z-10">
+                        <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" class="h-24 md:h-[360px] w-auto object-contain" draggable="false" />
                     </div>
 
                     <!-- Action Cards Container (Uber Tight Spacing) -->
-                    <div class="flex flex-col md:flex-row gap-4 md:gap-6 w-full max-w-5xl justify-center items-stretch z-20">
+                    <div class="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-5xl justify-center items-stretch z-20">
                         <!-- Host Game Card -->
-                        <div class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[30px] p-5 md:p-6 flex flex-col items-center text-center hover:bg-[#0f3d29]/40 hover:border-[#1F7D53]/60 transition-all duration-300 shadow-2xl">
+                        <div class="group flex-1 max-w-[380px] mx-auto md:mx-0 w-full bg-white/5 backdrop-blur-lg border border-white/10 rounded-[24px] md:rounded-[30px] p-4 md:p-6 flex flex-col items-center text-center hover:bg-[#0f3d29]/40 hover:border-[#1F7D53]/60 transition-all duration-300 shadow-2xl">
                             <div class="w-14 h-14 md:w-16 md:h-16 bg-[#1F7D53]/30 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
                                 <span class="material-symbols-outlined text-[#00ff55] text-3xl md:text-4xl" style="font-variation-settings: 'FILL' 1;">flag</span>
                             </div>
                             <h2 class="text-xl md:text-2xl text-white mb-2 uppercase tracking-wider">HOST</h2>
                             <p class="text-white/60 text-xs md:text-sm leading-relaxed mb-6 max-w-[220px]">create your game world and invite survivors</p>
-                            <button id="create-room-btn" class="mt-auto w-full py-3 bg-[#609966] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(157,192,139,0.5)]">
+                            <button id="create-room-btn" class="mt-auto w-full py-3 bg-[#4C5C2D] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl border-b-4 border-[#4C5C2D] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                 Create World
                             </button>
                         </div>
 
                         <!-- Join Game Card -->
-                        <div class="group flex-1 max-w-[380px] bg-white/5 backdrop-blur-lg border border-white/10 rounded-[30px] p-5 md:p-6 flex flex-col items-center text-center hover:bg-[#0f3d29]/40 hover:border-[#1F7D53]/60 transition-all duration-300 shadow-2xl">
+                        <div class="group flex-1 max-w-[380px] mx-auto md:mx-0 w-full bg-white/5 backdrop-blur-lg border border-white/10 rounded-[24px] md:rounded-[30px] p-4 md:p-6 flex flex-col items-center text-center hover:bg-[#0f3d29]/40 hover:border-[#1F7D53]/60 transition-all duration-300 shadow-2xl">
                             <div class="w-14 h-14 md:w-16 md:h-16 bg-[#1F7D53]/30 rounded-2xl flex items-center justify-center mb-4 group-hover:-rotate-12 transition-transform">
                                 <span class="material-symbols-outlined text-[#00ff55] text-3xl md:text-4xl" style="font-variation-settings: 'FILL' 1;">group</span>
                             </div>
@@ -90,15 +90,18 @@ export class LobbyUI {
 
                             <!-- Code Input Group -->
                             <div class="w-full space-y-3 mt-auto">
-                                <div class="relative">
+                                <div>
                                     <input id="lobby-nickname-input" class="w-full h-11 bg-black/40 border border-white/10 rounded-xl focus:border-[#1F7D53] focus:ring-0 text-center text-lg text-white uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all" placeholder="NICKNAME" type="text" maxlength="12" />
+                                    <p id="nickname-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
-                                <div class="relative">
-                                    <input id="room-code-input" class="w-full h-11 bg-black/40 border border-white/10 rounded-xl focus:border-[#1F7D53] focus:ring-0 text-center text-xl tracking-[0.3em] text-white uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all" placeholder="CODE" type="text" maxlength="6" />
+                                <div>
+                                    <input id="room-code-input" class="w-full h-11 bg-black/40 border border-white/10 rounded-xl focus:border-[#1F7D53] focus:ring-0 text-center text-xl tracking-[0.3em] text-white uppercase placeholder:text-white/10 font-['Retro_Gaming'] transition-all" placeholder="CODE" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                                    <p id="roomcode-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
-                                <button id="join-room-btn" class="w-full py-3 bg-[#609966] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(157,192,139,0.5)]">
+                                <button id="join-room-btn" class="w-full py-3 bg-[#4C5C2D] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl border-b-4 border-[#4C5C2D] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                     Join
                                 </button>
+                                <p id="join-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                             </div>
                         </div>
                     </div>
@@ -107,15 +110,17 @@ export class LobbyUI {
                 <!-- Logout Modal -->
                 <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
                     <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-                    <div class="relative z-10 bg-[#1a1a20] border border-white/10 rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center">
-                        <div class="mb-6">
-                            <span class="material-symbols-outlined text-red-500 text-5xl">logout</span>
-                        </div>
-                        <p class="text-white font-['Retro_Gaming'] text-sm leading-relaxed mb-3">Logout</p>
-                        <p class="text-white/40 font-['Retro_Gaming'] text-[10px] mb-10">Are you sure you want to log out?</p>
-                        <div class="flex gap-4">
-                            <button id="logout-cancel-btn" class="flex-1 py-4 bg-white/5 border border-white/10 rounded-xl text-white font-['Retro_Gaming'] text-[10px] uppercase hover:bg-white/10 transition-all">No</button>
-                            <button id="logout-confirm-btn" class="flex-1 py-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-500 font-['Retro_Gaming'] text-[10px] uppercase hover:bg-red-500/40 transition-all">Logout</button>
+                    <div class="relative z-10 bg-[#18230F] border-4 border-red-500/50 rounded-3xl shadow-[0_0_40px_rgba(239,68,68,0.15)] p-8 max-w-sm w-full text-center overflow-hidden">
+                        <div class="absolute inset-0 pixel-bg-pattern opacity-[0.05] pointer-events-none"></div>
+                        
+                        <div class="relative z-10">
+                            <span class="material-symbols-outlined text-red-500 text-5xl mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]" style="font-variation-settings: 'FILL' 1;">logout</span>
+                            <h3 class="text-white font-['Retro_Gaming'] text-base uppercase tracking-wider mb-2 drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">Logout</h3>
+                            <p class="text-white/50 font-['Retro_Gaming'] text-[9px] mb-8 leading-relaxed">Are you sure you want<br>to log out?</p>
+                            <div class="flex gap-4">
+                                <button id="logout-cancel-btn" class="flex-1 py-3 bg-white/10 text-white font-['Retro_Gaming'] text-[10px] uppercase rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">Cancel</button>
+                                <button id="logout-confirm-btn" class="flex-1 py-3 bg-red-500 text-white font-['Retro_Gaming'] text-[10px] uppercase rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.3)]">Logout</button>
+                            </div>
                         </div>
                     </div>
                 </div>
