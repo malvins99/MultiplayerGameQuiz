@@ -7,13 +7,13 @@
         "server"
     ],
     "scripts": {
-        "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+          "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
         "dev:client": "npm run dev --prefix client",
         "dev:server": "npm run dev --prefix server",
         "build": "npm run build --prefix client && npm run build --prefix server",
         "start": "npm start --prefix server"
     },
-    "engines": {
+    "engines": {    
         "node": ">=18.0.0"
     },
     "devDependencies": {
