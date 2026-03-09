@@ -26,6 +26,13 @@ export class RoomService {
         const profile = authService.getStoredProfile();
         const hostId = profile ? profile.id : null;
 
+        // Shuffle and Pick Questions based on settings
+        let questions = [...(quiz.questions || [])];
+        // Simple shuffle
+        questions.sort(() => Math.random() - 0.5);
+        // Limit to question count
+        questions = questions.slice(0, questionCount);
+
         try {
             // 1. Create Session in Supabase B
             const { data, error } = await supabaseB
@@ -38,7 +45,8 @@ export class RoomService {
                     total_time_minutes: timer / 60,
                     difficulty: difficulty,
                     host_id: hostId,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    current_questions: questions // Save selected questions
                 })
                 .select()
                 .single();
@@ -74,6 +82,7 @@ export class RoomService {
                 subject: quiz.category.toLowerCase(),
                 quizId: quiz.id,
                 quizTitle: quiz.title,
+                questions: questions,
                 map: mapFile,
                 questionCount: questionCount,
                 enemyCount: enemyCount,
@@ -92,8 +101,13 @@ export class RoomService {
 
             // 2. Create/Join Room on Colyseus
             localStorage.setItem('currentRoomOptions', JSON.stringify(colyseusOptions));
-            const room = await client.joinOrCreate("game_room", colyseusOptions);
+            const room = await client.create("game_room", colyseusOptions); // use create, not joinOrCreate to guarantee host role
             console.log("Room created via RoomService!", room);
+
+            // Save persistent session info for refresh recovery (Colyseus v0.15 API)
+            localStorage.setItem('currentRoomId', room.id);
+            localStorage.setItem('currentSessionId', room.sessionId);
+            localStorage.setItem('currentReconnectionToken', room.reconnectionToken); // v0.15 reconnect token
 
             return { room, options: colyseusOptions };
 

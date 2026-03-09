@@ -460,6 +460,7 @@ export class QuizSettingScene extends Phaser.Scene {
 
             // Save options for Restart functionality
             this.registry.set('lastGameOptions', options);
+            this.registry.set('lastSelectedQuiz', this.selectedQuiz);
 
             // Execute scene transition cleanly using TransitionManager closing
             TransitionManager.close(() => {

@@ -16,7 +16,7 @@ export class LeaderboardUI {
                 height: 64px; 
                 image-rendering: pixelated; 
                 position: absolute; 
-                transform: scale(3.5); 
+                transform: scale(4); 
                 animation: lb-play-idle 1s steps(9) infinite; 
             }
             @keyframes lb-play-idle { 
@@ -24,7 +24,16 @@ export class LeaderboardUI {
                 to { background-position: -864px 0; } 
             }
             @media (min-width: 768px) {
-                .char-anim { transform: scale(5); }
+                .char-anim { transform: scale(5.5); }
+                .char-anim-sm { transform: scale(1.8); }
+            }
+            .char-anim-sm { 
+                width: 96px; 
+                height: 64px; 
+                image-rendering: pixelated; 
+                position: absolute; 
+                transform: scale(1.3); 
+                animation: lb-play-idle 1s steps(9) infinite; 
             }
         `;
     }
@@ -36,7 +45,7 @@ export class LeaderboardUI {
             rankings[2]
         ];
 
-        const others = rankings.slice(3);
+        const others = rankings;
 
         const formatTime = (ms: number) => {
             const s = Math.floor(ms / 1000);
@@ -61,7 +70,7 @@ export class LeaderboardUI {
             let icon = 'military_tech';
             let height = 'h-32';
             let width = 'w-[100px] md:w-[140px]';
-            let avatarSize = 'w-16 h-16 md:w-24 md:h-24';
+            let avatarSize = 'w-20 h-20 md:w-28 md:h-28';
 
             if (isFirst) {
                 colorHex = '#ffcc00'; // Gold
@@ -70,7 +79,7 @@ export class LeaderboardUI {
                 icon = 'emoji_events';
                 height = 'h-48 md:h-56';
                 width = 'w-[120px] md:w-[180px]';
-                avatarSize = 'w-20 h-20 md:w-32 md:h-32';
+                avatarSize = 'w-24 h-24 md:w-32 md:h-32';
             } else if (isSecond) {
                 colorHex = '#c0c0c0'; // Silver
                 colorBg = 'bg-gray-600/40';
@@ -82,20 +91,14 @@ export class LeaderboardUI {
 
             return `
                 <div class="flex flex-col items-center relative z-20 group">
-                    ${isFirst ? `
-                    <svg class="absolute -top-14 md:-top-16 w-12 h-12 md:w-16 md:h-16 drop-shadow-[0_0_15px_${colorGlow}] animate-pulse" viewBox="0 0 24 24" style="fill: ${colorHex}; stroke: #000; stroke-width: 1;">
-                        <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-                    </svg>
-                    ` : ''}
 
-                    <div class="${avatarSize} podium-avatar rounded-2xl bg-black/80 border-4 shadow-[0_0_20px_${colorGlow}] flex items-center justify-center font-bold mb-4 relative backdrop-blur-sm group-hover:-translate-y-2 transition-transform duration-300" style="color: ${colorHex}; border-color: ${colorHex}">
+
+                    <div class="${avatarSize} podium-avatar rounded-full bg-black/80 border-4 shadow-[0_0_20px_${colorGlow}] flex items-center justify-center font-bold mb-4 relative backdrop-blur-sm group-hover:-translate-y-2 transition-transform duration-300" style="color: ${colorHex}; border-color: ${colorHex}">
                         <!-- Character Animation -->
                         <div class="char-anim" style="background-image: url('/assets/base_idle_strip9.png')"></div>
                         ${hairKey ? `<div class="char-anim" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
                         
-                        <div class="absolute -bottom-3 px-3 py-0.5 bg-black text-xs border-2 rounded-lg font-bold flex items-center gap-1 z-30" style="border-color: ${colorHex}; color: ${colorHex}">
-                            ${rank}
-                        </div>
+
                     </div>
 
                     <div class="text-white text-xs md:text-base mb-2 truncate max-w-[100px] md:max-w-[160px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center">${p.name}</div>
@@ -109,11 +112,16 @@ export class LeaderboardUI {
             `;
         }).join('');
 
-        const tableHtml = others.map((p) => `
+        const tableHtml = others.map((p) => {
+            const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
+            return `
             <div class="grid grid-cols-[60px_1fr_100px_100px] md:grid-cols-[100px_1fr_150px_150px] p-4 text-white items-center border-b border-white/5 hover:bg-white/5 transition-colors group">
                 <div class="text-center font-bold text-white/50 group-hover:text-primary transition-colors text-xs md:text-base">${p.rank}</div>
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-black/40 border-2 border-white/10 flex items-center justify-center font-bold text-xs md:text-sm group-hover:border-primary transition-colors">${getInitials(p.name)}</div>
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black/40 border-2 border-white/10 flex items-center justify-center font-bold text-xs md:text-sm group-hover:border-primary transition-colors overflow-hidden relative podium-avatar">
+                        <div class="char-anim-sm" style="background-image: url('/assets/base_idle_strip9.png')"></div>
+                        ${hairKey ? `<div class="char-anim-sm" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
+                    </div>
                     <div class="font-bold text-xs md:text-base truncate max-w-[120px] md:max-w-[300px]">${p.name}</div>
                 </div>
                 <div class="text-center text-primary font-bold text-sm md:text-lg drop-shadow-[0_0_5px_rgba(0,255,85,0.3)]">${p.score}</div>
@@ -122,7 +130,7 @@ export class LeaderboardUI {
                     ${formatTime(p.duration)}
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         return `
             <div class="fixed inset-0 w-full h-screen overflow-hidden fantasy-bg text-white pointer-events-auto select-none">
@@ -165,9 +173,7 @@ export class LeaderboardUI {
                 <!-- MAIN CONTENT AREA -->
                 <div class="relative z-10 w-full h-full flex flex-col items-center pt-24 pb-12 px-4 overflow-y-auto custom-scrollbar">
                     
-                    <h1 class="text-3xl md:text-5xl font-bold text-primary tracking-widest drop-shadow-[3px_3px_0_rgba(0,0,0,1)] text-center mb-10">
-                        FINAL RESULTS
-                    </h1>
+
 
                     <!-- Podiums -->
                     <div class="flex items-end justify-center gap-2 md:gap-8 mb-12">
