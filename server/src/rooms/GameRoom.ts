@@ -802,6 +802,12 @@ export class GameRoom extends Room<GameState> {
         }
 
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+
+        // Dynamically calculate enemies per player based on actual question count
+        // 1 enemy per question to prevent overcrowding
+        const actualQuestionCount = this.state.questions.length > 0 ? this.state.questions.length : config.targetQuestions;
+        const enemiesPerPlayer = actualQuestionCount;
+
         this.cachedMapData = MapParser.loadMapData(this.state.difficulty);
         const mapData = this.cachedMapData;
 
@@ -870,7 +876,7 @@ export class GameRoom extends Room<GameState> {
             let enemiesSpawnedForPlayer = 0;
 
             // We want 'config.enemiesPerPlayer' enemies
-            for (let i = 0; i < config.enemiesPerPlayer; i++) {
+            for (let i = 0; i < enemiesPerPlayer; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
 

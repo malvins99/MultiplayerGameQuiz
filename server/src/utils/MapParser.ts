@@ -11,6 +11,7 @@ export class MapParser {
         if (difficulty === 'sulit') filename = 'map_hard.json';
 
         const mapPath = path.join(__dirname, '..', 'maps', filename);
+        console.log(`[Server][MapParser] Loading Map. Difficulty: ${difficulty}, Filename: ${filename}, Path: ${mapPath}`);
 
         try {
             const rawData = fs.readFileSync(mapPath, 'utf-8');
