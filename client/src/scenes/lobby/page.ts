@@ -57,6 +57,7 @@ export class LobbyScene extends Phaser.Scene {
         const isRestoreRoute =
             Router.match('/host/:roomCode/lobby') ||
             Router.match('/host/:roomCode/leaderboard') ||
+            Router.is('/host/leaderboard') ||
             Router.is('/host/progress') ||
             Router.is('/player/lobby') ||
             Router.is('/player/game') ||
@@ -412,12 +413,13 @@ export class LobbyScene extends Phaser.Scene {
             return;
         }
 
-        // ── /host/:roomCode/leaderboard ──────────────────────
+        // ── /host/:roomCode/leaderboard OR /host/leaderboard ───────────
         const hostLbMatch = Router.match('/host/:roomCode/leaderboard');
-        if (hostLbMatch) {
-            console.log("[LobbyScene] Host Leaderboard restore, roomCode:", hostLbMatch.roomCode);
+        if (hostLbMatch || Router.is('/host/leaderboard')) {
+            const roomCode = hostLbMatch ? hostLbMatch.roomCode : undefined;
+            console.log("[LobbyScene] Host Leaderboard restore, roomCode:", roomCode);
             hidelobby();
-            this.scene.start('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode: hostLbMatch.roomCode });
+            this.scene.start('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode });
             return;
         }
 
