@@ -4,8 +4,82 @@ export class LoginUI {
         if (!loginUI) {
             loginUI = document.createElement('div');
             loginUI.id = 'login-ui';
-            loginUI.className = 'hidden fixed top-0 left-0 w-full h-screen z-30 overflow-y-auto md:overflow-hidden fantasy-bg';
+            loginUI.className = 'hidden fixed top-0 left-0 w-full h-screen z-30 overflow-hidden';
             loginUI.innerHTML = `
+                <!-- Full-Screen Background — palette gradient -->
+                <div class="absolute inset-0" style="background: linear-gradient(180deg, #4a9150 0%, #72BF78 40%, #A0D683 100%);"></div>
+
+                <!-- Pixel-art Background Decorations -->
+                <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                    <!-- Subtle pixel grid pattern -->
+                    <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+                    <!-- Diverse Pixel Clouds (Varying sizes, colors, speeds) -->
+                    
+                    <!-- L1: Back Layer (Small/Medium, Slow) -->
+                    <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(0.8); left: -10%;">
+                        <div class="relative w-10 h-3 bg-white">
+                            <div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.6); left: 80%;">
+                        <div class="relative w-12 h-4 bg-[#D3EE98]">
+                            <div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.0); left: 40%;">
+                        <div class="relative w-14 h-4 bg-white">
+                            <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                        </div>
+                    </div>
+
+                    <!-- L2: Mid Layer (Medium) -->
+                    <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.5); left: 15%;">
+                        <div class="relative w-16 h-5 bg-[#D3EE98]">
+                            <div class="absolute -top-3 left-4 w-6 h-3 bg-[#D3EE98]"></div>
+                            <div class="absolute -top-5 left-8 w-4 h-5 bg-[#D3EE98]"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.2); left: 60%;">
+                        <div class="relative w-14 h-4 bg-white">
+                            <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                            <div class="absolute -top-4 left-7 w-3 h-4 bg-white"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.4); left: 75%;">
+                        <div class="relative w-16 h-5 bg-[#D3EE98]">
+                            <div class="absolute -top-3 left-5 w-6 h-3 bg-[#D3EE98]"></div>
+                        </div>
+                    </div>
+
+                    <!-- L3: Front Layer (Large, Faster) -->
+                    <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.2); left: -20%;">
+                        <div class="relative w-12 h-4 bg-[#FEFF9F]">
+                            <div class="absolute -top-2 left-2 w-4 h-2 bg-[#FEFF9F]"></div>
+                            <div class="absolute -top-4 left-5 w-4 h-4 bg-[#FEFF9F]"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(1.8); left: 40%;">
+                        <div class="relative w-18 h-6 bg-white">
+                            <div class="absolute -top-3 left-5 w-7 h-3 bg-white"></div>
+                            <div class="absolute -top-6 left-10 w-5 h-6 bg-white"></div>
+                        </div>
+                    </div>
+                    <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(2.5); left: 10%;">
+                        <div class="relative w-14 h-4 bg-[#FEFF9F]">
+                            <div class="absolute -top-2 left-4 w-5 h-2 bg-[#FEFF9F]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Particles -->
+                    <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
+                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
+                    <div class="firefly !bg-[#D3EE98] !shadow-[0_0_15px_rgba(211,238,152,0.9)]" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
+                </div>
+
+                <!-- Walking Characters Container -->
+                <div id="walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+
                 <!-- LOGO TOP LEFT (Zigma) — Desktop only -->
                 <img src="/logo/Zigma-logo-fix.webp" style="top: -20px; left: -10px;" class="absolute w-64 z-50 pointer-events-none object-contain login-desktop-only" />
 
@@ -14,56 +88,35 @@ export class LoginUI {
 
                 <!-- MOBILE LOGO (Zigma only, centered at top) — Mobile only -->
                 <div class="login-mobile-only w-full justify-center pt-5 relative z-50 pointer-events-none">
-                    <img src="/logo/Zigma-logo-fix.webp" class="w-40 object-contain" />
-                </div>
-
-                <!-- Ambient Effects Layer -->
-                <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <!-- Base Pattern -->
-                    <div class="absolute inset-0 pixel-bg-pattern opacity-[0.05]"></div>
-
-                    <!-- Fog layers -->
-                    <div class="absolute w-[200%] h-full top-0 left-[-50%] mystical-fog opacity-40"></div>
-
-                    <!-- Bottom Silhouette (Forest/Terrain) -->
-                    <div class="absolute bottom-0 w-full h-[320px] forest-silhouette opacity-70"></div>
-
-                    <!-- Floating Particles / Fireflies (White) -->
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 60%; left: 85%; animation-delay: 1.5s;"></div>
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 40%; left: 50%; animation-delay: 3s;"></div>
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 80%; left: 30%; animation-delay: 4.5s;"></div>
-
-                    <div class="magic-particle" style="top: 70%; left: 20%; animation-delay: 0.5s;"></div>
-                    <div class="magic-particle" style="top: 30%; left: 75%; animation-delay: 2.5s;"></div>
-                    <div class="magic-particle" style="top: 85%; left: 60%; animation-delay: 4s;"></div>
+                    <img src="/logo/Zigma-logo-fix.webp" class="w-52 object-contain" />
                 </div>
 
                 <!-- Main Content -->
-                <div class="relative z-10 flex min-h-screen md:h-screen w-full items-start md:items-center justify-center px-4 pt-4 pb-8 md:p-4">
-                    <div class="w-full max-w-md">
+                <div class="relative z-10 flex h-full w-full items-start md:items-center justify-center px-4 md:px-8 pt-8 md:pt-0">
+                    <div class="w-full max-w-md md:max-w-xl -mt-10 md:mt-0">
 
-                        <!-- Login Card -->
-                        <div class="bg-[#18230F] border-2 border-[#255F38]/40 shadow-[0_0_30px_rgba(37,95,56,0.25)] flex flex-col relative rounded-3xl">
+                        <!-- Login Card — solid #D3EE98 background -->
+                        <div class="flex flex-col relative rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)]" style="background: #D3EE98;">
+                            <!-- Scanline Overlay (Pixel effect) -->
+                            <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%;"></div>
 
-                            <!-- Header -->
-                            <div class="bg-black/40 p-5 border-b border-white/10 flex items-center justify-center shrink-0 relative rounded-t-[calc(1.5rem-2px)]">
-                                <!-- Logo/Title -->
-                                <h1 class="text-2xl font-bold text-white uppercase tracking-widest font-['Retro_Gaming'] leading-relaxed drop-shadow-[3px_3px_0_rgba(0,0,0,1)]">
+                            <!-- Header — solid #72BF78 -->
+                            <div class="p-5 flex items-center justify-center shrink-0 relative" style="background: #72BF78; border-bottom: 3px solid #5DA563;">
+                                <h1 class="text-2xl font-bold text-white uppercase tracking-widest font-['Retro_Gaming'] leading-relaxed drop-shadow-[2px_2px_0_rgba(0,0,0,0.3)]">
                                     LOGIN
                                 </h1>
                             </div>
 
                             <!-- Form -->
-                            <form id="login-form" class="p-6 space-y-5">
+                            <form id="login-form" class="p-6 space-y-4">
                                 <!-- General Error Message -->
-                                <div id="login-error" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 text-[9px] font-['Retro_Gaming'] px-4 py-3 rounded-xl flex items-center gap-2">
+                                <div id="login-error" class="hidden bg-red-500/10 border border-red-500/40 text-red-700 text-[9px] font-['Retro_Gaming'] px-4 py-3 rounded-xl flex items-center gap-2">
                                     <span class="material-symbols-outlined text-sm shrink-0" style="font-variation-settings: 'FILL' 1;">error</span>
                                     <span id="login-error-text"></span>
                                 </div>
 
-                                <!-- Google Login (At the TOP) -->
-                                <button type="button" id="google-login-btn" class="w-full h-12 bg-black/40 border-2 border-[#255F38]/30 rounded-xl flex items-center justify-center px-4 text-white font-bold hover:border-[#1F7D53] transition-all group relative z-10 gap-3">
+                                <!-- Google Login Button — darkened yellow background -->
+                                <button type="button" id="google-login-btn" class="w-full h-11 border-2 border-[#72BF78] rounded-xl flex items-center justify-center px-4 font-bold hover:brightness-95 active:scale-[0.98] transition-all group relative z-10 gap-3" style="background: #E2E48A; color: #1a3a1d;">
                                     <!-- Google Icon -->
                                     <svg class="w-5 h-5 transition-transform" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -71,55 +124,55 @@ export class LoginUI {
                                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                     </svg>
-                                    <span class="font-['Space_Grotesk'] tracking-wide">Sign in with Google</span>
+                                    <span class="font-['Retro_Gaming'] tracking-wide">Sign in with Google</span>
                                 </button>
 
                                 <!-- Divider -->
                                 <div class="flex items-center gap-4">
-                                    <div class="flex-1 border-t border-white/5"></div>
-                                    <span class="text-white text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
-                                    <div class="flex-1 border-t border-white/5"></div>
+                                    <div class="flex-1 border-t-2 border-[#A0D683]"></div>
+                                    <span class="text-[#4a7a4d] text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
+                                    <div class="flex-1 border-t-2 border-[#A0D683]"></div>
                                 </div>
 
                                 <!-- Email/Username Input -->
-                                <div class="space-y-2 relative">
-                                    <label class="flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#1F7D53]">person</span> EMAIL / USERNAME
+                                <div class="space-y-1 relative">
+                                    <label class="flex items-center gap-2 text-[#2d5a30] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                        <span class="material-symbols-outlined text-sm text-[#72BF78]">person</span> EMAIL / USERNAME
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-12 bg-[#27391C]/30 border-2 border-[#255F38]/30 rounded-xl px-4 text-white font-['Space_Grotesk'] text-base placeholder:text-white/20 transition-all hover:border-[#1F7D53] focus:border-[#1F7D53] focus:ring-0 group" />
+                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-11 border-2 border-[#72BF78] rounded-xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-2 focus:ring-[#72BF78]/40 group" style="background: #E2E48A; color: #1a3a1d;" />
                                         <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                            <span class="material-symbols-outlined text-white group-focus-within:text-[#1F7D53] transition-colors">mail</span>
+                                            <span class="material-symbols-outlined text-[#1a3a1d]/60">mail</span>
                                         </div>
                                     </div>
-                                    <p id="email-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <p id="email-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
                                 <!-- Password Input -->
-                                <div class="space-y-2 relative">
-                                    <label class="flex items-center gap-2 text-white text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#1F7D53]">lock</span> PASSWORD
+                                <div class="space-y-1 relative">
+                                    <label class="flex items-center gap-2 text-[#2d5a30] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                        <span class="material-symbols-outlined text-sm text-[#72BF78]">lock</span> PASSWORD
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-password" type="password" placeholder="••••••••" class="w-full h-12 bg-[#27391C]/30 border-2 border-[#255F38]/30 rounded-xl px-4 pr-12 text-white font-['Space_Grotesk'] text-base placeholder:text-white/20 transition-all hover:border-[#1F7D53] focus:border-[#1F7D53] focus:ring-0 group" />
-                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-[#1F7D53] transition-colors">
+                                        <input id="login-password" type="password" placeholder="••••••••" class="w-full h-11 border-2 border-[#72BF78] rounded-xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-2 focus:ring-[#72BF78]/40 group" style="background: #E2E48A; color: #1a3a1d;" />
+                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#1a3a1d]/60 hover:text-[#1a3a1d] transition-colors">
                                             <span class="material-symbols-outlined">visibility_off</span>
                                         </button>
                                     </div>
-                                    <p id="password-error" class="hidden text-red-400 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <p id="password-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
-                                <!-- Login Button -->
-                                <button type="submit" id="login-btn" class="w-full h-[52px] flex items-center justify-center bg-[#609966] text-white font-['Retro_Gaming'] uppercase text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer gap-3">
+                                <!-- Login Button — solid #72BF78 -->
+                                <button type="submit" id="login-btn" class="w-full h-[50px] flex items-center justify-center text-white font-['Retro_Gaming'] font-bold uppercase text-sm rounded-xl border-b-4 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer gap-3" style="background: #72BF78; border-bottom-color: #5DA563; box-shadow: 0 4px 15px rgba(114,191,120,0.4);">
                                     <span class="material-symbols-outlined text-lg">login</span>
                                     LOGIN
                                 </button>
 
                                 <!-- Register Link -->
-                                <div class="text-center pt-4 flex flex-col items-center justify-center border-t border-white/5 mt-2">
+                                <div class="text-center pt-3 flex flex-col items-center justify-center border-t-2 border-[#A0D683] mt-2">
                                     <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="inline-flex items-center justify-center gap-1 transition-colors group whitespace-nowrap text-sm w-full font-bold">
-                                        <span class="text-white/40 group-hover:text-white/70 transition-colors">DON'T HAVE ACCOUNT?</span>
-                                        <span class="text-[#1F7D53] group-hover:text-white group-hover:underline transition-all">REGISTER</span>
+                                        <span class="text-[#4a7a4d]/70 group-hover:text-[#2d5a30] transition-colors font-['Retro_Gaming']">DON'T HAVE ACCOUNT?</span>
+                                        <span class="text-[#72BF78] group-hover:text-[#4a7a4d] group-hover:underline transition-all font-['Retro_Gaming'] font-bold">REGISTER</span>
                                     </a>
                                 </div>
                             </form>
@@ -129,6 +182,59 @@ export class LoginUI {
                 </div>
             `;
             document.body.appendChild(loginUI);
+
+            // Start Character Spawner
+            LoginUI.startCharacterSpawner();
         }
+    }
+
+    private static spawnerInterval: any = null;
+    private static startCharacterSpawner() {
+        if (this.spawnerInterval) return;
+
+        const container = document.getElementById('walking-characters-container');
+        if (!container) return;
+
+        // Initial spawn check
+        this.checkAndSpawn(container);
+
+        this.spawnerInterval = setInterval(() => {
+            this.checkAndSpawn(container);
+        }, 5000); // Check every 5s
+    }
+
+    private static checkAndSpawn(container: HTMLElement) {
+        const activeChars = container.querySelectorAll('.walking-char').length;
+        if (activeChars >= 3) return;
+
+        // Higher chance if fewer chars
+        const chance = activeChars === 0 ? 0.8 : 0.4;
+
+        if (Math.random() < chance) {
+            this.spawnCharacter(container);
+        }
+    }
+
+    private static spawnCharacter(container: HTMLElement) {
+        const char = document.createElement('div');
+        char.className = 'walking-char';
+
+        const fromRight = Math.random() > 0.5;
+        const speed = 20 + Math.random() * 10; // 20-30s across screen
+
+        if (fromRight) {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
+            char.style.transform = 'scale(-1, 1)'; // Maintain 1.5:1 while flipping
+        } else {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
+            char.style.transform = 'scale(1, 1)';
+        }
+
+        container.appendChild(char);
+
+        // Cleanup
+        setTimeout(() => {
+            if (char.parentElement) char.remove();
+        }, speed * 1000 + 500);
     }
 }

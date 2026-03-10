@@ -80,50 +80,44 @@
             "scaleInDock": 4
         },
         "client/public/assets/map hard.tmx": {
-            "expandedGroupLayers": [
-                6,
-                26,
-                19
-            ],
             "expandedObjectLayers": [
-                6,
-                5,
-                28,
                 26,
+                5,
+                6,
+                27,
                 25,
-                27
+                28
             ],
-            "scale": 0.5,
-            "selectedLayer": 24,
+            "scale": 0.33,
+            "selectedLayer": 10,
             "viewCenter": {
-                "x": 879,
-                "y": 561
+                "x": 789.3939393939394,
+                "y": 612.1212121212121
             }
         },
         "client/public/assets/map hard.tmx#spr_deco_coracle_strip4": {
             "scaleInDock": 4
         },
         "client/public/assets/map hard.tmx#spr_tileset_sunnysideworld_16px": {
-            "scaleInDock": 4
+            "scaleInDock": 3
         },
         "client/public/assets/map medium.tmj": {
             "expandedGroupLayers": [
-                93,
                 40
             ],
             "expandedObjectLayers": [
-                6,
-                91,
-                5,
                 92,
+                5,
+                6,
+                94,
                 93,
-                94
+                91
             ],
             "scale": 0.33,
-            "selectedLayer": 85,
+            "selectedLayer": 86,
             "viewCenter": {
                 "x": 871.2121212121212,
-                "y": 743.939393939394
+                "y": 212.12121212121212
             }
         },
         "client/public/assets/map medium.tmj#spr_deco_coracle_strip4": {

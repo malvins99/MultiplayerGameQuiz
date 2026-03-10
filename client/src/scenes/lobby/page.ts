@@ -554,12 +554,22 @@ export class LobbyScene extends Phaser.Scene {
             const userId = profile.id;
 
             // Cek apakah sudah pernah join (untuk rejoin case)
-            const { data: existingParticipant } = await supabaseB
+            // Check by user_id OR by nickname (karena constraint unik di DB = session_id + nickname)
+            const { data: existingByUserId } = await supabaseB
                 .from(PARTICIPANT_TABLE)
                 .select('id')
                 .eq('session_id', sessionData.id)
                 .eq('user_id', userId)
                 .maybeSingle();
+
+            const { data: existingByNickname } = await supabaseB
+                .from(PARTICIPANT_TABLE)
+                .select('id')
+                .eq('session_id', sessionData.id)
+                .ilike('nickname', nickname)
+                .maybeSingle();
+
+            const existingParticipant = existingByUserId || existingByNickname;
 
             if (!existingParticipant) {
                 // Belum pernah join → INSERT baru
@@ -574,15 +584,20 @@ export class LobbyScene extends Phaser.Scene {
                     });
 
                 if (partError) {
-                    console.error("Participant registration error:", partError);
-                    this.showJoinError('Failed to join, try again');
-                    return;
+                    // Handle 23505 (unique constraint violation) gracefully — participant already exists
+                    if (partError.code === '23505') {
+                        console.warn("Participant already exists (conflict), proceeding to join...");
+                    } else {
+                        console.error("Participant registration error:", partError);
+                        this.showJoinError('Failed to join, try again');
+                        return;
+                    }
                 }
             } else {
-                // Sudah pernah join → update nickname saja (rejoin)
+                // Sudah pernah join → update nickname + joined_at (rejoin)
                 await supabaseB
                     .from(PARTICIPANT_TABLE)
-                    .update({ nickname: nickname, joined_at: new Date().toISOString() })
+                    .update({ nickname: nickname, user_id: userId, joined_at: new Date().toISOString() })
                     .eq('id', existingParticipant.id);
             }
 

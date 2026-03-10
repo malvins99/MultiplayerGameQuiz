@@ -275,28 +275,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     setupRoomListeners() {
         if (!this.room) return;
 
-        // Listen for players joining/leaving
-        this.room.state.players.onAdd((player: any, sessionId: string) => {
-            console.log("Player join:", player.name);
-            this.updatePlayerGrid();
-            this.updateHostStatus();
-
-            // Listen for name changes
-            player.onChange(() => {
-                this.updatePlayerGrid();
-            });
-        });
-
-        this.room.state.players.onRemove((player: any, sessionId: string) => {
-            console.log("Player left:", player.name);
-            this.updatePlayerGrid();
-            this.updateHostStatus(); // Updates player count text
-        });
+        // NOTE: players.onAdd / onRemove are handled exclusively in setupStateListeners()
+        // to prevent double-registration which causes duplicated player cards.
 
         // Listen for game start message
         this.room.onMessage("start_game", (message) => {
             console.log("Game start message received!");
-            // this.startCountdown(); // Removed as method doesn't exist, overlay handled by state listener
         });
 
         // AUTO RECONNECT logic if connection is lost
@@ -544,8 +528,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             
             <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
                 <!-- LOGO TOP LEFT -->
-                <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-
+                <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain" />
+ 
                 <!-- LOGO TOP RIGHT -->
                 <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain" />
 
@@ -1942,12 +1926,19 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         if (!gridEl) return;
 
         // Hanya tampilkan player biasa — host adalah spectator murni, tidak masuk grid
-        const players: any[] = [];
+        // Use Map to ensure deduplication by sessionId
+        const playerMap = new Map<string, any>();
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            if (!p.isHost) {
-                players.push({ ...p, sessionId });
+            if (!p.isHost && !playerMap.has(sessionId)) {
+                playerMap.set(sessionId, {
+                    sessionId,
+                    name: p.name,
+                    hairId: p.hairId,
+                    isHost: p.isHost,
+                });
             }
         });
+        const players = Array.from(playerMap.values());
 
         // Update Header dynamically
         this.updateHostStatus();

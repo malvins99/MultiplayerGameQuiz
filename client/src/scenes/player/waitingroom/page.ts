@@ -292,12 +292,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     background: #ef4444; /* red-500 */
                     border-radius: 12px;
                     color: white;
+                    font-family: 'Retro Gaming';
+                    text-transform: uppercase;
                     font-size: 11px;
-                    font-weight: bold;
                     border: none;
                     border-bottom: 4px solid #b91c1c; /* red-700 */
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
                     transition: all 0.1s;
+                    cursor: pointer;
                 }
                 .btn-exit-standard:hover {
                     filter: brightness(1.1);
@@ -322,7 +324,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     font-size: 14px;
                 }
                 .neon-title-standard {
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     font-size: 38px;
                     color: #00ff88;
                     text-shadow: 0 0 15px rgba(0, 255, 136, 0.4), 3px 3px 0px #000;
@@ -361,23 +363,26 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 4px solid #000;
                     cursor: pointer;
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     text-transform: uppercase;
-                    transition: transform 0.1s;
+                    transition: all 0.1s;
                 }
                 .standard-pixel-btn:active {
-                    transform: scale(0.96);
+                    border-bottom-width: 0;
+                    transform: translateY(4px);
                 }
                 .btn-choose-char-green {
                     padding: 0 40px;
-                    background: #00ff88;
+                    background: #9DC08B;
                     border-radius: 12px;
                     color: black;
+                    font-family: 'Retro Gaming';
+                    text-transform: uppercase;
                     font-size: 11px;
-                    font-weight: bold;
-                    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2);
+                    border: none;
+                    border-bottom: 4px solid #15803d; /* green-700 */
+                    box-shadow: 0 0 15px rgba(157, 192, 139, 0.5);
                 }
                 .btn-choose-char-green:active {
                     box-shadow: none;
@@ -390,15 +395,15 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 /* Responsive Additions */
                 .logo-tl {
                     position: absolute;
-                    top: -60px;
-                    left: -65px;
-                    width: 24rem; /* 384px */
+                    top: -30px;
+                    left: -40px;
+                    width: 16rem; /* 256px (w-64) */
                 }
                 .logo-tr {
                     position: absolute;
-                    top: 0.5rem;
-                    right: 0.5rem;
-                    width: 16rem; /* 256px */
+                    top: -45px;
+                    right: -15px;
+                    width: 20rem; /* 320px (w-80) */
                 }
                 .player-grid-responsive {
                     display: grid;
@@ -417,14 +422,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 
                 @media (max-width: 768px) {
                     .logo-tl {
-                        top: -20px;
+                        top: -15px;
                         left: -20px;
-                        width: 12rem;
+                        width: 10rem;
                     }
                     .logo-tr {
-                        top: 0.5rem;
-                        right: 0.5rem;
-                        width: 8rem;
+                        top: -20px;
+                        right: -5px;
+                        width: 12rem;
                     }
                     .player-content-box {
                         margin-top: 30px;
@@ -439,12 +444,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     }
                     .btn-exit-standard {
                         padding: 0 16px;
-                        height: 48px;
+                        height: 40px;
                         font-size: 10px;
                     }
                     .btn-choose-char-green {
                         padding: 0 16px;
-                        height: 48px;
+                        height: 40px;
                         font-size: 10px;
                     }
                     .player-grid-responsive {
@@ -464,10 +469,10 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain" />
 
             <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
@@ -496,7 +501,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
                 <!-- Pill Choose Character (Host Start Button Style) -->
                 <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
-                    Choose Character
+                    CHOOSE CHARACTER
                 </button>
             </div>
         `;
@@ -802,12 +807,19 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     updatePlayerGrid() {
         if (!this.playerGridEl) return;
 
-        const players: any[] = [];
+        // Use Map to ensure deduplication by sessionId
+        const playerMap = new Map<string, any>();
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            if (!p.isHost) {
-                players.push({ ...p, sessionId });
+            if (!p.isHost && !playerMap.has(sessionId)) {
+                playerMap.set(sessionId, {
+                    sessionId,
+                    name: p.name,
+                    hairId: p.hairId,
+                    isHost: p.isHost,
+                });
             }
         });
+        const players = Array.from(playerMap.values());
 
         // Ensure current player is always first
         players.sort((a, b) => {

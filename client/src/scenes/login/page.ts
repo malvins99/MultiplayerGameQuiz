@@ -379,21 +379,21 @@ export class LoginScene extends Phaser.Scene {
         const config = {
             success: {
                 icon: 'check_circle',
-                iconColor: 'text-[#00ff55]',
-                bg: 'bg-[#111]/95',
-                border: 'border-[#1F7D53]/50',
+                iconColor: 'text-[#FEFF9F]',
+                bg: 'bg-[#2d5a30]/95',
+                border: 'border-[#A0D683]/50',
             },
             error: {
                 icon: 'error',
-                iconColor: 'text-red-400',
-                bg: 'bg-[#111]/95',
-                border: 'border-red-500/50',
+                iconColor: 'text-red-100',
+                bg: 'bg-red-600/90',
+                border: 'border-red-400/50',
             },
             info: {
                 icon: 'info',
-                iconColor: 'text-[#4988C4]',
-                bg: 'bg-[#111]/95',
-                border: 'border-[#4988C4]/50',
+                iconColor: 'text-[#FEFF9F]',
+                bg: 'bg-[#5DA563]/95',
+                border: 'border-[#D3EE98]/50',
             },
         }[type];
 

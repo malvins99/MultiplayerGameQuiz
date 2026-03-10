@@ -9,7 +9,7 @@
     .card-hover:hover {
       transform: translateY(-4px);
       box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
-      border-color: #00ff55;
+      border-color: #72BF78;
     }
 
     .custom-scrollbar::-webkit-scrollbar {
@@ -26,7 +26,7 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #00ff55;
+      background: #72BF78;
     }
 
     /* Dropdown Options Fix for Dark Mode */
@@ -66,10 +66,10 @@
       theme: {
         extend: {
           colors: {
-            "primary": "#00ff55",
-            "secondary": "#00d4ff",
-            "accent": "#cc00ff",
-            "background-light": "#f2f2f2",
+            "primary": "#72BF78",
+            "secondary": "#A0D683",
+            "accent": "#FEFF9F",
+            "background-light": "#D3EE98",
             "background-dark": "#121216",
             "surface-dark": "#1a1a20",
           },
@@ -522,11 +522,11 @@
 
       0%,
       100% {
-        box-shadow: 0 0 5px rgba(0, 255, 85, 0.3), 0 0 10px rgba(0, 255, 85, 0.2);
+        box-shadow: 0 0 5px rgba(114, 191, 120, 0.3), 0 0 10px rgba(114, 191, 120, 0.2);
       }
 
       50% {
-        box-shadow: 0 0 15px rgba(0, 255, 85, 0.5), 0 0 30px rgba(0, 255, 85, 0.3);
+        box-shadow: 0 0 15px rgba(160, 214, 131, 0.5), 0 0 30px rgba(160, 214, 131, 0.3);
       }
     }
 
@@ -560,7 +560,7 @@
       position: absolute;
       width: 6px;
       height: 6px;
-      background: radial-gradient(circle, #00d4ff 0%, transparent 70%);
+      background: radial-gradient(circle, #D3EE98 0%, transparent 70%);
       border-radius: 50%;
       animation: firefly 6s ease-in-out infinite;
       pointer-events: none;
@@ -570,20 +570,20 @@
       position: absolute;
       width: 4px;
       height: 4px;
-      background: #00d4ff;
+      background: #A0D683;
       border-radius: 50%;
-      box-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
+      box-shadow: 0 0 10px #A0D683, 0 0 20px #A0D683;
       animation: float-particle 8s ease-in-out infinite;
       pointer-events: none;
     }
 
-    /* Deep Space / Cyberpunk Gradient Background */
+    /* Background — uses all 4 palette colors */
     .fantasy-bg {
       background:
-        radial-gradient(ellipse at center, rgba(15, 61, 41, 0.6) 0%, transparent 60%),
-        radial-gradient(circle at top right, rgba(0, 255, 85, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at bottom left, rgba(31, 125, 83, 0.15) 0%, transparent 50%),
-        linear-gradient(180deg, #121216 0%, #0d1410 40%, #050505 100%);
+        radial-gradient(ellipse at center, rgba(114, 191, 120, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at top right, rgba(160, 214, 131, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at bottom left, rgba(211, 238, 152, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(114, 191, 120, 0.05) 0%, rgba(10, 20, 12, 0.98) 40%, #000000 100%);
     }
 
     /* Distant Mountains Silhouette Effect */
@@ -616,9 +616,9 @@
     .mystical-fog {
       background: linear-gradient(90deg,
           transparent 0%,
-          rgba(0, 255, 85, 0.04) 20%,
-          rgba(31, 125, 83, 0.05) 50%,
-          rgba(0, 255, 85, 0.04) 80%,
+          rgba(160, 214, 131, 0.04) 20%,
+          rgba(211, 238, 152, 0.05) 50%,
+          rgba(114, 191, 120, 0.04) 80%,
           transparent 100%);
       animation: fog-drift 20s ease-in-out infinite alternate;
     }
@@ -639,7 +639,7 @@
       height: 100%;
       border-radius: 50%;
       border: 3px solid transparent;
-      border-top-color: #00d4ff;
+      border-top-color: white;
       animation: spin 1.2s linear infinite;
     }
 
@@ -647,7 +647,7 @@
       width: 80%;
       height: 80%;
       border-top-color: transparent;
-      border-right-color: #00d4ff;
+      border-right-color: #FEFF9F;
       animation: spin-reverse 1.5s linear infinite;
     }
 
@@ -655,15 +655,67 @@
       width: 60%;
       height: 60%;
       border-top-color: transparent;
-      border-bottom-color: #cc00ff;
+      border-bottom-color: #FEFF9F;
       animation: spin 2s linear infinite;
     }
 
     .spinner-icon {
       font-size: 32px !important;
-      color: #00d4ff;
+      color: white;
       animation: pulse-glow 2s ease-in-out infinite;
       z-index: 1;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translateX(-10vw) scale(var(--tw-scale-x, 1));
+      }
+
+      to {
+        transform: translateX(110vw) scale(var(--tw-scale-x, 1));
+      }
+    }
+
+    @keyframes base-walk-cycle {
+      from {
+        background-position-x: 0;
+      }
+
+      to {
+        background-position-x: -800%;
+      }
+    }
+
+    @keyframes walk-across-right {
+      from {
+        left: -240px;
+      }
+
+      to {
+        left: 100vw;
+      }
+    }
+
+    @keyframes walk-across-left {
+      from {
+        left: 100vw;
+      }
+
+      to {
+        left: -240px;
+      }
+    }
+
+    .walking-char {
+      position: absolute;
+      bottom: 5px;
+      width: 240px;
+      height: 160px;
+      background-image: url('/assets/base_walk_strip8.png');
+      background-size: 800% 100%;
+      background-repeat: repeat-x;
+      image-rendering: pixelated;
+      z-index: 5;
     }
 
     @keyframes spin {
@@ -683,12 +735,12 @@
       0%,
       100% {
         opacity: 0.6;
-        filter: drop-shadow(0 0 5px rgba(0, 255, 85, 0.3));
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
       }
 
       50% {
         opacity: 1;
-        filter: drop-shadow(0 0 20px rgba(0, 255, 85, 0.8));
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
       }
     }
 
