@@ -536,7 +536,7 @@ export class SelectQuizScene extends Phaser.Scene {
                     <!-- Pixel Font Badge - Adjusted text size to be smaller -->
                     <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#4C5C2D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
+                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#4C5C2D]/30 flex items-center justify-center transition-all relative z-20 -mt-2" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-pink-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
                     </button>
                 </div>

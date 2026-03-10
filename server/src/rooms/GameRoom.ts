@@ -5,12 +5,12 @@ import { QUESTIONS } from "../dummyQuestions";
 import { MapParser } from "../utils/MapParser";
 
 const ROOM_CONFIG = {
-    mudah: { maxPlayers: 4, targetQuestions: 5, enemiesPerPlayer: 10 },
-    sedang: { maxPlayers: 5, targetQuestions: 10, enemiesPerPlayer: 20 },
-    sulit: { maxPlayers: 6, targetQuestions: 20, enemiesPerPlayer: 40 }
+    mudah: { maxPlayers: 50, targetQuestions: 5, enemiesPerPlayer: 10 },
+    sedang: { maxPlayers: 50, targetQuestions: 10, enemiesPerPlayer: 20 },
+    sulit: { maxPlayers: 50, targetQuestions: 20, enemiesPerPlayer: 40 }
 };
 
-const LOBBY_MAX_PLAYERS = 20;
+const LOBBY_MAX_PLAYERS = 51; // 50 players + 1 host
 
 export class GameRoom extends Room<GameState> {
     // Track which spawn points have been used
@@ -696,8 +696,10 @@ export class GameRoom extends Room<GameState> {
 
             // DO NOT reset usedSpawnIndices here. If we are full, we are full.
             if (spawnIndex === -1) {
-                console.warn("[Spawn] No empty spawn points left! Overwriting index 0.");
-                spawnIndex = 0; // Fallback, but don't clear the set so duplicates stay minimized
+                // If all unique spawns are taken (more players than spawn points),
+                // randomly pick any spawn point so they spread evenly instead of piling up at index 0.
+                console.warn("[Spawn] No empty spawn points left! Randomly picking an occupied spawn point.");
+                spawnIndex = Math.floor(Math.random() * mapData.playerSpawns.length);
             }
 
             this.usedSpawnIndices.add(spawnIndex);
@@ -869,8 +871,8 @@ export class GameRoom extends Room<GameState> {
             // Consolidate enemy creation to try strict distance first -> then relax if needed
             let enemiesSpawnedForPlayer = 0;
 
-            // We want 'config.enemiesPerPlayer' enemies
-            for (let i = 0; i < config.enemiesPerPlayer; i++) {
+            // We want exactly 'this.state.questions.length' enemies per player
+            for (let i = 0; i < this.state.questions.length; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
 

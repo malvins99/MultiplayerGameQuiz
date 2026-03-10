@@ -58,22 +58,7 @@ export class RoomService {
 
             console.log("Session Created in Supabase B:", data);
 
-            // 1.5 Add Host to Participants
-            if (data && data.id) {
-                const { error: partError } = await supabaseB
-                    .from(PARTICIPANT_TABLE)
-                    .insert({
-                        session_id: data.id,
-                        nickname: profile?.nickname || profile?.fullname || profile?.username || "Host",
-                        user_id: hostId,
-                        joined_at: new Date().toISOString(),
-                        score: 0
-                    });
-
-                if (partError) {
-                    console.error("Error adding host to participants:", partError);
-                }
-            }
+            // Host will not be added to PARTICIPANT_TABLE to ensure the stats page recognizes them as Host, not Player.
 
             const colyseusOptions = {
                 roomCode: roomCode,

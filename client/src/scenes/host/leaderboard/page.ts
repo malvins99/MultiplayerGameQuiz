@@ -38,6 +38,13 @@ export class HostLeaderboardScene extends Phaser.Scene {
         const q = this.registry.get('lastSelectedQuiz');
         if (q) localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(q));
 
+        let sessionId = this.registry.get('mySessionId');
+        if (!sessionId) {
+            sessionId = localStorage.getItem('hostLastSessionId');
+        } else {
+            localStorage.setItem('hostLastSessionId', sessionId);
+        }
+
         this.container = document.createElement('div');
         this.container.id = 'leaderboard-ui';
         // Force 'Retro Gaming' font family on the container and all children
@@ -83,7 +90,18 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         if (statsBtn) {
             statsBtn.onclick = () => {
-                alert("Fitur Statistik lengkap akan segera hadir!");
+                let opts = this.registry.get('lastGameOptions');
+                if (!opts) {
+                    const storedOpts = localStorage.getItem('hostLastGameOptions');
+                    if (storedOpts) try { opts = JSON.parse(storedOpts); } catch (e) { }
+                }
+
+                const sid = opts?.sessionId || this.registry.get('mySessionId') || localStorage.getItem('hostLastSessionId');
+                if (sid) {
+                    window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+                } else {
+                    alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
+                }
             };
         }
 
