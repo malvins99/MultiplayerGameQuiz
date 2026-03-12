@@ -603,6 +603,7 @@ export class LobbyScene extends Phaser.Scene {
                 localStorage.setItem('currentRoomId', room.id);
                 localStorage.setItem('currentSessionId', room.sessionId);
                 localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
+                localStorage.setItem('supabaseSessionId', sessionData.id);
 
                 this.lobbyUI?.classList.add('hidden');
 
