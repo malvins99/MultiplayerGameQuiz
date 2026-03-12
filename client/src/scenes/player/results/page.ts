@@ -19,6 +19,8 @@ export class ResultScene extends Phaser.Scene {
     private container!: HTMLDivElement;
     private rankings: RankingEntry[] = [];
     private mySessionId: string = "";
+    private roomId: string = "";
+    private supabaseSessionId: string = "";
 
     constructor() {
         super({ key: 'ResultScene' });
@@ -28,11 +30,40 @@ export class ResultScene extends Phaser.Scene {
         TransitionManager.ensureClosed();
 
         // 1. Get Data from Registry
-        this.rankings = this.registry.get('leaderboardData') || [];
+        let registryRankings = this.registry.get('leaderboardData') || [];
         const room = this.registry.get('room');
-        this.mySessionId = room ? room.sessionId : "";
+        let registrySessionId = room ? room.sessionId : "";
+        let registryRoomId = room ? room.id : "";
+
+        this.supabaseSessionId = localStorage.getItem('supabaseSessionId') || "";
+
+        if (registryRankings.length > 0 && registrySessionId && registryRoomId) {
+            this.rankings = registryRankings;
+            this.mySessionId = registrySessionId;
+            this.roomId = registryRoomId;
+            sessionStorage.setItem('playerResultState', JSON.stringify({
+                rankings: this.rankings,
+                mySessionId: this.mySessionId,
+                roomId: this.roomId,
+                supabaseSessionId: this.supabaseSessionId
+            }));
+        } else {
+            const savedState = sessionStorage.getItem('playerResultState');
+            if (savedState) {
+                const parsed = JSON.parse(savedState);
+                this.rankings = parsed.rankings;
+                this.mySessionId = parsed.mySessionId;
+                this.roomId = parsed.roomId;
+                if (parsed.supabaseSessionId) {
+                    this.supabaseSessionId = parsed.supabaseSessionId;
+                }
+            }
+        }
 
         // 2. Setup Container
+        const existingUI = document.getElementById('result-ui');
+        if (existingUI) existingUI.remove();
+
         this.container = document.createElement('div');
         this.container.id = 'result-ui';
         this.container.style.position = 'absolute';
@@ -53,6 +84,22 @@ export class ResultScene extends Phaser.Scene {
 
         // 3. Initial Render
         this.renderIndividualResult();
+
+        // 4. Listen for gameEnded to update rank
+        if (room) {
+            // Listen to gameEnded only once per scene creation
+            room.onMessage('gameEnded', (data: { rankings: any[] }) => {
+                this.registry.set('leaderboardData', data.rankings);
+                this.rankings = data.rankings;
+                sessionStorage.setItem('playerResultState', JSON.stringify({
+                    rankings: this.rankings,
+                    mySessionId: this.mySessionId,
+                    roomId: this.roomId,
+                    supabaseSessionId: this.supabaseSessionId
+                }));
+                this.renderIndividualResult();
+            });
+        }
 
         // Open Iris to reveal results
         setTimeout(() => {
@@ -225,7 +272,7 @@ export class ResultScene extends Phaser.Scene {
                 <div class="result-stats-row">
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
-                        <div class="stat-value">#${myEntry.rank}</div>
+                        <div class="stat-value">${myEntry.rank === -1 ? '#?' : '#' + myEntry.rank}</div>
                         <div class="stat-label">RANK</div>
                     </div>
                     <div class="stat-box">
@@ -289,10 +336,10 @@ export class ResultScene extends Phaser.Scene {
             };
 
             if (fullBtn) fullBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.cleanup();
-                    this.scene.start('LeaderboardScene');
-                });
+                const statId = this.supabaseSessionId || this.roomId;
+                if (statId) {
+                    window.open(`https://gameforsmartnewui.vercel.app/stat/${statId}`, '_blank');
+                }
             };
         }, 50);
     }
