@@ -27,6 +27,7 @@ export class SelectQuizScene extends Phaser.Scene {
     quizSelectionUI: HTMLElement | null = null;
     isLoading: boolean = false;
     tooltip: HTMLElement | null = null;
+    lastFavoritedId: string | null = null;
 
     constructor() {
         super('SelectQuizScene');
@@ -152,17 +153,19 @@ export class SelectQuizScene extends Phaser.Scene {
             let skeletons = '';
             for (let i = 0; i < skeletonCount; i++) {
                 skeletons += `
-                    <div class="bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0 animate-pulse">
-                        <div class="flex justify-between items-start shrink-0 gap-2 mb-2">
+                    <div class="bg-white border-4 border-[#6CC452] border-b-[8px] border-b-[#478D47] p-3 md:p-4 rounded-3xl relative overflow-hidden flex flex-col min-h-[100px] md:min-h-[110px] w-full min-w-0 animate-pulse">
+                        <div class="flex justify-between items-start shrink-0 gap-2 mb-4">
                             <!-- Badge Skeleton -->
-                            <div class="w-20 h-5 bg-white/10 rounded"></div>
+                            <div class="w-16 h-5 bg-gray-200 rounded shadow-sm"></div>
                             <!-- Favorite Icon Skeleton -->
-                            <div class="w-10 h-10 shrink-0 rounded-full bg-white/5"></div>
+                            <div class="w-6 h-6 shrink-0 rounded-full bg-gray-100"></div>
                         </div>
                         
-                        <!-- Title Skeleton -->
-                        <div class="w-full h-4 bg-white/10 rounded mt-1"></div>
-                        <div class="w-2/3 h-4 bg-white/10 rounded mt-2"></div>
+                        <!-- Title Skeleton: more detailed layout -->
+                        <div class="space-y-2">
+                            <div class="w-full h-4 bg-gray-200 rounded"></div>
+                            <div class="w-[85%] h-4 bg-gray-100 rounded"></div>
+                        </div>
                     </div>
                 `;
             }
@@ -206,7 +209,7 @@ export class SelectQuizScene extends Phaser.Scene {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-white/10 hover:text-[#1F7D53] rounded-lg transition-colors text-white/70 uppercase tracking-tight flex items-center justify-between group mt-1";
+        btn.className = "w-full text-left px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-[#478D47] uppercase tracking-tight flex items-center justify-between group mt-1";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
 
@@ -245,6 +248,37 @@ export class SelectQuizScene extends Phaser.Scene {
     }
 
     setupEventListeners() {
+        // --- ZIGMA LOGO (HOME) ---
+        const zigmaLogo = document.getElementById('select-quiz-zigma-logo');
+        if (zigmaLogo) {
+            zigmaLogo.onclick = () => {
+                // Show Global Loading
+                const overlay = document.getElementById('auth-loading-overlay');
+                const text = document.getElementById('auth-loading-text');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    if (text) text.innerText = 'Returning home...';
+                }
+
+                // Transition back home
+                TransitionManager.close(() => {
+                    this.cleanup();
+                    this.hideUI();
+                    Router.navigate('/');
+                    this.scene.start('LobbyScene');
+                    
+                    // Re-open Iris and then hide loading (No flicker)
+                    setTimeout(() => {
+                        TransitionManager.open();
+                        // Hide loading shortly AFTER iris starts opening
+                        setTimeout(() => {
+                            if (overlay) overlay.classList.add('hidden');
+                        }, 100);
+                    }, 500);
+                });
+            };
+        }
+
         // --- CUSTOM DROPDOWN TOGGLE ---
         this.setupDropdown('custom-cat-trigger', 'custom-cat-menu', 'custom-cat-arrow', (val, label) => {
             this.handleCategoryChange(val, label);
@@ -364,11 +398,11 @@ export class SelectQuizScene extends Phaser.Scene {
             // Active: text-pink-500
 
             if (this.showFavoritesOnly) {
-                favIcon.classList.remove('text-white/40');
-                favIcon.classList.add('text-pink-500');
+                favIcon.classList.remove('text-[#94A3B8]');
+                favIcon.classList.add('text-red-500', 'fill-current', 'heart-water-fill');
             } else {
-                favIcon.classList.remove('text-pink-500');
-                favIcon.classList.add('text-white/40');
+                favIcon.classList.remove('text-red-500', 'fill-current', 'heart-water-fill');
+                favIcon.classList.add('text-[#94A3B8]');
             }
         }
 
@@ -377,11 +411,13 @@ export class SelectQuizScene extends Phaser.Scene {
         const myIcon = myQuizBtn?.querySelector('span');
         if (myQuizBtn && myIcon) {
             if (this.showMyQuizzesOnly) {
-                myQuizBtn.classList.add('bg-[#1F7D53]/20', 'border-[#1F7D53]');
-                myIcon.classList.add('text-[#1F7D53]');
+                myQuizBtn.classList.add('bg-[#6CC452]/10', 'border-[#6CC452]');
+                myIcon.classList.remove('text-[#6CC452]/40');
+                myIcon.classList.add('text-[#478D47]');
             } else {
-                myQuizBtn.classList.remove('bg-[#1F7D53]/20', 'border-[#1F7D53]');
-                myIcon.classList.remove('text-[#1F7D53]');
+                myQuizBtn.classList.remove('bg-[#6CC452]/10', 'border-[#6CC452]');
+                myIcon.classList.remove('text-[#478D47]');
+                myIcon.classList.add('text-[#6CC452]/40');
             }
         }
 
@@ -452,8 +488,10 @@ export class SelectQuizScene extends Phaser.Scene {
         // Optimistic UI Update
         if (this.favorites.has(quizId)) {
             this.favorites.delete(quizId);
+            this.lastFavoritedId = null;
         } else {
             this.favorites.add(quizId);
+            this.lastFavoritedId = quizId;
         }
 
         // Re-render immediately
@@ -524,9 +562,9 @@ export class SelectQuizScene extends Phaser.Scene {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
 
-            let badgeColor = 'bg-[#1F7D53] text-white border border-transparent';
+            let badgeColor = 'bg-[#6CC452] text-white border-2 border-[#478D47]';
 
-            card.className = "group bg-surface-dark border border-white/5 p-4 md:p-5 rounded-3xl hover:border-[#1F7D53] hover:bg-[#1F7D53]/30 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[110px] md:min-h-[120px] w-full min-w-0";
+            card.className = "group bg-white border-4 border-[#6CC452] border-b-[8px] border-b-[#478D47] p-3 md:p-4 rounded-3xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[100px] md:min-h-[110px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
@@ -536,13 +574,13 @@ export class SelectQuizScene extends Phaser.Scene {
                     <!-- Pixel Font Badge - Adjusted text size to be smaller -->
                     <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
-                    <button class="fav-btn w-10 h-10 shrink-0 rounded-full bg-black/20 hover:bg-[#4C5C2D]/30 flex items-center justify-center transition-all relative z-20" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[18px] md:text-[20px] ${isFav ? 'text-pink-500 fill-current' : 'text-white/20 fill-current'} transition-colors">favorite</span>
+                    <button class="fav-btn p-1 flex items-center justify-center transition-all relative z-20 group/fav" data-id="${quiz.id}">
+                        <span class="material-symbols-outlined text-[24px] md:text-[26px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
                     </button>
                 </div>
                 
                 <!-- Title - Adjusted spacing to be closer to badge -->
-                <div class="relative z-10 font-bold text-white -mt-2 group-hover:text-[#A3C4A0] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
+                <div class="relative z-10 font-bold text-[#478D47] -mt-2 group-hover:text-[#6CC452] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
                     <span class="quiz-title-tooltip-trigger line-clamp-2 w-full">${quiz.title}</span>
                 </div>
             `;
@@ -600,7 +638,7 @@ export class SelectQuizScene extends Phaser.Scene {
                         autocomplete="off"
                         maxlength="${digits}"
                         value="${this.currentPage}"
-                        class="h-7 text-center p-0 bg-transparent text-[#1F7D53] font-bold text-xl rounded-none border-none focus:outline-none focus:ring-0 transition-colors"
+                        class="h-7 text-center p-0 bg-transparent text-[#4B5563] font-bold text-xl rounded-none border-none focus:outline-none focus:ring-0 transition-colors"
                         style="width: ${inputWidth}em; -moz-appearance: textfield; appearance: textfield;"
                     />
                     <span class="text-white font-bold text-xl">/ ${tp}</span>
@@ -662,7 +700,7 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!t) {
             t = document.createElement('div');
             t.id = 'custom-quiz-tooltip';
-            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-[#1a1a20] border-2 border-[#1F7D53] text-white text-sm font-bold font-['Retro_Gaming'] rounded-lg shadow-[0_0_15px_rgba(28,77,141,0.4)] opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
+            t.className = "fixed pointer-events-none z-[100] px-4 py-3 bg-white border-2 border-[#478D47] text-[#478D47] text-sm font-bold font-['Retro_Gaming'] rounded-lg shadow-2xl opacity-0 transition-opacity duration-200 max-w-xs break-words hidden leading-relaxed tracking-wide";
             document.body.appendChild(t);
         }
         this.tooltip = t;

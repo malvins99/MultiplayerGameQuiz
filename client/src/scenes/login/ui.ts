@@ -7,7 +7,7 @@ export class LoginUI {
             loginUI.className = 'hidden fixed top-0 left-0 w-full h-screen z-30 overflow-hidden';
             loginUI.innerHTML = `
                 <!-- Full-Screen Background — palette gradient -->
-                <div class="absolute inset-0" style="background: linear-gradient(180deg, #4a9150 0%, #72BF78 40%, #A0D683 100%);"></div>
+                <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
 
                 <!-- Pixel-art Background Decorations -->
                 <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -17,55 +17,55 @@ export class LoginUI {
                     <!-- Diverse Pixel Clouds (Varying sizes, colors, speeds) -->
                     
                     <!-- L1: Back Layer (Small/Medium, Slow) -->
-                    <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(0.8); left: -10%;">
+                    <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(1.0); left: -10%;">
                         <div class="relative w-10 h-3 bg-white">
                             <div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.6); left: 80%;">
+                    <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.8); left: 80%;">
                         <div class="relative w-12 h-4 bg-[#D3EE98]">
                             <div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.0); left: 40%;">
+                    <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.2); left: 40%;">
                         <div class="relative w-14 h-4 bg-white">
                             <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
                         </div>
                     </div>
 
                     <!-- L2: Mid Layer (Medium) -->
-                    <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.5); left: 15%;">
+                    <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.8); left: 15%;">
                         <div class="relative w-16 h-5 bg-[#D3EE98]">
                             <div class="absolute -top-3 left-4 w-6 h-3 bg-[#D3EE98]"></div>
                             <div class="absolute -top-5 left-8 w-4 h-5 bg-[#D3EE98]"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.2); left: 60%;">
+                    <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.5); left: 60%;">
                         <div class="relative w-14 h-4 bg-white">
                             <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
                             <div class="absolute -top-4 left-7 w-3 h-4 bg-white"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.4); left: 75%;">
+                    <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.7); left: 75%;">
                         <div class="relative w-16 h-5 bg-[#D3EE98]">
                             <div class="absolute -top-3 left-5 w-6 h-3 bg-[#D3EE98]"></div>
                         </div>
                     </div>
 
                     <!-- L3: Front Layer (Large, Faster) -->
-                    <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.2); left: -20%;">
+                    <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.5); left: -20%;">
                         <div class="relative w-12 h-4 bg-[#FEFF9F]">
                             <div class="absolute -top-2 left-2 w-4 h-2 bg-[#FEFF9F]"></div>
                             <div class="absolute -top-4 left-5 w-4 h-4 bg-[#FEFF9F]"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(1.8); left: 40%;">
+                    <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(2.2); left: 40%;">
                         <div class="relative w-18 h-6 bg-white">
                             <div class="absolute -top-3 left-5 w-7 h-3 bg-white"></div>
                             <div class="absolute -top-6 left-10 w-5 h-6 bg-white"></div>
                         </div>
                     </div>
-                    <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(2.5); left: 10%;">
+                    <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(3.0); left: 10%;">
                         <div class="relative w-14 h-4 bg-[#FEFF9F]">
                             <div class="absolute -top-2 left-4 w-5 h-2 bg-[#FEFF9F]"></div>
                         </div>
@@ -75,6 +75,8 @@ export class LoginUI {
                     <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
                     <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
                     <div class="firefly !bg-[#D3EE98] !shadow-[0_0_15px_rgba(211,238,152,0.9)]" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
+                    <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 85%; left: 20%; animation-delay: 4.5s;"></div>
+                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 15%; left: 70%; animation-delay: 6s;"></div>
                 </div>
 
                 <!-- Walking Characters Container -->
@@ -96,13 +98,13 @@ export class LoginUI {
                     <div class="w-full max-w-md md:max-w-xl -mt-10 md:mt-0">
 
                         <!-- Login Card — solid #D3EE98 background -->
-                        <div class="flex flex-col relative rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.25)]" style="background: #D3EE98;">
+                        <div class="flex flex-col relative rounded-3xl overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.15)] bg-white">
                             <!-- Scanline Overlay (Pixel effect) -->
                             <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%;"></div>
 
                             <!-- Header — solid #72BF78 -->
-                            <div class="p-5 flex items-center justify-center shrink-0 relative" style="background: #72BF78; border-bottom: 3px solid #5DA563;">
-                                <h1 class="text-2xl font-bold text-white uppercase tracking-widest font-['Retro_Gaming'] leading-relaxed drop-shadow-[2px_2px_0_rgba(0,0,0,0.3)]">
+                            <div class="p-6 flex items-center justify-center shrink-0 relative border-b border-gray-100 bg-white">
+                                <h1 class="text-3xl font-extrabold text-[#46A881] uppercase tracking-[0.2em] font-['Retro_Gaming'] leading-relaxed drop-shadow-sm">
                                     LOGIN
                                 </h1>
                             </div>
@@ -116,7 +118,7 @@ export class LoginUI {
                                 </div>
 
                                 <!-- Google Login Button — darkened yellow background -->
-                                <button type="button" id="google-login-btn" class="w-full h-11 border-2 border-[#72BF78] rounded-xl flex items-center justify-center px-4 font-bold hover:brightness-95 active:scale-[0.98] transition-all group relative z-10 gap-3" style="background: #E2E48A; color: #1a3a1d;">
+                                <button type="button" id="google-login-btn" class="w-full h-12 border-2 border-gray-200 rounded-2xl flex items-center justify-center px-4 font-bold hover:bg-gray-50 active:scale-[0.98] transition-all group relative z-10 gap-3 bg-white text-gray-700">
                                     <!-- Google Icon -->
                                     <svg class="w-5 h-5 transition-transform" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -129,20 +131,20 @@ export class LoginUI {
 
                                 <!-- Divider -->
                                 <div class="flex items-center gap-4">
-                                    <div class="flex-1 border-t-2 border-[#A0D683]"></div>
-                                    <span class="text-[#4a7a4d] text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
-                                    <div class="flex-1 border-t-2 border-[#A0D683]"></div>
+                                    <div class="flex-1 border-t border-gray-100"></div>
+                                    <span class="text-[#46A881]/60 text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
+                                    <div class="flex-1 border-t border-gray-100"></div>
                                 </div>
 
                                 <!-- Email/Username Input -->
                                 <div class="space-y-1 relative">
-                                    <label class="flex items-center gap-2 text-[#2d5a30] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#72BF78]">person</span> EMAIL / USERNAME
+                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                        <span class="material-symbols-outlined text-sm text-[#46A881]">person</span> EMAIL / USERNAME
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-11 border-2 border-[#72BF78] rounded-xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-2 focus:ring-[#72BF78]/40 group" style="background: #E2E48A; color: #1a3a1d;" />
+                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-12 border border-gray-200 rounded-2xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
                                         <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                                            <span class="material-symbols-outlined text-[#1a3a1d]/60">mail</span>
+                                            <span class="material-symbols-outlined text-[#46A881] hover:text-[#388567] transition-colors cursor-pointer">mail</span>
                                         </div>
                                     </div>
                                     <p id="email-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
@@ -150,12 +152,12 @@ export class LoginUI {
 
                                 <!-- Password Input -->
                                 <div class="space-y-1 relative">
-                                    <label class="flex items-center gap-2 text-[#2d5a30] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#72BF78]">lock</span> PASSWORD
+                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                        <span class="material-symbols-outlined text-sm text-[#46A881]">lock</span> PASSWORD
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-password" type="password" placeholder="••••••••" class="w-full h-11 border-2 border-[#72BF78] rounded-xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-2 focus:ring-[#72BF78]/40 group" style="background: #E2E48A; color: #1a3a1d;" />
-                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#1a3a1d]/60 hover:text-[#1a3a1d] transition-colors">
+                                        <input id="login-password" type="password" placeholder="••••••••" class="w-full h-12 border border-gray-200 rounded-2xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
+                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#46A881] hover:text-[#388567] transition-colors">
                                             <span class="material-symbols-outlined">visibility_off</span>
                                         </button>
                                     </div>
@@ -163,17 +165,20 @@ export class LoginUI {
                                 </div>
 
                                 <!-- Login Button — solid #72BF78 -->
-                                <button type="submit" id="login-btn" class="w-full h-[50px] flex items-center justify-center text-white font-['Retro_Gaming'] font-bold uppercase text-sm rounded-xl border-b-4 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer gap-3" style="background: #72BF78; border-bottom-color: #5DA563; box-shadow: 0 4px 15px rgba(114,191,120,0.4);">
+                                <button type="submit" id="login-btn" class="w-full h-14 flex items-center justify-center text-white font-['Retro_Gaming'] font-extrabold uppercase text-lg rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer gap-3" style="background: #46A881;">
+                                    <span class="material-symbols-outlined text-2xl">login</span>
+                                    LOGIN
+                                </button>
                                     <span class="material-symbols-outlined text-lg">login</span>
                                     LOGIN
                                 </button>
 
                                 <!-- Register Link -->
-                                <div class="text-center pt-3 flex flex-col items-center justify-center border-t-2 border-[#A0D683] mt-2">
-                                    <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="inline-flex items-center justify-center gap-1 transition-colors group whitespace-nowrap text-sm w-full font-bold">
-                                        <span class="text-[#4a7a4d]/70 group-hover:text-[#2d5a30] transition-colors font-['Retro_Gaming']">DON'T HAVE ACCOUNT?</span>
-                                        <span class="text-[#72BF78] group-hover:text-[#4a7a4d] group-hover:underline transition-all font-['Retro_Gaming'] font-bold">REGISTER</span>
-                                    </a>
+                                <div class="text-center pt-3 flex flex-col items-center justify-center mt-2">
+                                    <div class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-[11px] w-full font-bold">
+                                        <span class="text-[#46A881]/60 font-['Retro_Gaming'] tracking-widest">DON'T HAVE ACCOUNT?</span>
+                                        <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="text-[#46A881] hover:text-[#388567] transition-all font-['Retro_Gaming'] font-black">REGISTER</a>
+                                    </div>
                                 </div>
                             </form>
                         </div>

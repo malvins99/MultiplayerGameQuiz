@@ -524,7 +524,81 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         // NEW 2-COLUMN HOST LAYOUT
         this.waitingUI.innerHTML = `
-            <div class="fixed inset-0 pointer-events-none overflow-hidden fantasy-bg opacity-100"></div>
+            <!-- Full-Screen Background — same as home page -->
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
+
+            <!-- Pixel-art Background Decorations -->
+            <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <!-- Subtle pixel grid pattern -->
+                <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+                <!-- Diverse Pixel Clouds (Varying sizes, colors, speeds) -->
+                
+                <!-- L1: Back Layer (Small/Medium, Slow) -->
+                <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(1.0); left: -10%;">
+                    <div class="relative w-10 h-3 bg-white">
+                        <div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.8); left: 80%;">
+                    <div class="relative w-12 h-4 bg-[#D3EE98]">
+                        <div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.2); left: 40%;">
+                    <div class="relative w-14 h-4 bg-white">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                    </div>
+                </div>
+
+                <!-- L2: Mid Layer (Medium) -->
+                <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.8); left: 15%;">
+                    <div class="relative w-16 h-5 bg-[#D3EE98]">
+                        <div class="absolute -top-3 left-4 w-6 h-3 bg-[#D3EE98]"></div>
+                        <div class="absolute -top-5 left-8 w-4 h-5 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.5); left: 60%;">
+                    <div class="relative w-14 h-4 bg-white">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                        <div class="absolute -top-4 left-7 w-3 h-4 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.7); left: 75%;">
+                    <div class="relative w-16 h-5 bg-[#D3EE98]">
+                        <div class="absolute -top-3 left-5 w-6 h-3 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+
+                <!-- L3: Front Layer (Large, Faster) -->
+                <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.5); left: -20%;">
+                    <div class="relative w-12 h-4 bg-[#FEFF9F]">
+                        <div class="absolute -top-2 left-2 w-4 h-2 bg-[#FEFF9F]"></div>
+                        <div class="absolute -top-4 left-5 w-4 h-4 bg-[#FEFF9F]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(2.2); left: 40%;">
+                    <div class="relative w-18 h-6 bg-white">
+                        <div class="absolute -top-3 left-5 w-7 h-3 bg-white"></div>
+                        <div class="absolute -top-6 left-10 w-5 h-6 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(3.0); left: 10%;">
+                    <div class="relative w-14 h-4 bg-[#FEFF9F]">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-[#FEFF9F]"></div>
+                    </div>
+                </div>
+
+                <!-- Floating Particles -->
+                <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
+                <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
+                <div class="firefly !bg-[#D3EE98] !shadow-[0_0_15px_rgba(211,238,152,0.9)]" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
+                <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 85%; left: 20%; animation-delay: 4.5s;"></div>
+                <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 15%; left: 70%; animation-delay: 6s;"></div>
+            </div>
+
+            <!-- Walking Characters Container -->
+            <div id="host-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
             
             <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
                 <!-- LOGO TOP LEFT -->
@@ -536,7 +610,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <!-- Back Button REMOVED -->
 
                 <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-transparent border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative mt-4 md:mt-16 shrink-0 backdrop-blur-md">
+                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-[#6CC452] border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative mt-4 md:mt-16 shrink-0">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none"></div>
 
                     <!-- Room Code -->
@@ -565,7 +639,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-transparent border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative backdrop-blur-md md:mt-16">
+                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-[#6CC452] border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative md:mt-16">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none overflow-hidden rounded-3xl"></div>
 
                     <!-- Header -->
@@ -735,6 +809,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
             </div>
         `;
+
+        // Start Walking Character Spawner (sama seperti home page)
+        this.startWaitingCharacterSpawner('host-walking-characters-container');
 
         // Host Exit Confirm Modal
         const hostExitModal = document.createElement('div');
@@ -2099,4 +2176,49 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         });
     }
 
+    // Walking character spawner — sama persis seperti home page
+    private waitingSpawnerInterval: any = null;
+    startWaitingCharacterSpawner(containerId: string) {
+        if (this.waitingSpawnerInterval) {
+            clearInterval(this.waitingSpawnerInterval);
+            this.waitingSpawnerInterval = null;
+        }
+
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const checkAndSpawn = () => {
+            const activeChars = container.querySelectorAll('.walking-char').length;
+            if (activeChars >= 3) return;
+            const chance = activeChars === 0 ? 0.8 : 0.4;
+            if (Math.random() < chance) {
+                this.spawnWalkingCharacter(container);
+            }
+        };
+
+        checkAndSpawn();
+        this.waitingSpawnerInterval = setInterval(checkAndSpawn, 5000);
+    }
+
+    spawnWalkingCharacter(container: HTMLElement) {
+        const char = document.createElement('div');
+        char.className = 'walking-char';
+
+        const fromRight = Math.random() > 0.5;
+        const speed = 20 + Math.random() * 10;
+
+        if (fromRight) {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
+            char.style.transform = 'scale(-1, 1)';
+        } else {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
+            char.style.transform = 'scale(1, 1)';
+        }
+
+        container.appendChild(char);
+
+        setTimeout(() => {
+            if (char.parentElement) char.remove();
+        }, speed * 1000 + 500);
+    }
 }

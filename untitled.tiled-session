@@ -1,10 +1,14 @@
 {
-    "activeFile": "client/public/assets/map hard.tmx",
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "C:/Users/USER/Downloads/untitled.tmj",
     "expandedProjectPaths": [
-        "client/public",
         "client",
         ".",
-        "client/public/assets"
+        "client/public/assets",
+        "client/public"
     ],
     "fileStates": {
         "": {
@@ -12,6 +16,22 @@
         },
         "#spr_tileset_sunnysideworld_16px": {
             "scaleInDock": 2
+        },
+        "C:/Users/USER/Downloads/base_walk_strip8.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx": {
+            "scaleInDock": 4,
+            "scaleInEditor": 4
+        },
+        "C:/Users/USER/Downloads/untitled.tmj": {
+            "scale": 32,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 213.46875,
+                "y": 180.90625
+            }
         },
         "C:/Zigma-gamev1/new-project/spr_tileset_sunnysideworld_16px.tsx": {
             "scaleInDock": 1
@@ -80,44 +100,46 @@
             "scaleInDock": 4
         },
         "client/public/assets/map hard.tmx": {
-            "expandedObjectLayers": [
-                26,
-                5,
-                6,
-                27,
-                25,
-                28
+            "expandedGroupLayers": [
+                19,
+                3
             ],
-            "scale": 0.33,
-            "selectedLayer": 10,
+            "expandedObjectLayers": [
+                27,
+                26,
+                28,
+                6
+            ],
+            "scale": 5.5,
+            "selectedLayer": 11,
             "viewCenter": {
-                "x": 789.3939393939394,
-                "y": 612.1212121212121
+                "x": 981.6363636363636,
+                "y": 456.1818181818182
             }
         },
         "client/public/assets/map hard.tmx#spr_deco_coracle_strip4": {
             "scaleInDock": 4
         },
         "client/public/assets/map hard.tmx#spr_tileset_sunnysideworld_16px": {
-            "scaleInDock": 3
+            "scaleInDock": 1
         },
         "client/public/assets/map medium.tmj": {
             "expandedGroupLayers": [
                 40
             ],
             "expandedObjectLayers": [
+                91,
+                94,
                 92,
                 5,
-                6,
-                94,
                 93,
-                91
+                6
             ],
             "scale": 0.33,
             "selectedLayer": 86,
             "viewCenter": {
                 "x": 871.2121212121212,
-                "y": 212.12121212121212
+                "y": 210.60606060606057
             }
         },
         "client/public/assets/map medium.tmj#spr_deco_coracle_strip4": {
@@ -273,25 +295,36 @@
         }
     },
     "last.exportedFilePath": "C:/Zigma-gamev1/MultiplayerGameQuiz/server/src/maps",
+    "last.imagePath": "C:/Sunnyside_World_ASSET_PACK_V2.1/Sunnyside_World_Assets/Tileset",
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "json",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
     "openFiles": [
         "client/public/assets/map medium.tmj",
-        "client/public/assets/map hard.tmx"
+        "client/public/assets/map hard.tmx",
+        "C:/Users/USER/Downloads/untitled.tmj",
+        "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
+        "C:/Users/USER/Downloads/base_walk_strip8.tsx"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
         "client/public/assets/map medium.tmj",
         "client/public/assets/map hard.tmx",
+        "C:/Users/USER/Downloads/base_walk_strip8.tsx",
+        "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
+        "C:/Users/USER/Downloads/untitled.tmj",
         "client/public/assets/map_baru1_tetap.tmj",
         "C:/new map/group map.tmx",
         "client/public/assets/characters/untitled.tmx",
         "map_baru1.tmx",
         "map_baru1.(update).tmj",
         "server/src/maps/map_easy.json",
-        "untitled.tmx",
-        "untitled1.tmx",
-        "multiplayer_map.tmj",
-        "spr_death_strip13.tsx"
-    ]
+        "untitled.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
 }

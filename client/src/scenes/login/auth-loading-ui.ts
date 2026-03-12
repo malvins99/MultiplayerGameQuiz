@@ -4,7 +4,7 @@ export class AuthLoadingUI {
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'auth-loading-overlay';
-            overlay.className = 'hidden fixed inset-0 z-[9999] flex items-center justify-center';
+            overlay.className = 'hidden fixed inset-0 z-[2147483647] flex items-center justify-center';
             overlay.innerHTML = `
                 <!-- Background — same palette gradient as login -->
                 <div class="absolute inset-0" style="background: linear-gradient(135deg, #4a9150 0%, #72BF78 30%, #A0D683 60%, #72BF78 100%);"></div>
