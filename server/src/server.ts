@@ -39,7 +39,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve Static Files (Client Build)
-const clientBuildPath = path.join(__dirname, "../public");
+const clientBuildPath = path.join(process.cwd(), "public");
 console.log("Serving static files from:", clientBuildPath);
 console.log("__dirname is:", __dirname);
 

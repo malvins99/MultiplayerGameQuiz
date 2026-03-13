@@ -200,26 +200,8 @@ export class HostProgressScene extends Phaser.Scene {
         };
         this.scale.on('resize', this.resizeListener);
 
-        // Drag Pan
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            this.isDragPan = true;
-            this.dragOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
-        });
-        this.input.on('pointerup', () => this.isDragPan = false);
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.isDragPan) {
-                const cam = this.cameras.main;
-                const sensitivity = 1.0 / cam.zoom;
-                cam.scrollX -= (pointer.x - this.dragOrigin.x) * sensitivity;
-                cam.scrollY -= (pointer.y - this.dragOrigin.y) * sensitivity;
-                this.dragOrigin.set(pointer.x, pointer.y);
-            }
-        });
-        this.input.on('wheel', (pointer: any, gO: any, dx: number, dy: number) => {
-            const newZoom = this.cameras.main.zoom - dy * 0.001;
-            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 3));
-        });
-
+        // Host view is absolutely static: No manual drag/zoom allowed
+        // (Scroll and Pointer interactions removed to keep map pure & scaled neatly)
         // --- UI Initialization ---
         this.createUI();
 
@@ -231,7 +213,7 @@ export class HostProgressScene extends Phaser.Scene {
             if (player.isHost) return;
             const container = this.add.container(player.x, player.y);
             container.setDepth(100);
-            container.setScale(2);
+            container.setScale(1.6); // Sedikit diperbesar agar lebih jelas
 
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
             const hairSprite = this.add.sprite(0, 0, '').setVisible(false);
@@ -276,16 +258,15 @@ export class HostProgressScene extends Phaser.Scene {
                 const progress = Phaser.Math.Clamp(answered / target, 0, 1);
 
                 if (tag) tag.setText(player.name || 'Player');
-                if (progressText) progressText.setText(`${answered}/${target}`);
 
                 if (progressBar) {
                     progressBar.clear();
                     progressBar.fillStyle(0x000000, 0.5);
-                    progressBar.fillRect(0, 0, 40, 6);
+                    progressBar.fillRect(0, 0, 36, 5);
                     progressBar.fillStyle(0x00ff88, 1);
-                    progressBar.fillRect(0, 0, 40 * progress, 6);
+                    progressBar.fillRect(0, 0, 36 * progress, 5);
                     progressBar.lineStyle(1, 0x000000, 1);
-                    progressBar.strokeRect(0, 0, 40, 6);
+                    progressBar.strokeRect(0, 0, 36, 5);
                 }
             };
             updateProgress();
@@ -469,11 +450,8 @@ export class HostProgressScene extends Phaser.Scene {
     }
 
     focusOnAllPlayers() {
-        const players = Object.values(this.playerEntities);
-        if (players.length > 0) {
-            const target = players[0];
-            this.cameras.main.pan(target.x, target.y, 800, 'Power2');
-        } else if (this.map) {
+        if (this.map) {
+            // Karena ini tampilan statis keutuhan peta, pastikan tetap terkunci di pusat
             this.cameras.main.pan(this.map.widthInPixels / 2, this.map.heightInPixels / 2, 800, 'Power2');
         }
     }
@@ -521,13 +499,14 @@ export class HostProgressScene extends Phaser.Scene {
     }
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
-        const nameText = this.add.text(-20, -50, name, { fontSize: '12px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 3 }).setOrigin(0, 0.5);
+        // Render font lebih besar dengan resolusi lebih tinggi lalu di-scale agar tetap tajam (anti-blur)
+        const nameText = this.add.text(0, -38, name, { fontSize: '18px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
         nameText.setName('nameTag');
-        const progressText = this.add.text(-20, -35, '0/0', { fontSize: '9px', fontFamily: '"Retro Gaming"', color: '#00ff88', stroke: '#000000', strokeThickness: 2 }).setOrigin(0, 0.5);
-        progressText.setName('progressText');
-        const progressBar = this.add.graphics({ x: -20, y: -25 });
+
+        const progressBar = this.add.graphics({ x: -18, y: -25 });
         progressBar.setName('progressBar');
-        container.add([nameText, progressText, progressBar]);
+
+        container.add([nameText, progressBar]);
     }
 
     private async connectToSupabaseBSession() {

@@ -57,6 +57,7 @@ export class LobbyScene extends Phaser.Scene {
         const isRestoreRoute =
             Router.match('/host/:roomCode/lobby') ||
             Router.match('/host/:roomCode/leaderboard') ||
+            Router.is('/host/leaderboard') ||
             Router.is('/host/progress') ||
             Router.is('/player/lobby') ||
             Router.is('/player/game') ||
@@ -130,6 +131,15 @@ export class LobbyScene extends Phaser.Scene {
         const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
         if (profile && nicknameInput) {
             nicknameInput.value = profile.nickname || profile.fullname || profile.username || '';
+        }
+
+        // Reset Join Button state
+        const joinBtn = document.getElementById('join-room-btn') as HTMLButtonElement;
+        if (joinBtn) {
+            joinBtn.innerHTML = `Join`;
+            joinBtn.disabled = false;
+            joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
         }
     }
 
@@ -412,12 +422,13 @@ export class LobbyScene extends Phaser.Scene {
             return;
         }
 
-        // ── /host/:roomCode/leaderboard ──────────────────────
+        // ── /host/:roomCode/leaderboard OR /host/leaderboard ───────────
         const hostLbMatch = Router.match('/host/:roomCode/leaderboard');
-        if (hostLbMatch) {
-            console.log("[LobbyScene] Host Leaderboard restore, roomCode:", hostLbMatch.roomCode);
+        if (hostLbMatch || Router.is('/host/leaderboard')) {
+            const roomCode = hostLbMatch ? hostLbMatch.roomCode : undefined;
+            console.log("[LobbyScene] Host Leaderboard restore, roomCode:", roomCode);
             hidelobby();
-            this.scene.start('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode: hostLbMatch.roomCode });
+            this.scene.start('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode });
             return;
         }
 
@@ -524,7 +535,24 @@ export class LobbyScene extends Phaser.Scene {
 
         if (hasError) return;
 
+        const joinBtn = document.getElementById('join-room-btn') as HTMLButtonElement;
+        const setBtnLoading = (loading: boolean) => {
+            if (!joinBtn) return;
+            if (loading) {
+                joinBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> JOINING...`;
+                joinBtn.disabled = true;
+                joinBtn.classList.add('opacity-80', 'cursor-not-allowed');
+                joinBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+            } else {
+                joinBtn.innerHTML = `Join`;
+                joinBtn.disabled = false;
+                joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+                joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+            }
+        };
+
         try {
+            setBtnLoading(true);
             // 1. Verify Session in Supabase B
             const { data: sessionData, error: sessionError } = await supabaseB
                 .from(SESSION_TABLE)
@@ -535,11 +563,13 @@ export class LobbyScene extends Phaser.Scene {
             if (sessionError || !sessionData) {
                 console.error("Session lookup error:", sessionError);
                 this.showJoinFieldError('roomcode', 'Room not found');
+                setBtnLoading(false);
                 return;
             }
 
             if (sessionData.status !== 'waiting') {
                 this.showJoinError('Game already started or finished');
+                setBtnLoading(false);
                 return;
             }
 
@@ -616,6 +646,7 @@ export class LobbyScene extends Phaser.Scene {
                 localStorage.setItem('currentRoomId', room.id);
                 localStorage.setItem('currentSessionId', room.sessionId);
                 localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
+                localStorage.setItem('supabaseSessionId', sessionData.id);
 
                 this.lobbyUI?.classList.add('hidden');
 
@@ -625,10 +656,12 @@ export class LobbyScene extends Phaser.Scene {
                 });
             } else {
                 this.showJoinFieldError('roomcode', 'Room closed or not found');
+                setBtnLoading(false);
             }
 
         } catch (e) {
             console.error("Join room error", e);
+            setBtnLoading(false);
             this.showJoinError('Connection error, try again');
         }
     }

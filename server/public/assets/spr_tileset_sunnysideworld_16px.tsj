@@ -1,0 +1,14 @@
+{ "columns":64,
+ "image":"..\/..\/..\/..\/Sunnyside_World_ASSET_PACK_V2.1\/Sunnyside_World_Assets\/Tileset\/spr_tileset_sunnysideworld_16px.png",
+ "imageheight":1024,
+ "imagewidth":1024,
+ "margin":0,
+ "name":"spr_tileset_sunnysideworld_16px",
+ "spacing":0,
+ "tilecount":4096,
+ "tiledversion":"1.11.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

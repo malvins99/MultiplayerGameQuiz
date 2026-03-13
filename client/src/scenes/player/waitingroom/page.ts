@@ -247,9 +247,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             style.id = styleId;
             style.innerHTML = `
                 .player-content-box {
-                    background: #1a1a20;
-                    border: 4px solid #000;
-                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+                    background: #2d5a27;
+                    border: none;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
                     border-radius: 20px;
                     width: 95%;
                     max-width: 1100px;
@@ -262,20 +262,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     flex-direction: column;
                     margin-top: 10px;
                 }
+                .custom-scrollbar {
+                    scrollbar-width: none !important;
+                    -ms-overflow-style: none !important;
+                }
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(0,0,0,0.2);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #00ff88;
-                    border-radius: 10px;
-                    border: 2px solid #1a1a20;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #00cc6e;
+                    display: none !important;
                 }
                 .player-header-section {
                     display: flex;
@@ -297,7 +289,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     font-size: 11px;
                     border: none;
                     border-bottom: 4px solid #b91c1c; /* red-700 */
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     transition: all 0.1s;
                     cursor: pointer;
                 }
@@ -309,19 +301,21 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     transform: translateY(4px);
                 }
                 .player-count-box {
-                    background: rgba(0, 0, 0, 0.4);
-                    border: 2px solid #00ff88;
+                    background: transparent;
+                    border: 2px solid #FFFFFF;
                     border-radius: 10px;
-                    padding: 8px 15px;
+                    padding: 8px 12px;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+                    gap: 8px;
                 }
                 .player-count-value {
-                    color: #00ff88;
-                    font-family: 'Press Start 2P';
-                    font-size: 14px;
+                    color: #FFFFFF;
+                    font-family: 'Retro Gaming';
+                    font-size: 16px;
+                }
+                .material-symbols-outlined {
+                    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
                 }
                 .neon-title-standard {
                     font-family: 'Retro Gaming';
@@ -332,31 +326,34 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     letter-spacing: 4px;
                 }
                 .player-card-standard {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    background: #6CC452;
+                    border: none;
                     border-radius: 16px;
-                    padding: 12px;
+                    padding: 8px;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 10px;
+                    gap: 0px;
                     position: relative;
                     transition: all 0.2s ease;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    min-height: 140px;
                 }
                 .player-card-active {
-                    border: 2px solid #00ff88 !important;
-                    background: rgba(0, 255, 136, 0.02);
+                    /* No border as requested, maybe a subtle scale or shadow if needed, but keeping it simple for now */
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 }
                 .pill-you {
-                    background: #00ff88;
-                    color: black;
-                    font-family: 'Press Start 2P';
-                    font-size: 8px;
-                    padding: 5px 20px;
+                    background: #FFFFFF;
+                    color: #6CC452;
+                    font-family: 'Retro Gaming';
+                    font-size: 10px;
+                    padding: 6px 20px;
                     border-radius: 100px;
                     font-weight: bold;
                     white-space: nowrap;
                     text-transform: uppercase;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 }
                 .standard-pixel-btn {
                     height: 52px;
@@ -374,15 +371,15 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 }
                 .btn-choose-char-green {
                     padding: 0 40px;
-                    background: #9DC08B;
+                    background: #92C140;
                     border-radius: 12px;
-                    color: black;
+                    color: white;
                     font-family: 'Retro Gaming';
                     text-transform: uppercase;
                     font-size: 11px;
                     border: none;
-                    border-bottom: 4px solid #15803d; /* green-700 */
-                    box-shadow: 0 0 15px rgba(157, 192, 139, 0.5);
+                    border-bottom: 4px solid #478D47;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 }
                 .btn-choose-char-green:active {
                     box-shadow: none;
@@ -549,10 +546,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
                 <div class="player-content-box">
-                    <!-- Standard Header Section (Inside Box) -->
                     <div class="player-header-section">
                         <div class="player-count-box">
-                            <span class="material-symbols-outlined text-[#00ff88] text-xl">person</span>
+                            <span class="material-symbols-outlined text-white text-xl">person</span>
                             <span id="player-count-value" class="player-count-value">1</span>
                         </div>
                     </div>
@@ -915,11 +911,11 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="${cardClass} player-card-wrapper">
                     <!-- Character (Middle) -->
-                    <div style="width: 76px; height: 76px; background: radial-gradient(circle, rgba(0,212,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: visible; margin-top: 5px;">
                          <div style="
                             position: relative;
                             width: 32px; height: 32px; 
-                            transform: scale(2.0);
+                            transform: scale(3.5) translateY(4px);
                          ">
                             <div style="
                                 position: absolute; inset: 0;
@@ -947,8 +943,8 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     </div>
                     
                     <!-- Player Name -->
-                    <div style="text-align: center; width: 100%;">
-                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                    <div style="text-align: center; width: 100%; margin-top: 2px; padding: 0 4px;">
+                        <span style="font-size: 11px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);' : ''}">
                             ${player.name || 'PLAYER'}
                         </span>
                     </div>

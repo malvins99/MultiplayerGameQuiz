@@ -153,8 +153,8 @@ export class SelectQuizScene extends Phaser.Scene {
             let skeletons = '';
             for (let i = 0; i < skeletonCount; i++) {
                 skeletons += `
-                    <div class="bg-white border-4 border-[#6CC452] border-b-[8px] border-b-[#478D47] p-3 md:p-4 rounded-3xl relative overflow-hidden flex flex-col min-h-[100px] md:min-h-[110px] w-full min-w-0 animate-pulse">
-                        <div class="flex justify-between items-start shrink-0 gap-2 mb-4">
+                    <div class="bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0 animate-pulse">
+                        <div class="flex justify-between items-start shrink-0 gap-2 mb-3">
                             <!-- Badge Skeleton -->
                             <div class="w-16 h-5 bg-gray-200 rounded shadow-sm"></div>
                             <!-- Favorite Icon Skeleton -->
@@ -162,9 +162,9 @@ export class SelectQuizScene extends Phaser.Scene {
                         </div>
                         
                         <!-- Title Skeleton: more detailed layout -->
-                        <div class="space-y-2">
-                            <div class="w-full h-4 bg-gray-200 rounded"></div>
-                            <div class="w-[85%] h-4 bg-gray-100 rounded"></div>
+                        <div class="space-y-1.5">
+                            <div class="w-full h-3 bg-gray-200 rounded"></div>
+                            <div class="w-[85%] h-3 bg-gray-100 rounded"></div>
                         </div>
                     </div>
                 `;
@@ -235,11 +235,13 @@ export class SelectQuizScene extends Phaser.Scene {
         if (menu) {
             const btns = menu.querySelectorAll('button');
             btns.forEach(b => {
-                b.classList.remove('text-[#1F7D53]', 'bg-white/5');
-                b.classList.add('text-white/70');
+                // Keep the theme color always
+                b.classList.add('text-[#478D47]');
+                // Remove selected highlights
+                b.classList.remove('bg-[#F1F8E9]', 'font-bold');
                 if (b.dataset.value === value) {
-                    b.classList.add('text-[#1F7D53]', 'bg-white/5');
-                    b.classList.remove('text-white/70');
+                    // Highlight current selection
+                    b.classList.add('bg-[#F1F8E9]', 'font-bold');
                 }
             });
         }
@@ -257,7 +259,7 @@ export class SelectQuizScene extends Phaser.Scene {
                 const text = document.getElementById('auth-loading-text');
                 if (overlay) {
                     overlay.classList.remove('hidden');
-                    if (text) text.innerText = 'Returning home...';
+                    if (text) text.innerText = 'Going back...';
                 }
 
                 // Transition back home
@@ -564,18 +566,18 @@ export class SelectQuizScene extends Phaser.Scene {
 
             let badgeColor = 'bg-[#6CC452] text-white border-2 border-[#478D47]';
 
-            card.className = "group bg-white border-4 border-[#6CC452] border-b-[8px] border-b-[#478D47] p-3 md:p-4 rounded-3xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[100px] md:min-h-[110px] w-full min-w-0";
+            card.className = "group bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0";
 
             card.innerHTML = `
                 <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-[#4C5C2D]/0 to-[#1F7D53]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-2">
+                <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-1.5">
                     <!-- Pixel Font Badge - Adjusted text size to be smaller -->
-                    <span class="px-2 py-1 md:px-2 md:py-1 ${badgeColor} text-[10px] md:text-xs font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
+                    <span class="px-1.5 py-0.5 md:px-2 md:py-1 ${badgeColor} text-[9px] md:text-[10px] font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
                     
                     <button class="fav-btn p-1 flex items-center justify-center transition-all relative z-20 group/fav" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[24px] md:text-[26px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
+                        <span class="material-symbols-outlined text-[20px] md:text-[22px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
                     </button>
                 </div>
                 

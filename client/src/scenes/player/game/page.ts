@@ -595,19 +595,11 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
-        this.room.onMessage('playerFinished', () => {
-            let activePlayerCount = 0;
-            this.room.state.players.forEach((p: any) => {
-                if (!p.isHost) activePlayerCount++;
+        this.room.onMessage('playerFinished', (data: any) => {
+            this.registry.set('leaderboardData', [data]);
+            TransitionManager.close(() => {
+                this.scene.start('ResultScene');
             });
-
-            if (activePlayerCount > 1) {
-                TransitionManager.close(() => {
-                    TransitionManager.showWaiting("MENUNGGU PEMAIN LAIN...");
-                });
-            } else {
-                TransitionManager.close(() => { });
-            }
         });
 
         this.room.onMessage('gameEnded', (data: { rankings: any[] }) => {
@@ -616,9 +608,13 @@ export class GameScene extends Phaser.Scene {
             this.registry.set('leaderboardData', data.rankings);
 
             if (isHost) {
-                this.scene.start('HostLeaderboardScene');
+                if (!this.scene.isActive('HostLeaderboardScene')) {
+                    this.scene.start('HostLeaderboardScene');
+                }
             } else {
-                this.scene.start('ResultScene');
+                if (!this.scene.isActive('ResultScene')) {
+                    this.scene.start('ResultScene');
+                }
             }
         });
 

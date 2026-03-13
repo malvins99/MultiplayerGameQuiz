@@ -19,8 +19,31 @@ export class HostLeaderboardScene extends Phaser.Scene {
         this.initializeClient();
         TransitionManager.ensureClosed();
 
-        this.rankings = this.registry.get('leaderboardData') || [];
+        let data = this.registry.get('leaderboardData');
+        if (!data || data.length === 0) {
+            const stored = localStorage.getItem('hostLeaderboardData');
+            if (stored) {
+                try { data = JSON.parse(stored); } catch (e) { }
+            }
+        } else {
+            localStorage.setItem('hostLeaderboardData', JSON.stringify(data));
+        }
+
+        this.rankings = data || [];
         this.rankings.sort((a, b) => a.rank - b.rank);
+
+        const opts = this.registry.get('lastGameOptions');
+        if (opts) localStorage.setItem('hostLastGameOptions', JSON.stringify(opts));
+
+        const q = this.registry.get('lastSelectedQuiz');
+        if (q) localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(q));
+
+        let sessionId = this.registry.get('mySessionId');
+        if (!sessionId) {
+            sessionId = localStorage.getItem('hostLastSessionId');
+        } else {
+            localStorage.setItem('hostLastSessionId', sessionId);
+        }
 
         this.container = document.createElement('div');
         this.container.id = 'leaderboard-ui';
@@ -67,7 +90,18 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         if (statsBtn) {
             statsBtn.onclick = () => {
-                alert("Fitur Statistik lengkap akan segera hadir!");
+                let opts = this.registry.get('lastGameOptions');
+                if (!opts) {
+                    const storedOpts = localStorage.getItem('hostLastGameOptions');
+                    if (storedOpts) try { opts = JSON.parse(storedOpts); } catch (e) { }
+                }
+
+                const sid = opts?.sessionId || this.registry.get('mySessionId') || localStorage.getItem('hostLastSessionId');
+                if (sid) {
+                    window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+                } else {
+                    alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
+                }
             };
         }
 
@@ -82,14 +116,38 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         if (restartBtn) {
             restartBtn.onclick = async () => {
-                const opts = this.registry.get('lastGameOptions');
-                const q = this.registry.get('lastSelectedQuiz');
+                let opts = this.registry.get('lastGameOptions');
+                let q = this.registry.get('lastSelectedQuiz');
+
+                if (!opts) {
+                    const storedOpts = localStorage.getItem('hostLastGameOptions');
+                    if (storedOpts) try { opts = JSON.parse(storedOpts); } catch (e) { }
+                }
+                if (!q) {
+                    const storedQ = localStorage.getItem('hostLastSelectedQuiz');
+                    if (storedQ) try { q = JSON.parse(storedQ); } catch (e) { }
+                }
+
+                if (opts && !q && opts.quizId) {
+                    try {
+                        q = await import('../../../data/QuizData').then(m => m.fetchQuizById(opts.quizId));
+                        if (q) {
+                            this.registry.set('lastSelectedQuiz', q);
+                            localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(q));
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch quiz for restart:", err);
+                    }
+                }
+
                 if (opts && q) {
                     TransitionManager.close(async () => {
                         try {
                             const { room, options } = await RoomService.createRoom(this.client, { ...opts, quiz: q });
                             this.registry.set('lastGameOptions', options);
+                            this.registry.set('lastSelectedQuiz', q);
                             this.cleanup();
+                            Router.navigate(`/host/${options.roomCode}/lobby`);
                             this.scene.start('HostWaitingRoomScene', { room, isHost: true });
                             setTimeout(() => TransitionManager.open(), 600);
                         } catch (e) {
@@ -98,6 +156,8 @@ export class HostLeaderboardScene extends Phaser.Scene {
                             this.scene.start('LobbyScene');
                         }
                     });
+                } else {
+                    alert("Tidak dapat menemukan data kuis untuk mengulang permainan. Silakan kembali ke Lobby.");
                 }
             };
         }

@@ -610,13 +610,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <!-- Back Button REMOVED -->
 
                 <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-[#6CC452] border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative mt-4 md:mt-16 shrink-0">
+                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-[#2d5a27] rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative mt-4 md:mt-16 shrink-0">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none"></div>
 
                     <!-- Room Code -->
-                    <div class="w-full bg-black/40 border-2 border-[#1F7D53]/50 rounded-xl p-3 md:p-4 flex items-center justify-between relative group hover:border-[#9DC08B] transition-all mb-4">
-                        <span id="host-room-code" class="text-3xl md:text-4xl text-white font-['Retro_Gaming'] tracking-widest mx-auto drop-shadow-[0_0_10px_rgba(157,192,139,0.5)]">CODE</span>
-                        <button id="copy-code-btn" class="absolute right-4 text-white/50 hover:text-white transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
+                    <div class="w-full bg-white rounded-xl p-3 md:p-4 flex items-center justify-between relative group transition-all mb-4">
+                        <span id="host-room-code" class="text-3xl md:text-4xl text-[#6CC452] font-['Retro_Gaming'] tracking-widest mx-auto">CODE</span>
+                        <button id="copy-code-btn" class="absolute right-4 text-[#6CC452] text-opacity-70 hover:text-opacity-100 transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
                     <!-- QR Code -->
@@ -627,10 +627,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- URL Box -->
-                    <div id="copy-url-container" class="w-full bg-black/40 border-2 border-[#1F7D53]/50 rounded-xl p-4 flex items-center justify-between mb-4 group hover:border-[#9DC08B] transition-all cursor-pointer relative overflow-hidden">
-                        <span id="host-join-url" class="text-[10px] md:text-xs text-white font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
-                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#9DC08B]/10 group-hover:bg-[#9DC08B]/20 transition-colors">
-                            <span class="material-symbols-outlined text-[#9DC08B] group-hover:text-white text-sm">content_copy</span>
+                    <div id="copy-url-container" class="w-full bg-white rounded-xl p-4 flex items-center justify-between mb-4 group transition-all cursor-pointer relative overflow-hidden">
+                        <span id="host-join-url" class="text-[10px] md:text-xs text-[#6CC452] font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
+                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#6CC452]/10 group-hover:bg-[#6CC452]/20 transition-colors">
+                            <span class="material-symbols-outlined text-[#6CC452] text-sm">content_copy</span>
                         </div>
                     </div>
 
@@ -639,7 +639,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-[#6CC452] border-4 border-[#1F7D53]/60 rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.5)] relative md:mt-16">
+                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-[#2d5a27] rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative md:mt-16">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none overflow-hidden rounded-3xl"></div>
 
                     <!-- Header -->
@@ -647,10 +647,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         <div class="flex items-center gap-4">
                             <h2 id="host-player-count" class="text-xl md:text-2xl text-white font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(157,192,139,0.5)]">0 Players</h2>
                             <div class="flex gap-2">
-                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-black/40 border-2 border-[#1F7D53] text-[#9DC08B] flex items-center justify-center rounded-xl hover:bg-black/60 hover:border-[#9DC08B] transition-all shadow-lg">
+                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-[#6CC452] flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
                                     <span class="material-symbols-outlined text-xl md:text-2xl">group</span>
                                 </button>
-                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-black/40 border-2 border-[#1F7D53] text-[#9DC08B] flex items-center justify-center rounded-xl hover:bg-black/60 hover:border-[#9DC08B] transition-all shadow-lg">
+                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-[#6CC452] flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
                                     <span class="material-symbols-outlined text-xl md:text-2xl">person_add</span>
                                 </button>
                             </div>
@@ -714,46 +714,33 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <div class="bg-surface-dark border-4 border-primary rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,255,136,0.2)] relative overflow-hidden flex flex-col max-h-[85vh]">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
-                    <div class="flex justify-between items-center mb-6 z-10 shrink-0">
+                    <div class="flex justify-between items-center -mt-4 mb-6 z-10 shrink-0">
                         <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-3xl">group</span>
                             Invite Groups
                         </h3>
-                        <button id="close-manage-users-btn" class="text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
+                        <button id="close-manage-users-btn" class="login-mobile-only text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
                             <span class="material-symbols-outlined text-2xl">close</span>
                         </button>
                     </div>
 
                     <!-- Search Input -->
-                    <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-primary transition-colors">
+                    <div class="bg-black/40 border border-transparent rounded-xl flex items-center -mt-4 p-2 mb-4 shrink-0 relative z-10 focus-within:border-primary transition-colors">
                         <input type="text" id="group-search-input" placeholder="Search group..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="group-search-btn" class="w-10 h-10 rounded-lg bg-primary/20 text-primary border border-primary/50 flex items-center justify-center hover:bg-primary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
                     </div>
 
-                    <!-- Selected Groups -->
-                    <div id="selected-groups-container" class="shrink-0 flex flex-col gap-3 relative z-10 hidden mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="text-primary font-['Retro_Gaming'] text-[9px] uppercase tracking-wide">SELECTED</span>
-                            <span id="selected-groups-count" class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[8px] font-['Retro_Gaming'] border border-primary/30">0</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2" id="selected-groups-list"></div>
-                        <div class="w-full h-[1px] bg-white/10 mt-2"></div>
-                    </div>
-
                     <!-- List Area -->
-                    <div id="manage-users-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
+                    <div id="manage-users-list" class="h-[380px] overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
                         <!-- Populated dynamically -->
                     </div>
 
                     <!-- Footer -->
-                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
-                        <button id="cancel-invite-groups-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
-                            CANCEL
-                        </button>
-                        <button id="confirm-invite-groups-btn" class="px-7 py-3 bg-primary text-black font-['Retro_Gaming'] font-bold text-[10px] rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,255,136,0.3)] cursor-pointer opacity-50 pointer-events-none">
-                            INVITE
+                    <div class="login-desktop-only mt-4 pt-4 border-t border-white/10 z-10 shrink-0 text-right">
+                        <button id="cancel-invite-groups-btn" class="px-7 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer inline-block">
+                            CLOSE
                         </button>
                     </div>
                 </div>
@@ -764,46 +751,32 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <div class="bg-surface-dark border-4 border-secondary rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden flex flex-col max-h-[85vh]">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
-                    <div class="flex justify-between items-center mb-6 z-10 shrink-0">
+                    <div class="flex justify-between items-center -mt-4 mb-6 z-10 shrink-0">
                         <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-secondary text-3xl">person_add</span>
                             Invite Friends
                         </h3>
-                        <button id="close-add-user-btn" class="text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
+                        <button id="close-add-user-btn" class="login-mobile-only text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
                             <span class="material-symbols-outlined text-2xl">close</span>
                         </button>
                     </div>
 
                     <!-- Search Input -->
-                    <div class="bg-black/40 border border-transparent rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-secondary transition-colors">
+                    <div class="bg-black/40 border border-transparent -mt-4 rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-secondary transition-colors">
                         <input type="text" id="friend-search-input" placeholder="Search friend..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="friend-search-btn" class="w-10 h-10 rounded-lg bg-secondary/20 text-secondary border border-secondary/50 flex items-center justify-center hover:bg-secondary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
                     </div>
 
-                    <!-- Selected Friends -->
-                    <div id="selected-friends-container" class="shrink-0 flex flex-col gap-3 relative z-10 mb-4 hidden">
-                        <div class="flex items-center gap-2">
-                            <span class="text-secondary font-['Retro_Gaming'] text-[9px] uppercase tracking-wide">SELECTED</span>
-                            <span id="selected-friends-count" class="bg-secondary/20 text-secondary px-2 py-0.5 rounded text-[8px] font-['Retro_Gaming'] border border-secondary/30">0</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2" id="selected-friends-list">
-                        </div>
-                        <div class="w-full h-[1px] bg-white/10 mt-2"></div>
-                    </div>
-
                     <!-- List Area -->
-                    <div id="manage-friends-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
+                    <div id="manage-friends-list" class="h-[380px] overflow-y-auto custom-scrollbar flex flex-col gap-3 relative z-10 pb-4">
                     </div>
 
                     <!-- Footer -->
-                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10 z-10 shrink-0">
-                        <button id="cancel-invite-friends-btn" class="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
-                            CANCEL
-                        </button>
-                        <button id="confirm-invite-friends-btn" class="px-7 py-3 bg-secondary text-black font-['Retro_Gaming'] font-bold text-[10px] rounded-xl border-b-4 border-cyan-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(0,212,255,0.3)] cursor-pointer opacity-50 pointer-events-none">
-                            INVITE
+                    <div class="login-desktop-only mt-4 pt-4 border-t border-white/10 z-10 shrink-0 text-right">
+                        <button id="cancel-invite-friends-btn" class="px-7 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer inline-block">
+                            CLOSE
                         </button>
                     </div>
                 </div>
@@ -1098,21 +1071,50 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             // Bind global handlers only once
             if (!(window as any).toggleSelectGroup) {
-                (window as any).toggleSelectGroup = (groupId: string) => {
-                    if (this.selectedGroups.has(groupId)) {
-                        this.selectedGroups.delete(groupId);
-                    } else {
-                        const grp = this.allFetchedGroups.find(g => g.id === groupId);
-                        if (grp) this.selectedGroups.set(groupId, grp);
-                    }
-                    this.renderManageUsersList();
-                    this.renderSelectedGroups();
-                };
+                (window as any).inviteGroup = async (groupId: string) => {
+                    const group = this.allFetchedGroups.find(g => g.id === groupId);
+                    if (!group || this.selectedGroups.has(groupId)) return;
 
-                (window as any).removeSelectedGroup = (groupId: string) => {
-                    this.selectedGroups.delete(groupId);
+                    // Optimistic update
+                    this.selectedGroups.set(groupId, group);
                     this.renderManageUsersList();
-                    this.renderSelectedGroups();
+
+                    try {
+                        const profileStr = localStorage.getItem('game_user_profile');
+                        const currentRoomId = localStorage.getItem('currentRoomId'); // This is the 6-digit code
+                        if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
+                        const profile = JSON.parse(profileStr);
+
+                        const notificationsToInsert: any[] = [];
+
+                        if (Array.isArray(group.members)) {
+                            group.members.forEach((member: any) => {
+                                // Don't invite yourself
+                                if (member.user_id !== profile.id) {
+                                    notificationsToInsert.push({
+                                        user_id: member.user_id,
+                                        actor_id: profile.id,
+                                        type: 'sessionGroup',
+                                        entity_type: 'session',
+                                        from_group_id: group.id
+                                    });
+                                }
+                            });
+                        }
+
+                        if (notificationsToInsert.length > 0) {
+                            const { error } = await supabase.from('notifications').insert(notificationsToInsert);
+                            if (error) throw error;
+                        }
+
+                        this.showToast(`Invited ${group.name || 'group'}!`);
+
+                    } catch (error: any) {
+                        console.error('Failed to send group invite:', error);
+                        this.showToast('Failed to invite: ' + (error?.message || String(error)), true);
+                        this.selectedGroups.delete(groupId);
+                        this.renderManageUsersList();
+                    }
                 };
 
                 const searchInput = document.getElementById('group-search-input') as HTMLInputElement;
@@ -1130,59 +1132,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     };
                 }
 
-                const confirmBtn = document.getElementById('confirm-invite-groups-btn');
-                if (confirmBtn) {
-                    confirmBtn.onclick = async () => {
-                        if (this.selectedGroups.size > 0) {
-                            try {
-                                const profileStr = localStorage.getItem('game_user_profile');
-                                const currentRoomId = localStorage.getItem('currentRoomId'); // This is the 6-digit code
-                                if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
-                                const profile = JSON.parse(profileStr);
-
-                                const notificationsToInsert: any[] = [];
-
-                                this.selectedGroups.forEach((group) => {
-                                    if (Array.isArray(group.members)) {
-                                        group.members.forEach((member: any) => {
-                                            // Don't invite yourself
-                                            if (member.user_id !== profile.id) {
-                                                notificationsToInsert.push({
-                                                    user_id: member.user_id,
-                                                    actor_id: profile.id,
-                                                    type: 'sessionGroup',
-                                                    entity_type: 'session',
-                                                    from_group_id: group.id,
-                                                    content: {
-                                                        message: `${profile.username || 'Someone'} invited your group to a game!`,
-                                                        roomCode: currentRoomId
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                });
-
-                                if (notificationsToInsert.length > 0) {
-                                    const { error } = await supabase.from('notifications').insert(notificationsToInsert);
-                                    if (error) throw error;
-                                }
-
-                                this.showToast(`Successfully sent invites to ${this.selectedGroups.size} groups!`);
-                                const modal = document.getElementById('host-manage-users-modal');
-                                if (modal) modal.classList.add('hidden');
-                                this.selectedGroups.clear();
-                                this.renderSelectedGroups();
-                                this.renderManageUsersList();
-
-                            } catch (error: any) {
-                                console.error('Failed to send group invites:', error);
-                                this.showToast('Failed to send invites: ' + (error?.message || String(error)), true);
-                            }
-                        }
-                    };
-                }
-
                 const cancelBtn = document.getElementById('cancel-invite-groups-btn');
                 if (cancelBtn) {
                     cancelBtn.onclick = () => {
@@ -1192,13 +1141,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 }
             }
 
-            this.selectedGroups.clear();
             this.groupSearchQuery = '';
             const searchInput = document.getElementById('group-search-input') as HTMLInputElement;
             if (searchInput) searchInput.value = '';
 
             this.renderManageUsersList();
-            this.renderSelectedGroups();
 
         } catch (error) {
             console.error("Error fetching groups:", error);
@@ -1246,12 +1193,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             let btnHtml = '';
             if (canInvite) {
                 if (isSelected) {
-                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,255,136,0.3)] flex items-center justify-center gap-1.5 hover:bg-green-400">
-                        <span class="material-symbols-outlined text-[10px]">check</span> ADDED
+                    btnHtml = `<button class="px-3 py-2 bg-primary/30 text-white/50 border border-primary/50 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-not-allowed min-w-[70px] flex items-center justify-center gap-1.5" disabled>
+                        <span class="material-symbols-outlined text-[10px]">check</span> INVITED
                     </button>`;
                 } else {
-                    btnHtml = `<button onclick="window.toggleSelectGroup('${group.id}')" class="px-3 py-2 bg-primary/20 hover:bg-primary border border-primary text-primary hover:text-black rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
-                        ADD
+                    btnHtml = `<button onclick="window.inviteGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary hover:brightness-110 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                        INVITE
                     </button>`;
                 }
             } else {
@@ -1268,7 +1215,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                                 <span>${memberCount}</span>
                             </div>
                             <div class="flex items-center gap-1 text-primary/70">
-                                <span class="material-symbols-outlined text-[9px] mb-0.5">edit</span>
+                                <span class="material-symbols-outlined text-[9px] mb-0.5">person</span>
                                 <span class="truncate max-w-[80px]">${creatorNameText}</span>
                             </div>
                         </div>
@@ -1279,39 +1226,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         });
 
         listContainer.innerHTML = html;
-    }
-
-    renderSelectedGroups() {
-        const container = document.getElementById('selected-groups-container');
-        const list = document.getElementById('selected-groups-list');
-        const count = document.getElementById('selected-groups-count');
-        const confirmBtn = document.getElementById('confirm-invite-groups-btn');
-
-        if (!container || !list || !count || !confirmBtn) return;
-
-        if (this.selectedGroups.size === 0) {
-            container.classList.add('hidden');
-            confirmBtn.classList.add('opacity-50', 'pointer-events-none');
-            return;
-        }
-
-        container.classList.remove('hidden');
-        count.innerText = `${this.selectedGroups.size}`;
-        confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
-
-        let html = '';
-        this.selectedGroups.forEach((group, id) => {
-            const name = group.name || 'Unnamed';
-            html += `
-                <div class="flex items-center gap-1.5 bg-primary/20 text-primary border border-primary/50 px-3 py-2 rounded-lg text-[9px] font-['Retro_Gaming'] shadow-[0_0_10px_rgba(0,255,136,0.1)] transition-transform hover:scale-105">
-                    <span class="truncate max-w-[120px]">${name}</span>
-                    <button onclick="window.removeSelectedGroup('${id}')" class="flex items-center justify-center hover:bg-primary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-primary">
-                        <span class="material-symbols-outlined !text-[12px]">close</span>
-                    </button>
-                </div>
-            `;
-        });
-        list.innerHTML = html;
     }
 
     async updateFriendsList() {
@@ -1386,7 +1300,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                 const { data: profilesData, error: profilesError } = await supabase
                     .from('profiles')
-                    .select('id, username')
+                    .select('id, username, fullname, nickname')
                     .in('id', friendIds);
 
                 if (profilesError) {
@@ -1396,79 +1310,53 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                 this.allFetchedFriends = (profilesData || []).map((p: any) => ({
                     id: p.id,
-                    username: p.username || 'Unknown'
+                    username: p.username || 'Unknown',
+                    fullname: p.fullname,
+                    nickname: p.nickname
                 }));
             }
 
             // Bind global handlers only once
-            if (!(window as any).toggleSelectFriend) {
-                (window as any).toggleSelectFriend = (friendId: string) => {
-                    if (this.selectedFriends.has(friendId)) {
-                        this.selectedFriends.delete(friendId);
-                    } else {
-                        const friend = this.allFetchedFriends.find(f => f.id === friendId);
-                        if (friend) this.selectedFriends.set(friendId, friend);
-                    }
-                    this.renderSelectedFriends();
-                    this.renderFriendsList();
-                };
+            if (!(window as any).inviteFriend) {
+                (window as any).inviteFriend = async (friendId: string) => {
+                    const friend = this.allFetchedFriends.find(f => f.id === friendId);
+                    if (!friend || this.selectedFriends.has(friendId)) return;
 
-                (window as any).removeSelectedFriend = (friendId: string) => {
-                    this.selectedFriends.delete(friendId);
-                    this.renderSelectedFriends();
+                    // Optimistic update
+                    this.selectedFriends.set(friendId, friend);
                     this.renderFriendsList();
+
+                    try {
+                        const profileStr = localStorage.getItem('game_user_profile');
+                        if (!profileStr) throw new Error("Missing profile");
+                        const profile = JSON.parse(profileStr);
+
+                        const notificationsToInsert = [{
+                            user_id: friend.id,
+                            actor_id: profile.id,
+                            type: 'sessionFriend',
+                            entity_type: 'session'
+                        }];
+
+                        const { error } = await supabase.from('notifications').insert(notificationsToInsert);
+                        if (error) throw error;
+
+                        this.showToast(`Invited ${friend.username || 'friend'}!`);
+                    } catch (error: any) {
+                        console.error('Failed to send friend invite:', error);
+                        this.showToast('Failed to invite: ' + (error?.message || String(error)), true);
+                        this.selectedFriends.delete(friendId);
+                        this.renderFriendsList();
+                    }
                 };
             }
 
-            this.selectedFriends.clear();
-            this.friendSearchQuery = '';
             const searchInput = document.getElementById('friend-search-input') as HTMLInputElement;
             if (searchInput) {
                 searchInput.value = '';
                 searchInput.oninput = (e: any) => {
                     this.friendSearchQuery = e.target.value.toLowerCase();
                     this.renderFriendsList();
-                };
-            }
-
-            const confirmFriendsBtn = document.getElementById('confirm-invite-friends-btn');
-            if (confirmFriendsBtn) {
-                confirmFriendsBtn.onclick = async () => {
-                    if (this.selectedFriends.size > 0) {
-                        try {
-                            const profileStr = localStorage.getItem('game_user_profile');
-                            const currentRoomId = localStorage.getItem('currentRoomId'); // This is the 6-digit code
-                            if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
-                            const profile = JSON.parse(profileStr);
-
-                            const notificationsToInsert = Array.from(this.selectedFriends.values()).map(friend => ({
-                                user_id: friend.id,
-                                actor_id: profile.id,
-                                type: 'sessionFriend',
-                                entity_type: 'session',
-                                content: {
-                                    message: `${profile.username || 'A friend'} invited you to join a game!`,
-                                    roomCode: currentRoomId
-                                }
-                            }));
-
-                            if (notificationsToInsert.length > 0) {
-                                const { error } = await supabase.from('notifications').insert(notificationsToInsert);
-                                if (error) throw error;
-                            }
-
-                            this.showToast(`Successfully sent invites to ${this.selectedFriends.size} friends!`);
-                            const modal = document.getElementById('host-add-user-modal');
-                            if (modal) modal.classList.add('hidden');
-                            this.selectedFriends.clear();
-                            this.renderSelectedFriends();
-                            this.renderFriendsList();
-
-                        } catch (error: any) {
-                            console.error('Failed to send friend invites:', error);
-                            this.showToast('Failed to send invites: ' + (error?.message || String(error)), true);
-                        }
-                    }
                 };
             }
 
@@ -1480,7 +1368,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             }
 
             this.renderFriendsList();
-            this.renderSelectedFriends();
 
         } catch (error: any) {
             console.error('Failed to load friends list:', error);
@@ -1511,19 +1398,19 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         let html = '';
         filteredFriends.forEach((friend: any) => {
-            const name = friend.username;
+            const name = friend.nickname || friend.fullname || friend.username;
             const isSelected = this.selectedFriends.has(friend.id);
-            const statusText = 'Friend';
+            const statusText = '@' + friend.username;
             const statusColor = 'text-white/50';
 
             let btnHtml = '';
             if (isSelected) {
-                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px] shadow-[0_0_10px_rgba(0,212,255,0.3)] flex items-center justify-center gap-1.5 hover:bg-cyan-400">
-                    <span class="material-symbols-outlined text-[10px]">check</span> ADDED
+                btnHtml = `<button class="px-3 py-2 bg-secondary/30 text-white/50 border border-secondary/50 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-not-allowed min-w-[70px] flex items-center justify-center gap-1.5" disabled>
+                    <span class="material-symbols-outlined text-[10px]">check</span> INVITED
                 </button>`;
             } else {
-                btnHtml = `<button onclick="window.toggleSelectFriend('${friend.id}')" class="px-3 py-2 bg-secondary/20 hover:bg-secondary border border-secondary text-secondary hover:text-black rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
-                    ADD
+                btnHtml = `<button onclick="window.inviteFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary hover:brightness-110 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
+                    INVITE
                 </button>`;
             }
 
@@ -1541,38 +1428,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         listContainer.innerHTML = html;
     }
 
-    renderSelectedFriends() {
-        const container = document.getElementById('selected-friends-container');
-        const list = document.getElementById('selected-friends-list');
-        const count = document.getElementById('selected-friends-count');
-        const confirmBtn = document.getElementById('confirm-invite-friends-btn');
-
-        if (!container || !list || !count || !confirmBtn) return;
-
-        if (this.selectedFriends.size === 0) {
-            container.classList.add('hidden');
-            confirmBtn.classList.add('opacity-50', 'pointer-events-none');
-            return;
-        }
-
-        container.classList.remove('hidden');
-        count.innerText = `${this.selectedFriends.size}`;
-        confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
-
-        let html = '';
-        this.selectedFriends.forEach((friend, id) => {
-            const name = friend.username || 'Unknown';
-            html += `
-                <div class="flex items-center gap-1.5 bg-secondary/20 text-secondary border border-secondary/50 px-3 py-2 rounded-lg text-[9px] font-['Retro_Gaming'] shadow-[0_0_10px_rgba(0,212,255,0.1)] transition-transform hover:scale-105">
-                    <span class="truncate max-w-[120px]">${name}</span>
-                    <button onclick="window.removeSelectedFriend('${id}')" class="flex items-center justify-center hover:bg-secondary/40 rounded-md w-5 h-5 transition-colors cursor-pointer border border-transparent hover:border-secondary">
-                        <span class="material-symbols-outlined !text-[12px]">close</span>
-                    </button>
-                </div>
-            `;
-        });
-        list.innerHTML = html;
-    }
+    // renderSelectedFriends removed
 
     setupCharacterCustomization() {
         const charPreviewBox = document.getElementById('character-preview-box');
@@ -1829,8 +1685,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             // New Host Layout Header
             const hostHeader = document.getElementById('host-player-count');
             if (hostHeader) {
-                const label = totalPlayers === 1 ? 'Player' : 'Player';
-                hostHeader.innerText = `${totalPlayers} ${label} `;
+                const label = totalPlayers > 1 ? 'Players' : 'Player';
+                hostHeader.innerText = `${totalPlayers} ${label}`;
             }
         } else {
             // Player view header logic (Existing)
@@ -2068,17 +1924,17 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             html += `
                         <div class="group relative flex flex-col items-center justify-center p-3 gap-2.5 rounded-2xl w-full max-w-[140px] mx-auto aspect-[1/1.1] transition-transform duration-200"
                 style="
-                background: rgba(20, 20, 35, 0.9); 
+                background: #6CC452; 
                     ${borderClass}
                 ">
                     ${kickButtonHTML}
 
                 <!-- Character(Middle) -->
-                    <div style="width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="width: 60px; height: 60px; background: transparent; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: none;">
                         <div style="
                 position: relative;
                 width: 32px; height: 32px;
-                transform: scale(1.6);
+                transform: scale(1.8);
                 ">
                     <!-- Base Body -->
                         <div style="

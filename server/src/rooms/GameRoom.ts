@@ -5,12 +5,12 @@ import { QUESTIONS } from "../dummyQuestions";
 import { MapParser } from "../utils/MapParser";
 
 const ROOM_CONFIG = {
-    mudah: { maxPlayers: 4, targetQuestions: 5, enemiesPerPlayer: 10 },
-    sedang: { maxPlayers: 5, targetQuestions: 10, enemiesPerPlayer: 20 },
-    sulit: { maxPlayers: 6, targetQuestions: 20, enemiesPerPlayer: 40 }
+    mudah: { maxPlayers: 50, targetQuestions: 5, enemiesPerPlayer: 10 },
+    sedang: { maxPlayers: 50, targetQuestions: 10, enemiesPerPlayer: 20 },
+    sulit: { maxPlayers: 50, targetQuestions: 20, enemiesPerPlayer: 40 }
 };
 
-const LOBBY_MAX_PLAYERS = 20;
+const LOBBY_MAX_PLAYERS = 51; // 50 players + 1 host
 
 export class GameRoom extends Room<GameState> {
     // Track which spawn points have been used
@@ -128,8 +128,9 @@ export class GameRoom extends Room<GameState> {
         });
 
         // --- NEW: Simpan data "Masuk" ke Supabase Utama dan Supabase B saat sesi dibuat ---
-        this.saveInitialSessionToMainSupabase();
-        this.syncSessionToSupabaseB();
+        // Fire and forget to avoid blocking room creation
+        this.saveInitialSessionToMainSupabase().catch(e => console.error("Initial Main Sync Error:", e));
+        this.syncSessionToSupabaseB().catch(e => console.error("Initial Sync B Error:", e));
 
         // Set max clients for the entire lobby
         this.maxClients = LOBBY_MAX_PLAYERS;
@@ -250,7 +251,22 @@ export class GameRoom extends Room<GameState> {
                 if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
-                    client.send("playerFinished");
+                    
+                    const playerPayload = {
+                        rank: -1,
+                        sessionId: player.sessionId,
+                        userId: player.userId,
+                        name: player.name,
+                        hairId: player.hairId || 0,
+                        score: player.score,
+                        finishTime: player.finishTime,
+                        duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0,
+                        correctAnswers: player.correctAnswers,
+                        wrongAnswers: player.wrongAnswers,
+                        currentQuestion: player.answeredQuestions,
+                        answers: this.playerAnswers ? (this.playerAnswers.get(player.sessionId) || []) : []
+                    };
+                    client.send("playerFinished", playerPayload);
                     this.checkGameEnd();
                 }
 
@@ -300,7 +316,22 @@ export class GameRoom extends Room<GameState> {
                 if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
-                    client.send("playerFinished");
+                    
+                    const playerPayload = {
+                        rank: -1,
+                        sessionId: player.sessionId,
+                        userId: player.userId,
+                        name: player.name,
+                        hairId: player.hairId || 0,
+                        score: player.score,
+                        finishTime: player.finishTime,
+                        duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0,
+                        correctAnswers: player.correctAnswers,
+                        wrongAnswers: player.wrongAnswers,
+                        currentQuestion: player.answeredQuestions,
+                        answers: this.playerAnswers ? (this.playerAnswers.get(player.sessionId) || []) : []
+                    };
+                    client.send("playerFinished", playerPayload);
                     this.checkGameEnd();
                 }
 
@@ -696,8 +727,10 @@ export class GameRoom extends Room<GameState> {
 
             // DO NOT reset usedSpawnIndices here. If we are full, we are full.
             if (spawnIndex === -1) {
-                console.warn("[Spawn] No empty spawn points left! Overwriting index 0.");
-                spawnIndex = 0; // Fallback, but don't clear the set so duplicates stay minimized
+                // If all unique spawns are taken (more players than spawn points),
+                // randomly pick any spawn point so they spread evenly instead of piling up at index 0.
+                console.warn("[Spawn] No empty spawn points left! Randomly picking an occupied spawn point.");
+                spawnIndex = Math.floor(Math.random() * mapData.playerSpawns.length);
             }
 
             this.usedSpawnIndices.add(spawnIndex);
@@ -875,8 +908,8 @@ export class GameRoom extends Room<GameState> {
             // Consolidate enemy creation to try strict distance first -> then relax if needed
             let enemiesSpawnedForPlayer = 0;
 
-            // We want 'config.enemiesPerPlayer' enemies
-            for (let i = 0; i < enemiesPerPlayer; i++) {
+            // We want exactly 'this.state.questions.length' enemies per player
+            for (let i = 0; i < this.state.questions.length; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
 
@@ -1026,6 +1059,7 @@ export class GameRoom extends Room<GameState> {
             .map((player, index) => ({
                 rank: index + 1,
                 sessionId: player.sessionId,
+                userId: player.userId,
                 name: player.name,
                 hairId: player.hairId || 0, // Ensure hairId is sent
                 score: player.score,
@@ -1055,8 +1089,8 @@ export class GameRoom extends Room<GameState> {
             // Construct 'participants' Array of JSON matching the target schema
             const participantsDataArray = rankings.map((r) => {
                 return {
-                    id: r.sessionId,
-                    user_id: r.sessionId, // We don't have Supabase auth ID for players directly in Colyseus, so we fallback
+                    id: r.userId || r.sessionId,
+                    user_id: r.userId || r.sessionId, // Actually use the correct Supabase Auth ID
                     nickname: r.name,
                     score: Math.round(r.score),
                     correct: r.correctAnswers,
@@ -1075,8 +1109,8 @@ export class GameRoom extends Room<GameState> {
             // Construct 'responses' Array of JSON
             const responsesDataArray = rankings.map((r) => {
                 return {
-                    id: r.sessionId + "_resp",
-                    participant: r.sessionId,
+                    id: (r.userId || r.sessionId) + "_resp",
+                    participant: r.userId || r.sessionId,
                     answers: r.answers || [] // from playerAnswers
                 }
             });

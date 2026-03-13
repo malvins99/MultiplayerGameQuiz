@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- QUIZ SELECTION styles -->
+  <style>
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+      border-color: #72BF78;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1a1a20;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #72BF78;
+    }
+
+    /* Dropdown Options Fix for Dark Mode */
+    #quiz-category-select option {
+      background-color: #1a1a20;
+      color: white;
+    }
+  </style>
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legends of Learning - Multiplayer RPG</title>
+
+  <!-- TAILWIND & FONTS -->
+  <style>
+    @font-face {
+      font-family: 'Retro Gaming';
+      src: url('/fonts/RetroGaming.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'VT323';
+      src: url('/fonts/VT323-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#72BF78",
+            "secondary": "#A0D683",
+            "accent": "#FEFF9F",
+            "background-light": "#D3EE98",
+            "background-dark": "#121216",
+            "surface-dark": "#1a1a20",
+          },
+          fontFamily: {
+            "display": ["'Retro Gaming'", "monospace"],
+            "sans": ["'Retro Gaming'", "monospace"],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body,
+    * {
+      cursor: url('/assets/cursor_03.png') 0 0, auto !important;
+    }
+
+    /* Global Font Override */
+    body,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    span,
+    button,
+    input,
+    select,
+    textarea {
+      font-family: 'Retro Gaming', monospace !important;
+    }
+
+    /* Exceptions for Material Symbols */
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined' !important;
+    }
+
+    /* UI specific scaling */
+    #login-ui,
+    #lobby-ui {
+      font-size: 1.15rem;
+    }
+
+    /* Phaser canvas cursor */
+    canvas {
+      cursor: url('/assets/cursor_03.png') 0 0, auto !important;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #121216;
+    }
+
+    #app {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    /* Lobby Overlay Styles */
+    #lobby-ui {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Login page logo responsive visibility */
+    .login-desktop-only {
+      display: block;
+    }
+
+    .login-mobile-only {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .login-desktop-only {
+        display: none !important;
+      }
+
+      .login-mobile-only {
+        display: flex !important;
+      }
+    }
+
+    /* Hide scrollbar on lobby */
+    #lobby-ui {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    #lobby-ui::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Hide scrollbar on quiz selection */
+    #quiz-selection-ui {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    #quiz-selection-ui::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pixel-border {
+      box-shadow: 0 -4px 0 0 #000, 0 4px 0 0 #000, -4px 0 0 0 #000, 4px 0 0 0 #000;
+    }
+
+    .pixel-btn-green {
+      box-shadow: inset -4px -4px 0px 0px #00a336;
+    }
+
+    .pixel-btn-blue {
+      box-shadow: inset -4px -4px 0px 0px #008299;
+    }
+
+    /* Animated Scrolling Background (Bottom-Left Direction) */
+    @keyframes scroll-diagonal {
+      0% {
+        background-position: 0 0;
+      }
+
+      100% {
+        background-position: -400px 400px;
+        /* Move LEFT (-x) and DOWN (+y) */
+      }
+    }
+
+    .pixel-bg-pattern {
+      background-image: url('/assets/bg_pattern.png');
+      background-repeat: repeat;
+      background-size: 400px;
+      /* Made MUCH larger */
+      animation: scroll-diagonal 20s linear infinite;
+      /* Slower animation for larger pattern */
+      image-rendering: pixelated;
+      /* Ensure crisp scaling */
+    }
+
+    /* --- UI Layer (Controls) --- */
+    #ui-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      /* Above game, below lobby (lobby z-index is likely high, checked lobby is 10/20?) */
+    }
+
+    /* --- WASD (Desktop) --- */
+    #dpad-container {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      pointer-events: auto;
+    }
+
+    .dpad-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .dpad-btn {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 4px solid #444;
+      color: #999;
+      /* Gray Text */
+      font-family: 'Retro Gaming', monospace;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      outline: none;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .dpad-btn:active,
+    .dpad-btn.active {
+      background: rgba(128, 128, 128, 0.5);
+      /* Transparent Gray */
+      color: #ccc;
+      border-color: #888;
+      transform: scale(0.95);
+    }
+
+    /* --- Joystick (Mobile) --- */
+    #analog-container {
+      position: absolute;
+      bottom: 50px;
+      left: 50px;
+      width: 120px;
+      height: 120px;
+      pointer-events: auto;
+      display: none;
+    }
+
+    #joystick-base {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      border: 4px solid #444;
+      border-radius: 16px;
+      position: relative;
+    }
+
+    #joystick-stick {
+      width: 50px;
+      height: 50px;
+      background: rgba(100, 100, 100, 0.9);
+      border: 4px solid #888;
+      border-radius: 12px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s;
+    }
+
+    /* --- Responsive Switching --- */
+    @media (max-width: 768px) {
+      #dpad-container {
+        display: none;
+      }
+
+      #analog-container {
+        display: block;
+      }
+    }
+
+    /* Floating Animation for Host Icon */
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* SPRITE ANIMATION (6 Frames: 1, 6, 7, 8, 9, 10 from original) */
+    /* New icons: 144x24 sprite sheets (6 frames at 24x24 each) */
+    /* Scaled up to 128x128 display size (768x128 total) */
+    @keyframes sprite-play-6 {
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: -768px 0;
+      }
+    }
+
+    .sprite-icon {
+      width: 128px;
+      height: 128px;
+      background-repeat: no-repeat;
+      /* Scale 144x24 -> 768x128 (128/24 = 5.33x) */
+      background-size: 768px 128px;
+      image-rendering: pixelated;
+    }
+
+    .icon-sword {
+      background-image: url('/assets/icon_sword_subset.png');
+      animation: sprite-play-6 0.6s steps(6) infinite;
+    }
+
+    .icon-shield {
+      background-image: url('/assets/icon_evasion_subset.png');
+      animation: sprite-play-6 0.6s steps(6) infinite;
+    }
+
+    /* --- Button Sweep/Fill Animation --- */
+    .btn-sweep {
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      transition: color 0.3s;
+    }
+
+    .btn-sweep::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background-color: white;
+      /* Fill color */
+      z-index: -1;
+      transition: width 0.3s ease-in-out;
+    }
+
+    /* Specific text colors for hover state if needed */
+    .pixel-btn-green.btn-sweep:hover {
+      color: #000 !important;
+    }
+
+    .pixel-btn-blue.btn-sweep:hover {
+      color: #000 !important;
+    }
+
+    .btn-sweep:hover::before {
+      width: 100%;
+    }
+
+    /* --- Spotlight / Dimming Effect DISABLED --- */
+
+    /* --- GLOBAL IRIS TRANSITION (Robust Box-Shadow Method) --- */
+    #transition-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2147483647 !important;
+
+      /* Base State: Tiny hole, No Shadow (Hidden) */
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: 0 0 0 0 transparent;
+      pointer-events: none;
+    }
+
+    /* 1. PERSISTENT STATE: Shadow is ON (Black) */
+    /* This class is added first and removed last to prevent flickering */
+    #transition-overlay.overlay-active {
+      box-shadow: 0 0 0 300vmax black;
+      pointer-events: auto;
+    }
+
+    /* 2. ANIMATIONS: Only control width/height of the "Hole" */
+
+    /* Close: Big Hole -> Small Hole (Screen goes black) */
+    .iris-close {
+      animation: anim-close 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* Open: Small Hole -> Big Hole (Screen reveals) */
+    .iris-open {
+      animation: anim-open 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes anim-close {
+      0% {
+        width: 300vmax;
+        height: 300vmax;
+      }
+
+      100% {
+        width: 0px;
+        height: 0px;
+      }
+    }
+
+    @keyframes anim-open {
+      0% {
+        width: 0px;
+        height: 0px;
+      }
+
+      100% {
+        width: 300vmax;
+        height: 300vmax;
+      }
+    }
+
+    /* === FANTASY ADVENTURE BACKGROUND EFFECTS === */
+
+    /* Magic Firefly Particles */
+    @keyframes firefly {
+
+      0%,
+      100% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0.5);
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+        transform: translateY(-100px) translateX(30px) scale(1);
+      }
+
+      90% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes float-particle {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.3;
+      }
+
+      25% {
+        transform: translateY(-20px) translateX(10px);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: translateY(-40px) translateX(-10px);
+        opacity: 0.5;
+      }
+
+      75% {
+        transform: translateY(-20px) translateX(15px);
+        opacity: 0.9;
+      }
+    }
+
+    @keyframes glow-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 5px rgba(114, 191, 120, 0.3), 0 0 10px rgba(114, 191, 120, 0.2);
+      }
+
+      50% {
+        box-shadow: 0 0 15px rgba(160, 214, 131, 0.5), 0 0 30px rgba(160, 214, 131, 0.3);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    @keyframes mystical-float {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      33% {
+        transform: translateY(-15px) rotate(2deg);
+      }
+
+      66% {
+        transform: translateY(-8px) rotate(-2deg);
+      }
+    }
+
+    .firefly {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, #D3EE98 0%, transparent 70%);
+      border-radius: 50%;
+      animation: firefly 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .magic-particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #A0D683;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #A0D683, 0 0 20px #A0D683;
+      animation: float-particle 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Background — uses all 4 palette colors */
+    .fantasy-bg {
+      background:
+        radial-gradient(ellipse at center, rgba(114, 191, 120, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at top right, rgba(160, 214, 131, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at bottom left, rgba(211, 238, 152, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(114, 191, 120, 0.05) 0%, rgba(10, 20, 12, 0.98) 40%, #000000 100%);
+    }
+
+    /* Distant Mountains Silhouette Effect */
+    .forest-silhouette {
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23080812' d='M0,192L48,176C96,160,192,128,288,138.7C384,149,480,203,576,224C672,245,768,235,864,213.3C960,192,1056,160,1152,149.3C1248,139,1344,149,1392,154.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%2305050f' d='M0,288L48,272C96,256,192,224,288,218.7C384,213,480,235,576,245.3C672,256,768,256,864,240C960,224,1056,192,1152,186.7C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+      background-size: cover;
+      background-position: bottom;
+      background-repeat: no-repeat;
+    }
+
+    /* Mystical Fog/Nebula */
+    @keyframes fog-drift {
+      0% {
+        transform: translateX(-10%);
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 0.6;
+      }
+
+      100% {
+        transform: translateX(10%);
+        opacity: 0.3;
+      }
+    }
+
+    .mystical-fog {
+      background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(160, 214, 131, 0.04) 20%,
+          rgba(211, 238, 152, 0.05) 50%,
+          rgba(114, 191, 120, 0.04) 80%,
+          transparent 100%);
+      animation: fog-drift 20s ease-in-out infinite alternate;
+    }
+
+    /* === AUTH LOADING SPINNER === */
+    .auth-loading-spinner {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top-color: white;
+      animation: spin 1.2s linear infinite;
+    }
+
+    .spinner-ring-2 {
+      width: 80%;
+      height: 80%;
+      border-top-color: transparent;
+      border-right-color: #FEFF9F;
+      animation: spin-reverse 1.5s linear infinite;
+    }
+
+    .spinner-ring-3 {
+      width: 60%;
+      height: 60%;
+      border-top-color: transparent;
+      border-bottom-color: #FEFF9F;
+      animation: spin 2s linear infinite;
+    }
+
+    .spinner-icon {
+      font-size: 32px !important;
+      color: white;
+      animation: pulse-glow 2s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translateX(-10vw) scale(var(--tw-scale-x, 1));
+      }
+
+      to {
+        transform: translateX(110vw) scale(var(--tw-scale-x, 1));
+      }
+    }
+
+    @keyframes base-walk-cycle {
+      from {
+        background-position-x: 0;
+      }
+
+      to {
+        background-position-x: -800%;
+      }
+    }
+
+    @keyframes walk-across-right {
+      from {
+        left: -240px;
+      }
+
+      to {
+        left: 100vw;
+      }
+    }
+
+    @keyframes walk-across-left {
+      from {
+        left: 100vw;
+      }
+
+      to {
+        left: -240px;
+      }
+    }
+
+    .walking-char {
+      position: absolute;
+      bottom: 5px;
+      width: 240px;
+      height: 160px;
+      background-image: url('/assets/base_walk_strip8.png');
+      background-size: 800% 100%;
+      background-repeat: repeat-x;
+      image-rendering: pixelated;
+      z-index: 5;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin-reverse {
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        opacity: 0.6;
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+      }
+
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+      }
+    }
+
+    .pixel-bg-pattern {
+      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18h2.5v2.5H20zm0-5V13h2.5v2.5H20zM5 20.5V18h2.5v2.5H5zm0-5V13h2.5v2.5H5zm30 0V13h2.5v2.5H35zm0 5V18h2.5v2.5H35zM20 35.5V33h2.5v2.5H20zm0-5V28h2.5v2.5H20zM5 35.5V33h2.5v2.5H5zm0-5V28h2.5v2.5H5zm30 0V28h2.5v2.5H35zm0 5V33h2.5v2.5H35z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    /* Clarity fix for logos */
+    img[src*="logo"] {
+      image-rendering: pixelated;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-DgHVKnJA.js"></script>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-white">
+
+  <!-- PHASER CONTAINER -->
+  <div id="app"></div>
+
+  <!-- CONTROLS OVERLAY (Moved to src/ui/GameOverlayUI.ts) -->
+
+  <!-- LOBBY OVERLAY (Moved to src/ui/LobbyUI.ts) -->
+  <!-- CREATE ROOM UI (Moved to src/ui/CreateRoomUI.ts) -->
+
+  <!-- QUIZ SELECTION UI (Moved to src/ui/QuizSelectionUI.ts) -->
+
+  <!-- QUIZ SETTINGS UI (Moved to src/ui/QuizSettingsUI.ts) -->
+
+  <!-- WAITING ROOM OVERLAY (Moved to src/ui/WaitingRoomUI.ts) -->
+
+  <!-- LOGIN UI (Moved to src/ui/LoginUI.ts) -->
+
+  <!-- AUTH LOADING OVERLAY (Moved to src/ui/AuthLoadingUI.ts) -->
+
+  <!-- GLOBAL TRANSITION OVERLAY -->
+  <div id="transition-overlay"></div>
+
+  <!-- MAIN SCRIPT -->
+</body>
+
+</html>

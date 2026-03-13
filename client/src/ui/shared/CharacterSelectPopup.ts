@@ -109,16 +109,16 @@ export class CharacterSelectPopup {
         this.okBtn = document.createElement('button');
         this.okBtn.style.cssText = `
             padding: 12px 40px;
-            background: #9DC08B;
+            background: #92C140;
             border-radius: 12px;
-            color: black;
+            color: white;
             font-family: 'Retro Gaming';
             text-transform: uppercase;
             font-size: 14px;
             font-weight: bold;
             border: none;
-            border-bottom: 4px solid #15803d;
-            box-shadow: 0 0 15px rgba(157, 192, 139, 0.5);
+            border-bottom: 4px solid #478D47;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: all 0.1s;
         `;

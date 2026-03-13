@@ -180,8 +180,14 @@
       -ms-overflow-style: none;
     }
 
-    #lobby-ui::-webkit-scrollbar {
+    #lobby-ui::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
       display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
 
     /* Hide scrollbar on quiz selection */

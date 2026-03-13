@@ -83,7 +83,7 @@ export class QuizSettingsUI {
                 <div id="quizsettings-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
 
                 <!-- LOGO TOP LEFT -->
-                <img id="settings-zigma-logo" src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain cursor-pointer hover:scale-[1.02] transition-transform" />
+                <img id="settings-zigma-logo" src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain cursor-pointer" />
 
                 <!-- LOGO TOP RIGHT -->
                 <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain pointer-events-none" />
@@ -191,7 +191,7 @@ export class QuizSettingsUI {
 
                     <!-- Footer -->
                     <div class="p-5 bg-[#F1F8E9] flex justify-center mt-auto rounded-b-[calc(1.5rem-2px)] border-t-2 border-[#6CC452]/10">
-                        <button id="settings-continue-btn" class="w-full md:w-auto px-12 h-14 bg-[#6CC452] text-white font-bold text-lg uppercase rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-lg">
+                        <button id="settings-continue-btn" class="w-full md:w-auto px-12 h-14 bg-[#92C140] text-white font-bold text-lg uppercase rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-lg">
                             CREATE
                         </button>
                     </div>

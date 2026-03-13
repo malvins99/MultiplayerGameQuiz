@@ -4,7 +4,7 @@ export class LobbyUI {
         if (!lobbyUI) {
             lobbyUI = document.createElement('div');
             lobbyUI.id = 'lobby-ui';
-            lobbyUI.className = 'fixed inset-0 z-10 overflow-y-auto flex flex-col hidden';
+            lobbyUI.className = 'fixed inset-0 z-10 hidden';
             lobbyUI.innerHTML = `
                 <!-- Full-Screen Background — palette gradient -->
                 <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
@@ -82,8 +82,10 @@ export class LobbyUI {
                 <!-- Walking Characters Container -->
                 <div id="lobby-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
 
-                <!-- Top Navigation -->
-                <div class="relative z-50 flex items-start justify-between p-4 md:p-6 w-full">
+                <!-- Scrollable Content Layer -->
+                <div class="absolute inset-0 overflow-y-auto flex flex-col no-scrollbar">
+                    <!-- Top Navigation -->
+                    <div class="relative z-50 flex items-start justify-between p-4 md:p-6 w-full">
                     <div class="select-none flex items-start">
                         <img src="/logo/gameforsmart-logo-fix.webp" alt="Partner Logo"
                             class="h-12 md:h-[130px] w-auto object-contain mt-1 md:-mt-5 -ms-2" draggable="false" />
@@ -114,48 +116,48 @@ export class LobbyUI {
                 </div>
 
                 <!-- Main Content (Logo + Cards) -->
-                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-0 px-4 md:justify-center md:-mt-48 pb-6">
+                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-0 px-4 md:justify-center md:-mt-52 pb-6">
                     <!-- Mega Central Logo -->
-                    <div class="mb-2 md:-mb-10 md:-mt-24 transform hover:scale-105 transition-transform duration-500 z-10">
-                        <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" class="h-24 md:h-[360px] w-auto object-contain" draggable="false" />
+                    <div class="mb-2 md:-mb-6 md:-mt-14 z-10">
+                        <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" class="h-24 md:h-[280px] w-auto object-contain" draggable="false" />
                     </div>
 
                     <!-- Action Cards Container (Uber Tight Spacing) -->
-                    <div class="flex flex-col md:flex-row gap-3 md:gap-6 w-full max-w-5xl justify-center items-stretch z-20">
-                        <div class="group flex-1 max-w-[380px] mx-auto md:mx-0 w-full bg-white border-4 border-[#6CC452] border-b-[12px] border-b-[#478D47] rounded-[24px] md:rounded-[30px] p-4 md:p-6 flex flex-col items-center text-center hover:bg-[#F1F8E9] transition-all duration-300 shadow-2xl">
-                            <div class="w-14 h-14 md:w-16 md:h-16 bg-[#F1F8E9] border-2 border-[#478D47] rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
-                                <span class="material-symbols-outlined text-[#478D47] text-3xl md:text-4xl" style="font-variation-settings: 'FILL' 1;">flag</span>
+                    <div class="flex flex-col md:flex-row gap-3 md:gap-5 w-full max-w-4xl justify-center items-stretch z-20">
+                        <div class="group flex-1 max-w-[320px] mx-auto md:mx-0 w-full bg-white border-4 border-[#6CC452] border-b-[10px] border-b-[#478D47] rounded-[24px] md:rounded-[28px] p-4 md:p-5 flex flex-col items-center text-center hover:bg-[#F1F8E9] transition-all duration-300 shadow-2xl">
+                            <div class="w-12 h-12 md:w-14 md:h-14 bg-[#F1F8E9] border-2 border-[#478D47] rounded-2xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                                <span class="material-symbols-outlined text-[#478D47] text-2xl md:text-3xl" style="font-variation-settings: 'FILL' 1;">flag</span>
                             </div>
-                            <h2 class="text-xl md:text-2xl text-[#478D47] mb-2 uppercase tracking-wider">HOST</h2>
-                            <p class="text-[#478D47] text-xs md:text-sm leading-relaxed mb-6 max-w-[220px]">create your game world and invite survivors</p>
-                            <button id="create-room-btn" class="mt-auto w-full py-3 bg-[#6CC452] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                            <h2 class="text-lg md:text-xl text-[#478D47] mb-1 uppercase tracking-wider">HOST</h2>
+                            <p class="text-[#478D47] text-[10px] md:text-xs leading-relaxed mb-4 max-w-[200px]">create your game world and invite survivors</p>
+                            <button id="create-room-btn" class="mt-auto w-full py-2.5 bg-[#92C140] text-white font-bold font-['Retro_Gaming'] text-base rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                 Create World
                             </button>
                         </div>
-
-                        <div class="group flex-1 max-w-[380px] mx-auto md:mx-0 w-full bg-white border-4 border-[#6CC452] border-b-[12px] border-b-[#478D47] rounded-[24px] md:rounded-[30px] p-4 md:p-6 flex flex-col items-center text-center hover:bg-[#F1F8E9] transition-all duration-300 shadow-2xl">
-                            <div class="w-14 h-14 md:w-16 md:h-16 bg-[#F1F8E9] border-2 border-[#478D47] rounded-2xl flex items-center justify-center mb-4 group-hover:-rotate-12 transition-transform">
-                                <span class="material-symbols-outlined text-[#478D47] text-3xl md:text-4xl" style="font-variation-settings: 'FILL' 1;">group</span>
+                        <div class="group flex-1 max-w-[320px] mx-auto md:mx-0 w-full bg-white border-4 border-[#6CC452] border-b-[10px] border-b-[#478D47] rounded-[24px] md:rounded-[28px] p-4 md:p-5 flex flex-col items-center text-center hover:bg-[#F1F8E9] transition-all duration-300 shadow-2xl">
+                            <div class="w-12 h-12 md:w-14 md:h-14 bg-[#F1F8E9] border-2 border-[#478D47] rounded-2xl flex items-center justify-center mb-3 group-hover:-rotate-12 transition-transform">
+                                <span class="material-symbols-outlined text-[#478D47] text-2xl md:text-3xl" style="font-variation-settings: 'FILL' 1;">group</span>
                             </div>
-                            <h2 class="text-xl md:text-2xl text-[#478D47] mb-2 uppercase tracking-wider">JOIN</h2>
-                            <p class="text-[#478D47] text-xs md:text-sm leading-relaxed mb-4 max-w-[260px]">enter code to join world</p>
-
+                            <h2 class="text-lg md:text-xl text-[#478D47] mb-1 uppercase tracking-wider">JOIN</h2>
+                            <p class="text-[#478D47] text-[10px] md:text-xs leading-relaxed mb-3 max-w-[240px]">enter code to join world</p>
                             <!-- Code Input Group -->
-                            <div class="w-full space-y-3 mt-auto">
+                            <div class="w-full space-y-2 mt-auto">
                                 <div>
-                                    <input id="lobby-nickname-input" class="w-full h-11 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-lg text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="NICKNAME" type="text" maxlength="12" />
-                                    <p id="nickname-error" class="hidden text-red-500 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <input id="lobby-nickname-input" class="w-full h-10 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-base text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="NICKNAME" type="text" maxlength="12" />
+                                    <p id="nickname-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
                                 <div>
-                                    <input id="room-code-input" class="w-full h-11 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-xl tracking-[0.3em] text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="CODE" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
-                                    <p id="roomcode-error" class="hidden text-red-500 text-[9px] font-['Retro_Gaming'] mt-1.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <input id="room-code-input" class="w-full h-10 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-lg tracking-[0.3em] text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="CODE" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                                    <p id="roomcode-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
-                                <button id="join-room-btn" class="w-full py-3 bg-[#6CC452] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                                <button id="join-room-btn" class="w-full py-2.5 bg-[#92C140] text-white font-bold font-['Retro_Gaming'] text-base rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                     Join
                                 </button>
-                                <p id="join-error" class="hidden text-red-500 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                <p id="join-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-0.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                             </div>
                         </div>
+
+                    </div>
                     </div>
                 </div>
 

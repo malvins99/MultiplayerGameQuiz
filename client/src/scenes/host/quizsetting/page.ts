@@ -140,15 +140,15 @@ export class QuizSettingScene extends Phaser.Scene {
                 const text = document.getElementById('auth-loading-text');
                 if (overlay) {
                     overlay.classList.remove('hidden');
-                    if (text) text.innerText = 'Returning home...';
+                    if (text) text.innerText = 'Going back...';
                 }
 
-                // Transition back home
+                // Transition back to selection
                 TransitionManager.close(() => {
                     this.cleanup();
                     this.hideSettingsUI();
-                    Router.navigate('/');
-                    this.scene.start('LobbyScene');
+                    Router.navigate('/host/select-quiz');
+                    this.scene.start('SelectQuizScene', { client: this.client });
                     
                     // Re-open Iris and then hide loading (No flicker)
                     setTimeout(() => {
@@ -310,6 +310,12 @@ export class QuizSettingScene extends Phaser.Scene {
         // --- BUAT ROOM BUTTON ---
         const settingsContinueBtn = document.getElementById('settings-continue-btn') as HTMLButtonElement;
         if (settingsContinueBtn) {
+            // Reset button state and styles to ensure it's not stuck on "CREATING..." from a previous attempt
+            settingsContinueBtn.innerHTML = `CREATE`;
+            settingsContinueBtn.disabled = false;
+            settingsContinueBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            settingsContinueBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+
             // Clone to remove old listeners
             const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLButtonElement;
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
@@ -491,6 +497,7 @@ export class QuizSettingScene extends Phaser.Scene {
 
             // Save options for Restart functionality
             this.registry.set('lastGameOptions', options);
+            this.registry.set('lastSelectedQuiz', this.selectedQuiz);
 
             // Execute scene transition cleanly using TransitionManager closing
             TransitionManager.close(() => {
