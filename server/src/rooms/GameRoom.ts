@@ -128,8 +128,9 @@ export class GameRoom extends Room<GameState> {
         });
 
         // --- NEW: Simpan data "Masuk" ke Supabase Utama dan Supabase B saat sesi dibuat ---
-        this.saveInitialSessionToMainSupabase();
-        this.syncSessionToSupabaseB();
+        // Fire and forget to avoid blocking room creation
+        this.saveInitialSessionToMainSupabase().catch(e => console.error("Initial Main Sync Error:", e));
+        this.syncSessionToSupabaseB().catch(e => console.error("Initial Sync B Error:", e));
 
         // Set max clients for the entire lobby
         this.maxClients = LOBBY_MAX_PLAYERS;
@@ -834,6 +835,12 @@ export class GameRoom extends Room<GameState> {
         }
 
         const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG];
+
+        // Dynamically calculate enemies per player based on actual question count
+        // 1 enemy per question to prevent overcrowding
+        const actualQuestionCount = this.state.questions.length > 0 ? this.state.questions.length : config.targetQuestions;
+        const enemiesPerPlayer = actualQuestionCount;
+
         this.cachedMapData = MapParser.loadMapData(this.state.difficulty);
         const mapData = this.cachedMapData;
 

@@ -131,6 +131,37 @@ export class QuizSettingScene extends Phaser.Scene {
     }
 
     setupEventListeners() {
+        // --- ZIGMA LOGO (HOME) ---
+        const zigmaLogo = document.getElementById('settings-zigma-logo');
+        if (zigmaLogo) {
+            zigmaLogo.onclick = () => {
+                // Show Global Loading
+                const overlay = document.getElementById('auth-loading-overlay');
+                const text = document.getElementById('auth-loading-text');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    if (text) text.innerText = 'Going back...';
+                }
+
+                // Transition back to selection
+                TransitionManager.close(() => {
+                    this.cleanup();
+                    this.hideSettingsUI();
+                    Router.navigate('/host/select-quiz');
+                    this.scene.start('SelectQuizScene', { client: this.client });
+                    
+                    // Re-open Iris and then hide loading (No flicker)
+                    setTimeout(() => {
+                        TransitionManager.open();
+                        // Hide loading shortly AFTER iris starts opening
+                        setTimeout(() => {
+                            if (overlay) overlay.classList.add('hidden');
+                        }, 100);
+                    }, 500);
+                });
+            };
+        }
+
         // --- DROPDOWN SETUP ---
 
         // Difficulty Dropdown
@@ -153,8 +184,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 if (display) display.innerText = label;
 
                 // Highlight active
-                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
-                target.classList.add('text-[#1F7D53]', 'bg-white/5');
+                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
+                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
                 // Close menu
                 this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
@@ -178,8 +209,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-timer-selected');
                 if (display) display.innerText = label;
 
-                timerOptions.forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
-                target.classList.add('text-[#1F7D53]', 'bg-white/5');
+                timerOptions.forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
+                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
             });
@@ -202,8 +233,8 @@ export class QuizSettingScene extends Phaser.Scene {
                 const display = document.getElementById('settings-question-selected');
                 if (display) display.innerText = label;
 
-                questionOptions.forEach(o => o.classList.remove('text-[#1F7D53]', 'bg-white/5'));
-                target.classList.add('text-[#1F7D53]', 'bg-white/5');
+                questionOptions.forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
+                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-question-menu', 'settings-question-arrow');
             });
@@ -226,16 +257,16 @@ export class QuizSettingScene extends Phaser.Scene {
 
                 if (this.soundEnabled) {
                     if (newToggle) {
-                        newToggle.classList.remove('bg-white/10');
-                        newToggle.classList.add('bg-[#4C5C2D]');
+                        newToggle.classList.remove('bg-white');
+                        newToggle.classList.add('bg-[#478D47]');
                     }
-                    if (newKnob) newKnob.classList.add('translate-x-6');
+                    if (newKnob) newKnob.classList.add('translate-x-5');
                 } else {
                     if (newToggle) {
-                        newToggle.classList.remove('bg-[#4C5C2D]');
-                        newToggle.classList.add('bg-white/10');
+                        newToggle.classList.remove('bg-[#478D47]');
+                        newToggle.classList.add('bg-white');
                     }
-                    if (newKnob) newKnob.classList.remove('translate-x-6');
+                    if (newKnob) newKnob.classList.remove('translate-x-5');
                 }
 
                 console.log("Sound Enabled:", this.soundEnabled);
@@ -279,6 +310,12 @@ export class QuizSettingScene extends Phaser.Scene {
         // --- BUAT ROOM BUTTON ---
         const settingsContinueBtn = document.getElementById('settings-continue-btn') as HTMLButtonElement;
         if (settingsContinueBtn) {
+            // Reset button state and styles to ensure it's not stuck on "CREATING..." from a previous attempt
+            settingsContinueBtn.innerHTML = `CREATE`;
+            settingsContinueBtn.disabled = false;
+            settingsContinueBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            settingsContinueBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+
             // Clone to remove old listeners
             const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLButtonElement;
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
@@ -357,9 +394,9 @@ export class QuizSettingScene extends Phaser.Scene {
         if (!this.selectedQuiz) return;
 
         // MAP CONFIGURATION
-        let mapFile = 'map_baru1_tetap.tmj'; // Default Mudah
-        if (this.settingsDifficulty === 'sedang') mapFile = 'map_baru3.tmj';
-        if (this.settingsDifficulty === 'sulit') mapFile = 'map_baru3.tmj';
+        let mapFile = 'map_newest_easy_nomor1.tmj'; // Default Mudah
+        if (this.settingsDifficulty === 'sedang') mapFile = 'map_medium.tmj';
+        if (this.settingsDifficulty === 'sulit') mapFile = 'map_hard.tmj';
 
         // ENEMY COUNT CALCULATION
         // 5 soal -> 10 enemies, 10 soal -> 20 enemies

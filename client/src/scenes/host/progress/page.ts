@@ -70,15 +70,17 @@ export class HostProgressScene extends Phaser.Scene {
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
-            mapFile = 'map_baru2.tmj';
+            mapFile = 'map_medium.tmj';
         } else if (difficulty === 'sulit') {
             mapKey = 'map_hard';
-            mapFile = 'map_baru3.tmj';
+            mapFile = 'map_hard.tmj';
         }
 
-        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
-        this.load.image('tiles', '/assets/spr_tileset_sunnysideworld_16px.png');
-        this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png');
+        const cb = `?v=${Date.now()}`;
+        console.log(`[HostProgressScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
+        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
+        this.load.image('tiles', `/assets/spr_tileset_sunnysideworld_16px.png${cb}`);
+        this.load.image('forest_tiles', `/assets/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
 
@@ -111,8 +113,12 @@ export class HostProgressScene extends Phaser.Scene {
         if (tilesets.length > 0) {
             this.map.layers.forEach((layerData, index) => {
                 try {
+                    const existingLayer = this.map.getLayer(layerData.name);
+                    if (existingLayer && existingLayer.tilemapLayer) return;
+
                     this.map.createLayer(layerData.name, tilesets, 0, 0);
                 } catch (e) {
+                    console.log("Error creating layer safely handled:", e);
                 }
             });
         }

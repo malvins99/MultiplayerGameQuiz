@@ -107,7 +107,33 @@ export class CharacterSelectPopup {
         footer.className = 'flex justify-end pt-2';
 
         this.okBtn = document.createElement('button');
-        this.okBtn.className = 'px-8 md:px-12 py-3 md:py-4 bg-primary text-black font-bold text-lg md:text-xl uppercase pixel-btn-green border-2 border-black font-[\"Retro_Gaming\"] tracking-widest hover:brightness-110 active:translate-y-1 transition-all rounded-lg md:rounded-xl shadow-lg';
+        this.okBtn.style.cssText = `
+            padding: 12px 40px;
+            background: #92C140;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Retro Gaming';
+            text-transform: uppercase;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-bottom: 4px solid #478D47;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.1s;
+        `;
+        this.okBtn.onmousedown = () => {
+            this.okBtn.style.borderBottomWidth = '0';
+            this.okBtn.style.transform = 'translateY(4px)';
+        };
+        this.okBtn.onmouseup = () => {
+            this.okBtn.style.borderBottomWidth = '4px';
+            this.okBtn.style.transform = 'translateY(0)';
+        };
+        this.okBtn.onmouseleave = () => {
+            this.okBtn.style.borderBottomWidth = '4px';
+            this.okBtn.style.transform = 'translateY(0)';
+        };
         this.okBtn.innerText = 'OK';
 
         footer.appendChild(this.okBtn);

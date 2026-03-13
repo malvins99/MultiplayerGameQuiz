@@ -73,22 +73,23 @@ export class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // Determine map based on difficulty from room state
         const difficulty = this.room.state.difficulty;
         let mapKey = 'map_easy';
         let mapFile = 'map_newest_easy_nomor1.tmj';
 
         if (difficulty === 'sedang') {
             mapKey = 'map_medium';
-            mapFile = 'map_baru2.tmj';
+            mapFile = 'map_medium.tmj';
         } else if (difficulty === 'sulit') {
             mapKey = 'map_hard';
-            mapFile = 'map_baru3.tmj';
+            mapFile = 'map_hard.tmj';
         }
 
-        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}`);
-        this.load.image('tiles', '/assets/spr_tileset_sunnysideworld_16px.png');
-        this.load.image('forest_tiles', '/assets/spr_tileset_sunnysideworld_forest_32px.png');
+        const cb = `?v=${Date.now()}`;
+        console.log(`[GameScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
+        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
+        this.load.image('tiles', `/assets/spr_tileset_sunnysideworld_16px.png${cb}`);
+        this.load.image('forest_tiles', `/assets/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
 
@@ -156,7 +157,9 @@ export class GameScene extends Phaser.Scene {
 
         // --- Map Rendering ---
         const difficulty = this.room.state.difficulty;
-        const mapKey = difficulty === 'sedang' ? 'map_medium' : difficulty === 'sulit' ? 'map_hard' : 'map_easy';
+        let mapKey = 'map_easy';
+        if (difficulty === 'sedang') mapKey = 'map_medium';
+        if (difficulty === 'sulit') mapKey = 'map_hard';
 
         this.map = this.make.tilemap({ key: mapKey });
 

@@ -132,6 +132,15 @@ export class LobbyScene extends Phaser.Scene {
         if (profile && nicknameInput) {
             nicknameInput.value = profile.nickname || profile.fullname || profile.username || '';
         }
+
+        // Reset Join Button state
+        const joinBtn = document.getElementById('join-room-btn') as HTMLButtonElement;
+        if (joinBtn) {
+            joinBtn.innerHTML = `Join`;
+            joinBtn.disabled = false;
+            joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+        }
     }
 
     initializeAutoJoin(): boolean {
@@ -526,7 +535,24 @@ export class LobbyScene extends Phaser.Scene {
 
         if (hasError) return;
 
+        const joinBtn = document.getElementById('join-room-btn') as HTMLButtonElement;
+        const setBtnLoading = (loading: boolean) => {
+            if (!joinBtn) return;
+            if (loading) {
+                joinBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> JOINING...`;
+                joinBtn.disabled = true;
+                joinBtn.classList.add('opacity-80', 'cursor-not-allowed');
+                joinBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+            } else {
+                joinBtn.innerHTML = `Join`;
+                joinBtn.disabled = false;
+                joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+                joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
+            }
+        };
+
         try {
+            setBtnLoading(true);
             // 1. Verify Session in Supabase B
             const { data: sessionData, error: sessionError } = await supabaseB
                 .from(SESSION_TABLE)
@@ -537,11 +563,13 @@ export class LobbyScene extends Phaser.Scene {
             if (sessionError || !sessionData) {
                 console.error("Session lookup error:", sessionError);
                 this.showJoinFieldError('roomcode', 'Room not found');
+                setBtnLoading(false);
                 return;
             }
 
             if (sessionData.status !== 'waiting') {
                 this.showJoinError('Game already started or finished');
+                setBtnLoading(false);
                 return;
             }
 
@@ -556,12 +584,22 @@ export class LobbyScene extends Phaser.Scene {
             const userId = profile.id;
 
             // Cek apakah sudah pernah join (untuk rejoin case)
-            const { data: existingParticipant } = await supabaseB
+            // Check by user_id OR by nickname (karena constraint unik di DB = session_id + nickname)
+            const { data: existingByUserId } = await supabaseB
                 .from(PARTICIPANT_TABLE)
                 .select('id')
                 .eq('session_id', sessionData.id)
                 .eq('user_id', userId)
                 .maybeSingle();
+
+            const { data: existingByNickname } = await supabaseB
+                .from(PARTICIPANT_TABLE)
+                .select('id')
+                .eq('session_id', sessionData.id)
+                .ilike('nickname', nickname)
+                .maybeSingle();
+
+            const existingParticipant = existingByUserId || existingByNickname;
 
             if (!existingParticipant) {
                 // Belum pernah join → INSERT baru
@@ -576,15 +614,20 @@ export class LobbyScene extends Phaser.Scene {
                     });
 
                 if (partError) {
-                    console.error("Participant registration error:", partError);
-                    this.showJoinError('Failed to join, try again');
-                    return;
+                    // Handle 23505 (unique constraint violation) gracefully — participant already exists
+                    if (partError.code === '23505') {
+                        console.warn("Participant already exists (conflict), proceeding to join...");
+                    } else {
+                        console.error("Participant registration error:", partError);
+                        this.showJoinError('Failed to join, try again');
+                        return;
+                    }
                 }
             } else {
-                // Sudah pernah join → update nickname saja (rejoin)
+                // Sudah pernah join → update nickname + joined_at (rejoin)
                 await supabaseB
                     .from(PARTICIPANT_TABLE)
-                    .update({ nickname: nickname, joined_at: new Date().toISOString() })
+                    .update({ nickname: nickname, user_id: userId, joined_at: new Date().toISOString() })
                     .eq('id', existingParticipant.id);
             }
 
@@ -613,10 +656,12 @@ export class LobbyScene extends Phaser.Scene {
                 });
             } else {
                 this.showJoinFieldError('roomcode', 'Room closed or not found');
+                setBtnLoading(false);
             }
 
         } catch (e) {
             console.error("Join room error", e);
+            setBtnLoading(false);
             this.showJoinError('Connection error, try again');
         }
     }

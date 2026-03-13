@@ -247,9 +247,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             style.id = styleId;
             style.innerHTML = `
                 .player-content-box {
-                    background: #1a1a20;
-                    border: 4px solid #000;
-                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+                    background: #2d5a27;
+                    border: none;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
                     border-radius: 20px;
                     width: 95%;
                     max-width: 1100px;
@@ -262,20 +262,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     flex-direction: column;
                     margin-top: 10px;
                 }
+                .custom-scrollbar {
+                    scrollbar-width: none !important;
+                    -ms-overflow-style: none !important;
+                }
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(0,0,0,0.2);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #00ff88;
-                    border-radius: 10px;
-                    border: 2px solid #1a1a20;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #00cc6e;
+                    display: none !important;
                 }
                 .player-header-section {
                     display: flex;
@@ -292,12 +284,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     background: #ef4444; /* red-500 */
                     border-radius: 12px;
                     color: white;
+                    font-family: 'Retro Gaming';
+                    text-transform: uppercase;
                     font-size: 11px;
-                    font-weight: bold;
                     border: none;
                     border-bottom: 4px solid #b91c1c; /* red-700 */
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     transition: all 0.1s;
+                    cursor: pointer;
                 }
                 .btn-exit-standard:hover {
                     filter: brightness(1.1);
@@ -307,22 +301,24 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     transform: translateY(4px);
                 }
                 .player-count-box {
-                    background: rgba(0, 0, 0, 0.4);
-                    border: 2px solid #00ff88;
+                    background: transparent;
+                    border: 2px solid #FFFFFF;
                     border-radius: 10px;
-                    padding: 8px 15px;
+                    padding: 8px 12px;
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+                    gap: 8px;
                 }
                 .player-count-value {
-                    color: #00ff88;
-                    font-family: 'Press Start 2P';
-                    font-size: 14px;
+                    color: #FFFFFF;
+                    font-family: 'Retro Gaming';
+                    font-size: 16px;
+                }
+                .material-symbols-outlined {
+                    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
                 }
                 .neon-title-standard {
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     font-size: 38px;
                     color: #00ff88;
                     text-shadow: 0 0 15px rgba(0, 255, 136, 0.4), 3px 3px 0px #000;
@@ -330,54 +326,60 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     letter-spacing: 4px;
                 }
                 .player-card-standard {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    background: #6CC452;
+                    border: none;
                     border-radius: 16px;
-                    padding: 12px;
+                    padding: 8px;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 10px;
+                    gap: 0px;
                     position: relative;
                     transition: all 0.2s ease;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    min-height: 140px;
                 }
                 .player-card-active {
-                    border: 2px solid #00ff88 !important;
-                    background: rgba(0, 255, 136, 0.02);
+                    /* No border as requested, maybe a subtle scale or shadow if needed, but keeping it simple for now */
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 }
                 .pill-you {
-                    background: #00ff88;
-                    color: black;
-                    font-family: 'Press Start 2P';
-                    font-size: 8px;
-                    padding: 5px 20px;
+                    background: #FFFFFF;
+                    color: #6CC452;
+                    font-family: 'Retro Gaming';
+                    font-size: 10px;
+                    padding: 6px 20px;
                     border-radius: 100px;
                     font-weight: bold;
                     white-space: nowrap;
                     text-transform: uppercase;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 }
                 .standard-pixel-btn {
                     height: 52px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 4px solid #000;
                     cursor: pointer;
-                    font-family: 'Press Start 2P';
+                    font-family: 'Retro Gaming';
                     text-transform: uppercase;
-                    transition: transform 0.1s;
+                    transition: all 0.1s;
                 }
                 .standard-pixel-btn:active {
-                    transform: scale(0.96);
+                    border-bottom-width: 0;
+                    transform: translateY(4px);
                 }
                 .btn-choose-char-green {
                     padding: 0 40px;
-                    background: #00ff88;
+                    background: #92C140;
                     border-radius: 12px;
-                    color: black;
+                    color: white;
+                    font-family: 'Retro Gaming';
+                    text-transform: uppercase;
                     font-size: 11px;
-                    font-weight: bold;
-                    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2);
+                    border: none;
+                    border-bottom: 4px solid #478D47;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 }
                 .btn-choose-char-green:active {
                     box-shadow: none;
@@ -390,15 +392,15 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 /* Responsive Additions */
                 .logo-tl {
                     position: absolute;
-                    top: -60px;
-                    left: -65px;
-                    width: 24rem; /* 384px */
+                    top: -30px;
+                    left: -40px;
+                    width: 16rem; /* 256px (w-64) */
                 }
                 .logo-tr {
                     position: absolute;
-                    top: 0.5rem;
-                    right: 0.5rem;
-                    width: 16rem; /* 256px */
+                    top: -45px;
+                    right: -15px;
+                    width: 20rem; /* 320px (w-80) */
                 }
                 .player-grid-responsive {
                     display: grid;
@@ -417,14 +419,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                 
                 @media (max-width: 768px) {
                     .logo-tl {
-                        top: -20px;
+                        top: -15px;
                         left: -20px;
-                        width: 12rem;
+                        width: 10rem;
                     }
                     .logo-tr {
-                        top: 0.5rem;
-                        right: 0.5rem;
-                        width: 8rem;
+                        top: -20px;
+                        right: -5px;
+                        width: 12rem;
                     }
                     .player-content-box {
                         margin-top: 30px;
@@ -439,12 +441,12 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     }
                     .btn-exit-standard {
                         padding: 0 16px;
-                        height: 48px;
+                        height: 40px;
                         font-size: 10px;
                     }
                     .btn-choose-char-green {
                         padding: 0 16px;
-                        height: 48px;
+                        height: 40px;
                         font-size: 10px;
                     }
                     .player-grid-responsive {
@@ -461,21 +463,92 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         }
 
         this.waitingUI.innerHTML = `
-            <div class="fixed inset-0 pointer-events-none pixel-bg-pattern opacity-10"></div>
+            <!-- Full-Screen Background — same as home page -->
+            <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
+
+            <!-- Pixel-art Background Decorations -->
+            <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <!-- Subtle pixel grid pattern -->
+                <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+                <!-- L1: Back Layer (Small/Medium, Slow) -->
+                <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(1.0); left: -10%;">
+                    <div class="relative w-10 h-3 bg-white">
+                        <div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.8); left: 80%;">
+                    <div class="relative w-12 h-4 bg-[#D3EE98]">
+                        <div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.2); left: 40%;">
+                    <div class="relative w-14 h-4 bg-white">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                    </div>
+                </div>
+
+                <!-- L2: Mid Layer (Medium) -->
+                <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.8); left: 15%;">
+                    <div class="relative w-16 h-5 bg-[#D3EE98]">
+                        <div class="absolute -top-3 left-4 w-6 h-3 bg-[#D3EE98]"></div>
+                        <div class="absolute -top-5 left-8 w-4 h-5 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.5); left: 60%;">
+                    <div class="relative w-14 h-4 bg-white">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
+                        <div class="absolute -top-4 left-7 w-3 h-4 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.7); left: 75%;">
+                    <div class="relative w-16 h-5 bg-[#D3EE98]">
+                        <div class="absolute -top-3 left-5 w-6 h-3 bg-[#D3EE98]"></div>
+                    </div>
+                </div>
+
+                <!-- L3: Front Layer (Large, Faster) -->
+                <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.5); left: -20%;">
+                    <div class="relative w-12 h-4 bg-[#FEFF9F]">
+                        <div class="absolute -top-2 left-2 w-4 h-2 bg-[#FEFF9F]"></div>
+                        <div class="absolute -top-4 left-5 w-4 h-4 bg-[#FEFF9F]"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(2.2); left: 40%;">
+                    <div class="relative w-18 h-6 bg-white">
+                        <div class="absolute -top-3 left-5 w-7 h-3 bg-white"></div>
+                        <div class="absolute -top-6 left-10 w-5 h-6 bg-white"></div>
+                    </div>
+                </div>
+                <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(3.0); left: 10%;">
+                    <div class="relative w-14 h-4 bg-[#FEFF9F]">
+                        <div class="absolute -top-2 left-4 w-5 h-2 bg-[#FEFF9F]"></div>
+                    </div>
+                </div>
+
+                <!-- Floating Particles -->
+                <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
+                <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
+                <div class="firefly !bg-[#D3EE98] !shadow-[0_0_15px_rgba(211,238,152,0.9)]" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
+                <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 85%; left: 20%; animation-delay: 4.5s;"></div>
+                <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 15%; left: 70%; animation-delay: 6s;"></div>
+            </div>
+
+            <!-- Walking Characters Container -->
+            <div id="player-waiting-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
             
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain" />
 
             <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
                 <div class="player-content-box">
-                    <!-- Standard Header Section (Inside Box) -->
                     <div class="player-header-section">
                         <div class="player-count-box">
-                            <span class="material-symbols-outlined text-[#00ff88] text-xl">person</span>
+                            <span class="material-symbols-outlined text-white text-xl">person</span>
                             <span id="player-count-value" class="player-count-value">1</span>
                         </div>
                     </div>
@@ -496,10 +569,13 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
                 <!-- Pill Choose Character (Host Start Button Style) -->
                 <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
-                    Choose Character
+                    CHOOSE CHARACTER
                 </button>
             </div>
         `;
+
+        // Start Walking Character Spawner (sama seperti home page)
+        this.startWaitingCharacterSpawner('player-waiting-characters-container');
     }
 
     updateCharacterPreview(hairId: number) {
@@ -802,12 +878,19 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     updatePlayerGrid() {
         if (!this.playerGridEl) return;
 
-        const players: any[] = [];
+        // Use Map to ensure deduplication by sessionId
+        const playerMap = new Map<string, any>();
         this.room.state.players.forEach((p: any, sessionId: string) => {
-            if (!p.isHost) {
-                players.push({ ...p, sessionId });
+            if (!p.isHost && !playerMap.has(sessionId)) {
+                playerMap.set(sessionId, {
+                    sessionId,
+                    name: p.name,
+                    hairId: p.hairId,
+                    isHost: p.isHost,
+                });
             }
         });
+        const players = Array.from(playerMap.values());
 
         // Ensure current player is always first
         players.sort((a, b) => {
@@ -828,11 +911,11 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
             html += `
                 <div class="${cardClass} player-card-wrapper">
                     <!-- Character (Middle) -->
-                    <div style="width: 76px; height: 76px; background: radial-gradient(circle, rgba(0,212,255,0.05) 0%, rgba(255,255,255,0) 70%); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.03);">
+                    <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; overflow: visible; margin-top: 5px;">
                          <div style="
                             position: relative;
                             width: 32px; height: 32px; 
-                            transform: scale(2.0);
+                            transform: scale(3.5) translateY(4px);
                          ">
                             <div style="
                                 position: absolute; inset: 0;
@@ -860,8 +943,8 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
                     </div>
                     
                     <!-- Player Name -->
-                    <div style="text-align: center; width: 100%;">
-                        <span style="font-size: 9px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                    <div style="text-align: center; width: 100%; margin-top: 2px; padding: 0 4px;">
+                        <span style="font-size: 11px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);' : ''}">
                             ${player.name || 'PLAYER'}
                         </span>
                     </div>
@@ -879,4 +962,49 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         };
     }
 
+    // Walking character spawner — sama persis seperti home page
+    private waitingSpawnerInterval: any = null;
+    startWaitingCharacterSpawner(containerId: string) {
+        if (this.waitingSpawnerInterval) {
+            clearInterval(this.waitingSpawnerInterval);
+            this.waitingSpawnerInterval = null;
+        }
+
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const checkAndSpawn = () => {
+            const activeChars = container.querySelectorAll('.walking-char').length;
+            if (activeChars >= 3) return;
+            const chance = activeChars === 0 ? 0.8 : 0.4;
+            if (Math.random() < chance) {
+                this.spawnWalkingCharacter(container);
+            }
+        };
+
+        checkAndSpawn();
+        this.waitingSpawnerInterval = setInterval(checkAndSpawn, 5000);
+    }
+
+    spawnWalkingCharacter(container: HTMLElement) {
+        const char = document.createElement('div');
+        char.className = 'walking-char';
+
+        const fromRight = Math.random() > 0.5;
+        const speed = 20 + Math.random() * 10;
+
+        if (fromRight) {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
+            char.style.transform = 'scale(-1, 1)';
+        } else {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
+            char.style.transform = 'scale(1, 1)';
+        }
+
+        container.appendChild(char);
+
+        setTimeout(() => {
+            if (char.parentElement) char.remove();
+        }, speed * 1000 + 500);
+    }
 }
