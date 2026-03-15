@@ -1,53 +1,65 @@
-import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { Router } from '../../../utils/Router';
 import { RoomService } from '../../../services/room/RoomService';
 import { LeaderboardUI } from './ui';
 import type { RankingEntry } from './ui';
+import { LobbyManager } from '../../../scenes/lobby/page';
+import { initializeGame } from '../../../game';
 
-export class HostLeaderboardScene extends Phaser.Scene {
+export class HostLeaderboardManager {
     private container!: HTMLDivElement;
     private client!: Client;
     private rankings: RankingEntry[] = [];
+    private opts: any;
+    private q: any;
+    private sessionId: string | null = null;
+    private isHost: boolean = true;
 
-    constructor() {
-        super({ key: 'HostLeaderboardScene' });
-    }
-
-    create() {
+    start(data?: { rankings?: any[], isHost?: boolean, lastGameOptions?: any, lastSelectedQuiz?: any, mySessionId?: string }) {
         this.initializeClient();
         TransitionManager.ensureClosed();
 
-        let data = this.registry.get('leaderboardData');
-        if (!data || data.length === 0) {
+        // Data passing via args or localStorage backup
+        let rankingsData = data?.rankings;
+        if (!rankingsData || rankingsData.length === 0) {
             const stored = localStorage.getItem('hostLeaderboardData');
             if (stored) {
-                try { data = JSON.parse(stored); } catch (e) { }
+                try { rankingsData = JSON.parse(stored); } catch (e) { }
             }
         } else {
-            localStorage.setItem('hostLeaderboardData', JSON.stringify(data));
+            localStorage.setItem('hostLeaderboardData', JSON.stringify(rankingsData));
         }
-
-        this.rankings = data || [];
+        this.rankings = rankingsData || [];
         this.rankings.sort((a, b) => a.rank - b.rank);
 
-        const opts = this.registry.get('lastGameOptions');
-        if (opts) localStorage.setItem('hostLastGameOptions', JSON.stringify(opts));
+        this.isHost = data?.isHost !== undefined ? data.isHost : true;
 
-        const q = this.registry.get('lastSelectedQuiz');
-        if (q) localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(q));
-
-        let sessionId = this.registry.get('mySessionId');
-        if (!sessionId) {
-            sessionId = localStorage.getItem('hostLastSessionId');
+        this.opts = data?.lastGameOptions;
+        if (this.opts) {
+            localStorage.setItem('hostLastGameOptions', JSON.stringify(this.opts));
         } else {
-            localStorage.setItem('hostLastSessionId', sessionId);
+            const stored = localStorage.getItem('hostLastGameOptions');
+            if (stored) try { this.opts = JSON.parse(stored); } catch (e) { }
+        }
+
+        this.q = data?.lastSelectedQuiz;
+        if (this.q) {
+            localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(this.q));
+        } else {
+            const stored = localStorage.getItem('hostLastSelectedQuiz');
+            if (stored) try { this.q = JSON.parse(stored); } catch (e) { }
+        }
+
+        this.sessionId = data?.mySessionId || null;
+        if (!this.sessionId) {
+            this.sessionId = localStorage.getItem('hostLastSessionId');
+        } else if (this.sessionId) {
+            localStorage.setItem('hostLastSessionId', this.sessionId);
         }
 
         this.container = document.createElement('div');
         this.container.id = 'leaderboard-ui';
-        // Force 'Retro Gaming' font family on the container and all children
         this.container.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; font-family: "Retro Gaming", monospace !important;';
         document.body.appendChild(this.container);
 
@@ -67,7 +79,6 @@ export class HostLeaderboardScene extends Phaser.Scene {
     }
 
     private renderLeaderboard() {
-        // Add the local styles
         const styleId = 'leaderboard-local-styles';
         if (!document.getElementById(styleId)) {
             const s = document.createElement('style');
@@ -77,9 +88,7 @@ export class HostLeaderboardScene extends Phaser.Scene {
         }
 
         Router.navigate('/host/leaderboard');
-
         this.container.innerHTML = LeaderboardUI.generateHTML(this.rankings);
-
         this.attachListeners();
     }
 
@@ -90,13 +99,13 @@ export class HostLeaderboardScene extends Phaser.Scene {
 
         if (statsBtn) {
             statsBtn.onclick = () => {
-                let opts = this.registry.get('lastGameOptions');
-                if (!opts) {
-                    const storedOpts = localStorage.getItem('hostLastGameOptions');
-                    if (storedOpts) try { opts = JSON.parse(storedOpts); } catch (e) { }
-                }
-
-                const sid = opts?.sessionId || this.registry.get('mySessionId') || localStorage.getItem('hostLastSessionId');
+                // Priority: 1. data from start arg, 2. stored supabaseSessionId, 3. stored lastGameOptions, 4. fallback hostLastSessionId
+                const sid = this.opts?.sessionId || 
+                            localStorage.getItem('supabaseSessionId') || 
+                            localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
+                            this.sessionId || 
+                            localStorage.getItem('hostLastSessionId');
+                
                 if (sid) {
                     window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
                 } else {
@@ -106,54 +115,44 @@ export class HostLeaderboardScene extends Phaser.Scene {
         }
 
         if (homeBtn) {
-            homeBtn.onclick = () => TransitionManager.transitionTo(() => {
-                this.cleanup();
-                const r = this.registry.get('room'); if (r) r.leave();
-                window.history.pushState({}, '', '/');
-                this.scene.start('LobbyScene');
-            });
+            homeBtn.onclick = () => {
+                TransitionManager.close(() => {
+                    this.cleanup();
+                    window.history.pushState({}, '', '/');
+                    const manager = new LobbyManager();
+                    manager.init();
+                });
+            };
         }
 
         if (restartBtn) {
             restartBtn.onclick = async () => {
-                let opts = this.registry.get('lastGameOptions');
-                let q = this.registry.get('lastSelectedQuiz');
-
-                if (!opts) {
-                    const storedOpts = localStorage.getItem('hostLastGameOptions');
-                    if (storedOpts) try { opts = JSON.parse(storedOpts); } catch (e) { }
-                }
-                if (!q) {
-                    const storedQ = localStorage.getItem('hostLastSelectedQuiz');
-                    if (storedQ) try { q = JSON.parse(storedQ); } catch (e) { }
-                }
-
-                if (opts && !q && opts.quizId) {
+                if (this.opts && !this.q && this.opts.quizId) {
                     try {
-                        q = await import('../../../data/QuizData').then(m => m.fetchQuizById(opts.quizId));
-                        if (q) {
-                            this.registry.set('lastSelectedQuiz', q);
-                            localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(q));
+                        this.q = await import('../../../data/QuizData').then(m => m.fetchQuizById(this.opts.quizId));
+                        if (this.q) {
+                            localStorage.setItem('hostLastSelectedQuiz', JSON.stringify(this.q));
                         }
                     } catch (err) {
                         console.error("Failed to fetch quiz for restart:", err);
                     }
                 }
 
-                if (opts && q) {
+                if (this.opts && this.q) {
                     TransitionManager.close(async () => {
                         try {
-                            const { room, options } = await RoomService.createRoom(this.client, { ...opts, quiz: q });
-                            this.registry.set('lastGameOptions', options);
-                            this.registry.set('lastSelectedQuiz', q);
+                            const { room, options } = await RoomService.createRoom(this.client, { ...this.opts, quiz: this.q });
                             this.cleanup();
                             Router.navigate(`/host/${options.roomCode}/lobby`);
-                            this.scene.start('HostWaitingRoomScene', { room, isHost: true });
+                            // Start Phaser Engine directly onto HostWaitingRoomScene
+                            initializeGame('HostWaitingRoomScene', { room, isHost: true });
                             setTimeout(() => TransitionManager.open(), 600);
                         } catch (e) {
+                            console.error(e);
                             alert("Restart error. Returning to lobby.");
                             this.cleanup();
-                            this.scene.start('LobbyScene');
+                            const manager = new LobbyManager();
+                            manager.init();
                         }
                     });
                 } else {
@@ -164,7 +163,14 @@ export class HostLeaderboardScene extends Phaser.Scene {
     }
 
     cleanup() {
-        if (this.container) this.container.remove();
-        const s = document.getElementById('leaderboard-local-styles'); if (s) s.remove();
+        if (this.container) {
+            if (this.container.parentNode) this.container.parentNode.removeChild(this.container);
+            this.container.remove();
+        }
+        const s = document.getElementById('leaderboard-local-styles'); 
+        if (s) {
+            if(s.parentNode) s.parentNode.removeChild(s);
+            s.remove();
+        }
     }
 }

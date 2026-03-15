@@ -1,105 +1,4 @@
-import { Client } from 'colyseus.js';
-import { TransitionManager } from '../../../utils/TransitionManager';
-import { Router } from '../../../utils/Router';
-import { LobbyManager } from '../../lobby/page';
-
-interface RankingEntry {
-    rank: number;
-    sessionId: string;
-    name: string;
-    hairId?: number;
-    score: number;
-    finishTime: number;
-    duration: number;
-    correctAnswers: number;
-    wrongAnswers: number;
-}
-
-export class ResultManager {
-    private container!: HTMLDivElement;
-    private rankings: RankingEntry[] = [];
-    private mySessionId: string = "";
-    private roomId: string = "";
-    private supabaseSessionId: string = "";
-    private room: any;
-
-    constructor() {}
-
-    start(data?: { room?: any, leaderboardData?: any[] }) {
-        TransitionManager.ensureClosed();
-
-        let registryRankings = data?.leaderboardData || [];
-        this.room = data?.room;
-        let registrySessionId = this.room ? this.room.sessionId : "";
-        let registryRoomId = this.room ? this.room.id : "";
-
-        this.supabaseSessionId = localStorage.getItem('supabaseSessionId') || "";
-
-        if (registryRankings.length > 0 && registrySessionId && registryRoomId) {
-            this.rankings = registryRankings;
-            this.mySessionId = registrySessionId;
-            this.roomId = registryRoomId;
-            sessionStorage.setItem('playerResultState', JSON.stringify({
-                rankings: this.rankings,
-                mySessionId: this.mySessionId,
-                roomId: this.roomId,
-                supabaseSessionId: this.supabaseSessionId
-            }));
-        } else {
-            const savedState = sessionStorage.getItem('playerResultState');
-            if (savedState) {
-                const parsed = JSON.parse(savedState);
-                this.rankings = parsed.rankings;
-                this.mySessionId = parsed.mySessionId;
-                this.roomId = parsed.roomId;
-                if (parsed.supabaseSessionId) {
-                    this.supabaseSessionId = parsed.supabaseSessionId;
-                }
-            }
-        }
-
-        const existingUI = document.getElementById('result-ui');
-        if (existingUI) existingUI.remove();
-
-        this.container = document.createElement('div');
-        this.container.id = 'result-ui';
-        this.container.style.position = 'absolute';
-        this.container.style.top = '0';
-        this.container.style.left = '0';
-        this.container.style.width = '100%';
-        this.container.style.height = '100%';
-        this.container.style.zIndex = '1000';
-        document.body.appendChild(this.container);
-
-        if (!document.getElementById('result-styles')) {
-            const style = document.createElement('style');
-            style.id = 'result-styles';
-            style.innerHTML = this.getStyles();
-            document.head.appendChild(style);
-        }
-
-        this.renderIndividualResult();
-
-        if (this.room) {
-            this.room.onMessage('gameEnded', (msgData: { rankings: any[] }) => {
-                this.rankings = msgData.rankings;
-                sessionStorage.setItem('playerResultState', JSON.stringify({
-                    rankings: this.rankings,
-                    mySessionId: this.mySessionId,
-                    roomId: this.roomId,
-                    supabaseSessionId: this.supabaseSessionId
-                }));
-                this.renderIndividualResult();
-            });
-        }
-
-        setTimeout(() => {
-            TransitionManager.open();
-        }, 100);
-    }
-
-    private getStyles(): string {
-        return `
+import{T as r,R as l}from"./index-3vZSclUO.js";class p{constructor(){this.rankings=[],this.mySessionId="",this.roomId="",this.supabaseSessionId=""}start(t){r.ensureClosed();let i=(t==null?void 0:t.leaderboardData)||[];this.room=t==null?void 0:t.room;let s=this.room?this.room.sessionId:"",o=this.room?this.room.id:"";if(this.supabaseSessionId=localStorage.getItem("supabaseSessionId")||"",i.length>0&&s&&o)this.rankings=i,this.mySessionId=s,this.roomId=o,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId}));else{const e=sessionStorage.getItem("playerResultState");if(e){const n=JSON.parse(e);this.rankings=n.rankings,this.mySessionId=n.mySessionId,this.roomId=n.roomId,n.supabaseSessionId&&(this.supabaseSessionId=n.supabaseSessionId)}}const a=document.getElementById("result-ui");if(a&&a.remove(),this.container=document.createElement("div"),this.container.id="result-ui",this.container.style.position="absolute",this.container.style.top="0",this.container.style.left="0",this.container.style.width="100%",this.container.style.height="100%",this.container.style.zIndex="1000",document.body.appendChild(this.container),!document.getElementById("result-styles")){const e=document.createElement("style");e.id="result-styles",e.innerHTML=this.getStyles(),document.head.appendChild(e)}this.renderIndividualResult(),this.room&&this.room.onMessage("gameEnded",e=>{this.rankings=e.rankings,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId})),this.renderIndividualResult()}),setTimeout(()=>{r.open()},100)}getStyles(){return`
             @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
             #result-ui {
@@ -221,26 +120,7 @@ export class ResultManager {
 
             .logo-left { position: absolute; top: -60px; left: -65px; width: 384px; z-index: 20; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none; }
             .logo-right { position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none; }
-        `;
-    }
-
-    private renderIndividualResult() {
-        Router.navigate('/player/result');
-        this.container.innerHTML = '';
-
-        const myEntry = this.rankings.find(p => p.sessionId === this.mySessionId) || this.rankings[0];
-        if (!myEntry) return;
-
-        const formatTime = (ms: number) => {
-            const totalSeconds = Math.floor(ms / 1000);
-            const mins = Math.floor(totalSeconds / 60);
-            const secs = totalSeconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        };
-
-        const characterVisuals = this.getCharacterVisuals(myEntry);
-
-        this.container.innerHTML = `
+        `}renderIndividualResult(){l.navigate("/player/result"),this.container.innerHTML="";const t=this.rankings.find(o=>o.sessionId===this.mySessionId)||this.rankings[0];if(!t)return;const i=o=>{const a=Math.floor(o/1e3),e=Math.floor(a/60),n=a%60;return`${e.toString().padStart(2,"0")}:${n.toString().padStart(2,"0")}`},s=this.getCharacterVisuals(t);this.container.innerHTML=`
             <div class="spotlight-container">
                 <div class="spotlight-beam"></div>
                 <div class="spotlight-center"></div>
@@ -250,30 +130,30 @@ export class ResultManager {
 
             <div class="result-card">
                 <div class="result-avatar-container">
-                    <div class="char-anim result-char anim-play" style="${characterVisuals.base}"></div>
-                    ${characterVisuals.hair ? `<div class="char-anim result-char anim-play" style="${characterVisuals.hair}"></div>` : ''}
+                    <div class="char-anim result-char anim-play" style="${s.base}"></div>
+                    ${s.hair?`<div class="char-anim result-char anim-play" style="${s.hair}"></div>`:""}
                 </div>
-                <div class="result-name">${myEntry.name}</div>
+                <div class="result-name">${t.name}</div>
                 
                 <div class="result-stats-row">
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
-                        <div class="stat-value">${myEntry.rank === -1 ? '#?' : '#' + myEntry.rank}</div>
+                        <div class="stat-value">${t.rank===-1?"#?":"#"+t.rank}</div>
                         <div class="stat-label">RANK</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">workspace_premium</span>
-                        <div class="stat-value">${myEntry.score}</div>
+                        <div class="stat-value">${t.score}</div>
                         <div class="stat-label">SCORE</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">task_alt</span>
-                        <div class="stat-value">${myEntry.correctAnswers}/5</div>
+                        <div class="stat-value">${t.correctAnswers}/5</div>
                         <div class="stat-label">CORRECT</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">schedule</span>
-                        <div class="stat-value">${formatTime(myEntry.duration)}</div>
+                        <div class="stat-value">${i(t.duration)}</div>
                         <div class="stat-label">TIME</div>
                     </div>
                 </div>
@@ -287,55 +167,4 @@ export class ResultManager {
                     <span class="material-symbols-outlined">analytics</span>
                 </button>
             </div>
-        `;
-
-        this.attachListeners();
-    }
-
-    private getCharacterVisuals(player: RankingEntry) {
-        const base = `background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;`;
-        let hair = '';
-        if (player.hairId && player.hairId > 0) {
-            const hairFiles: Record<number, string> = {
-                1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair'
-            };
-            const key = hairFiles[player.hairId];
-            if (key) {
-                hair = `background-image: url('/assets/${key}_idle_strip9.png'); background-size: 864px 64px;`;
-            }
-        }
-        return { base, hair };
-    }
-
-    private attachListeners() {
-        setTimeout(() => {
-            const homeBtn = document.getElementById('lb-home-btn');
-            const statsBtn = document.getElementById('lb-stats-btn');
-
-            if (homeBtn) homeBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.cleanup();
-                    if (this.room) this.room.leave();
-                    window.location.href = '/';
-                });
-            };
-
-            if (statsBtn) {
-                statsBtn.onclick = () => {
-                    const sid = this.supabaseSessionId || localStorage.getItem('supabaseSessionId');
-                    if (sid) {
-                        window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
-                    } else {
-                        alert("ID Sesi tidak ditemukan.");
-                    }
-                };
-            }
-        }, 50);
-    }
-
-    cleanup() {
-        if (this.container) this.container.remove();
-        const style = document.getElementById('result-styles');
-        if (style) style.remove();
-    }
-}
+        `,this.attachListeners()}getCharacterVisuals(t){const i="background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;";let s="";if(t.hairId&&t.hairId>0){const a={1:"bowlhair",2:"curlyhair",3:"longhair",4:"mophair",5:"shorthair",6:"spikeyhair"}[t.hairId];a&&(s=`background-image: url('/assets/${a}_idle_strip9.png'); background-size: 864px 64px;`)}return{base:i,hair:s}}attachListeners(){setTimeout(()=>{const t=document.getElementById("lb-home-btn"),i=document.getElementById("lb-stats-btn");t&&(t.onclick=()=>{r.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})}),i&&(i.onclick=()=>{const s=this.supabaseSessionId||localStorage.getItem("supabaseSessionId");s?window.open(`https://gameforsmartnewui.vercel.app/stat/${s}`,"_blank"):alert("ID Sesi tidak ditemukan.")})},50)}cleanup(){this.container&&this.container.remove();const t=document.getElementById("result-styles");t&&t.remove()}}export{p as ResultManager};

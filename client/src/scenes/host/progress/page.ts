@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
-import { supabaseB, SESSION_TABLE } from '../../../lib/supabaseB';
 
 export class HostProgressScene extends Phaser.Scene {
     room!: Room;
@@ -15,6 +14,7 @@ export class HostProgressScene extends Phaser.Scene {
     minZoom: number = 0.8;
     isMuted: boolean = false;
     private resizeListener: (() => void) | null = null;
+    private landscapeOverlay!: HTMLDivElement;
 
     constructor() {
         super('HostProgressScene');
@@ -52,11 +52,33 @@ export class HostProgressScene extends Phaser.Scene {
             // Store sessionId before leaving so LeaderboardScene can still use it
             this.registry.set('mySessionId', this.room.sessionId);
 
+            // Fetch stored options correctly from localStorage as registry might be cleared
+            const storedOpts = localStorage.getItem('lastGameOptions');
+            const opts = storedOpts ? JSON.parse(storedOpts) : null;
+            const storedQ = localStorage.getItem('lastSelectedQuiz');
+            const q = storedQ ? JSON.parse(storedQ) : null;
+
             // Leave the room NOW
             this.room.leave();
             this.registry.set('room', null);
 
-            TransitionManager.sceneTo(this, 'HostLeaderboardScene');
+            TransitionManager.close(() => {
+                const engine = (window as any).gameInstance;
+                if (engine) {
+                    engine.destroy(true);
+                    (window as any).gameInstance = null;
+                }
+                import('../leaderboard/page').then((m) => {
+                    const manager = new m.HostLeaderboardManager();
+                    manager.start({
+                        rankings: data.rankings,
+                        isHost: isHost,
+                        mySessionId: this.room.sessionId,
+                        lastGameOptions: opts,
+                        lastSelectedQuiz: q
+                    });
+                });
+            });
         });
     }
 
@@ -210,9 +232,7 @@ export class HostProgressScene extends Phaser.Scene {
         // (Scroll and Pointer interactions removed to keep map pure & scaled neatly)
         // --- UI Initialization ---
         this.createUI();
-
-        // Connect to Supabase B for additional session config as requested
-        this.connectToSupabaseBSession();
+        this.createLandscapeOverlay();
 
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
@@ -394,10 +414,46 @@ export class HostProgressScene extends Phaser.Scene {
 
         this.events.once('shutdown', () => {
             if (this.resizeListener) this.scale.off('resize', this.resizeListener);
+            window.removeEventListener('resize', this.checkOrientation);
             this.disposers.forEach(d => d());
             this.disposers = [];
             if (this.uiContainer && this.uiContainer.parentNode) document.body.removeChild(this.uiContainer);
+            if (this.landscapeOverlay && this.landscapeOverlay.parentNode) document.body.removeChild(this.landscapeOverlay);
         });
+    }
+
+    private checkOrientation = () => {
+        if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'flex';
+        } else {
+            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'none';
+        }
+    };
+
+    private createLandscapeOverlay() {
+        const existingId = 'host-landscape-overlay';
+        if (document.getElementById(existingId)) {
+            document.getElementById(existingId)?.remove();
+        }
+        
+        this.landscapeOverlay = document.createElement('div');
+        this.landscapeOverlay.id = existingId;
+        this.landscapeOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #121216; z-index: 999999; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-family: 'Retro Gaming', monospace; text-align: center;
+            padding: 20px; backdrop-filter: blur(10px);
+        `;
+        this.landscapeOverlay.innerHTML = `
+            <span class="material-symbols-outlined" style="font-size: 72px; margin-bottom: 24px; color: #72BF78;">screen_rotation</span>
+            <h2 style="font-size: 24px; margin-bottom: 12px; color: #72BF78;">Akses Landscape Diperlukan</h2>
+            <p style="font-size: 14px; color: #aaa; line-height: 1.6; max-width: 80%;">Mohon putar perangkat Anda ke mode mendatar (Landscape) untuk pandangan Map yang lebih optimal.</p>
+        `;
+        document.body.appendChild(this.landscapeOverlay);
+
+        window.addEventListener('resize', this.checkOrientation);
+        this.checkOrientation();
     }
 
     showEndGamePopup() {
@@ -513,32 +569,5 @@ export class HostProgressScene extends Phaser.Scene {
         progressBar.setName('progressBar');
 
         container.add([nameText, progressBar]);
-    }
-
-    private async connectToSupabaseBSession() {
-        const sessionId = (this.room as any).sessionId_original || this.room.id; // Corrected to use internal sessionId if available
-        // Note: we usually get sessionId from the lobby sequence. If not, we use room.id as fallback.
-        // But the best is to get it from room state if we put it there.
-
-        // Use the room state's provided values as priority, but fetch once to verify "connection"
-        console.log("[Supabase B] Connecting to session info...");
-        try {
-            const { data, error } = await supabaseB
-                .from(SESSION_TABLE)
-                .select('question_limit, total_time_minutes')
-                .eq('id', this.room.id) // Assuming room.id is the session id
-                .single();
-
-            if (data) {
-                console.log("[Supabase B] Session data linked successfully:", data);
-                // Update local timer display if it hasn't started yet
-                const timerEl = document.getElementById('game-timer');
-                if (timerEl && timerEl.innerText === "05:00") {
-                    timerEl.innerText = `${String(data.total_time_minutes).padStart(2, '0')}:00`;
-                }
-            }
-        } catch (e) {
-            console.warn("[Supabase B] Could not link session data, falling back to room state.");
-        }
     }
 }

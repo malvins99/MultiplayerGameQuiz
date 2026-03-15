@@ -1,18 +1,13 @@
-import Phaser from 'phaser';
 import { Router } from '../../utils/Router';
 import { TransitionManager } from '../../utils/TransitionManager';
 import { authService } from '../../services/auth/AuthService';
 import { LoginUI } from './ui';
 
-export class LoginScene extends Phaser.Scene {
+export class LoginManager {
     loginUI: HTMLElement | null = null;
     isLoading: boolean = false;
 
-    constructor() {
-        super('LoginScene');
-    }
-
-    async create() {
+    async init() {
         this.initializeUI();
         this.setupEventListeners();
 
@@ -264,27 +259,21 @@ export class LoginScene extends Phaser.Scene {
     navigateToLobby(shouldNavigateToRoot: boolean = true) {
         TransitionManager.transitionTo(() => {
             const pendingCode = localStorage.getItem('pendingJoinRoomCode');
-            let autoJoinCode: string | null = null;
+            let path = '/';
 
             if (pendingCode && pendingCode.trim().length > 0) {
                 const cleanCode = pendingCode.trim();
                 console.log("🚀 [LoginScene] Restoring pending join:", cleanCode);
-
-                // Set URL to join path
-                Router.navigate(`/join/${cleanCode}`);
-                autoJoinCode = cleanCode;
-            } else if (shouldNavigateToRoot) {
-                // Normal login without pending code
-                Router.navigate('/');
-            } else {
-                // Already authenticated at specific URL, keep current path
-                console.log("[LoginScene] Preserving current path:", Router.getPath());
+                path = `/join/${cleanCode}`;
+            } else if (!shouldNavigateToRoot) {
+                path = Router.getPath();
+                if (path === '/login') path = '/';
             }
 
             this.hideLoginUI();
-
-            // Start LobbyScene, passing the code if it exists
-            this.scene.start('LobbyScene', { autoJoinCode });
+            
+            // Full reload to bootstrap LobbyManager cleanly
+            window.location.href = path;
         });
     }
 
@@ -449,7 +438,6 @@ export class LoginScene extends Phaser.Scene {
 
         if (path === '/login') {
             this.showLoginUI();
-            this.scene.start('LoginScene');
         }
     }
 
