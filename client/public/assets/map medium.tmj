@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"..\/..\/..\/..\/..\/Users\/USER\/Downloads\/map medium.tmj"
+        }
+    },
  "height":70,
  "infinite":false,
  "layers":[
@@ -5928,6 +5936,32 @@
          "columns":64,
          "firstgid":4562,
          "image":"spr_tileset_sunnysideworld_16px.png",
+         "imageheight":1024,
+         "imagewidth":1024,
+         "margin":0,
+         "name":"spr_tileset_sunnysideworld_16px",
+         "spacing":0,
+         "tilecount":4096,
+         "tileheight":16,
+         "tilewidth":16
+        }, 
+        {
+         "columns":64,
+         "firstgid":8658,
+         "image":"..\/..\/..\/..\/..\/Sunnyside_World_ASSET_PACK_V2.1\/Sunnyside_World_Assets\/Tileset\/spr_tileset_sunnysideworld_16px.png",
+         "imageheight":1024,
+         "imagewidth":1024,
+         "margin":0,
+         "name":"spr_tileset_sunnysideworld_16px",
+         "spacing":0,
+         "tilecount":4096,
+         "tileheight":16,
+         "tilewidth":16
+        }, 
+        {
+         "columns":64,
+         "firstgid":12754,
+         "image":"..\/..\/..\/..\/..\/Sunnyside_World_ASSET_PACK_V2.1\/Sunnyside_World_Assets\/Tileset\/spr_tileset_sunnysideworld_16px.png",
          "imageheight":1024,
          "imagewidth":1024,
          "margin":0,
