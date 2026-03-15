@@ -673,10 +673,17 @@ export class GameScene extends Phaser.Scene {
     }
 
     private checkOrientation = () => {
-        if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
-            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'flex';
+        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile && window.innerHeight > window.innerWidth) {
+            if (this.landscapeOverlay) {
+                this.landscapeOverlay.style.display = 'flex';
+                this.landscapeOverlay.style.pointerEvents = 'auto';
+            }
         } else {
-            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'none';
+            if (this.landscapeOverlay) {
+                this.landscapeOverlay.style.display = 'none';
+                this.landscapeOverlay.style.pointerEvents = 'none';
+            }
         }
     };
 
@@ -696,9 +703,19 @@ export class GameScene extends Phaser.Scene {
             padding: 20px; backdrop-filter: blur(8px);
         `;
         this.landscapeOverlay.innerHTML = `
-            <span class="material-symbols-outlined" style="font-size: 72px; margin-bottom: 24px; color: #72BF78;">screen_rotation</span>
-            <h2 style="font-size: 24px; margin-bottom: 12px; color: #72BF78;">Mode Landscape Diperlukan</h2>
-            <p style="font-size: 14px; color: #aaa; line-height: 1.6; max-width: 80%;">Putar layar HP Anda secara mendatar untuk dapat mengontrol karakter dengan leluasa serta melihat map dengan luas.</p>
+            <div style="background: rgba(0,0,0,0.85); padding: 40px; border-radius: 20px; border: 2px solid #72BF78; display: flex; flex-direction: column; align-items: center; max-width: 90vw;">
+                <span class="material-symbols-outlined" style="font-size: 80px; margin-bottom: 20px; color: #72BF78; animation: rotateDevice 2s infinite ease-in-out;">screen_rotation</span>
+                <h2 style="font-size: 26px; margin-bottom: 15px; color: #72BF78; text-transform: uppercase;">Mode Landscape Diperlukan</h2>
+                <p style="font-size: 14px; color: #eee; line-height: 1.6; max-width: 300px; font-family: sans-serif;">Putar layar HP Anda secara mendatar untuk dapat mengontrol karakter dengan leluasa serta melihat map dengan luas.</p>
+                <div style="margin-top: 25px; padding: 10px 20px; background: #72BF78; color: #000; border-radius: 6px; font-weight: 800; font-size: 14px;">PUTAR SEKARANG</div>
+            </div>
+            <style>
+                @keyframes rotateDevice {
+                    0% { transform: rotate(0deg); }
+                    50% { transform: rotate(90deg); }
+                    100% { transform: rotate(0deg); }
+                }
+            </style>
         `;
         document.body.appendChild(this.landscapeOverlay);
 

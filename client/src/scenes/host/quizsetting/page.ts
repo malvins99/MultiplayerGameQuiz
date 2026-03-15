@@ -385,6 +385,7 @@ export class QuizSettingManager {
             localStorage.setItem('currentRoomId', room.id);
             localStorage.setItem('currentSessionId', room.sessionId);
             localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
+            localStorage.setItem('supabaseSessionId', data.id);
             
             // To pass parameters to Phaser, we should use localStorage or window object, as we are dynamically importing game.ts
             // LocalStorage is safest for now

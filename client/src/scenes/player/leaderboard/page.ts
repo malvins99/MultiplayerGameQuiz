@@ -173,11 +173,17 @@ export class PlayerLeaderboardManager {
 
         if (statsBtn) {
             statsBtn.onclick = () => {
-                const sid = localStorage.getItem('supabaseSessionId');
-                if (sid) {
+                let sid = localStorage.getItem('supabaseSessionId');
+                
+                // Fallback: try to find sessionId in rankings or room state if available
+                if (!sid && this.rankings.length > 0) {
+                    sid = (this.rankings[0] as any).sessionId; // Many events pass it via ranking items
+                }
+                
+                if (sid && sid !== "undefined" && sid !== "null") {
                     window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
                 } else {
-                    alert("ID Sesi tidak ditemukan.");
+                    alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
                 }
             };
         }
