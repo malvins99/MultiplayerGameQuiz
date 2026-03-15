@@ -1,46 +1,34 @@
-import Phaser from 'phaser';
-import { Client, Room } from 'colyseus.js';
+import { Client } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { Quiz, fetchQuizById } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 import { authService } from '../../../services/auth/AuthService';
 
-export class QuizSettingScene extends Phaser.Scene {
+export class QuizSettingManager {
     client!: Client;
-
-    // Settings State
     selectedQuiz: Quiz | null = null;
     settingsDifficulty: string = 'mudah';
     settingsTimer: number = 300;
     settingsQuestionCount: number = 5;
     soundEnabled: boolean = false;
-
-    // UI Element
     quizSettingsUI: HTMLElement | null = null;
+    private _outsideClickHandler: ((e: MouseEvent) => void) | null = null;
 
-    constructor() {
-        super('QuizSettingScene');
+    constructor() {}
+
+    async init(data?: { quiz?: Quiz; client?: Client }) {
+        this.selectedQuiz = data?.quiz || null;
+        if (data?.client) this.client = data.client;
+        
+        await this.start();
     }
 
-    init(data: { quiz?: Quiz; client: Client }) {
-        this.selectedQuiz = data.quiz || null;
-        this.client = data.client;
-
-        // If client is missing (direct refresh), try to reconnect/use passed client 
-        // Note: Client is usually passed from Lobby, but if Lobby started us without data, 
-        // we heavily rely on Lobby doing the initial client setup. 
-        // Lobby currently creates client in init/create, passing it here is fine.
-    }
-
-    async create() {
+    private async start() {
         this.quizSettingsUI = document.getElementById('quiz-settings-ui');
 
-        // Check if we need to restore state from URL
         if (!this.selectedQuiz) {
-            // Retrieve from localStorage (hidden persistence)
             const quizId = localStorage.getItem('tempSettingsQuizId');
-
             if (quizId) {
                 console.log("Restoring quiz state for ID:", quizId);
                 const quiz = await fetchQuizById(quizId);
@@ -48,26 +36,19 @@ export class QuizSettingScene extends Phaser.Scene {
                     this.selectedQuiz = quiz;
                 } else {
                     console.error("Failed to fetch quiz");
-                    Router.navigate('/host/select-quiz');
-                    this.scene.start('SelectQuizScene', { client: this.client });
+                    this.goBackToQuizSelection();
                     return;
                 }
             } else {
-                // No ID, go back
                 console.warn("No quiz ID found, redirecting.");
-                Router.navigate('/host/select-quiz');
-                this.scene.start('SelectQuizScene', { client: this.client });
+                this.goBackToQuizSelection();
                 return;
             }
         }
 
-        // Show settings UI
         this.showSettingsUI();
-
-        // Setup event listeners
         this.setupEventListeners();
 
-        // Set the quiz title
         const titleEl = document.getElementById('settings-quiz-title');
         const titleExpandBtn = document.getElementById('settings-title-expand-btn');
         const titleExpandIcon = document.getElementById('settings-title-expand-icon');
@@ -75,21 +56,16 @@ export class QuizSettingScene extends Phaser.Scene {
         if (titleEl && this.selectedQuiz) {
             titleEl.innerText = this.selectedQuiz.title;
 
-            // Use requestAnimationFrame to let the DOM update and calculate heights
             requestAnimationFrame(() => {
-                // If scrollHeight is greater than clientHeight, it means line-clamp is truncating text
                 if (titleEl.scrollHeight > titleEl.clientHeight) {
                     if (titleExpandBtn) {
                         titleExpandBtn.classList.remove('hidden');
-
                         titleExpandBtn.onclick = () => {
                             const isExpanded = !titleEl.classList.contains('line-clamp-2');
                             if (isExpanded) {
-                                // Collapse
                                 titleEl.classList.add('line-clamp-2');
                                 titleExpandIcon?.classList.remove('rotate-180');
                             } else {
-                                // Expand
                                 titleEl.classList.remove('line-clamp-2');
                                 titleExpandIcon?.classList.add('rotate-180');
                             }
@@ -99,10 +75,6 @@ export class QuizSettingScene extends Phaser.Scene {
             });
         }
 
-        // Update URL (ensure param is there if not already)
-
-
-        // Listen for browser back
         window.addEventListener('popstate', this.handlePopState);
     }
 
@@ -111,31 +83,23 @@ export class QuizSettingScene extends Phaser.Scene {
     };
 
     showSettingsUI() {
-        // Hide all other UIs
         const uiIds = ['lobby-ui', 'quiz-selection-ui', 'create-room-ui'];
         uiIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.add('hidden');
         });
 
-        // Show quiz settings UI
-        if (this.quizSettingsUI) {
-            this.quizSettingsUI.classList.remove('hidden');
-        }
+        if (this.quizSettingsUI) this.quizSettingsUI.classList.remove('hidden');
     }
 
     hideSettingsUI() {
-        if (this.quizSettingsUI) {
-            this.quizSettingsUI.classList.add('hidden');
-        }
+        if (this.quizSettingsUI) this.quizSettingsUI.classList.add('hidden');
     }
 
     setupEventListeners() {
-        // --- ZIGMA LOGO (HOME) ---
         const zigmaLogo = document.getElementById('settings-zigma-logo');
         if (zigmaLogo) {
             zigmaLogo.onclick = () => {
-                // Show Global Loading
                 const overlay = document.getElementById('auth-loading-overlay');
                 const text = document.getElementById('auth-loading-text');
                 if (overlay) {
@@ -143,144 +107,108 @@ export class QuizSettingScene extends Phaser.Scene {
                     if (text) text.innerText = 'Going back...';
                 }
 
-                // Transition back to selection
                 TransitionManager.close(() => {
                     this.cleanup();
                     this.hideSettingsUI();
                     Router.navigate('/host/select-quiz');
-                    this.scene.start('SelectQuizScene', { client: this.client });
+                    this.startManager('SelectQuizManager');
                     
-                    // Re-open Iris and then hide loading (No flicker)
                     setTimeout(() => {
                         TransitionManager.open();
-                        // Hide loading shortly AFTER iris starts opening
-                        setTimeout(() => {
-                            if (overlay) overlay.classList.add('hidden');
-                        }, 100);
+                        setTimeout(() => { if (overlay) overlay.classList.add('hidden'); }, 100);
                     }, 500);
                 });
             };
         }
 
-        // --- DROPDOWN SETUP ---
-
-        // Difficulty Dropdown
         this.setupDropdown('settings-difficulty-trigger', 'settings-difficulty-menu', 'settings-difficulty-arrow');
         const diffOptions = document.querySelectorAll('.diff-opt');
         diffOptions.forEach(opt => {
-            // Clone and replace to remove old listeners
             const newOpt = opt.cloneNode(true) as HTMLElement;
             opt.parentNode?.replaceChild(newOpt, opt);
-
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = target.dataset.value || 'mudah';
                 const label = target.dataset.label || 'Mudah';
-
                 this.settingsDifficulty = val;
 
-                // Update UI
                 const display = document.getElementById('settings-difficulty-selected');
                 if (display) display.innerText = label;
 
-                // Highlight active
                 document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
                 target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
-                // Close menu
                 this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
             });
         });
 
-        // Timer Dropdown
         this.setupDropdown('settings-timer-trigger', 'settings-timer-menu', 'settings-timer-arrow');
         const timerOptions = document.querySelectorAll('.timer-opt');
         timerOptions.forEach(opt => {
             const newOpt = opt.cloneNode(true) as HTMLElement;
             opt.parentNode?.replaceChild(newOpt, opt);
-
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = parseInt(target.dataset.value || '300');
                 const label = target.dataset.label || '5 Menit';
-
                 this.settingsTimer = val;
 
                 const display = document.getElementById('settings-timer-selected');
                 if (display) display.innerText = label;
 
-                timerOptions.forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
+                document.querySelectorAll('.timer-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
                 target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
             });
         });
 
-        // Question Count Dropdown
         this.setupDropdown('settings-question-trigger', 'settings-question-menu', 'settings-question-arrow');
         const questionOptions = document.querySelectorAll('.question-opt');
         questionOptions.forEach(opt => {
             const newOpt = opt.cloneNode(true) as HTMLElement;
             opt.parentNode?.replaceChild(newOpt, opt);
-
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = parseInt(target.dataset.value || '5');
                 const label = target.dataset.label || '5 Soal';
-
                 this.settingsQuestionCount = val;
 
                 const display = document.getElementById('settings-question-selected');
                 if (display) display.innerText = label;
 
-                questionOptions.forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
+                document.querySelectorAll('.question-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
                 target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-question-menu', 'settings-question-arrow');
             });
         });
 
-        // Sound Toggle
         const soundContainer = document.getElementById('sound-toggle-container');
-
         if (soundContainer) {
-            // Clone to remove old listeners
             const newContainer = soundContainer.cloneNode(true) as HTMLElement;
             soundContainer.parentNode?.replaceChild(newContainer, soundContainer);
-
-            // Re-select inner elements from the new container
             const newToggle = newContainer.querySelector('#sound-toggle-btn') as HTMLElement;
             const newKnob = newContainer.querySelector('#sound-toggle-knob') as HTMLElement;
 
             newContainer.onclick = () => {
                 this.soundEnabled = !this.soundEnabled;
-
                 if (this.soundEnabled) {
-                    if (newToggle) {
-                        newToggle.classList.remove('bg-white');
-                        newToggle.classList.add('bg-[#478D47]');
-                    }
+                    if (newToggle) { newToggle.classList.remove('bg-white'); newToggle.classList.add('bg-[#478D47]'); }
                     if (newKnob) newKnob.classList.add('translate-x-5');
                 } else {
-                    if (newToggle) {
-                        newToggle.classList.remove('bg-[#478D47]');
-                        newToggle.classList.add('bg-white');
-                    }
+                    if (newToggle) { newToggle.classList.remove('bg-[#478D47]'); newToggle.classList.add('bg-white'); }
                     if (newKnob) newKnob.classList.remove('translate-x-5');
                 }
-
-                console.log("Sound Enabled:", this.soundEnabled);
             };
         }
 
-        // Click Outside to Close All Dropdowns
         this._outsideClickHandler = (e: MouseEvent) => {
             const dropdowns = [
                 { menu: 'settings-timer-menu', trigger: 'settings-timer-trigger', arrow: 'settings-timer-arrow' },
                 { menu: 'settings-question-menu', trigger: 'settings-question-trigger', arrow: 'settings-question-arrow' },
                 { menu: 'settings-difficulty-menu', trigger: 'settings-difficulty-trigger', arrow: 'settings-difficulty-arrow' }
             ];
-
             dropdowns.forEach(d => {
                 const menu = document.getElementById(d.menu);
                 const trigger = document.getElementById(d.trigger);
@@ -293,57 +221,39 @@ export class QuizSettingScene extends Phaser.Scene {
         };
         document.addEventListener('click', this._outsideClickHandler);
 
-        // --- BACK BUTTON ---
         const settingsBackBtn = document.getElementById('settings-back-btn');
         if (settingsBackBtn) {
-            // Clone to remove old listeners
             const newBackBtn = settingsBackBtn.cloneNode(true) as HTMLElement;
             settingsBackBtn.parentNode?.replaceChild(newBackBtn, settingsBackBtn);
-
             newBackBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.goBackToQuizSelection();
-                });
+                TransitionManager.transitionTo(() => this.goBackToQuizSelection());
             };
         }
 
-        // --- BUAT ROOM BUTTON ---
         const settingsContinueBtn = document.getElementById('settings-continue-btn') as HTMLButtonElement;
         if (settingsContinueBtn) {
-            // Reset button state and styles to ensure it's not stuck on "CREATING..." from a previous attempt
             settingsContinueBtn.innerHTML = `CREATE`;
             settingsContinueBtn.disabled = false;
             settingsContinueBtn.classList.remove('opacity-80', 'cursor-not-allowed');
             settingsContinueBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
 
-            // Clone to remove old listeners
             const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLButtonElement;
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
-
             newContinueBtn.onclick = () => {
-                // Change UI to loading state
                 newContinueBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> CREATING...`;
                 newContinueBtn.disabled = true;
                 newContinueBtn.classList.add('opacity-80', 'cursor-not-allowed');
                 newContinueBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
-
-                // Call create room directly. UI transition will happen upon success.
                 this.createRoom(newContinueBtn);
             };
         }
     }
 
-    private _outsideClickHandler: ((e: MouseEvent) => void) | null = null;
-
-    // --- DROPDOWN HELPERS ---
-
     setupDropdown(triggerId: string, menuId: string, arrowId?: string) {
         const trigger = document.getElementById(triggerId);
         if (trigger) {
-            // Clone to remove old listeners
             const newTrigger = trigger.cloneNode(true) as HTMLElement;
             trigger.parentNode?.replaceChild(newTrigger, trigger);
-
             newTrigger.onclick = (e) => {
                 e.stopPropagation();
                 const menu = document.getElementById(menuId);
@@ -356,7 +266,6 @@ export class QuizSettingScene extends Phaser.Scene {
     toggleDropdownElement(menuId: string, arrowId: string | undefined | null, show: boolean) {
         const menu = document.getElementById(menuId);
         const arrow = arrowId ? document.getElementById(arrowId) : null;
-
         if (!menu) return;
 
         if (show) {
@@ -370,9 +279,7 @@ export class QuizSettingScene extends Phaser.Scene {
             menu.classList.remove('scale-100', 'opacity-100');
             menu.classList.add('scale-95', 'opacity-0');
             if (arrow) arrow.classList.remove('rotate-180');
-            setTimeout(() => {
-                menu.classList.add('hidden');
-            }, 200);
+            setTimeout(() => menu.classList.add('hidden'), 200);
         }
     }
 
@@ -380,56 +287,41 @@ export class QuizSettingScene extends Phaser.Scene {
         this.toggleDropdownElement(menuId, arrowId, false);
     }
 
-    // --- NAVIGATION ---
-
     goBackToQuizSelection() {
         this.cleanup();
         this.hideSettingsUI();
-        this.scene.start('SelectQuizScene', { client: this.client });
+        Router.navigate('/host/select-quiz');
+        this.startManager('SelectQuizManager');
     }
-
-    // --- ROOM CREATION ---
 
     async createRoom(btn?: HTMLButtonElement) {
         if (!this.selectedQuiz) return;
 
-        // MAP CONFIGURATION
-        let mapFile = 'map_newest_easy_nomor1.tmj'; // Default Mudah
+        let mapFile = 'map_newest_easy_nomor1.tmj';
         if (this.settingsDifficulty === 'sedang') mapFile = 'map_medium.tmj';
         if (this.settingsDifficulty === 'sulit') mapFile = 'map_hard.tmj';
 
-        // ENEMY COUNT CALCULATION
-        // 5 soal -> 10 enemies, 10 soal -> 20 enemies
         const enemyCount = this.settingsQuestionCount === 5 ? 10 : 20;
-
         const roomCode = this.generateRoomCode();
         const profile = authService.getStoredProfile();
         const hostId = profile ? profile.id : null;
 
-        // Shuffle and Pick Questions based on settings
         let questions = [...(this.selectedQuiz.questions || [])];
-        // Simple shuffle
         questions.sort(() => Math.random() - 0.5);
-        // Limit to question count
         questions = questions.slice(0, this.settingsQuestionCount);
 
-        // 1. Create Session in Supabase B
         try {
-            const { data, error } = await supabaseB
-                .from(SESSION_TABLE)
-                .insert({
-                    game_pin: roomCode,
-                    quiz_id: this.selectedQuiz.id,
-                    status: 'waiting',
-                    question_limit: this.settingsQuestionCount,
-                    total_time_minutes: this.settingsTimer / 60,
-                    difficulty: this.settingsDifficulty,
-                    host_id: hostId,
-                    created_at: new Date().toISOString(),
-                    current_questions: questions // Save selected questions
-                })
-                .select()
-                .single();
+            const { data, error } = await supabaseB.from(SESSION_TABLE).insert({
+                game_pin: roomCode,
+                quiz_id: this.selectedQuiz.id,
+                status: 'waiting',
+                question_limit: this.settingsQuestionCount,
+                total_time_minutes: this.settingsTimer / 60,
+                difficulty: this.settingsDifficulty,
+                host_id: hostId,
+                created_at: new Date().toISOString(),
+                current_questions: questions
+            }).select().single();
 
             if (error) {
                 console.error("Supabase Session Error:", error);
@@ -443,33 +335,24 @@ export class QuizSettingScene extends Phaser.Scene {
                 return;
             }
 
-            console.log("Session Created in Supabase B:", data);
-
-            // 1.5 Add Host to Participants
             if (data && data.id) {
-                const { error: partError } = await supabaseB
-                    .from(PARTICIPANT_TABLE)
-                    .insert({
-                        session_id: data.id,
-                        nickname: profile?.nickname || profile?.fullname || profile?.username || "Host",
-                        user_id: hostId,
-                        joined_at: new Date().toISOString(),
-                        score: 0
-                    });
-
-                if (partError) {
-                    console.error("Error adding host to participants:", partError);
-                }
+                await supabaseB.from(PARTICIPANT_TABLE).insert({
+                    session_id: data.id,
+                    nickname: profile?.nickname || profile?.fullname || profile?.username || "Host",
+                    user_id: hostId,
+                    joined_at: new Date().toISOString(),
+                    score: 0
+                });
             }
 
             const options = {
                 roomCode: roomCode,
-                sessionId: data.id, // Pass Supabase Session ID to server
+                sessionId: data.id,
                 difficulty: this.settingsDifficulty,
                 subject: this.selectedQuiz.category.toLowerCase(),
                 quizId: this.selectedQuiz.id,
                 quizTitle: this.selectedQuiz.title,
-                questions: questions, // PASS THE QUESTIONS!
+                questions: questions,
                 map: mapFile,
                 questionCount: this.settingsQuestionCount,
                 enemyCount: enemyCount,
@@ -485,34 +368,35 @@ export class QuizSettingScene extends Phaser.Scene {
                 }
             };
 
-            // 2. Create Room on Colyseus
+            // Before calling create room, ensure we load client if not passed previously
+            if (!this.client) {
+                const envServerUrl = import.meta.env.VITE_SERVER_URL;
+                let host = envServerUrl;
+                if (!host) {
+                    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+                    host = window.location.hostname === 'localhost' ? 'ws://localhost:2567' : `${protocol}://${window.location.host}`;
+                }
+                this.client = new Client(host);
+            }
+
             localStorage.setItem('currentRoomOptions', JSON.stringify(options));
             const room = await this.client.create("game_room", options);
-            console.log("Room created!", room);
 
-            // Save persistent session info for refresh recovery (Colyseus v0.15 API)
             localStorage.setItem('currentRoomId', room.id);
             localStorage.setItem('currentSessionId', room.sessionId);
-            localStorage.setItem('currentReconnectionToken', room.reconnectionToken); // v0.15 reconnect token
+            localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
+            
+            // To pass parameters to Phaser, we should use localStorage or window object, as we are dynamically importing game.ts
+            // LocalStorage is safest for now
+            localStorage.setItem('lastGameOptions', JSON.stringify(options));
+            localStorage.setItem('lastSelectedQuiz', JSON.stringify(this.selectedQuiz));
 
-            // Save options for Restart functionality
-            this.registry.set('lastGameOptions', options);
-            this.registry.set('lastSelectedQuiz', this.selectedQuiz);
-
-            // Execute scene transition cleanly using TransitionManager closing
             TransitionManager.close(() => {
-                // Hide all overlays
                 this.hideSettingsUI();
-
-                // Navigate to Waiting Room
                 this.cleanup();
-                Router.navigate(`/host/${roomCode}/lobby`); // Correct route for refresh logic
-                this.scene.start('HostWaitingRoomScene', { room, isHost: true });
-
-                // Manually open the iris after the new scene is kicked off.
-                setTimeout(() => {
-                    TransitionManager.open();
-                }, 600);
+                Router.navigate(`/host/${roomCode}/lobby`);
+                this.startGameEngine('HostWaitingRoomScene', { room, isHost: true });
+                setTimeout(() => TransitionManager.open(), 600);
             });
 
         } catch (e) {
@@ -524,7 +408,6 @@ export class QuizSettingScene extends Phaser.Scene {
                 btn.classList.remove('opacity-80', 'cursor-not-allowed');
                 btn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
             }
-            // If error, we might be stuck on black screen, so force open
             TransitionManager.open();
         }
     }
@@ -532,8 +415,6 @@ export class QuizSettingScene extends Phaser.Scene {
     generateRoomCode(): string {
         return Math.floor(100000 + Math.random() * 900000).toString();
     }
-
-    // --- CLEANUP ---
 
     cleanup() {
         window.removeEventListener('popstate', this.handlePopState);
@@ -543,8 +424,21 @@ export class QuizSettingScene extends Phaser.Scene {
         }
     }
 
-    shutdown() {
-        this.cleanup();
+    private startManager(managerName: string, data?: any) {
+        if (managerName === 'SelectQuizManager') {
+            import('../selectquiz/page').then(m => {
+                const manager = new m.SelectQuizManager();
+                manager.init(data || { client: this.client });
+            });
+        }
+    }
+
+    private startGameEngine(startScene: string, sceneData?: any) {
+        import('../../../game').then((engine) => {
+            engine.initializeGame(startScene, sceneData);
+        }).catch(err => {
+            console.error("Failed to load game engine:", err);
+            window.location.href = '/';
+        });
     }
 }
-

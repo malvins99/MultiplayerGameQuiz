@@ -1,66 +1,53 @@
-import Phaser from 'phaser';
 import { Client } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { Quiz, fetchQuizzesPaginated, fetchCategoriesWithRaw, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { authService } from '../../../services/auth/AuthService';
 
-export class SelectQuizScene extends Phaser.Scene {
+export class SelectQuizManager {
     client!: Client;
-
-    // Quiz Selection State (Server-Side Pagination)
-    pageQuizzes: Quiz[] = []; // quizzes for current page only
+    pageQuizzes: Quiz[] = [];
     currentPage: number = 1;
     itemsPerPage: number = 9;
     totalPages: number = 1;
     totalCount: number = -1;
     favorites: Set<string> = new Set();
-    rawCategoryMap: Map<string, string> = new Map(); // display label -> raw DB value
+    rawCategoryMap: Map<string, string> = new Map();
 
-    // Filters
     searchQuery: string = '';
     selectedCategory: string = '';
     showFavoritesOnly: boolean = false;
     showMyQuizzesOnly: boolean = false;
 
-    // UI Element
     quizSelectionUI: HTMLElement | null = null;
     isLoading: boolean = false;
     tooltip: HTMLElement | null = null;
     lastFavoritedId: string | null = null;
+    
+    private searchTimeout: any = null;
+    private _outsideClickHandler: ((e: MouseEvent) => void) | null = null;
 
-    constructor() {
-        super('SelectQuizScene');
-    }
+    constructor() {}
 
     init(data: { client: Client }) {
         this.client = data.client;
+        this.start();
     }
 
-    create() {
+    private start() {
         this.quizSelectionUI = document.getElementById('quiz-selection-ui');
-
-        // Hide UI initially to prevent flash
         this.hideAllUI();
 
-        // Extra safety: Force hide lobby-ui immediately
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.add('hidden');
 
         this.createTooltip();
         this.setupEventListeners();
-        // this.loadFavorites(); // REMOVED
-
-        // Show UI
         this.showQuizSelection();
 
-        // URL
         Router.navigate('/host/select-quiz');
-
-        // Listen for browser back
         window.addEventListener('popstate', this.handlePopState);
 
-        // Load quiz data from Supabase (async)
         this.loadQuizData();
     }
 
@@ -69,15 +56,9 @@ export class SelectQuizScene extends Phaser.Scene {
         this.showLoadingState();
 
         try {
-            // Fetch categories and user favorites in parallel
             const profile = authService.getStoredProfile();
-            const promises: any[] = [
-                fetchCategoriesWithRaw()
-            ];
-
-            if (profile) {
-                promises.push(fetchUserFavorites(profile.id));
-            }
+            const promises: any[] = [fetchCategoriesWithRaw()];
+            if (profile) promises.push(fetchUserFavorites(profile.id));
 
             const results = await Promise.all(promises);
             const categoryPairs = results[0] as { raw: string; display: string }[];
@@ -85,14 +66,10 @@ export class SelectQuizScene extends Phaser.Scene {
 
             this.favorites = new Set(userFavorites);
 
-            // Build raw category map (display -> raw) for server-side filter
             this.rawCategoryMap.clear();
             categoryPairs.forEach(c => this.rawCategoryMap.set(c.display, c.raw));
-
-            // Populate category dropdown with display labels
             this.populateCategories(categoryPairs.map(c => c.display));
 
-            // Fetch first page of quizzes from server
             await this.fetchPage();
         } catch (err) {
             console.error('Failed to load quiz data:', err);
@@ -101,17 +78,12 @@ export class SelectQuizScene extends Phaser.Scene {
         }
     }
 
-    /**
-     * Fetch quizzes for the current page from the server (offset pagination).
-     */
     async fetchPage() {
         this.isLoading = true;
         this.showLoadingState();
 
         try {
             const profile = authService.getStoredProfile();
-
-            // Reverse-map the displayed category back to raw DB value
             let rawCategory: string | undefined;
             if (this.selectedCategory) {
                 rawCategory = this.rawCategoryMap.get(this.selectedCategory) || undefined;
@@ -143,25 +115,18 @@ export class SelectQuizScene extends Phaser.Scene {
         const grid = document.getElementById('quiz-grid');
         if (grid) {
             let skeletonCount = this.itemsPerPage;
-
-            // If totalCount is known (not reset by filters), calculate remaining items for this page
             if (this.totalCount !== undefined && this.totalCount !== -1) {
                 const remaining = this.totalCount - (this.currentPage - 1) * this.itemsPerPage;
                 skeletonCount = Math.max(1, Math.min(this.itemsPerPage, remaining));
             }
-
             let skeletons = '';
             for (let i = 0; i < skeletonCount; i++) {
                 skeletons += `
                     <div class="bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0 animate-pulse">
                         <div class="flex justify-between items-start shrink-0 gap-2 mb-3">
-                            <!-- Badge Skeleton -->
                             <div class="w-16 h-5 bg-gray-200 rounded shadow-sm"></div>
-                            <!-- Favorite Icon Skeleton -->
                             <div class="w-6 h-6 shrink-0 rounded-full bg-gray-100"></div>
                         </div>
-                        
-                        <!-- Title Skeleton: more detailed layout -->
                         <div class="space-y-1.5">
                             <div class="w-full h-3 bg-gray-200 rounded"></div>
                             <div class="w-[85%] h-3 bg-gray-100 rounded"></div>
@@ -181,11 +146,9 @@ export class SelectQuizScene extends Phaser.Scene {
         const catSelect = document.getElementById('quiz-category-select') as HTMLSelectElement;
         const customMenu = document.getElementById('custom-cat-menu');
 
-        // Clear existing options to avoid duplicates
         if (catSelect) catSelect.innerHTML = '';
         if (customMenu) customMenu.innerHTML = '';
 
-        // 1. Populate Native (Hidden)
         if (catSelect) {
             categories.forEach(cat => {
                 const opt = document.createElement('option');
@@ -195,7 +158,6 @@ export class SelectQuizScene extends Phaser.Scene {
             });
         }
 
-        // 2. Populate Custom Menu
         if (customMenu) {
             const allBtn = this.createCustomOption('ALL', '');
             customMenu.appendChild(allBtn);
@@ -212,10 +174,7 @@ export class SelectQuizScene extends Phaser.Scene {
         btn.className = "w-full text-left px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-[#478D47] uppercase tracking-tight flex items-center justify-between group mt-1";
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
-
-        btn.onclick = () => {
-            this.handleCategoryChange(value, label);
-        };
+        btn.onclick = () => this.handleCategoryChange(value, label);
         return btn;
     }
 
@@ -235,26 +194,20 @@ export class SelectQuizScene extends Phaser.Scene {
         if (menu) {
             const btns = menu.querySelectorAll('button');
             btns.forEach(b => {
-                // Keep the theme color always
                 b.classList.add('text-[#478D47]');
-                // Remove selected highlights
                 b.classList.remove('bg-[#F1F8E9]', 'font-bold');
                 if (b.dataset.value === value) {
-                    // Highlight current selection
                     b.classList.add('bg-[#F1F8E9]', 'font-bold');
                 }
             });
         }
-
         this.applyFilters();
     }
 
     setupEventListeners() {
-        // --- ZIGMA LOGO (HOME) ---
         const zigmaLogo = document.getElementById('select-quiz-zigma-logo');
         if (zigmaLogo) {
             zigmaLogo.onclick = () => {
-                // Show Global Loading
                 const overlay = document.getElementById('auth-loading-overlay');
                 const text = document.getElementById('auth-loading-text');
                 if (overlay) {
@@ -262,36 +215,26 @@ export class SelectQuizScene extends Phaser.Scene {
                     if (text) text.innerText = 'Going back...';
                 }
 
-                // Transition back home
                 TransitionManager.close(() => {
                     this.cleanup();
                     this.hideUI();
                     Router.navigate('/');
-                    this.scene.start('LobbyScene');
+                    this.startManager('LobbyManager');
                     
-                    // Re-open Iris and then hide loading (No flicker)
                     setTimeout(() => {
                         TransitionManager.open();
-                        // Hide loading shortly AFTER iris starts opening
-                        setTimeout(() => {
-                            if (overlay) overlay.classList.add('hidden');
-                        }, 100);
+                        setTimeout(() => { if (overlay) overlay.classList.add('hidden'); }, 100);
                     }, 500);
                 });
             };
         }
 
-        // --- CUSTOM DROPDOWN TOGGLE ---
         this.setupDropdown('custom-cat-trigger', 'custom-cat-menu', 'custom-cat-arrow', (val, label) => {
             this.handleCategoryChange(val, label);
         });
 
-        // Click Outside to Close Category Dropdown
         this._outsideClickHandler = (e: MouseEvent) => {
-            const dropdowns = [
-                { menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' }
-            ];
-
+            const dropdowns = [{ menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' }];
             dropdowns.forEach(d => {
                 const menu = document.getElementById(d.menu);
                 const trigger = document.getElementById(d.trigger);
@@ -304,39 +247,24 @@ export class SelectQuizScene extends Phaser.Scene {
         };
         document.addEventListener('click', this._outsideClickHandler);
 
-        // --- QUIZ SELECTION UI ---
         const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
-        const searchBtn = document.getElementById('search-trigger-btn');
-        const favBtn = document.getElementById('quiz-filter-fav-btn');
-        const prevBtn = document.getElementById('prev-page-btn');
-        const nextBtn = document.getElementById('next-page-btn');
-        const quizBackBtn = document.getElementById('quiz-back-btn');
-
         if (searchInput) {
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
+            // Replaced keydown logic with debounced input hook for perfect execution
+            searchInput.addEventListener('input', (e) => {
+                if (this.searchTimeout) clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
                     this.searchQuery = (e.target as HTMLInputElement).value;
                     this.currentPage = 1;
                     this.applyFilters();
-                }
+                }, 300);
             });
         }
 
-        if (searchBtn) {
-            searchBtn.onclick = () => {
-                const val = searchInput ? searchInput.value : '';
-                this.searchQuery = val;
-                this.currentPage = 1;
-                this.applyFilters();
-            }
-        }
-
+        const favBtn = document.getElementById('quiz-filter-fav-btn');
         if (favBtn) {
             favBtn.onclick = () => {
                 this.showFavoritesOnly = !this.showFavoritesOnly;
-                // Exclusivity: Turn off My Quizzes if Fav is On
                 if (this.showFavoritesOnly) this.showMyQuizzesOnly = false;
-
                 this.updateFilterUI();
                 this.currentPage = 1;
                 this.applyFilters();
@@ -351,17 +279,15 @@ export class SelectQuizScene extends Phaser.Scene {
                     alert('Silakan login untuk melihat quiz buatan Anda.');
                     return;
                 }
-
                 this.showMyQuizzesOnly = !this.showMyQuizzesOnly;
-                // Exclusivity: Turn off Fav if My Quiz is On
                 if (this.showMyQuizzesOnly) this.showFavoritesOnly = false;
-
                 this.updateFilterUI();
                 this.currentPage = 1;
                 this.applyFilters();
             };
         }
 
+        const prevBtn = document.getElementById('prev-page-btn');
         if (prevBtn) {
             prevBtn.onclick = () => {
                 if (this.currentPage > 1) {
@@ -371,6 +297,7 @@ export class SelectQuizScene extends Phaser.Scene {
             };
         }
 
+        const nextBtn = document.getElementById('next-page-btn');
         if (nextBtn) {
             nextBtn.onclick = () => {
                 if (this.currentPage < this.totalPages) {
@@ -380,25 +307,18 @@ export class SelectQuizScene extends Phaser.Scene {
             };
         }
 
+        const quizBackBtn = document.getElementById('quiz-back-btn');
         if (quizBackBtn) {
             quizBackBtn.onclick = () => {
-                TransitionManager.transitionTo(() => {
-                    this.goBackToLobby();
-                });
+                TransitionManager.transitionTo(() => this.goBackToLobby());
             };
         }
     }
 
     updateFilterUI() {
-        // Toggle Fav Icon Style
         const favBtn = document.getElementById('quiz-filter-fav-btn');
         const favIcon = favBtn?.querySelector('span');
         if (favIcon) {
-            // Usually text-white/40 is default. Active is text-pink-500.
-            // But let's check your original classes. 
-            // Original: text-white/40 group-hover:text-pink-500 (hover removed previously)
-            // Active: text-pink-500
-
             if (this.showFavoritesOnly) {
                 favIcon.classList.remove('text-[#94A3B8]');
                 favIcon.classList.add('text-red-500', 'fill-current', 'heart-water-fill');
@@ -408,7 +328,6 @@ export class SelectQuizScene extends Phaser.Scene {
             }
         }
 
-        // Toggle My Quiz Icon Style
         const myQuizBtn = document.getElementById('quiz-filter-my-btn');
         const myIcon = myQuizBtn?.querySelector('span');
         if (myQuizBtn && myIcon) {
@@ -422,22 +341,15 @@ export class SelectQuizScene extends Phaser.Scene {
                 myIcon.classList.add('text-[#6CC452]/40');
             }
         }
-
     }
-
-    private _outsideClickHandler: ((e: MouseEvent) => void) | null = null;
-
-    // --- DROPDOWN HELPERS ---
 
     setupDropdown(triggerId: string, menuId: string, arrowId?: string, onSelect?: (val: string, label: string) => void) {
         const trigger = document.getElementById(triggerId);
         if (trigger) {
             trigger.onclick = (e) => {
                 e.stopPropagation();
-
                 const menu = document.getElementById(menuId);
                 const isHidden = menu?.classList.contains('hidden');
-
                 this.toggleDropdownElement(menuId, arrowId, !!isHidden);
             };
         }
@@ -460,9 +372,7 @@ export class SelectQuizScene extends Phaser.Scene {
             menu.classList.remove('scale-100', 'opacity-100');
             menu.classList.add('scale-95', 'opacity-0');
             if (arrow) arrow.classList.remove('rotate-180');
-            setTimeout(() => {
-                menu.classList.add('hidden');
-            }, 200);
+            setTimeout(() => menu.classList.add('hidden'), 200);
         }
     }
 
@@ -474,10 +384,6 @@ export class SelectQuizScene extends Phaser.Scene {
         this.toggleDropdownElement('custom-cat-menu', 'custom-cat-arrow', show);
     }
 
-    // --- DATA & LOGIC ---
-
-    // loadFavorites removed as it is now handled in loadQuizData
-
     async toggleFavorite(quizId: string) {
         const profile = authService.getStoredProfile();
         if (!profile) {
@@ -486,8 +392,6 @@ export class SelectQuizScene extends Phaser.Scene {
         }
 
         const userId = profile.id;
-
-        // Optimistic UI Update
         if (this.favorites.has(quizId)) {
             this.favorites.delete(quizId);
             this.lastFavoritedId = null;
@@ -496,10 +400,7 @@ export class SelectQuizScene extends Phaser.Scene {
             this.lastFavoritedId = quizId;
         }
 
-        // Re-render immediately
         this.renderQuizGrid();
-
-        // Sync with Supabase
         await toggleFavoriteInSupabase(quizId, userId);
     }
 
@@ -518,9 +419,8 @@ export class SelectQuizScene extends Phaser.Scene {
     }
 
     applyFilters() {
-        // Reset to page 1 when filters change, then fetch from server
         this.currentPage = 1;
-        this.totalCount = -1; // Reset to indicate unknown count
+        this.totalCount = -1;
         this.fetchPage();
     }
 
@@ -531,10 +431,8 @@ export class SelectQuizScene extends Phaser.Scene {
         const nextBtn = document.getElementById('next-page-btn') as HTMLButtonElement;
 
         if (!grid) return;
-
         grid.innerHTML = '';
 
-        // Server-side pagination: pageQuizzes already contains only current page data
         const totalPages = this.totalPages;
         const pageItems = this.pageQuizzes;
 
@@ -547,76 +445,53 @@ export class SelectQuizScene extends Phaser.Scene {
                     <p class="text-white/70 font-['Retro_Gaming'] text-lg uppercase mb-2 tracking-widest">
                         Quiz Tidak Ditemukan
                     </p>
-                    
                     <button id="reset-filters-btn" class="px-6 py-3 bg-[#1F7D53]/10 border border-[#1F7D53]/30 text-[#1F7D53] hover:bg-[#1F7D53] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">refresh</span>
-                        Reset Filter
+                        <span class="material-symbols-outlined text-sm">refresh</span> Reset Filter
                     </button>
                 </div>
             `;
-
             const btn = document.getElementById('reset-filters-btn');
             if (btn) btn.onclick = () => this.resetFilters();
         }
 
-        // Render Cards
         pageItems.forEach(quiz => {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
-
             let badgeColor = 'bg-[#6CC452] text-white border-2 border-[#478D47]';
 
             card.className = "group bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0";
-
             card.innerHTML = `
-                <!-- Background Gradient -->
                 <div class="absolute inset-0 bg-gradient-to-br from-[#4C5C2D]/0 to-[#1F7D53]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-1.5">
-                    <!-- Pixel Font Badge - Adjusted text size to be smaller -->
                     <span class="px-1.5 py-0.5 md:px-2 md:py-1 ${badgeColor} text-[9px] md:text-[10px] font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
-                    
                     <button class="fav-btn p-1 flex items-center justify-center transition-all relative z-20 group/fav" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[20px] md:text-[22px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
                     </button>
                 </div>
-                
-                <!-- Title - Adjusted spacing to be closer to badge -->
                 <div class="relative z-10 font-bold text-[#478D47] -mt-2 group-hover:text-[#6CC452] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
                     <span class="quiz-title-tooltip-trigger line-clamp-2 w-full">${quiz.title}</span>
                 </div>
             `;
 
-            // Tooltip Logic
             const titleEl = card.querySelector('.quiz-title-tooltip-trigger');
             if (titleEl) {
-                titleEl.addEventListener('mouseenter', () => {
-                    this.showTooltip(quiz.title);
-                });
-                titleEl.addEventListener('mousemove', (e: any) => {
-                    this.moveTooltip(e);
-                });
-                titleEl.addEventListener('mouseleave', () => {
-                    this.hideTooltip();
-                });
+                titleEl.addEventListener('mouseenter', () => this.showTooltip(quiz.title));
+                titleEl.addEventListener('mousemove', (e: any) => this.moveTooltip(e));
+                titleEl.addEventListener('mouseleave', () => this.hideTooltip());
             }
 
-            // Card Click -> QuizSettingScene
             card.onclick = (e) => {
                 if (!(e.target as HTMLElement).closest('.fav-btn')) {
                     TransitionManager.transitionTo(() => {
                         this.hideUI();
                         this.cleanup();
-                        // Simpan ID ke localStorage agar URL tetap bersih (/host/settings) tapi refresh tetap jalan
                         localStorage.setItem('tempSettingsQuizId', quiz.id);
-                        // Navigate ke URL bersih
                         Router.navigate('/host/settings');
-                        this.scene.start('QuizSettingScene', { quiz, client: this.client });
+                        this.startManager('QuizSettingManager', { quiz, client: this.client });
                     });
                 }
             };
 
-            // Favorite Click
             const favBtnEl = card.querySelector('.fav-btn');
             favBtnEl?.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -626,23 +501,13 @@ export class SelectQuizScene extends Phaser.Scene {
             grid.appendChild(card);
         });
 
-        // Update Pagination UI
         if (pageNumbers) {
             const tp = totalPages || 1;
             const digits = String(tp).length;
             const inputWidth = (digits * 0.75) + 1.2;
             pageNumbers.innerHTML = `
                 <div class="flex items-center gap-1">
-                    <input
-                        id="page-input"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        maxlength="${digits}"
-                        value="${this.currentPage}"
-                        class="h-7 text-center p-0 bg-transparent text-[#4B5563] font-bold text-xl rounded-none border-none focus:outline-none focus:ring-0 transition-colors"
-                        style="width: ${inputWidth}em; -moz-appearance: textfield; appearance: textfield;"
-                    />
+                    <input id="page-input" type="text" inputmode="numeric" autocomplete="off" maxlength="${digits}" value="${this.currentPage}" class="h-7 text-center p-0 bg-transparent text-[#4B5563] font-bold text-xl rounded-none border-none focus:outline-none focus:ring-0 transition-colors" style="width: ${inputWidth}em; -moz-appearance: textfield; appearance: textfield;" />
                     <span class="text-white font-bold text-xl">/ ${tp}</span>
                 </div>
             `;
@@ -651,53 +516,30 @@ export class SelectQuizScene extends Phaser.Scene {
             if (pageInput) {
                 const navigateToPage = () => {
                     let val = parseInt(pageInput.value);
-                    if (isNaN(val) || val < 1) {
-                        val = 1;
-                    } else if (val > tp) {
-                        val = tp;
-                    }
+                    if (isNaN(val) || val < 1) val = 1;
+                    else if (val > tp) val = tp;
                     this.currentPage = val;
                     this.fetchPage();
                 };
-
                 pageInput.addEventListener('input', () => {
                     pageInput.value = pageInput.value.replace(/[^0-9]/g, '');
                     const num = parseInt(pageInput.value);
-                    if (!isNaN(num) && num > tp) {
-                        pageInput.value = String(tp);
-                    }
+                    if (!isNaN(num) && num > tp) pageInput.value = String(tp);
                 });
-
                 pageInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        pageInput.blur();
-                        navigateToPage();
-                    }
+                    if (e.key === 'Enter') { e.preventDefault(); pageInput.blur(); navigateToPage(); }
                 });
-
-                pageInput.addEventListener('blur', () => {
-                    navigateToPage();
-                });
-
-                pageInput.addEventListener('focus', () => {
-                    pageInput.select();
-                });
+                pageInput.addEventListener('blur', navigateToPage);
+                pageInput.addEventListener('focus', () => pageInput.select());
             }
         }
 
         if (prevBtn) prevBtn.disabled = this.currentPage === 1;
         if (nextBtn) nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
-
-        // Scroll back to top on mobile
-        if (this.quizSelectionUI) {
-            this.quizSelectionUI.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        if (this.quizSelectionUI) this.quizSelectionUI.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- TOOLTIP ---
     createTooltip() {
-        // Check if exists
         let t = document.getElementById('custom-quiz-tooltip');
         if (!t) {
             t = document.createElement('div');
@@ -712,28 +554,16 @@ export class SelectQuizScene extends Phaser.Scene {
         if (!this.tooltip) return;
         this.tooltip.innerText = text;
         this.tooltip.classList.remove('hidden');
-        // Force reflow
         void this.tooltip.offsetWidth;
         this.tooltip.classList.remove('opacity-0');
     }
 
     moveTooltip(e: MouseEvent) {
         if (!this.tooltip) return;
-
-        // Calculate position - default to bottom-right of cursor
         let x = e.clientX + 20;
         let y = e.clientY + 20;
-
-        // Boundary check (simple) - if too close to right edge, flip to left
-        if (x + this.tooltip.offsetWidth > window.innerWidth) {
-            x = e.clientX - this.tooltip.offsetWidth - 20;
-        }
-
-        // If too close to bottom, flip to top
-        if (y + this.tooltip.offsetHeight > window.innerHeight) {
-            y = e.clientY - this.tooltip.offsetHeight - 20;
-        }
-
+        if (x + this.tooltip.offsetWidth > window.innerWidth) x = e.clientX - this.tooltip.offsetWidth - 20;
+        if (y + this.tooltip.offsetHeight > window.innerHeight) y = e.clientY - this.tooltip.offsetHeight - 20;
         this.tooltip.style.left = `${x}px`;
         this.tooltip.style.top = `${y}px`;
     }
@@ -741,14 +571,8 @@ export class SelectQuizScene extends Phaser.Scene {
     hideTooltip() {
         if (!this.tooltip) return;
         this.tooltip.classList.add('opacity-0');
-        setTimeout(() => {
-            if (this.tooltip && this.tooltip.classList.contains('opacity-0')) {
-                this.tooltip.classList.add('hidden');
-            }
-        }, 200);
+        setTimeout(() => { if (this.tooltip && this.tooltip.classList.contains('opacity-0')) this.tooltip.classList.add('hidden'); }, 200);
     }
-
-    // --- NAVIGATION ---
 
     hideAllUI() {
         const uiIds = ['lobby-ui', 'create-room-ui', 'quiz-settings-ui'];
@@ -760,25 +584,19 @@ export class SelectQuizScene extends Phaser.Scene {
     }
 
     showQuizSelection() {
-        if (this.quizSelectionUI) {
-            this.quizSelectionUI.classList.remove('hidden');
-        }
+        if (this.quizSelectionUI) this.quizSelectionUI.classList.remove('hidden');
     }
 
     hideUI() {
-        if (this.quizSelectionUI) {
-            this.quizSelectionUI.classList.add('hidden');
-        }
+        if (this.quizSelectionUI) this.quizSelectionUI.classList.add('hidden');
     }
 
     goBackToLobby() {
         this.cleanup();
         this.hideUI();
         Router.navigate('/');
-        this.scene.start('LobbyScene');
+        this.startManager('LobbyManager');
     }
-
-    // --- CLEANUP ---
 
     cleanup() {
         window.removeEventListener('popstate', this.handlePopState);
@@ -786,12 +604,22 @@ export class SelectQuizScene extends Phaser.Scene {
             document.removeEventListener('click', this._outsideClickHandler);
             this._outsideClickHandler = null;
         }
+        if (this.searchTimeout) clearTimeout(this.searchTimeout);
     }
 
-    shutdown() {
-        this.cleanup();
+    private startManager(managerName: string, data?: any) {
+        if (managerName === 'QuizSettingManager') {
+            import('../quizsetting/page').then(m => {
+                const manager = new m.QuizSettingManager();
+                manager.init(data);
+            });
+        } else if (managerName === 'LobbyManager') {
+            import('../../lobby/page').then(m => {
+                const manager = new m.LobbyManager();
+                manager.init(data);
+            });
+        }
     }
 }
-
 
 

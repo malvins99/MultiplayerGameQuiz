@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
@@ -6,7 +5,7 @@ import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
 import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 
-export class PlayerWaitingRoomScene extends Phaser.Scene {
+export class PlayerWaitingRoomManager {
     room!: Room;
     isHost: boolean = false;
     mySessionId: string = '';
@@ -36,11 +35,9 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
     characterPreviewEl: HTMLElement | null = null;
     qrPopup: QRCodePopup | null = null;
 
-    constructor() {
-        super('PlayerWaitingRoomScene');
-    }
+    constructor() {}
 
-    init(data: { room?: Room, isHost?: boolean, client?: any, isRestore?: boolean }) {
+    async init(data: { room?: Room, isHost?: boolean, client?: any, isRestore?: boolean }) {
         if (data.room) {
             this.room = data.room;
             this.mySessionId = this.room.sessionId;
@@ -48,8 +45,10 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.isHost = data.isHost !== undefined ? data.isHost : false;
 
         if (data.isRestore && !this.room && data.client) {
-            this.restoreRoom(data.client);
+            await this.restoreRoom(data.client);
         }
+
+        this.start();
     }
 
     async restoreRoom(client: any) {
@@ -82,6 +81,24 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         }
     }
 
+    private startGameEngine(startScene: string, sceneData?: any) {
+        import('../../../game').then((engine) => {
+            engine.initializeGame(startScene, sceneData);
+        }).catch(err => {
+            console.error("Failed to load game engine:", err);
+            window.location.href = '/';
+        });
+    }
+
+    private startManager(managerName: string, data?: any) {
+        if (managerName === 'LobbyManager') {
+            import('../../lobby/page').then(m => {
+                const manager = new m.LobbyManager();
+                manager.init(data);
+            });
+        }
+    }
+
     /** Bersihkan UI dan kembali ke lobby (tanpa ghost waiting-ui) */
     cleanupAndGoLobby() {
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
@@ -95,14 +112,14 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         document.getElementById('exit-confirm-modal')?.remove();
         Router.navigate('/');
-        this.scene.start('LobbyScene');
+        this.startManager('LobbyManager');
     }
 
     setupRoomListeners() {
         // --- Room State Listeners ---
         this.room.state.listen("hostId", (hostId: string) => {
             if (hostId === this.mySessionId) {
-                this.scene.start('HostWaitingRoomScene', { room: this.room, isHost: true });
+                this.startGameEngine('HostWaitingRoomScene', { room: this.room, isHost: true });
             }
             this.updateUILayout();
         });
@@ -127,7 +144,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         });
     }
 
-    create() {
+    private start() {
         // Grab DOM elements
         this.waitingUI = document.getElementById('waiting-ui');
 
@@ -168,7 +185,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         // Initialize Character Popup
         this.characterPopup = new CharacterSelectPopup(
             HAIR_OPTIONS,
-            (hairId) => this.room.send("updateHair", { hairId }),
+            (hairId) => { if (this.room) this.room.send("updateHair", { hairId }) },
             () => { }
         );
 
@@ -180,26 +197,28 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         this.createCountdownOverlay();
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number, previousVal: number) => {
-            if (val > 0) {
-                if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
-                if (this.countdownText) this.countdownText.innerText = val.toString();
+        if (this.room) {
+            this.room.state.listen("countdown", (val: number, previousVal: number) => {
+                if (val > 0) {
+                    if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
+                    if (this.countdownText) this.countdownText.innerText = val.toString();
 
-                // --- OPTIMIZATION: Start Game Transition Early ---
-                // Switch to GameScene immediately so it can load in background
-                this.handleGameStart();
-            } else if (val === 0 && (previousVal || 0) > 0) {
-                if (this.countdownText) this.countdownText.innerText = "GO!";
-            } else if (val === 0) {
-                // If it starts at 0 or after GO!, hide
-                if (this.countdownOverlay) this.countdownOverlay.classList.add('hidden');
-            }
-        });
+                    // --- OPTIMIZATION: Start Game Transition Early ---
+                    // Switch to GameScene immediately so it can load in background
+                    this.handleGameStart();
+                } else if (val === 0 && (previousVal || 0) > 0) {
+                    if (this.countdownText) this.countdownText.innerText = "GO!";
+                } else if (val === 0) {
+                    // If it starts at 0 or after GO!, hide
+                    if (this.countdownOverlay) this.countdownOverlay.classList.add('hidden');
+                }
+            });
 
-        // Listen for State Start (Still kept as fallback if countdown is skipped)
-        this.room.state.listen("isGameStarted", (isStarted: boolean) => {
-            if (isStarted) this.handleGameStart();
-        });
+            // Listen for State Start (Still kept as fallback if countdown is skipped)
+            this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+                if (isStarted) this.handleGameStart();
+            });
+        }
     }
 
     handleGameStart() {
@@ -218,7 +237,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
 
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
         Router.navigate('/game');
-        this.scene.start('GameScene', { room: this.room });
+        this.startGameEngine('GameScene', { room: this.room });
     }
 
     createCountdownOverlay() {
@@ -756,7 +775,7 @@ export class PlayerWaitingRoomScene extends Phaser.Scene {
         Router.replace('/');
 
         // Explicitly tell lobby we are exiting so it doesn't auto-join
-        this.scene.start('LobbyScene', { didExit: true });
+        this.startManager('LobbyManager', { didExit: true });
     }
 
     showCopyFeedback() {
