@@ -92,7 +92,8 @@ export class RoomService {
             // Save persistent session info for refresh recovery (Colyseus v0.15 API)
             localStorage.setItem('currentRoomId', room.id);
             localStorage.setItem('currentSessionId', room.sessionId);
-            localStorage.setItem('currentReconnectionToken', room.reconnectionToken); // v0.15 reconnect token
+            localStorage.setItem('currentReconnectionToken', room.reconnectionToken);
+            localStorage.setItem('supabaseSessionId', data.id);
 
             return { room, options: colyseusOptions };
 

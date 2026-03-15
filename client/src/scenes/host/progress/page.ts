@@ -423,10 +423,17 @@ export class HostProgressScene extends Phaser.Scene {
     }
 
     private checkOrientation = () => {
-        if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
-            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'flex';
+        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile && window.innerHeight > window.innerWidth) {
+            if (this.landscapeOverlay) {
+                this.landscapeOverlay.style.display = 'flex';
+                this.landscapeOverlay.style.pointerEvents = 'auto';
+            }
         } else {
-            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'none';
+            if (this.landscapeOverlay) {
+                this.landscapeOverlay.style.display = 'none';
+                this.landscapeOverlay.style.pointerEvents = 'none';
+            }
         }
     };
 
@@ -446,9 +453,19 @@ export class HostProgressScene extends Phaser.Scene {
             padding: 20px; backdrop-filter: blur(10px);
         `;
         this.landscapeOverlay.innerHTML = `
-            <span class="material-symbols-outlined" style="font-size: 72px; margin-bottom: 24px; color: #72BF78;">screen_rotation</span>
-            <h2 style="font-size: 24px; margin-bottom: 12px; color: #72BF78;">Akses Landscape Diperlukan</h2>
-            <p style="font-size: 14px; color: #aaa; line-height: 1.6; max-width: 80%;">Mohon putar perangkat Anda ke mode mendatar (Landscape) untuk pandangan Map yang lebih optimal.</p>
+            <div style="background: rgba(0,0,0,0.8); padding: 40px; border-radius: 24px; border: 2px solid #72BF78; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+                <span class="material-symbols-outlined" style="font-size: 84px; margin-bottom: 24px; color: #72BF78; animation: rotateDevice 2s ease-in-out infinite;">screen_rotation</span>
+                <h2 style="font-size: 28px; margin-bottom: 16px; color: #72BF78; text-transform: uppercase; letter-spacing: 2px;">Mode Landscape Diperlukan</h2>
+                <p style="font-size: 16px; color: #eee; line-height: 1.6; max-width: 320px; font-family: sans-serif;">Mohon putar perangkat Anda ke mode mendatar (Landscape) untuk pandangan Map yang lebih optimal.</p>
+                <div style="margin-top: 30px; padding: 10px 20px; background: #72BF78; color: #121216; border-radius: 8px; font-weight: bold; font-size: 14px;">ROTATE DEVICE</div>
+            </div>
+            <style>
+                @keyframes rotateDevice {
+                    0% { transform: rotate(0deg); }
+                    50% { transform: rotate(90deg); }
+                    100% { transform: rotate(0deg); }
+                }
+            </style>
         `;
         document.body.appendChild(this.landscapeOverlay);
 

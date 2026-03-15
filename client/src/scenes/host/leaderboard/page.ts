@@ -99,14 +99,24 @@ export class HostLeaderboardManager {
 
         if (statsBtn) {
             statsBtn.onclick = () => {
-                // Priority: 1. data from start arg, 2. stored supabaseSessionId, 3. stored lastGameOptions, 4. fallback hostLastSessionId
-                const sid = this.opts?.sessionId || 
-                            localStorage.getItem('supabaseSessionId') || 
-                            localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
-                            this.sessionId || 
-                            localStorage.getItem('hostLastSessionId');
+                // Priority for Supabase Session ID: 
+                // 1. Direct from options passed to start()
+                // 2. Consistent stored key 'supabaseSessionId'
+                // 3. Fallback to ranking entries (usually contains the Supabase ID)
+                // 4. Stored manager options
+                let sid = this.opts?.sessionId || 
+                            localStorage.getItem('supabaseSessionId');
                 
-                if (sid) {
+                if (!sid && this.rankings.length > 0) {
+                    sid = this.rankings[0].sessionId;
+                }
+
+                if (!sid) {
+                    sid = localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
+                          localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1];
+                }
+                
+                if (sid && sid !== "undefined" && sid !== "null") {
                     window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
                 } else {
                     alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");

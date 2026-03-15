@@ -4,7 +4,7 @@ export class LoginUI {
         if (!loginUI) {
             loginUI = document.createElement('div');
             loginUI.id = 'login-ui';
-            loginUI.className = 'hidden fixed top-0 left-0 w-full h-screen z-30 overflow-hidden';
+            loginUI.className = 'hidden fixed top-0 left-0 w-full h-full z-30 overflow-hidden';
             loginUI.innerHTML = `
                 <!-- Full-Screen Background — palette gradient -->
                 <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
