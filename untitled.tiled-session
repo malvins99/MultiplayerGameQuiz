@@ -3,12 +3,12 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "C:/Users/USER/Downloads/untitled.tmj",
+    "activeFile": "client/public/assets/map hard.tmx",
     "expandedProjectPaths": [
-        "client",
         ".",
-        "client/public/assets",
-        "client/public"
+        "client",
+        "client/public",
+        "client/public/assets"
     ],
     "fileStates": {
         "": {
@@ -101,20 +101,20 @@
         },
         "client/public/assets/map hard.tmx": {
             "expandedGroupLayers": [
-                19,
-                3
+                3,
+                19
             ],
             "expandedObjectLayers": [
                 27,
-                26,
                 28,
+                26,
                 6
             ],
-            "scale": 5.5,
+            "scale": 0.5,
             "selectedLayer": 11,
             "viewCenter": {
-                "x": 981.6363636363636,
-                "y": 456.1818181818182
+                "x": 601,
+                "y": 220
             }
         },
         "client/public/assets/map hard.tmx#spr_deco_coracle_strip4": {
@@ -129,17 +129,17 @@
             ],
             "expandedObjectLayers": [
                 91,
-                94,
                 92,
                 5,
                 93,
+                94,
                 6
             ],
-            "scale": 0.33,
+            "scale": 0.5,
             "selectedLayer": 86,
             "viewCenter": {
-                "x": 871.2121212121212,
-                "y": 210.60606060606057
+                "x": 829,
+                "y": 508
             }
         },
         "client/public/assets/map medium.tmj#spr_deco_coracle_strip4": {
@@ -294,7 +294,7 @@
             }
         }
     },
-    "last.exportedFilePath": "C:/Zigma-gamev1/MultiplayerGameQuiz/server/src/maps",
+    "last.exportedFilePath": "C:/Users/USER/Downloads",
     "last.imagePath": "C:/Sunnyside_World_ASSET_PACK_V2.1/Sunnyside_World_Assets/Tileset",
     "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
     "map.lastUsedFormat": "json",
@@ -310,10 +310,10 @@
     "project": "untitled.tiled-project",
     "recentFiles": [
         "client/public/assets/map medium.tmj",
-        "client/public/assets/map hard.tmx",
         "C:/Users/USER/Downloads/base_walk_strip8.tsx",
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
         "C:/Users/USER/Downloads/untitled.tmj",
+        "client/public/assets/map hard.tmx",
         "client/public/assets/map_baru1_tetap.tmj",
         "C:/new map/group map.tmx",
         "client/public/assets/characters/untitled.tmx",

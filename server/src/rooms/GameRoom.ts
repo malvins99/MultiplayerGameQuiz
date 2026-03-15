@@ -27,6 +27,7 @@ export class GameRoom extends Room<GameState> {
     private totalTimeMinutes: number = 5;
     private questionLimit: string = "all";
     private quizDetail: any = {};
+    private enemyCountOption: number = 0;
 
     // Local storage for detailed answers (not synced)
     playerAnswers: Map<string, any[]> = new Map();
@@ -116,6 +117,7 @@ export class GameRoom extends Room<GameState> {
         this.totalTimeMinutes = options.timer ? Math.round(options.timer / 60) : 5;
         this.questionLimit = options.questionCount?.toString() || "all";
         this.quizDetail = options.quizDetail || {};
+        this.enemyCountOption = options.enemyCount || 0;
 
         // Sync to state so all clients see it
         this.state.totalTimeMinutes = this.totalTimeMinutes;
@@ -873,7 +875,11 @@ export class GameRoom extends Room<GameState> {
             return true;
         };
 
-        // Create Enemies Per Player (semua entry di state.players adalah player biasa)
+        // 1:1 ratio: 5 soal = 5 musuh, 10 soal = 10 musuh
+        const enemiesPerPlayerToSpawn = this.state.questions.length || 5;
+
+        console.log(`[GameRoom] Spawning ${enemiesPerPlayerToSpawn} enemies per player (1:1 with questions)`);
+
         this.state.players.forEach(player => {
 
             // SAFETY: Ensure questions exist
@@ -908,8 +914,7 @@ export class GameRoom extends Room<GameState> {
             // Consolidate enemy creation to try strict distance first -> then relax if needed
             let enemiesSpawnedForPlayer = 0;
 
-            // We want exactly 'this.state.questions.length' enemies per player
-            for (let i = 0; i < this.state.questions.length; i++) {
+            for (let i = 0; i < enemiesPerPlayerToSpawn; i++) {
                 const enemy = new Enemy();
                 enemy.ownerId = player.sessionId;
 

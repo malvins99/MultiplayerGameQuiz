@@ -18,8 +18,12 @@ export class MapParser {
             const map = JSON.parse(rawData);
 
             return {
-                playerSpawns: this.findLayerObjects(map.layers, 'spawn players').concat(this.findLayerObjects(map.layers, 'spawn point')),
-                enemySpawnZones: this.findLayerObjects(map.layers, 'enemies spawn').concat(this.findLayerObjects(map.layers, 'enemies')),
+                playerSpawns: this.findLayerObjects(map.layers, 'spawn players')
+                                  .concat(this.findLayerObjects(map.layers, 'spawn point'))
+                                  .concat(this.findLayerObjects(map.layers, 'spawn player')),
+                enemySpawnZones: this.findLayerObjects(map.layers, 'enemies spawn')
+                                     .concat(this.findLayerObjects(map.layers, 'enemies'))
+                                     .concat(this.findLayerObjects(map.layers, 'spawn enemies')),
                 chests: this.findLayerObjects(map.layers, 'chest'),
                 mapWidth: map.width * map.tilewidth,
                 mapHeight: map.height * map.tileheight
