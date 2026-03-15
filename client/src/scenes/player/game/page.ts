@@ -90,6 +90,8 @@ export class GameScene extends Phaser.Scene {
         this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
         this.load.image('tiles', `/assets/spr_tileset_sunnysideworld_16px.png${cb}`);
         this.load.image('forest_tiles', `/assets/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
+        this.load.image('coracle_tiles', `/assets/spr_deco_coracle_strip4.png${cb}`);
+        this.load.image('windmill_tiles', `/assets/spr_deco_windmill_withshadow_strip9.png${cb}`);
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
 
@@ -166,10 +168,14 @@ export class GameScene extends Phaser.Scene {
         // Add both tilesets
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
         const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
+        const tileset3 = this.map.addTilesetImage('spr_deco_coracle_strip4', 'coracle_tiles');
+        const tileset4 = this.map.addTilesetImage('spr_deco_windmill_withshadow_strip9', 'windmill_tiles');
 
         const tilesets: Phaser.Tilemaps.Tileset[] = [];
         if (tileset1) tilesets.push(tileset1);
         if (tileset2) tilesets.push(tileset2);
+        if (tileset3) tilesets.push(tileset3);
+        if (tileset4) tilesets.push(tileset4);
 
         if (tilesets.length > 0) {
             this.map.layers.forEach(layerData => {
