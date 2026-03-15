@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="110" height="70" tilewidth="16" tileheight="16" infinite="0" nextlayerid="31" nextobjectid="13">
+ <editorsettings>
+  <export target="../../../../../Users/USER/Downloads/map hard.tmj" format="json"/>
+ </editorsettings>
  <tileset firstgid="1" name="spr_tileset_sunnysideworld_16px" tilewidth="16" tileheight="16" tilecount="4096" columns="64">
   <image source="spr_tileset_sunnysideworld_16px.png" width="1024" height="1024"/>
  </tileset>
@@ -1122,7 +1125,7 @@
    </layer>
   </group>
  </group>
- <group id="26" name="chest" visible="0">
+ <group id="26" name="chest">
   <objectgroup id="27" name="chest">
    <object id="9" x="764" y="156"/>
    <object id="10" x="792" y="948"/>
@@ -1130,7 +1133,7 @@
    <object id="12" x="556" y="564"/>
   </objectgroup>
  </group>
- <group id="5" name="spawn poin players" visible="0">
+ <group id="5" name="spawn poin players">
   <objectgroup id="25" name="spawn player">
    <object id="1" x="1480" y="152">
     <point/>
@@ -1152,7 +1155,7 @@
    </object>
   </objectgroup>
  </group>
- <group id="6" name="spawn enemies" visible="0">
+ <group id="6" name="spawn enemies">
   <objectgroup id="28" name="spawn enemies">
    <object id="8" x="396" y="208" width="904" height="684"/>
   </objectgroup>

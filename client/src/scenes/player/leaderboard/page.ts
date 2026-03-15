@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { Router } from '../../../utils/Router';
 
@@ -11,21 +10,21 @@ interface RankingEntry {
     duration: number;
 }
 
-export class LeaderboardScene extends Phaser.Scene {
+export class PlayerLeaderboardManager {
     private container!: HTMLDivElement;
     private rankings: RankingEntry[] = [];
     private mySessionId: string = "";
+    private room: any;
 
-    constructor() {
-        super({ key: 'LeaderboardScene' });
-    }
+    constructor() {}
 
-    create() {
+    start(data?: { room?: any, leaderboardData?: any[], mySessionId?: string }) {
         TransitionManager.ensureClosed();
-        this.rankings = this.registry.get('leaderboardData') || [];
+        this.room = data?.room;
+        this.rankings = data?.leaderboardData || [];
         this.rankings.sort((a, b) => a.rank - b.rank);
-        const room = this.registry.get('room');
-        this.mySessionId = this.registry.get('mySessionId') || (room ? room.sessionId : "");
+        
+        this.mySessionId = data?.mySessionId || (this.room ? this.room.sessionId : "");
 
         this.container = document.createElement('div');
         this.container.id = 'leaderboard-ui';
@@ -40,6 +39,15 @@ export class LeaderboardScene extends Phaser.Scene {
         }
 
         this.renderLeaderboard();
+
+        if (this.room) {
+            this.room.onMessage('gameEnded', (msgData: { rankings: any[] }) => {
+                this.rankings = msgData.rankings;
+                this.rankings.sort((a, b) => a.rank - b.rank);
+                this.renderLeaderboard();
+            });
+        }
+
         setTimeout(() => TransitionManager.open(), 100);
     }
 
@@ -136,6 +144,7 @@ export class LeaderboardScene extends Phaser.Scene {
             `).join('')}</div>
             <div class="lb-footer">
                 <button id="lb-home-btn" class="nav-btn"><span class="material-symbols-outlined">home</span></button>
+                <button id="lb-stats-btn" class="nav-btn"><span class="material-symbols-outlined">analytics</span></button>
                 <button id="lb-back-btn" class="nav-btn"><span class="material-symbols-outlined">person</span></button>
             </div>
         `;
@@ -146,15 +155,32 @@ export class LeaderboardScene extends Phaser.Scene {
     private attachListeners() {
         const homeBtn = document.getElementById('lb-home-btn');
         const backBtn = document.getElementById('lb-back-btn');
+        const statsBtn = document.getElementById('lb-stats-btn');
 
         if (homeBtn) homeBtn.onclick = () => TransitionManager.transitionTo(() => {
-            this.cleanup(); const r = this.registry.get('room'); if (r) r.leave();
+            this.cleanup(); 
+            if (this.room) this.room.leave();
             window.location.href = '/';
         });
 
         if (backBtn) backBtn.onclick = () => TransitionManager.transitionTo(() => {
-            this.cleanup(); this.scene.start('ResultScene');
+            this.cleanup();
+            import('../results/page').then((m) => {
+                const manager = new m.ResultManager();
+                manager.start({ room: this.room, leaderboardData: this.rankings });
+            });
         });
+
+        if (statsBtn) {
+            statsBtn.onclick = () => {
+                const sid = localStorage.getItem('supabaseSessionId');
+                if (sid) {
+                    window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+                } else {
+                    alert("ID Sesi tidak ditemukan.");
+                }
+            };
+        }
     }
 
     cleanup() {

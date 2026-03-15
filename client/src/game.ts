@@ -2,11 +2,9 @@ import Phaser from 'phaser';
 import { HostWaitingRoomScene } from './scenes/host/lobby/page';
 import { GameScene } from './scenes/player/game/page';
 import { UIScene } from './scenes/player/ui/page';
-import { ResultScene } from './scenes/player/results/page';
-import { LeaderboardScene } from './scenes/player/leaderboard/page';
+
 
 import { HostProgressScene } from './scenes/host/progress/page';
-import { HostLeaderboardScene } from './scenes/host/leaderboard/page';
 
 import { LoginUI } from './scenes/login/ui';
 import { LobbyUI } from './scenes/lobby/ui';
@@ -69,10 +67,7 @@ export function initializeGame(startScene?: string, sceneData?: any) {
             HostWaitingRoomScene,
             GameScene,
             UIScene,
-            LeaderboardScene,
-            HostLeaderboardScene,
-            HostProgressScene,
-            ResultScene
+            HostProgressScene
         ],
         scale: {
             mode: Phaser.Scale.RESIZE,

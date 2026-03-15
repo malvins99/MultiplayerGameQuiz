@@ -30,6 +30,10 @@ export class GameScene extends Phaser.Scene {
     clickToMove!: ClickToMoveSystem;
 
     isGameReady: boolean = false; // Block input until countdown finishes
+    private lastNetworkSendTime: number = 0;
+    private networkSendRate: number = 100; // ms (10 times a second)
+    private wasMovingKeyboard: boolean = false;
+    private landscapeOverlay!: HTMLDivElement;
 
     constructor() {
         super('GameScene');
@@ -590,8 +594,14 @@ export class GameScene extends Phaser.Scene {
             this.events.once('shutdown', () => {
                 uiLayer.classList.add('hidden');
                 this.scene.stop('UIScene');
+                window.removeEventListener('resize', this.checkOrientation);
+                if (this.landscapeOverlay && this.landscapeOverlay.parentNode) {
+                    this.landscapeOverlay.parentNode.removeChild(this.landscapeOverlay);
+                }
             });
         }
+
+        this.createLandscapeOverlay();
 
         // --- Game Events from Server ---
         this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
@@ -604,7 +614,15 @@ export class GameScene extends Phaser.Scene {
         this.room.onMessage('playerFinished', (data: any) => {
             this.registry.set('leaderboardData', [data]);
             TransitionManager.close(() => {
-                this.scene.start('ResultScene');
+                const engine = (window as any).gameInstance;
+                if (engine) {
+                    engine.destroy(true);
+                    (window as any).gameInstance = null;
+                }
+                import('../results/page').then((m) => {
+                    const manager = new m.ResultManager();
+                    manager.start({ room: this.room, leaderboardData: [data] });
+                });
             });
         });
 
@@ -614,13 +632,34 @@ export class GameScene extends Phaser.Scene {
             this.registry.set('leaderboardData', data.rankings);
 
             if (isHost) {
-                if (!this.scene.isActive('HostLeaderboardScene')) {
-                    this.scene.start('HostLeaderboardScene');
-                }
+                this.room.leave();
+                TransitionManager.close(() => {
+                    const engine = (window as any).gameInstance;
+                    if (engine) {
+                        engine.destroy(true);
+                        (window as any).gameInstance = null;
+                    }
+                    import('../../host/leaderboard/page').then((m) => {
+                        const manager = new m.HostLeaderboardManager();
+                        manager.start({
+                            rankings: data.rankings,
+                            isHost: isHost,
+                            mySessionId: this.room.sessionId
+                        });
+                    });
+                });
             } else {
-                if (!this.scene.isActive('ResultScene')) {
-                    this.scene.start('ResultScene');
-                }
+                TransitionManager.close(() => {
+                    const engine = (window as any).gameInstance;
+                    if (engine) {
+                        engine.destroy(true);
+                        (window as any).gameInstance = null;
+                    }
+                    import('../results/page').then((m) => {
+                        const manager = new m.ResultManager();
+                        manager.start({ room: this.room, leaderboardData: data.rankings });
+                    });
+                });
             }
         });
 
@@ -631,6 +670,40 @@ export class GameScene extends Phaser.Scene {
             console.warn(`[GameScene] Disconnected from room (code: ${code})`);
             this.isGameReady = false;
         });
+    }
+
+    private checkOrientation = () => {
+        if (window.innerWidth <= 768 && window.innerHeight > window.innerWidth) {
+            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'flex';
+        } else {
+            if (this.landscapeOverlay) this.landscapeOverlay.style.display = 'none';
+        }
+    };
+
+    private createLandscapeOverlay() {
+        const existingId = 'player-landscape-overlay';
+        if (document.getElementById(existingId)) {
+            document.getElementById(existingId)?.remove();
+        }
+        
+        this.landscapeOverlay = document.createElement('div');
+        this.landscapeOverlay.id = existingId;
+        this.landscapeOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 18, 22, 0.95); z-index: 999999; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-family: 'Retro Gaming', monospace; text-align: center;
+            padding: 20px; backdrop-filter: blur(8px);
+        `;
+        this.landscapeOverlay.innerHTML = `
+            <span class="material-symbols-outlined" style="font-size: 72px; margin-bottom: 24px; color: #72BF78;">screen_rotation</span>
+            <h2 style="font-size: 24px; margin-bottom: 12px; color: #72BF78;">Mode Landscape Diperlukan</h2>
+            <p style="font-size: 14px; color: #aaa; line-height: 1.6; max-width: 80%;">Putar layar HP Anda secara mendatar untuk dapat mengontrol karakter dengan leluasa serta melihat map dengan luas.</p>
+        `;
+        document.body.appendChild(this.landscapeOverlay);
+
+        window.addEventListener('resize', this.checkOrientation);
+        this.checkOrientation();
     }
 
     createPlayerIndicator() {
@@ -871,7 +944,6 @@ export class GameScene extends Phaser.Scene {
         if (!isQuizOpen) this.clickToMove.update(delta);
 
         if (this.clickToMove.isMovingByClick()) {
-            if (this.room && this.room.connection.isOpen) this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
             if (this.indicatorContainer) this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 8);
             if (this.nameTagContainers[this.room.sessionId]) this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 21);
             return;
@@ -924,7 +996,15 @@ export class GameScene extends Phaser.Scene {
                 if (velocity.x !== 0) hair.setFlipX(velocity.x < 0);
             }
 
-            if (this.room && this.room.connection.isOpen) this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
+            const now = Date.now();
+            if (now - this.lastNetworkSendTime > this.networkSendRate) {
+                if (this.room && this.room.connection.isOpen) {
+                    this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
+                }
+                this.lastNetworkSendTime = now;
+            }
+            this.wasMovingKeyboard = true;
+
             if (this.indicatorContainer) this.indicatorContainer.setPosition(this.currentPlayer.x, this.currentPlayer.y - 8);
             if (this.nameTagContainers[this.room.sessionId]) this.nameTagContainers[this.room.sessionId].setPosition(this.currentPlayer.x, this.currentPlayer.y - 21);
         } else {
@@ -936,7 +1016,19 @@ export class GameScene extends Phaser.Scene {
                 const baseKey = currentKey.split('_')[0];
                 if (currentKey && !currentKey.includes('idle')) hair.play(baseKey + '_idle', true);
             }
+
+            if (this.wasMovingKeyboard) {
+                if (this.room && this.room.connection.isOpen) {
+                    this.room.send("movePlayer", { x: this.currentPlayer.x, y: this.currentPlayer.y });
+                }
+                this.wasMovingKeyboard = false;
+            }
         }
+
+        // --- Frustum Culling Setup ---
+        const view = this.cameras.main.worldView;
+        const margin = 200;
+        const viewRect = new Phaser.Geom.Rectangle(view.x - margin, view.y - margin, view.width + margin * 2, view.height + margin * 2);
 
         Object.keys(this.enemyEntities).forEach(id => {
             const enemy = this.enemyEntities[id];
@@ -945,10 +1037,22 @@ export class GameScene extends Phaser.Scene {
             const enemyState = this.room.state.enemies[id as any];
             const isAlive = enemyState ? enemyState.isAlive : true;
 
-            if (isAlive && tx !== undefined && ty !== undefined) {
-                enemy.x += (tx - enemy.x) * 0.1;
-                enemy.y += (ty - enemy.y) * 0.1;
-            } else if (!isAlive) {
+            if (isAlive) {
+                const isVisible = viewRect.contains(enemy.x, enemy.y);
+                enemy.setVisible(isVisible);
+                if (!isVisible && enemy.anims && enemy.anims.isPlaying) enemy.anims.pause();
+                else if (isVisible && enemy.anims && !enemy.anims.isPlaying) enemy.anims.resume();
+
+                if (tx !== undefined && ty !== undefined) {
+                    if (isVisible) {
+                        enemy.x += (tx - enemy.x) * 0.1;
+                        enemy.y += (ty - enemy.y) * 0.1;
+                    } else {
+                        enemy.x = tx;
+                        enemy.y = ty;
+                    }
+                }
+            } else {
                 enemy.setData('targetX', enemy.x);
                 enemy.setData('targetY', enemy.y);
             }
@@ -960,9 +1064,30 @@ export class GameScene extends Phaser.Scene {
                 if (entity) {
                     const tx = entity.getData('targetX');
                     const ty = entity.getData('targetY');
+                    
+                    const isVisible = viewRect.contains(entity.x, entity.y);
+                    entity.setVisible(isVisible);
+                    if (this.nameTagContainers[sid]) this.nameTagContainers[sid].setVisible(isVisible);
+
                     if (tx !== undefined && ty !== undefined) {
-                        entity.x += (tx - entity.x) * 0.1;
-                        entity.y += (ty - entity.y) * 0.1;
+                        if (isVisible) {
+                            entity.x += (tx - entity.x) * 0.1;
+                            entity.y += (ty - entity.y) * 0.1;
+                        } else {
+                            entity.x = tx;
+                            entity.y = ty;
+                            // Reset anmations if invisible
+                            const base = entity.getData('baseSprite') as Phaser.GameObjects.Sprite;
+                            const hair = entity.getData('hairSprite') as Phaser.GameObjects.Sprite;
+                            if (base && base.anims) base.anims.pause();
+                            if (hair && hair.anims) hair.anims.pause();
+                        }
+                    } else if (isVisible) {
+                        // Resume idle standing if visible but no target
+                        const base = entity.getData('baseSprite') as Phaser.GameObjects.Sprite;
+                        const hair = entity.getData('hairSprite') as Phaser.GameObjects.Sprite;
+                        if (base && base.anims && !base.anims.isPlaying) base.anims.resume();
+                        if (hair && hair.anims && !hair.anims.isPlaying) hair.anims.resume();
                     }
                     if (this.nameTagContainers[sid]) this.nameTagContainers[sid].setPosition(entity.x, entity.y - 21);
                 }

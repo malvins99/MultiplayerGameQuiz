@@ -47,6 +47,8 @@ export class LobbyManager {
             Router.is('/host/progress') ||
             Router.is('/player/lobby') ||
             Router.is('/player/game') ||
+            Router.is('/player/result') ||
+            Router.is('/player/leaderboard') ||
             Router.match('/player/:roomCode/leaderboard');
 
         if (isRestoreRoute && !this.didExit) {
@@ -323,10 +325,26 @@ export class LobbyManager {
                 const manager = new m.QuizSettingManager();
                 manager.init(data || { client: this.client });
             });
+        } else if (managerName === 'HostLeaderboardManager') {
+            import('../host/leaderboard/page').then(m => {
+                const manager = new m.HostLeaderboardManager();
+                // We use start() for Leaderboard, not init() like others because it was named start().
+                manager.start(data || { client: this.client });
+            });
         } else if (managerName === 'PlayerWaitingRoomManager') {
             import('../player/waitingroom/page').then(m => {
                 const manager = new m.PlayerWaitingRoomManager();
                 manager.init(data || { client: this.client });
+            });
+        } else if (managerName === 'PlayerLeaderboardManager') {
+            import('../player/leaderboard/page').then(m => {
+                const manager = new m.PlayerLeaderboardManager();
+                manager.start(data || { client: this.client });
+            });
+        } else if (managerName === 'ResultManager') {
+            import('../player/results/page').then(m => {
+                const manager = new m.ResultManager();
+                manager.start(data || { client: this.client });
             });
         }
     }
@@ -373,7 +391,7 @@ export class LobbyManager {
         if (hostLbMatch || Router.is('/host/leaderboard')) {
             const roomCode = hostLbMatch ? hostLbMatch.roomCode : undefined;
             hidelobby();
-            this.startGameEngine('HostLeaderboardScene', { client: this.client, isRestore: true, roomCode });
+            this.startManager('HostLeaderboardManager', { client: this.client, isRestore: true, roomCode });
             return;
         }
 
@@ -391,7 +409,14 @@ export class LobbyManager {
 
         if (Router.is('/player/result')) {
             hidelobby();
-            this.startGameEngine('ResultScene', { client: this.client, isRestore: true });
+            this.startManager('ResultManager', { client: this.client, isRestore: true });
+            return;
+        }
+
+        const playerLbMatch = Router.match('/player/:roomCode/leaderboard');
+        if (playerLbMatch || Router.is('/player/leaderboard')) {
+            hidelobby();
+            this.startManager('PlayerLeaderboardManager', { client: this.client, isRestore: true });
             return;
         }
 
