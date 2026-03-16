@@ -929,7 +929,9 @@ export class GameScene extends Phaser.Scene {
     resetCamera() {
         if (!this.isZooming) return;
         this.isZooming = false;
-        this.cameras.main.zoomTo(2.0, 800, 'Power2');
+        
+        const targetZoom = window.innerWidth <= 768 ? 1.2 : 2;
+        this.cameras.main.zoomTo(targetZoom, 800, 'Power2');
         if (this.currentPlayer) this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
     }
 
