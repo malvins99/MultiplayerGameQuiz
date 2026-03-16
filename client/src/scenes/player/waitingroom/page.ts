@@ -436,27 +436,54 @@ export class PlayerWaitingRoomManager {
                     margin: 0 auto;
                 }
                 
+                @media (max-width: 932px) and (orientation: landscape) {
+                    .logo-tl {
+                        top: -10px !important;
+                        left: -15px !important;
+                        width: 8rem !important;
+                    }
+                    .logo-tr {
+                        top: -15px !important;
+                        right: -5px !important;
+                        width: 10rem !important;
+                    }
+                    .player-content-box {
+                        margin-top: 10px !important;
+                        padding: 10px !important;
+                        min-height: 120px !important;
+                        max-height: 55vh !important;
+                        margin-bottom: 50px !important;
+                    }
+                    .player-header-section {
+                        margin-bottom: 10px !important;
+                        padding-bottom: 8px !important;
+                    }
+                    .pt-16 {
+                        padding-top: 2rem !important;
+                    }
+                }
+                
                 @media (max-width: 768px) {
                     .logo-tl {
                         top: -15px;
                         left: -20px;
-                        width: 10rem;
+                        width: 9rem;
                     }
                     .logo-tr {
                         top: -20px;
                         right: -5px;
-                        width: 12rem;
+                        width: 11rem;
                     }
                     .player-content-box {
-                        margin-top: 30px;
+                        margin-top: 20px;
                         padding: 15px;
-                        min-height: 200px;
+                        min-height: 160px;
                         flex: 1;
-                        max-height: calc(100vh - 180px);
-                        margin-bottom: 80px;
+                        max-height: calc(100vh - 160px);
+                        margin-bottom: 70px;
                     }
                     .fixed.bottom-10 {
-                        bottom: 1.5rem !important;
+                        bottom: 1.2rem !important;
                     }
                     .btn-exit-standard {
                         padding: 0 16px;
