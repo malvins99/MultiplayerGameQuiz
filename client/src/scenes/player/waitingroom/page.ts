@@ -243,10 +243,10 @@ export class PlayerWaitingRoomManager {
     createCountdownOverlay() {
         const overlay = document.createElement('div');
         overlay.id = 'player-countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center hidden';
+        overlay.className = 'fixed inset-0 z-50 bg-black flex items-center justify-center hidden';
         overlay.innerHTML = `
             <div class="flex flex-col items-center animate-bounce">
-                <div id="player-countdown-text" class="text-[80px] md:text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
+                <div id="player-countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
                     10
                 </div>
             </div>

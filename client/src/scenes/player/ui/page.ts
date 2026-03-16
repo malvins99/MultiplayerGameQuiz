@@ -23,7 +23,7 @@ export class UIScene extends Phaser.Scene {
         // --- Logos (Handled by HTML UI Overlay) ---
 
         // Create Container positioned at Top Center
-        this.scoreContainer = this.add.container(screenWidth / 2, 70);
+        this.scoreContainer = this.add.container(screenWidth / 2, 45);
         this.scoreContainer.setScrollFactor(0);
         this.scoreContainer.setDepth(100);
 
@@ -82,7 +82,7 @@ export class UIScene extends Phaser.Scene {
 
     handleResize(gameSize: Phaser.Structs.Size) {
         if (this.scoreContainer) {
-            this.scoreContainer.setPosition(gameSize.width / 2, 70);
+            this.scoreContainer.setPosition(gameSize.width / 2, 45);
         }
     }
 
