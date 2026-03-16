@@ -4,6 +4,8 @@ import cors from "cors";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
 import { GameRoom } from "./rooms/GameRoom";
+import crypto from "crypto";
+import { spawn } from "child_process";
 
 import path from "path";
 
@@ -77,6 +79,59 @@ app.use("/colyseus", monitor());
 // Fallback to index.html for SPA routing
 app.get("*", (req, res) => {
     res.sendFile(path.join(clientBuildPath, "index.html"));
+});
+
+// GitHub Webhook for Auto Deployment
+app.post("/api/githubWebhook", async (req, res) => {
+    const signature = req.headers["x-hub-signature-256"];
+    const SECRET = "e694k3dRoH/lbYM5Ze/2SkCpLpT9UgB6+6wGIBx0Dk0=";
+
+    if (!signature) {
+        return res.status(401).json({ error: "No signature" });
+    }
+
+    // Since app.use(express.json()) is used, we need to stringify it back for comparison
+    // or use a raw-body parser. For simplicity with GitHub, we'll assume JSON match.
+    const rawBody = JSON.stringify(req.body);
+    const hash =
+        "sha256=" +
+        crypto
+            .createHmac("sha256", SECRET)
+            .update(rawBody)
+            .digest("hex");
+
+    // Timing safe comparison to prevent timing attacks
+    const hashBuffer = Buffer.from(hash);
+    const signatureBuffer = Buffer.from(signature as string);
+
+    if (hashBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(hashBuffer, signatureBuffer)) {
+        console.warn("[Webhook] Invalid signature received");
+        return res.status(403).json({ error: "Invalid signature" });
+    }
+
+    const payload = req.body;
+
+    // Check branch
+    if (payload.ref !== "refs/heads/main" && payload.ref !== "refs/heads/merge-akhir") {
+        return res.json({ message: "Not a monitored branch" });
+    }
+
+    const commit = payload.head_commit;
+    const author = commit?.author?.name || "Unknown";
+    const message = commit?.message || "-";
+    const hashShort = commit?.id?.substring(0, 7) || "N/A";
+
+    console.log(`[Webhook] Deployment triggered by ${author}: ${message} (${hashShort})`);
+
+    // Path to the deployment script
+    const scriptPath = "/www/wwwroot/Bot-Deploy/deploy-zigma.sh";
+
+    spawn("bash", [scriptPath, author, hashShort, message], {
+        detached: true,
+        stdio: "ignore",
+    }).unref();
+
+    return res.json({ success: true });
 });
 
 gameServer.listen(port, "0.0.0.0");
