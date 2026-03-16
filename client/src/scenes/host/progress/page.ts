@@ -174,10 +174,10 @@ export class HostProgressScene extends Phaser.Scene {
         logoContainer.className = 'spectator-logo-container';
         logoContainer.innerHTML = `
             <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo-fix.webp" style="top: -60px; left: -65px;" class="absolute w-96 z-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+            <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain" />
             
             <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-logo-fix.webp" class="absolute top-2 right-2 w-64 z-20 object-contain drop-shadow-[0_0_15px_rgba(0,255,136,0.3)]" />
+            <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain" />
         `;
         document.body.appendChild(logoContainer);
         this.disposers.push(() => logoContainer.remove());
@@ -222,14 +222,40 @@ export class HostProgressScene extends Phaser.Scene {
 
         updateCamera();
 
+        // --- Restore Drag and Zoom ---
+        this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: any, deltaX: number, deltaY: number, deltaZ: number) => {
+            const newZoom = this.cameras.main.zoom - (deltaY * 0.001);
+            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, 0.3, 3.0));
+        });
+
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            if (pointer.rightButtonDown() || pointer.leftButtonDown()) {
+                this.isDragPan = true;
+                this.dragOrigin = new Phaser.Math.Vector2(pointer.x, pointer.y);
+            }
+        });
+
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+            if (this.isDragPan && this.dragOrigin) {
+                const deltaX = pointer.x - this.dragOrigin.x;
+                const deltaY = pointer.y - this.dragOrigin.y;
+                if (this.cameras && this.cameras.main && this.cameras.main.zoom > 0) {
+                    this.cameras.main.scrollX -= deltaX / this.cameras.main.zoom;
+                    this.cameras.main.scrollY -= deltaY / this.cameras.main.zoom;
+                }
+                this.dragOrigin.set(pointer.x, pointer.y);
+            }
+        });
+
+        this.input.on('pointerup', () => this.isDragPan = false);
+        this.input.on('pointerupoutside', () => this.isDragPan = false);
+
         // Handle Window Resize
         this.resizeListener = () => {
             updateCamera();
         };
         this.scale.on('resize', this.resizeListener);
 
-        // Host view is absolutely static: No manual drag/zoom allowed
-        // (Scroll and Pointer interactions removed to keep map pure & scaled neatly)
         // --- UI Initialization ---
         this.createUI();
         this.createLandscapeOverlay();
@@ -239,7 +265,7 @@ export class HostProgressScene extends Phaser.Scene {
             if (player.isHost) return;
             const container = this.add.container(player.x, player.y);
             container.setDepth(100);
-            container.setScale(1.6); // Sedikit diperbesar agar lebih jelas
+            container.setScale(2.5); // Diperbesar lagi agar karakter lebih dominan/jelas
 
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
             const hairSprite = this.add.sprite(0, 0, '').setVisible(false);
@@ -270,7 +296,7 @@ export class HostProgressScene extends Phaser.Scene {
 
             const updateProgress = () => {
                 const tag = container.getByName('nameTag') as Phaser.GameObjects.Text;
-                const progressText = container.getByName('progressText') as Phaser.GameObjects.Text;
+                const progressStrText = container.getByName('progressStrText') as Phaser.GameObjects.Text;
                 const progressBar = container.getByName('progressBar') as Phaser.GameObjects.Graphics;
 
                 const answered = player.answeredQuestions || 0;
@@ -284,6 +310,7 @@ export class HostProgressScene extends Phaser.Scene {
                 const progress = Phaser.Math.Clamp(answered / target, 0, 1);
 
                 if (tag) tag.setText(player.name || 'Player');
+                if (progressStrText) progressStrText.setText(`${answered}/${target}`);
 
                 if (progressBar) {
                     progressBar.clear();
@@ -337,8 +364,8 @@ export class HostProgressScene extends Phaser.Scene {
         `;
 
         this.uiContainer.innerHTML = `
-            <img src="/logo/Zigma-logo-fix.webp" style="position: absolute; top: -60px; left: -65px; width: 384px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); pointer-events: none;" />
-            <img src="/logo/gameforsmart-logo-fix.webp" style="position: absolute; top: 8px; right: 8px; width: 256px; z-index: 20; object-contain; filter: drop-shadow(0 0 15px rgba(0,255,136,0.3)); pointer-events: none;" />
+            <img src="/logo/Zigma-logo-fix.webp" style="position: absolute; top: -30px; left: -40px; width: 256px; z-index: 20; object-contain; pointer-events: none;" />
+            <img src="/logo/gameforsmart-logo-fix.webp" style="position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; object-contain; pointer-events: none;" />
 
             <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px;">
                 <span id="timer-icon" class="material-symbols-outlined" style="font-size: 48px; color: #ffffff; filter: drop-shadow(0 0 2px black) drop-shadow(0 0 2px black);">timer</span>
@@ -579,12 +606,15 @@ export class HostProgressScene extends Phaser.Scene {
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
         // Render font lebih besar dengan resolusi lebih tinggi lalu di-scale agar tetap tajam (anti-blur)
-        const nameText = this.add.text(0, -38, name, { fontSize: '18px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
+        const nameText = this.add.text(0, -45, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
         nameText.setName('nameTag');
 
-        const progressBar = this.add.graphics({ x: -18, y: -25 });
+        const progressStrText = this.add.text(0, -32, '0/0', { fontSize: '18px', fontFamily: '"Retro Gaming"', color: '#FEFF9F', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
+        progressStrText.setName('progressStrText');
+
+        const progressBar = this.add.graphics({ x: -18, y: -23 });
         progressBar.setName('progressBar');
 
-        container.add([nameText, progressBar]);
+        container.add([nameText, progressStrText, progressBar]);
     }
 }

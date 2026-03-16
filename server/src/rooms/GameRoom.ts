@@ -228,8 +228,9 @@ export class GameRoom extends Room<GameState> {
                 });
 
                 // Update Score (Authoritative & Dynamic)
-                let totalQuestions = this.state.questions.length || 1;
-                const pointsPerCorrect = 100 / totalQuestions;
+                const qLimit = parseInt(this.questionLimit);
+                let totalQuestions = isNaN(qLimit) ? (this.state.questions.length || 1) : qLimit;
+                const pointsPerCorrect = 100 / (totalQuestions || 1);
                 player.score = Math.min(100, player.score + pointsPerCorrect);
 
                 // Real-time sync to Supabase B
@@ -249,7 +250,8 @@ export class GameRoom extends Room<GameState> {
                 }
 
                 // Check if player finished all required questions
-                totalQuestions = this.state.questions.length;
+                const finalQLimit = parseInt(this.questionLimit);
+                totalQuestions = isNaN(finalQLimit) ? this.state.questions.length : finalQLimit;
                 if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
@@ -314,7 +316,8 @@ export class GameRoom extends Room<GameState> {
                 }
 
                 // Cek apakah player selesai menjawab semua soal
-                const totalQuestions = this.state.questions.length;
+                const qLimit = parseInt(this.questionLimit);
+                const totalQuestions = isNaN(qLimit) ? this.state.questions.length : qLimit;
                 if (player.answeredQuestions >= totalQuestions && !player.isFinished) {
                     player.isFinished = true;
                     player.finishTime = Date.now();
@@ -349,8 +352,9 @@ export class GameRoom extends Room<GameState> {
             const player = this.state.players.get(client.sessionId);
             if (player) {
                 // Chest gives a small bonus (e.g., 5 points fixed or 25% of a question)
-                const totalQuestions = this.state.questions.length || 1;
-                const pointsPerCorrect = 100 / totalQuestions;
+                const qLimit = parseInt(this.questionLimit);
+                const totalQuestions = isNaN(qLimit) ? (this.state.questions.length || 1) : qLimit;
+                const pointsPerCorrect = 100 / (totalQuestions || 1);
                 const chestPoints = pointsPerCorrect * 0.5; // Bonus set at half a question value
 
                 player.score = Math.min(100, player.score + chestPoints);
@@ -875,8 +879,9 @@ export class GameRoom extends Room<GameState> {
             return true;
         };
 
-        // 1:1 ratio: 5 soal = 5 musuh, 10 soal = 10 musuh
-        const enemiesPerPlayerToSpawn = this.state.questions.length || 5;
+        // 1:1 ratio: Exact matching or fallback to array length/5
+        const qLimit = parseInt(this.questionLimit);
+        const enemiesPerPlayerToSpawn = !isNaN(qLimit) ? qLimit : (this.state.questions.length || 5);
 
         console.log(`[GameRoom] Spawning ${enemiesPerPlayerToSpawn} enemies per player (1:1 with questions)`);
 
@@ -1106,7 +1111,7 @@ export class GameRoom extends Room<GameState> {
                     ended: r.finishTime > 0 ? new Date(r.finishTime).toISOString() : new Date().toISOString(),
                     eliminated: false,
                     spacecraft: r.hairId ? `hair_${r.hairId}.png` : "galaksi1.webp", // Mocking spacecraft visual 
-                    total_question: this.state.questions.length,
+                    total_question: !isNaN(parseInt(this.questionLimit)) ? parseInt(this.questionLimit) : this.state.questions.length,
                     current_question: r.currentQuestion
                 }
             });

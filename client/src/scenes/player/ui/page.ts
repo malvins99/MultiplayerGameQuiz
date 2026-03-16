@@ -5,7 +5,6 @@ export class UIScene extends Phaser.Scene {
     scoreText!: Phaser.GameObjects.Text;
     timerText!: Phaser.GameObjects.Text;
     currentScore: number = 0;
-    zigmaLogo!: Phaser.GameObjects.Image;
 
     constructor() {
         super({ key: 'UIScene', active: false });
@@ -21,9 +20,7 @@ export class UIScene extends Phaser.Scene {
     create() {
         const screenWidth = this.scale.width;
 
-        // --- Logos ---
-        // Zigma Logo (Top Left)
-        this.zigmaLogo = this.add.image(20, 20, 'logo_zigma'); // Placeholder key, will load in preload or use DOM
+        // --- Logos (Handled by HTML UI Overlay) ---
 
         // Create Container positioned at Top Center
         this.scoreContainer = this.add.container(screenWidth / 2, 70);
@@ -67,10 +64,12 @@ export class UIScene extends Phaser.Scene {
 
         // Timer Text (below score box)
         const initialMinutes = this.room?.state?.totalTimeMinutes || 5;
-        this.timerText = this.add.text(0, 40, `${String(initialMinutes).padStart(2, '0')}:00`, {
+        this.timerText = this.add.text(0, 42, `${String(initialMinutes).padStart(2, '0')}:00`, {
             fontFamily: '"Retro Gaming", monospace',
-            fontSize: '12px',
-            color: '#666666',
+            fontSize: '16px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3,
             align: 'center'
         });
         this.timerText.setOrigin(0.5, 0.5);
@@ -161,7 +160,7 @@ export class UIScene extends Phaser.Scene {
             } else if (totalSeconds <= 60) {
                 this.timerText.setColor('#ffaa00');
             } else {
-                this.timerText.setColor('#666666');
+                this.timerText.setColor('#ffffff');
             }
         }
     }
