@@ -28,8 +28,8 @@ export class UIScene extends Phaser.Scene {
         this.scoreContainer.setDepth(100);
 
         // --- Score UI Background Box ---
-        const boxWidth = 160;
-        const boxHeight = 50;
+        const boxWidth = 120;
+        const boxHeight = 40;
         const cornerRadius = 10;
         const fillColor = 0xefe4ca; // Beige/Tan
         const borderColor = 0x4a3d2e; // Dark Brown
@@ -55,7 +55,7 @@ export class UIScene extends Phaser.Scene {
         // Score Text
         this.scoreText = this.add.text(0, 0, '0', {
             fontFamily: '"Retro Gaming", monospace',
-            fontSize: '24px',
+            fontSize: '18px',
             color: '#4a3d2e',
             align: 'center'
         });
@@ -64,9 +64,9 @@ export class UIScene extends Phaser.Scene {
 
         // Timer Text (below score box)
         const initialMinutes = this.room?.state?.totalTimeMinutes || 5;
-        this.timerText = this.add.text(0, 42, `${String(initialMinutes).padStart(2, '0')}:00`, {
+        this.timerText = this.add.text(0, 32, `${String(initialMinutes).padStart(2, '0')}:00`, {
             fontFamily: '"Retro Gaming", monospace',
-            fontSize: '16px',
+            fontSize: '14px',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
