@@ -151,36 +151,11 @@ export class HostProgressScene extends Phaser.Scene {
             });
         }
 
-        // --- Logo Integration ---
-        const logoStyleId = 'spectator-logo-styles';
-        if (!document.getElementById(logoStyleId)) {
-            const style = document.createElement('style');
-            style.id = logoStyleId;
-            style.innerHTML = `
-                .spectator-logo-container {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    pointer-events: none;
-                    z-index: 100;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        const logoContainer = document.createElement('div');
-        logoContainer.className = 'spectator-logo-container';
-        logoContainer.innerHTML = `
-            <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain" />
-            
-            <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain" />
-        `;
-        document.body.appendChild(logoContainer);
-        this.disposers.push(() => logoContainer.remove());
+        // Texture Filtering for sharp pixels
+        if (this.textures.exists('tiles')) this.textures.get('tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        if (this.textures.exists('forest_tiles')) this.textures.get('forest_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        if (this.textures.exists('coracle_tiles')) this.textures.get('coracle_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        if (this.textures.exists('windmill_tiles')) this.textures.get('windmill_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
         // --- Animations ---
         if (!this.anims.exists('idle')) {
@@ -207,12 +182,18 @@ export class HostProgressScene extends Phaser.Scene {
         const updateCamera = () => {
             if (!this.cameras || !this.cameras.main || !this.map) return;
 
-            const mapW = this.map.widthInPixels || 1920;
-            const mapH = this.map.heightInPixels || 1080;
+            const mapW = this.map.widthInPixels || (this.map.width * this.map.tileWidth);
+            const mapH = this.map.heightInPixels || (this.map.height * this.map.tileHeight);
 
             const zoomX = this.scale.width / mapW;
             const zoomY = this.scale.height / mapH;
+            
+            // We want to "cover" the screen, so take the MAX zoom. 
+            // If it's a mobile screen, we want it to be even a bit closer.
+            const isMobile = window.innerWidth <= 768;
             this.minZoom = Math.max(zoomX, zoomY);
+            
+            if (isMobile && this.minZoom < 1.0) this.minZoom = 1.0; 
 
             this.cameras.main.setBackgroundColor('#1a1a1a');
             this.cameras.main.centerOn(mapW / 2, mapH / 2);
@@ -364,15 +345,12 @@ export class HostProgressScene extends Phaser.Scene {
         `;
 
         this.uiContainer.innerHTML = `
-            <img src="/logo/Zigma-logo-fix.webp" style="position: absolute; top: -30px; left: -40px; width: 256px; z-index: 20; object-contain; pointer-events: none;" />
-            <img src="/logo/gameforsmart-logo-fix.webp" style="position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; object-contain; pointer-events: none;" />
+            <img src="/logo/Zigma-logo-fix.webp" class="absolute top-[-10px] md:top-[-30px] left-[-15px] md:left-[-40px] w-32 md:w-64 z-20 object-contain pointer-events-none" />
+            <img src="/logo/gameforsmart-logo-fix.webp" class="absolute top-[-15px] md:top-[-45px] right-0 md:right-[-15px] w-40 md:w-80 z-20 object-contain pointer-events-none" />
 
-            <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px;">
-                <span id="timer-icon" class="material-symbols-outlined" style="font-size: 48px; color: #ffffff; filter: drop-shadow(0 0 2px black) drop-shadow(0 0 2px black);">timer</span>
-                <span id="game-timer" style="
-                    font-size: 48px; 
-                    color: #ffffff; 
-                    font-weight: bold; 
+            <div class="absolute top-[20px] md:top-[30px] left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-4">
+                <span id="timer-icon" class="material-symbols-outlined text-[32px] md:text-[48px] text-white drop-shadow-md">timer</span>
+                <span id="game-timer" class="text-[32px] md:text-[48px] text-white font-bold" style="
                     text-shadow: 
                         -2px -2px 0 #000,  
                          2px -2px 0 #000,
@@ -382,45 +360,11 @@ export class HostProgressScene extends Phaser.Scene {
                 ">${String(this.room.state.totalTimeMinutes || 5).padStart(2, '0')}:00</span>
             </div>
 
-            <button id="spec-volume-btn" style="
-                position: absolute; 
-                bottom: 40px; 
-                left: 40px; 
-                background: rgba(0,0,0,0.6); 
-                border: 2px solid rgba(0,255,136,0.3); 
-                color: #00ff88; 
-                width: 64px; 
-                height: 64px; 
-                border-radius: 50%; 
-                cursor: pointer; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                pointer-events: auto;
-                backdrop-filter: blur(4px);
-                transition: all 0.2s;
-            ">
-                <span id="volume-icon" class="material-symbols-outlined" style="font-size: 32px;">volume_up</span>
+            <button id="spec-volume-btn" class="absolute bottom-4 md:bottom-10 left-4 md:left-10 bg-black/60 border-2 border-[#00ff88]/30 text-[#00ff88] w-12 h-12 md:w-16 md:h-16 rounded-full cursor-pointer flex items-center justify-center pointer-events-auto backdrop-blur-sm transition-all duration-200">
+                <span id="volume-icon" class="material-symbols-outlined text-[24px] md:text-[32px]">volume_up</span>
             </button>
 
-            <button id="spec-end-btn" style="
-                position: absolute; 
-                bottom: 40px; 
-                right: 40px; 
-                background: #ff0055; 
-                border: none; 
-                padding: 18px 36px; 
-                color: white; 
-                cursor: pointer; 
-                font-family: inherit; 
-                font-size: 14px; 
-                text-transform: uppercase; 
-                border-radius: 12px; 
-                box-shadow: 0 6px 0 #990033; 
-                pointer-events: auto;
-                transition: all 0.05s;
-                letter-spacing: 1px;
-            ">
+            <button id="spec-end-btn" class="absolute bottom-4 md:bottom-10 right-4 md:right-10 bg-[#ff0055] border-none px-4 py-2 md:px-9 md:py-4 text-white cursor-pointer font-inherit text-xs md:text-sm uppercase rounded-xl pointer-events-auto transition-all duration-75 tracking-widest shadow-[0_4px_0_#990033] md:shadow-[0_6px_0_#990033] active:translate-y-1 active:shadow-none">
                 Akhiri Game
             </button>
         `;
