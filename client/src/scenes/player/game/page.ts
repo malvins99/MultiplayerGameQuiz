@@ -205,6 +205,12 @@ export class GameScene extends Phaser.Scene {
         if (this.textures.exists('forest_tiles')) {
             this.textures.get('forest_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
         }
+        if (this.textures.exists('coracle_tiles')) {
+            this.textures.get('coracle_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        }
+        if (this.textures.exists('windmill_tiles')) {
+            this.textures.get('windmill_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        }
 
         // --- Animations ---
         // Base Animations
@@ -329,7 +335,7 @@ export class GameScene extends Phaser.Scene {
                 this.currentPlayer = container as any;
                 this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
                 this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-                this.cameras.main.setZoom(2);
+                this.cameras.main.setZoom(window.innerWidth <= 768 ? 1.2 : 2);
                 this.cameras.main.roundPixels = true;
 
                 const uiScene = this.scene.get('UIScene') as UIScene;
