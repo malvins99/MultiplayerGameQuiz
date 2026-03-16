@@ -95,58 +95,52 @@ export const TransitionManager = {
             gradient.style.background = 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%)';
             el.appendChild(gradient);
 
-            // Sub-text (Optional "READY...")
-            const subTitle = document.createElement('div');
-            subTitle.id = 'transition-countdown-subtitle';
-            subTitle.style.position = 'relative';
-            subTitle.style.fontFamily = "'Retro Gaming', monospace";
-            subTitle.style.fontSize = '24px';
-            subTitle.style.color = '#00ff55';
-            subTitle.style.marginBottom = '20px';
-            subTitle.style.opacity = '0.6';
-            subTitle.style.letterSpacing = '10px';
-            subTitle.innerText = 'BATTLE STARTING';
-            el.appendChild(subTitle);
-
             // Main Text Container
             const textContent = document.createElement('div');
             textContent.id = 'transition-countdown-text';
             textContent.style.position = 'relative';
             textContent.style.fontFamily = "'Retro Gaming', monospace";
-            textContent.style.fontSize = '180px';
-            textContent.style.color = '#00ff55';
-            textContent.style.textShadow = '0 0 40px rgba(0, 255, 85, 0.6)';
+            textContent.style.fontSize = '120px'; // Matched to 120px
+            textContent.style.color = '#00ff88'; // Matched to #00ff88
+            textContent.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))'; // Matched shadow
             textContent.style.transition = 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            
+            // Add Bounce Animation
+            const bounceStyle = document.createElement('style');
+            bounceStyle.innerHTML = `
+                @keyframes tm-bounce {
+                    0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+                    50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+                }
+                .tm-animate-bounce { animation: tm-bounce 1s infinite; }
+            `;
+            document.head.appendChild(bounceStyle);
+            textContent.classList.add('tm-animate-bounce');
+
             el.appendChild(textContent);
 
             overlay.appendChild(el);
         }
 
         const textEl = document.getElementById('transition-countdown-text');
-        const subEl = document.getElementById('transition-countdown-subtitle');
         if (!textEl) return;
 
         const oldText = textEl.innerText;
         textEl.innerText = text;
 
-        // Auto-scale font size if text is long
         if (text.length > 5) {
             textEl.style.fontSize = '60px';
-            if (subEl) subEl.style.display = 'none';
         } else {
-            textEl.style.fontSize = '180px';
-            if (subEl) subEl.style.display = 'block';
+            textEl.style.fontSize = '120px'; // Matched
         }
 
         // Color Logic
         if (text === 'GO!' || text === '0') {
             textEl.style.color = '#fff';
-            textEl.style.textShadow = '0 0 50px #fff';
-            if (subEl) subEl.innerText = 'FIGHT!';
+            textEl.style.filter = 'drop-shadow(0 0 50px #fff)';
         } else {
-            textEl.style.color = '#00ff55';
-            textEl.style.textShadow = '0 0 40px rgba(0, 255, 85, 0.6)';
-            if (subEl) subEl.innerText = 'BATTLE STARTING';
+            textEl.style.color = '#00ff88'; // Matched
+            textEl.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
         }
 
         // Pulse animation ONLY if it's a number (for countdown)

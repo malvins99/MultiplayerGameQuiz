@@ -206,7 +206,7 @@ export class HostProgressScene extends Phaser.Scene {
         // --- Restore Drag and Zoom ---
         this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: any, deltaX: number, deltaY: number, deltaZ: number) => {
             const newZoom = this.cameras.main.zoom - (deltaY * 0.001);
-            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, 0.3, 3.0));
+            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 3.0));
         });
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {

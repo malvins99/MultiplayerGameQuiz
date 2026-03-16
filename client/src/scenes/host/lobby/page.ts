@@ -2078,3 +2078,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         }, speed * 1000 + 500);
     }
 }
+
+
+//ikan

@@ -122,17 +122,17 @@ export class QuizPopup {
             /* ========== DIALOGUE BOX ========== */
             .rpg-box {
                 pointer-events: auto;
-                width: 95%; max-width: 900px; /* Increased width */
+                width: 90%; max-width: 480px; /* Reduced to 480px */
                 background-color: #e4d5b7;
-                border: 6px solid #4b3d28;
+                border: 3px solid #4b3d28;
                 border-radius: 4px;
                 box-shadow: 0 0 0 2px #2e2216, 0 10px 20px rgba(0,0,0,0.5);
-                padding: 24px;
+                padding: 10px; /* Tighter padding */
                 position: relative;
                 color: #2e2216;
                 transform: translateY(150%);
                 transition: transform 0.3s ease-out;
-                display: flex; flex-direction: column; gap: 15px;
+                display: flex; flex-direction: column; gap: 6px; /* Tighter gap */
             }
             .rpg-overlay-v2.active .rpg-box { transform: translateY(0); }
 
@@ -147,19 +147,19 @@ export class QuizPopup {
             /* ========== QUESTION CONTENT BOX (Scrollable) ========== */
             .rpg-question-box {
                 background: #d0c0a0;
-                border: 3px solid #4b3d28; /* Same border as buttons */
+                border: 2px solid #4b3d28;
                 border-radius: 4px;
-                padding: 15px;
-                max-height: 400px; /* Increased height for scrolling */
-                overflow-y: auto; /* Enable scrolling */
-                display: flex; flex-direction: column; gap: 15px;
+                padding: 8px;
+                max-height: 90px; /* Even shorter for landscape */
+                overflow-y: auto;
+                display: flex; flex-direction: column; gap: 6px;
                 box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
             }
             
             /* Custom Scrollbar */
-            .rpg-question-box::-webkit-scrollbar { width: 10px; }
+            .rpg-question-box::-webkit-scrollbar { width: 5px; }
             .rpg-question-box::-webkit-scrollbar-track { background: #c3b08d; }
-            .rpg-question-box::-webkit-scrollbar-thumb { background: #4b3d28; border: 2px solid #c3b08d; border-radius: 4px; }
+            .rpg-question-box::-webkit-scrollbar-thumb { background: #4b3d28; border: 1px solid #c3b08d; border-radius: 4px; }
 
             .rpg-question-image {
                 max-width: 100%;
@@ -171,8 +171,7 @@ export class QuizPopup {
             .rpg-question-image.hidden { display: none; }
 
             .rpg-question-text {
-                font-size: 16px; /* Slightly smaller for more text */
-                line-height: 1.6;
+                line-height: 1.5;
                 white-space: pre-wrap;
             }
 
@@ -186,13 +185,13 @@ export class QuizPopup {
 
             .rpg-btn {
                 background: #dcc8a4;
-                border: 3px solid #4b3d28;
-                padding: 10px 15px; /* Reduced padding */
-                font-family: inherit; font-size: 14px; /* Smaller font */
+                border: 2px solid #4b3d28;
+                padding: 4px 8px;
+                font-family: inherit; font-size: 11px; /* Smaller font */
                 color: #2e2216; cursor: pointer;
                 text-align: left; transition: all 0.1s;
                 position: relative; border-radius: 4px;
-                min-height: 50px; display: flex; align-items: center;
+                min-height: 32px; display: flex; align-items: center;
             }
             .rpg-btn:hover { background: #eaddc5; transform: translateY(-2px); box-shadow: 0 4px 0 #2e2216; }
             .rpg-btn-img {
