@@ -6,6 +6,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 
 import { HTMLControlAdapter } from '../../../ui/shared/HTMLControlAdapter';
 import { ClickToMoveSystem } from '../../../systems/ClickToMoveSystem';
+import { OrientationManager } from '../../../utils/OrientationManager';
 // Removed legacy QUESTIONS import
 
 export class GameScene extends Phaser.Scene {
@@ -33,7 +34,6 @@ export class GameScene extends Phaser.Scene {
     private lastNetworkSendTime: number = 0;
     private networkSendRate: number = 100; // ms (10 times a second)
     private wasMovingKeyboard: boolean = false;
-    private landscapeOverlay!: HTMLDivElement;
 
     constructor() {
         super('GameScene');
@@ -600,14 +600,11 @@ export class GameScene extends Phaser.Scene {
             this.events.once('shutdown', () => {
                 uiLayer.classList.add('hidden');
                 this.scene.stop('UIScene');
-                window.removeEventListener('resize', this.checkOrientation);
-                if (this.landscapeOverlay && this.landscapeOverlay.parentNode) {
-                    this.landscapeOverlay.parentNode.removeChild(this.landscapeOverlay);
-                }
+                OrientationManager.disable();
             });
         }
 
-        this.createLandscapeOverlay();
+        OrientationManager.requireLandscape();
 
         // --- Game Events from Server ---
         this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
@@ -678,56 +675,6 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private checkOrientation = () => {
-        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile && window.innerHeight > window.innerWidth) {
-            if (this.landscapeOverlay) {
-                this.landscapeOverlay.style.display = 'flex';
-                this.landscapeOverlay.style.pointerEvents = 'auto';
-            }
-        } else {
-            if (this.landscapeOverlay) {
-                this.landscapeOverlay.style.display = 'none';
-                this.landscapeOverlay.style.pointerEvents = 'none';
-            }
-        }
-    };
-
-    private createLandscapeOverlay() {
-        const existingId = 'player-landscape-overlay';
-        if (document.getElementById(existingId)) {
-            document.getElementById(existingId)?.remove();
-        }
-        
-        this.landscapeOverlay = document.createElement('div');
-        this.landscapeOverlay.id = existingId;
-        this.landscapeOverlay.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(18, 18, 22, 0.95); z-index: 999999; display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: 'Retro Gaming', monospace; text-align: center;
-            padding: 20px; backdrop-filter: blur(8px);
-        `;
-        this.landscapeOverlay.innerHTML = `
-            <div style="background: rgba(0,0,0,0.85); padding: 40px; border-radius: 20px; border: 2px solid #72BF78; display: flex; flex-direction: column; align-items: center; max-width: 90vw;">
-                <span class="material-symbols-outlined" style="font-size: 80px; margin-bottom: 20px; color: #72BF78; animation: rotateDevice 2s infinite ease-in-out;">screen_rotation</span>
-                <h2 style="font-size: 26px; margin-bottom: 15px; color: #72BF78; text-transform: uppercase;">Mode Landscape Diperlukan</h2>
-                <p style="font-size: 14px; color: #eee; line-height: 1.6; max-width: 300px; font-family: sans-serif;">Putar layar HP Anda secara mendatar untuk dapat mengontrol karakter dengan leluasa serta melihat map dengan luas.</p>
-                <div style="margin-top: 25px; padding: 10px 20px; background: #72BF78; color: #000; border-radius: 6px; font-weight: 800; font-size: 14px;">PUTAR SEKARANG</div>
-            </div>
-            <style>
-                @keyframes rotateDevice {
-                    0% { transform: rotate(0deg); }
-                    50% { transform: rotate(90deg); }
-                    100% { transform: rotate(0deg); }
-                }
-            </style>
-        `;
-        document.body.appendChild(this.landscapeOverlay);
-
-        window.addEventListener('resize', this.checkOrientation);
-        this.checkOrientation();
-    }
 
     createPlayerIndicator() {
         if (this.currentPlayer) {

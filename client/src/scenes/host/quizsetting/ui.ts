@@ -85,6 +85,9 @@ export class QuizSettingsUI {
                 <!-- LOGO TOP LEFT (Zigma) — Desktop only -->
                 <img id="settings-zigma-logo" src="/logo/Zigma-logo-fix.webp" style="top: -20px; left: -10px;" class="absolute w-64 z-50 object-contain cursor-pointer login-desktop-only" />
 
+                <!-- LOGO TOP RIGHT (Game For Smart) — Desktop only -->
+                <img src="/logo/gameforsmart-logo-fix.webp" style="top: -35px; right: -15px;" class="absolute w-80 z-20 object-contain pointer-events-none login-desktop-only" />
+
                 <!-- MOBILE LOGO (Zigma only, centered at top) — Mobile only -->
                 <div class="login-mobile-only w-full justify-center pt-5 relative z-50 pointer-events-none">
                     <img id="settings-zigma-logo-mobile" src="/logo/Zigma-logo-fix.webp" class="w-52 object-contain cursor-pointer pointer-events-auto" />
