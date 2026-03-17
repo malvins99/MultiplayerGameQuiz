@@ -16,7 +16,7 @@ export class LeaderboardUI {
                 height: 64px; 
                 image-rendering: pixelated; 
                 position: absolute; 
-                transform: scale(4); 
+                transform: scale(3.5); 
                 animation: lb-play-idle 1s steps(9) infinite; 
             }
             @keyframes lb-play-idle { 
@@ -35,6 +35,10 @@ export class LeaderboardUI {
                 transform: scale(1.3); 
                 animation: lb-play-idle 1s steps(9) infinite; 
             }
+            .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,255,85,0.3); border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,255,85,0.5); }
         `;
     }
 
@@ -133,58 +137,57 @@ export class LeaderboardUI {
         `}).join('');
 
         return `
-            <div class="fixed inset-0 w-full h-screen overflow-hidden fantasy-bg text-white pointer-events-auto select-none">
+            <div class="fixed inset-0 w-full h-screen overflow-hidden fantasy-bg text-white pointer-events-auto select-none flex flex-col">
                 
-                <!-- GameForSmart Logo - Top Right Corner -->
-                <div class="absolute top-4 right-4 md:top-6 md:right-6 z-50">
-                    <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart" draggable="false"
-                        class="w-32 h-auto md:w-56 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
+                <!-- Header: Logos -->
+                <div class="relative w-full px-4 py-6 md:px-8 md:py-8 flex items-center justify-center md:justify-between z-50 shrink-0">
+                    <!-- Zigma Logo -->
+                    <div class="relative">
+                        <img src="/logo/Zigma-logo-fix.webp" alt="Zigma" draggable="false"
+                            class="w-24 h-auto md:w-32 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 transition-all duration-300" />
+                    </div>
+
+                    <!-- GameForSmart Logo (Hidden on Mobile) -->
+                    <div class="hidden md:block">
+                        <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart" draggable="false"
+                            class="w-56 h-auto object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 transition-all duration-300" />
+                    </div>
                 </div>
 
-                <!-- Zigma Logo - Top Left Corner -->
-                <div class="absolute top-4 left-4 md:top-6 md:left-6 z-50">
-                    <img src="/logo/Zigma-logo-fix.webp" alt="Zigma" draggable="false"
-                        class="w-24 h-auto md:w-32 object-contain drop-shadow-[0_0_10px_rgba(0,255,85,0.4)] hover:scale-105 hover:drop-shadow-[0_0_20px_rgba(0,255,85,0.6)] transition-all duration-300" />
-                </div>
-
-                <!-- Fantasy Forest Gradient Overlay -->
-                <div class="absolute inset-0 pointer-events-none"
-                    style="background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);"></div>
-
-                <!-- Mystical Fog Layer -->
-                <div class="absolute inset-0 pointer-events-none mystical-fog"></div>
-                <div class="absolute inset-0 pointer-events-none mystical-fog"
-                    style="animation-delay: 5s; animation-direction: reverse;"></div>
-
-                <!-- Magic Firefly Particles -->
-                <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s; animation-duration: 7s;"></div>
-                <div class="firefly" style="top: 60%; left: 85%; animation-delay: 1s; animation-duration: 5s;"></div>
-                <div class="firefly" style="top: 30%; left: 50%; animation-delay: 2s; animation-duration: 6s;"></div>
-                <div class="firefly" style="top: 80%; left: 30%; animation-delay: 0.5s; animation-duration: 8s;"></div>
-                <div class="firefly" style="top: 15%; left: 70%; animation-delay: 1.5s; animation-duration: 7s;"></div>
-
-                <!-- Glowing Orbs -->
-                <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
-                <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style="animation-delay: 1s;"></div>
-
-                <!-- Bottom Forest Silhouette -->
-                <div class="absolute bottom-0 left-0 right-0 h-32 pointer-events-none forest-silhouette opacity-50"></div>
-
-                <!-- MAIN CONTENT AREA -->
-                <div class="relative z-10 w-full h-full flex flex-col items-center pt-24 pb-12 px-4 overflow-y-auto custom-scrollbar">
+                <!-- Fantasy Forest Background Elements (Fixed position relative to container) -->
+                <div class="absolute inset-0 pointer-events-none z-0">
+                    <div class="absolute inset-0" style="background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);"></div>
+                    <div class="absolute inset-0 mystical-fog"></div>
+                    <div class="absolute inset-0 mystical-fog" style="animation-delay: 5s; animation-direction: reverse;"></div>
                     
+                    <!-- Magic Firefly Particles -->
+                    <div class="firefly" style="top: 20%; left: 10%; animation-delay: 0s; animation-duration: 7s;"></div>
+                    <div class="firefly" style="top: 60%; left: 85%; animation-delay: 1s; animation-duration: 5s;"></div>
+                    <div class="firefly" style="top: 30%; left: 50%; animation-delay: 2s; animation-duration: 6s;"></div>
+                    <div class="firefly" style="top: 80%; left: 30%; animation-delay: 0.5s; animation-duration: 8s;"></div>
+                    <div class="firefly" style="top: 15%; left: 70%; animation-delay: 1.5s; animation-duration: 7s;"></div>
 
+                    <!-- Glowing Orbs -->
+                    <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-[120px] animate-pulse"></div>
+                    <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse" style="animation-delay: 1s;"></div>
 
-                    <!-- Podiums -->
-                    <div class="flex items-end justify-center gap-2 md:gap-8 mb-12">
+                    <!-- Bottom Forest Silhouette -->
+                    <div class="absolute bottom-0 left-0 right-0 h-32 forest-silhouette opacity-50"></div>
+                </div>
+
+                <!-- MAIN SCROLLABLE CONTENT AREA (ONLY THE TABLE SCROLLS) -->
+                <div class="relative z-10 flex-grow flex flex-col items-center px-4 overflow-hidden">
+                    
+                    <!-- Podiums (Non-scrollable) -->
+                    <div class="w-full flex items-end justify-center gap-2 md:gap-8 mb-8 mt-2 shrink-0">
                         ${podiumsHtml}
                     </div>
 
-                    <!-- Leaderboard Table Card -->
+                    <!-- Leaderboard Table Card (The only scrollable part) -->
                     ${others.length > 0 ? `
-                    <div class="w-full max-w-4xl bg-[#1a1a20]/90 backdrop-blur-md border-[3px] border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,255,85,0.1)] overflow-hidden shrink-0 mb-20">
-                        <!-- Header -->
-                        <div class="bg-black/80 border-b-[3px] border-primary/20 relative">
+                    <div class="w-full max-w-4xl bg-[#1a1a20]/90 backdrop-blur-md border-[3px] border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,255,85,0.1)] flex flex-col overflow-hidden mb-4 min-h-0 flex-grow">
+                        <!-- Header (Fixed at top of card) -->
+                        <div class="bg-black/80 border-b-[3px] border-primary/20 shrink-0">
                             <div class="grid grid-cols-[60px_1fr_100px_100px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[10px] md:text-xs">
                                 <div class="text-center">RANK</div>
                                 <div>PLAYER</div>
@@ -193,26 +196,25 @@ export class LeaderboardUI {
                             </div>
                         </div>
                         
-                        <!-- List -->
-                        <div class="flex flex-col">
-                            ${tableHtml}
+                        <!-- List (Scrollable) -->
+                        <div class="flex-grow overflow-y-auto custom-scrollbar">
+                            <div class="flex flex-col">
+                                ${tableHtml}
+                            </div>
                         </div>
                     </div>
                     ` : ''}
                 </div>
 
-                <!-- FLOATING ACTIONS (Left & Right) -->
-                <div class="fixed top-[40%] md:top-1/2 left-4 md:left-6 -translate-y-1/2 flex flex-col gap-4 z-50">
-                    <button id="lb-home-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-primary text-white/70 hover:text-primary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,255,85,0.2)]" title="Home">
+                <!-- BOTTOM NAVIGATION ACTIONS (Horizontal row) -->
+                <div class="relative z-50 w-full p-6 flex justify-center items-center gap-4 shrink-0 bg-gradient-to-t from-black/80 to-transparent">
+                    <button id="lb-home-btn" class="flex-1 max-w-[120px] h-14 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-primary/40 hover:border-primary text-white/70 hover:text-primary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,255,85,0.2)]" title="Home">
                         <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform">home</span>
                     </button>
-                    <button id="lb-restart-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-secondary text-white/70 hover:text-secondary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,212,255,0.2)]" title="Play Again">
+                    <button id="lb-restart-btn" class="flex-1 max-w-[120px] h-14 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-secondary/40 hover:border-secondary text-white/70 hover:text-secondary rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,212,255,0.2)]" title="Play Again">
                         <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:-rotate-180 transition-transform duration-500">restart_alt</span>
                     </button>
-                </div>
-
-                <div class="fixed top-[40%] md:top-1/2 right-4 md:right-6 -translate-y-1/2 flex flex-col gap-4 z-50">
-                    <button id="lb-stats-btn" class="w-14 h-14 md:w-16 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-white/10 hover:border-accent text-white/70 hover:text-accent rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(204,0,255,0.2)]" title="Statistics">
+                    <button id="lb-stats-btn" class="flex-1 max-w-[120px] h-14 md:h-16 bg-[#1a1a20]/80 backdrop-blur-md border-2 border-accent/40 hover:border-accent text-white/70 hover:text-accent rounded-2xl flex items-center justify-center transition-all group hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(204,0,255,0.2)]" title="Statistics">
                         <span class="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform">analytics</span>
                     </button>
                 </div>

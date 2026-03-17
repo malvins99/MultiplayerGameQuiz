@@ -6,6 +6,7 @@ import { LeaderboardUI } from './ui';
 import type { RankingEntry } from './ui';
 import { LobbyManager } from '../../../scenes/lobby/page';
 import { initializeGame } from '../../../game';
+import { OrientationManager } from '../../../utils/OrientationManager';
 
 export class HostLeaderboardManager {
     private container!: HTMLDivElement;
@@ -19,6 +20,7 @@ export class HostLeaderboardManager {
     start(data?: { rankings?: any[], isHost?: boolean, lastGameOptions?: any, lastSelectedQuiz?: any, mySessionId?: string }) {
         this.initializeClient();
         TransitionManager.ensureClosed();
+        OrientationManager.requirePortrait('MODE PORTRAIT DIPERLUKAN', 'mode potrait di perlukan');
 
         // Data passing via args or localStorage backup
         let rankingsData = data?.rankings;
@@ -182,5 +184,6 @@ export class HostLeaderboardManager {
             if(s.parentNode) s.parentNode.removeChild(s);
             s.remove();
         }
+        OrientationManager.disable();
     }
 }
