@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Room } from 'colyseus.js';
 import { Router } from '../../../utils/Router';
 import { TransitionManager } from '../../../utils/TransitionManager';
+import { OrientationManager } from '../../../utils/OrientationManager';
 
 export class HostProgressScene extends Phaser.Scene {
     room!: Room;
@@ -13,8 +14,8 @@ export class HostProgressScene extends Phaser.Scene {
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
     isMuted: boolean = false;
+    isMuted: boolean = false;
     private resizeListener: (() => void) | null = null;
-    private landscapeOverlay!: HTMLDivElement;
 
     constructor() {
         super('HostProgressScene');
@@ -206,7 +207,7 @@ export class HostProgressScene extends Phaser.Scene {
         // --- Restore Drag and Zoom ---
         this.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: any, deltaX: number, deltaY: number, deltaZ: number) => {
             const newZoom = this.cameras.main.zoom - (deltaY * 0.001);
-            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, 0.3, 3.0));
+            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, this.minZoom, 3.0));
         });
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -239,7 +240,7 @@ export class HostProgressScene extends Phaser.Scene {
 
         // --- UI Initialization ---
         this.createUI();
-        this.createLandscapeOverlay();
+        OrientationManager.requireLandscape();
 
         // --- Player Sync ---
         const handlePlayerAdd = (player: any, sessionId: string) => {
@@ -385,64 +386,13 @@ export class HostProgressScene extends Phaser.Scene {
 
         this.events.once('shutdown', () => {
             if (this.resizeListener) this.scale.off('resize', this.resizeListener);
-            window.removeEventListener('resize', this.checkOrientation);
             this.disposers.forEach(d => d());
             this.disposers = [];
             if (this.uiContainer && this.uiContainer.parentNode) document.body.removeChild(this.uiContainer);
-            if (this.landscapeOverlay && this.landscapeOverlay.parentNode) document.body.removeChild(this.landscapeOverlay);
+            OrientationManager.disable();
         });
     }
 
-    private checkOrientation = () => {
-        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile && window.innerHeight > window.innerWidth) {
-            if (this.landscapeOverlay) {
-                this.landscapeOverlay.style.display = 'flex';
-                this.landscapeOverlay.style.pointerEvents = 'auto';
-            }
-        } else {
-            if (this.landscapeOverlay) {
-                this.landscapeOverlay.style.display = 'none';
-                this.landscapeOverlay.style.pointerEvents = 'none';
-            }
-        }
-    };
-
-    private createLandscapeOverlay() {
-        const existingId = 'host-landscape-overlay';
-        if (document.getElementById(existingId)) {
-            document.getElementById(existingId)?.remove();
-        }
-        
-        this.landscapeOverlay = document.createElement('div');
-        this.landscapeOverlay.id = existingId;
-        this.landscapeOverlay.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #121216; z-index: 999999; display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: 'Retro Gaming', monospace; text-align: center;
-            padding: 20px; backdrop-filter: blur(10px);
-        `;
-        this.landscapeOverlay.innerHTML = `
-            <div style="background: rgba(0,0,0,0.8); padding: 40px; border-radius: 24px; border: 2px solid #72BF78; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 50px rgba(0,0,0,0.5);">
-                <span class="material-symbols-outlined" style="font-size: 84px; margin-bottom: 24px; color: #72BF78; animation: rotateDevice 2s ease-in-out infinite;">screen_rotation</span>
-                <h2 style="font-size: 28px; margin-bottom: 16px; color: #72BF78; text-transform: uppercase; letter-spacing: 2px;">Mode Landscape Diperlukan</h2>
-                <p style="font-size: 16px; color: #eee; line-height: 1.6; max-width: 320px; font-family: sans-serif;">Mohon putar perangkat Anda ke mode mendatar (Landscape) untuk pandangan Map yang lebih optimal.</p>
-                <div style="margin-top: 30px; padding: 10px 20px; background: #72BF78; color: #121216; border-radius: 8px; font-weight: bold; font-size: 14px;">ROTATE DEVICE</div>
-            </div>
-            <style>
-                @keyframes rotateDevice {
-                    0% { transform: rotate(0deg); }
-                    50% { transform: rotate(90deg); }
-                    100% { transform: rotate(0deg); }
-                }
-            </style>
-        `;
-        document.body.appendChild(this.landscapeOverlay);
-
-        window.addEventListener('resize', this.checkOrientation);
-        this.checkOrientation();
-    }
 
     showEndGamePopup() {
         const overlay = document.createElement('div');

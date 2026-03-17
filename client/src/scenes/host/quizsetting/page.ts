@@ -97,29 +97,32 @@ export class QuizSettingManager {
     }
 
     setupEventListeners() {
-        const zigmaLogo = document.getElementById('settings-zigma-logo');
-        if (zigmaLogo) {
-            zigmaLogo.onclick = () => {
-                const overlay = document.getElementById('auth-loading-overlay');
-                const text = document.getElementById('auth-loading-text');
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                    if (text) text.innerText = 'Going back...';
-                }
+        const zigmaLogos = ['settings-zigma-logo', 'settings-zigma-logo-mobile'];
+        zigmaLogos.forEach(id => {
+            const logo = document.getElementById(id);
+            if (logo) {
+                logo.onclick = () => {
+                    const overlay = document.getElementById('auth-loading-overlay');
+                    const text = document.getElementById('auth-loading-text');
+                    if (overlay) {
+                        overlay.classList.remove('hidden');
+                        if (text) text.innerText = 'Going back...';
+                    }
 
-                TransitionManager.close(() => {
-                    this.cleanup();
-                    this.hideSettingsUI();
-                    Router.navigate('/host/select-quiz');
-                    this.startManager('SelectQuizManager');
-                    
-                    setTimeout(() => {
-                        TransitionManager.open();
-                        setTimeout(() => { if (overlay) overlay.classList.add('hidden'); }, 100);
-                    }, 500);
-                });
-            };
-        }
+                    TransitionManager.close(() => {
+                        this.cleanup();
+                        this.hideSettingsUI();
+                        Router.navigate('/host/select-quiz');
+                        this.startManager('SelectQuizManager');
+                        
+                        setTimeout(() => {
+                            TransitionManager.open();
+                            setTimeout(() => { if (overlay) overlay.classList.add('hidden'); }, 100);
+                        }, 500);
+                    });
+                };
+            }
+        });
 
         this.setupDropdown('settings-difficulty-trigger', 'settings-difficulty-menu', 'settings-difficulty-arrow');
         const diffOptions = document.querySelectorAll('.diff-opt');
@@ -135,8 +138,8 @@ export class QuizSettingManager {
                 const display = document.getElementById('settings-difficulty-selected');
                 if (display) display.innerText = label;
 
-                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
-                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
+                document.querySelectorAll('.diff-opt').forEach(o => o.classList.remove('bg-[#F1F8E9]'));
+                target.classList.add('bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-difficulty-menu', 'settings-difficulty-arrow');
             });
@@ -156,8 +159,8 @@ export class QuizSettingManager {
                 const display = document.getElementById('settings-timer-selected');
                 if (display) display.innerText = label;
 
-                document.querySelectorAll('.timer-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
-                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
+                document.querySelectorAll('.timer-opt').forEach(o => o.classList.remove('bg-[#F1F8E9]'));
+                target.classList.add('bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-timer-menu', 'settings-timer-arrow');
             });
@@ -177,8 +180,8 @@ export class QuizSettingManager {
                 const display = document.getElementById('settings-question-selected');
                 if (display) display.innerText = label;
 
-                document.querySelectorAll('.question-opt').forEach(o => o.classList.remove('text-[#478D47]', 'bg-[#F1F8E9]'));
-                target.classList.add('text-[#478D47]', 'bg-[#F1F8E9]');
+                document.querySelectorAll('.question-opt').forEach(o => o.classList.remove('bg-[#F1F8E9]'));
+                target.classList.add('bg-[#F1F8E9]');
 
                 this.closeDropdown('settings-question-menu', 'settings-question-arrow');
             });
