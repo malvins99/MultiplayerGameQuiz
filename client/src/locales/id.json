@@ -1,0 +1,65 @@
+{
+  "login": {
+    "title": "MASUK",
+    "google_signin": "Masuk dengan Google",
+    "or": "atau",
+    "email_username": "EMAIL / NAMA PENGGUNA",
+    "password": "KATA SANDI",
+    "login_btn": "MASUK",
+    "dont_have_account": "BELUM PUNYA AKUN?",
+    "register": "DAFTAR",
+    "placeholders": {
+      "email": "player@game.com",
+      "password": "••••••••"
+    },
+    "errors": {
+      "required": "Wajib diisi",
+      "invalid_email": "Masukkan email yang valid",
+      "invalid_login": "Email atau kata sandi salah"
+    }
+  },
+  "loading": {
+    "completing_login": "Menyelesaikan masuk...",
+    "please_wait": "Harap tunggu"
+  },
+  "lobby": {
+    "guest": "Tamu",
+    "menu": {
+      "language": "Bahasa",
+      "logout": "Keluar"
+    },
+    "host_card": {
+      "title": "BUAT GAME",
+      "desc": "buat dunia game Anda dan undang penyintas",
+      "btn": "Buat Dunia"
+    },
+    "join_card": {
+      "title": "GABUNG",
+      "desc": "masukkan kode untuk bergabung",
+      "btn": "Gabung",
+      "placeholders": {
+        "nickname": "NAMA",
+        "code": "KODE"
+      },
+      "joining_btn": "GABUNG..."
+    },
+    "logout_modal": {
+      "title": "Keluar",
+      "desc": "Apakah Anda yakin ingin<br>keluar?",
+      "cancel": "Batal",
+      "confirm": "Keluar"
+    },
+    "join_errors": {
+      "invalid_code": "Masukkan kode 6 digit yang valid",
+      "required": "Wajib diisi",
+      "room_not_found": "Ruangan tidak ditemukan",
+      "game_started": "Permainan sudah dimulai atau selesai",
+      "login_first": "Silakan masuk terlebih dahulu",
+      "join_failed": "Gagal bergabung, coba lagi",
+      "room_closed": "Ruangan ditutup atau tidak ditemukan",
+      "conn_error": "Kesalahan koneksi, coba lagi",
+      "joining_msg": "Bergabung ke Ruangan {code}...",
+      "autojoin_failed": "Gagal bergabung otomatis: "
+    }
+  }
+}

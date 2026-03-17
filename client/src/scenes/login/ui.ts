@@ -1,3 +1,5 @@
+import { i18n } from '../../utils/i18n';
+
 export class LoginUI {
     static render() {
         let loginUI = document.getElementById('login-ui');
@@ -83,14 +85,14 @@ export class LoginUI {
                 <div id="walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
 
                 <!-- LOGO TOP LEFT (Zigma) — Desktop only -->
-                <img src="/logo/Zigma-logo-fix.webp" style="top: -20px; left: -10px;" class="absolute w-64 z-50 pointer-events-none object-contain login-desktop-only" />
+                <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" style="top: -20px; left: -10px;" class="absolute w-64 z-50 pointer-events-none object-contain login-desktop-only" />
 
                 <!-- LOGO TOP RIGHT (GFS) — Desktop only -->
-                <img src="/logo/gameforsmart-logo-fix.webp" style="top: -25px; right: 10px;" class="absolute w-80 z-50 pointer-events-none object-contain login-desktop-only" />
+                <img src="/logo/gameforsmart-logo-fix.webp" alt="Game For Smart Logo" style="top: -25px; right: 10px;" class="absolute w-80 z-50 pointer-events-none object-contain login-desktop-only" />
 
                 <!-- MOBILE LOGO (Zigma only, centered at top) — Mobile only -->
                 <div class="login-mobile-only w-full justify-center pt-5 relative z-50 pointer-events-none">
-                    <img src="/logo/Zigma-logo-fix.webp" class="w-52 object-contain" />
+                    <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Mobile Logo" class="w-52 object-contain" />
                 </div>
 
                 <!-- Main Content -->
@@ -105,7 +107,7 @@ export class LoginUI {
                             <!-- Header — solid #72BF78 -->
                             <div class="p-6 flex items-center justify-center shrink-0 relative border-b border-gray-100 bg-white">
                                 <h1 class="text-3xl font-extrabold text-[#46A881] uppercase tracking-[0.2em] font-['Retro_Gaming'] leading-relaxed drop-shadow-sm">
-                                    LOGIN
+                                    ${i18n.t('login.title')}
                                 </h1>
                             </div>
 
@@ -126,23 +128,23 @@ export class LoginUI {
                                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                     </svg>
-                                    <span class="font-['Retro_Gaming'] tracking-wide">Sign in with Google</span>
+                                    <span class="font-['Retro_Gaming'] tracking-wide">${i18n.t('login.google_signin')}</span>
                                 </button>
 
                                 <!-- Divider -->
                                 <div class="flex items-center gap-4">
                                     <div class="flex-1 border-t border-gray-100"></div>
-                                    <span class="text-[#46A881]/60 text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">or</span>
+                                    <span class="text-[#46A881]/60 text-[10px] uppercase font-bold tracking-widest font-['Retro_Gaming']">${i18n.t('login.or')}</span>
                                     <div class="flex-1 border-t border-gray-100"></div>
                                 </div>
 
                                 <!-- Email/Username Input -->
                                 <div class="space-y-1 relative">
                                     <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#46A881]">person</span> EMAIL / USERNAME
+                                        <span class="material-symbols-outlined text-sm text-[#46A881]">person</span> ${i18n.t('login.email_username')}
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-email" type="text" placeholder="player@game.com" autocomplete="off" class="w-full h-12 border border-gray-200 rounded-2xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
+                                        <input id="login-email" type="text" placeholder="${i18n.t('login.placeholders.email')}" autocomplete="off" class="w-full h-12 border border-gray-200 rounded-2xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
                                         <div class="absolute right-4 top-1/2 -translate-y-1/2">
                                             <span class="material-symbols-outlined text-[#46A881] hover:text-[#388567] transition-colors cursor-pointer">mail</span>
                                         </div>
@@ -153,10 +155,10 @@ export class LoginUI {
                                 <!-- Password Input -->
                                 <div class="space-y-1 relative">
                                     <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                        <span class="material-symbols-outlined text-sm text-[#46A881]">lock</span> PASSWORD
+                                        <span class="material-symbols-outlined text-sm text-[#46A881]">lock</span> ${i18n.t('login.password')}
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-password" type="password" placeholder="••••••••" class="w-full h-12 border border-gray-200 rounded-2xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
+                                        <input id="login-password" type="password" placeholder="${i18n.t('login.placeholders.password')}" class="w-full h-12 border border-gray-200 rounded-2xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
                                         <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#46A881] hover:text-[#388567] transition-colors">
                                             <span class="material-symbols-outlined">visibility_off</span>
                                         </button>
@@ -167,17 +169,14 @@ export class LoginUI {
                                 <!-- Login Button — solid #72BF78 -->
                                 <button type="submit" id="login-btn" class="w-full h-14 flex items-center justify-center text-white font-['Retro_Gaming'] font-extrabold uppercase text-lg rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer gap-3" style="background: #46A881;">
                                     <span class="material-symbols-outlined text-2xl">login</span>
-                                    LOGIN
-                                </button>
-                                    <span class="material-symbols-outlined text-lg">login</span>
-                                    LOGIN
+                                    ${i18n.t('login.login_btn')}
                                 </button>
 
                                 <!-- Register Link -->
                                 <div class="text-center pt-3 flex flex-col items-center justify-center mt-2">
                                     <div class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-[11px] w-full font-bold">
-                                        <span class="text-[#46A881]/60 font-['Retro_Gaming'] tracking-widest">DON'T HAVE ACCOUNT?</span>
-                                        <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="text-[#46A881] hover:text-[#388567] transition-all font-['Retro_Gaming'] font-black">REGISTER</a>
+                                        <span class="text-[#46A881]/60 font-['Retro_Gaming'] tracking-widest">${i18n.t('login.dont_have_account')}</span>
+                                        <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="text-[#46A881] hover:text-[#388567] transition-all font-['Retro_Gaming'] font-black">${i18n.t('login.register')}</a>
                                     </div>
                                 </div>
                             </form>
@@ -190,6 +189,24 @@ export class LoginUI {
 
             // Start Character Spawner
             LoginUI.startCharacterSpawner();
+
+            // Handle language change event
+            window.addEventListener('languageChanged', () => {
+                // Clear existing UI and re-render
+                if (loginUI) {
+                    const isHidden = loginUI.classList.contains('hidden');
+                    loginUI.remove();
+                    LoginUI.render();
+                    const newUI = document.getElementById('login-ui');
+                    if (newUI && !isHidden) newUI.classList.remove('hidden');
+                    
+                    // Re-read login manager to re-setup listeners (managed by LoginManager)
+                    window.dispatchEvent(new CustomEvent('loginUIReRendered'));
+                }
+            });
+        } else {
+            // If already exists, we might need to update the innerHTML if it's a re-render
+            // but for simplicity, we handles it via removal and re-render above.
         }
     }
 
