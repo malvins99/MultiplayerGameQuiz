@@ -226,17 +226,19 @@ export class ResultManager {
  Simon: Darkened border-bottom to #386938.
 
             @keyframes base-walk-cycle { from { background-position: 0 0; } to { background-position: -768px 0; } }
-            @keyframes walk-across-right { from { left: -100px; } to { left: 100vw; } }
-            @keyframes walk-across-left { from { left: 100vw; } to { left: -100px; } }
+            @keyframes walk-across-right { from { transform: translate3d(-100px, 0, 0) scale(1.5, 1.5); } to { transform: translate3d(100vw, 0, 0) scale(1.5, 1.5); } }
+            @keyframes walk-across-left { from { transform: translate3d(100vw, 0, 0) scale(-1.5, 1.5); } to { transform: translate3d(-100px, 0, 0) scale(-1.5, 1.5); } }
             .walking-char {
                 position: absolute;
                 bottom: 20px;
+                left: 0;
                 width: 96px; height: 64px;
                 background-image: url('/assets/base_walk_strip8.png');
                 background-size: 768px 64px;
                 image-rendering: pixelated;
                 z-index: 2;
                 pointer-events: none;
+                will-change: transform;
             }
 
             .logo-center {
@@ -247,7 +249,6 @@ export class ResultManager {
                 margin: 0 auto;
                 width: 200px;
                 z-index: 2000;
-                filter: drop-shadow(0 0 10px rgba(114, 191, 120, 0.4));
                 pointer-events: none;
                 display: none; /* Hide by default, show on mobile */
             }
@@ -267,7 +268,6 @@ export class ResultManager {
                 width: 320px; 
                 z-index: 20; 
                 pointer-events: none;
-                filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
             }
 
             @media (max-width: 768px) {
@@ -530,10 +530,8 @@ export class ResultManager {
         const speed = 20 + Math.random() * 10;
         if (fromRight) {
             char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
-            char.style.transform = 'scale(-1.5, 1.5)';
         } else {
             char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
-            char.style.transform = 'scale(1.5, 1.5)';
         }
         container.appendChild(char);
         setTimeout(() => { if (char.parentElement) char.remove(); }, speed * 1000 + 500);

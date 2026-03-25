@@ -13,7 +13,7 @@ export class QRCodePopup {
     private createDOM() {
         // Wrapper - centered interaction layer
         this.overlay = document.createElement('div');
-        this.overlay.className = 'fixed inset-0 bg-black/80 z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center cursor-pointer';
+        this.overlay.className = 'fixed inset-0 bg-black/95 z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center cursor-pointer';
 
         // Popup Container - simplified, no border/bg for container itself, just holds the image
         this.popup = document.createElement('div');
@@ -21,10 +21,10 @@ export class QRCodePopup {
 
         // QR Container - Minimal white box for QR contrast
         const qrContainer = document.createElement('div');
-        qrContainer.className = 'bg-white p-4 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]'; // Rounded white background for QR
+        qrContainer.className = 'bg-white p-1 rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.6)] flex items-center justify-center overflow-hidden border-2 border-white/5'; // Small padding and subtle border to keep it distinct
 
         this.qrImage = document.createElement('img');
-        this.qrImage.className = 'w-[500px] h-[500px] object-contain mix-blend-multiply';
+        this.qrImage.className = 'h-[92vh] w-[92vh] max-w-[95vw] object-contain mix-blend-multiply transition-all';
         this.qrImage.alt = "Room QR Code";
 
         qrContainer.appendChild(this.qrImage);
