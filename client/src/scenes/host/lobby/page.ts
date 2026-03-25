@@ -600,37 +600,43 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             <!-- Walking Characters Container -->
             <div id="host-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
             
-            <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar">
-                <!-- LOGO TOP LEFT -->
-                <img src="/logo/Zigma-logo-fix.webp" style="top: -30px; left: -40px;" class="absolute w-64 z-20 object-contain" />
- 
-                <!-- LOGO TOP RIGHT -->
-                <img src="/logo/gameforsmart-logo-fix.webp" style="top: -45px; right: -15px;" class="absolute w-80 z-20 object-contain" />
+            <div class="relative z-10 flex h-screen w-full flex-col md:flex-row p-4 md:p-6 pt-16 md:pt-6 gap-4 md:gap-6 font-display overflow-y-auto md:overflow-hidden custom-scrollbar items-start">
+                <!-- LOGO ZIGMA: Tengah atas di mobile, Kiri atas di desktop -->
+                <img src="/logo/Zigma-logo-fix.webp"
+                    class="absolute z-20 object-contain w-40 md:w-64 pointer-events-none"
+                    style="top: 0px; left: 50%; transform: translateX(-50%);"
+                    id="host-logo-zigma" />
 
-                <!-- Back Button REMOVED -->
+                <!-- LOGO GAME FOR SMART: Sembunyi di mobile, Kanan atas di desktop -->
+                <img src="/logo/gameforsmart-logo-fix.webp"
+                    style="top: -45px; right: -15px; display: none;"
+                    class="absolute w-80 z-20 object-contain pointer-events-none"
+                    id="host-logo-gfs" />
 
-                <!-- LEFT PANEL (Code, QR, URL, Start) -->
-                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-[#2d5a27] rounded-3xl p-4 md:p-6 flex flex-col items-center shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative mt-4 md:mt-16 shrink-0">
+                <!-- PANELS WRAPPER -->
+                <div class="flex-1 w-full flex flex-col md:flex-row gap-4 md:gap-8 items-stretch">
+                    <!-- LEFT PANEL (Code, QR, URL, Start) -->
+                <section class="w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] bg-[#2d5a27] rounded-3xl p-4 md:p-6 flex flex-col items-center gap-4 shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative mt-4 md:mt-16 shrink-0">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none"></div>
 
                     <!-- Room Code -->
-                    <div class="w-full bg-white rounded-xl p-3 md:p-4 flex items-center justify-between relative group transition-all mb-4">
-                        <span id="host-room-code" class="text-3xl md:text-4xl text-[#6CC452] font-['Retro_Gaming'] tracking-widest mx-auto">CODE</span>
-                        <button id="copy-code-btn" class="absolute right-4 text-[#6CC452] text-opacity-70 hover:text-opacity-100 transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
+                    <div class="w-full bg-white rounded-xl p-3 md:p-4 flex items-center justify-between relative group transition-all">
+                        <span id="host-room-code" class="text-4xl md:text-5xl text-black font-['Retro_Gaming'] tracking-widest mx-auto">CODE</span>
+                        <button id="copy-code-btn" class="absolute right-4 text-black text-opacity-70 hover:text-opacity-100 transition-colors cursor-pointer"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
 
                     <!-- QR Code -->
-                    <div class="flex-1 w-full flex items-center justify-center my-2 relative">
-                        <div class="bg-white p-4 rounded-xl aspect-square w-full max-w-[340px] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,85,0.2)] cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="w-full flex items-center justify-center relative">
+                        <div class="bg-white py-6 px-1 rounded-xl aspect-square w-full max-w-[340px] flex items-center justify-center shadow-[0_0_20px_rgba(0,255,85,0.2)] cursor-pointer hover:scale-[1.02] transition-transform">
                             <img id="host-qr-img" src="" class="w-full h-full object-contain" />
                         </div>
                     </div>
 
                     <!-- URL Box -->
-                    <div id="copy-url-container" class="w-full bg-white rounded-xl p-4 flex items-center justify-between mb-4 group transition-all cursor-pointer relative overflow-hidden">
-                        <span id="host-join-url" class="text-[10px] md:text-xs text-[#6CC452] font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
-                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-[#6CC452]/10 group-hover:bg-[#6CC452]/20 transition-colors">
-                            <span class="material-symbols-outlined text-[#6CC452] text-sm">content_copy</span>
+                    <div id="copy-url-container" class="w-full bg-white rounded-xl p-4 flex items-center justify-between group transition-all cursor-pointer relative overflow-hidden">
+                        <span id="host-join-url" class="text-[10px] md:text-xs text-black font-['Press_Start_2P'] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0 mr-2 select-all">https://...</span>
+                        <div class="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-black/5 group-hover:bg-black/10 transition-colors">
+                            <span class="material-symbols-outlined text-black text-sm">content_copy</span>
                         </div>
                     </div>
 
@@ -639,18 +645,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </section>
 
                 <!-- RIGHT PANEL (Players) -->
-                <section class="flex-1 w-full min-h-[400px] mb-8 md:mb-0 bg-[#2d5a27] rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative md:mt-16">
+                <section class="flex-1 w-full mb-8 md:mb-0 bg-[#2d5a27] rounded-3xl p-4 md:p-8 flex flex-col shadow-[0_20px_40px_rgba(0,0,0,0.2)] relative md:mt-16">
                     <div class="absolute inset-0 pixel-bg-pattern opacity-5 pointer-events-none overflow-hidden rounded-3xl"></div>
 
                     <!-- Header -->
                     <div class="flex flex-col md:flex-row items-center justify-between mb-4 md:mb-6 border-b-2 border-white/20 pb-4 gap-4 md:gap-0 z-10 w-full">
                         <div class="flex items-center gap-4">
-                            <h2 id="host-player-count" class="text-xl md:text-2xl text-white font-['Retro_Gaming'] tracking-wide drop-shadow-[0_0_10px_rgba(157,192,139,0.5)]">0 Players</h2>
+                            <h2 id="host-player-count" class="text-xl md:text-2xl text-white font-['Retro_Gaming'] tracking-wide">0 Players</h2>
                             <div class="flex gap-2">
-                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-[#6CC452] flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
+                                <button id="host-manage-users-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-black flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
                                     <span class="material-symbols-outlined text-xl md:text-2xl">group</span>
                                 </button>
-                                <button id="host-add-user-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-[#6CC452] flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
+                                <button id="host-add-friends-btn" class="w-10 h-10 md:w-12 md:h-12 bg-white border-2 border-white text-black flex items-center justify-center rounded-xl hover:bg-[#f0f0f0] transition-all shadow-lg">
                                     <span class="material-symbols-outlined text-xl md:text-2xl">person_add</span>
                                 </button>
                             </div>
@@ -661,9 +667,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
                                 EXIT
                             </button>
-
                             <!-- Start Button -->
-                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-[#9DC08B] text-black font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(157,192,139,0.5)] cursor-pointer shrink-0">
+                            <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-[#92C140] text-white font-bold font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-not-allowed shrink-0">
                                 Start
                             </button>
                         </div>
@@ -672,18 +677,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Player List / Empty State -->
                     <div id="host-player-area" class="flex-1 w-full relative overflow-hidden">
                         <!-- Empty State -->
-                        <div id="host-empty-state" class="absolute inset-0 flex flex-col items-center justify-center opacity-50 space-y-4">
-                            <div class="w-24 h-24 rounded-full bg-black/10 flex items-center justify-center border-2 border-black/10">
-                                <span class="material-symbols-outlined text-6xl text-black/50">person_add</span>
+                        <div id="host-empty-state" class="absolute inset-0 flex flex-col items-center justify-center opacity-80 space-y-4">
+                            <div class="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center border-2 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                                <span class="material-symbols-outlined text-6xl text-white">person_add</span>
                             </div>
-                            <p class="text-black/50 font-['Retro_Gaming'] text-xs tracking-widest animate-pulse font-bold">Waiting for players to join...</p>
+                            <p class="text-white font-['Retro_Gaming'] text-xs tracking-widest animate-pulse font-bold">Waiting for players to join...</p>
                         </div>
                         
                         <!-- Grid Container -->
                         <div id="host-player-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 w-full h-full overflow-y-auto custom-scrollbar p-2 hidden z-10 relative"></div>
                     </div>
                 </section>
-                </section>
+                </div>
             </div>
 
             <!-- CONFIRM BACK MODAL -->
@@ -782,6 +787,29 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
             </div>
         `;
+
+        // Responsive logo positioning: Desktop = kiri atas (asli), Mobile = tengah atas
+        const zigmaLogo = document.getElementById('host-logo-zigma');
+        const gfsLogo = document.getElementById('host-logo-gfs');
+        const updateLogoPosition = () => {
+            const isDesktop = window.innerWidth >= 768;
+            if (zigmaLogo) {
+                if (isDesktop) {
+                    zigmaLogo.style.top = '-30px';
+                    zigmaLogo.style.left = '-40px';
+                    zigmaLogo.style.transform = 'none';
+                } else {
+                    zigmaLogo.style.top = '0px';
+                    zigmaLogo.style.left = '50%';
+                    zigmaLogo.style.transform = 'translateX(-50%)';
+                }
+            }
+            if (gfsLogo) {
+                gfsLogo.style.display = isDesktop ? 'block' : 'none';
+            }
+        };
+        updateLogoPosition();
+        window.addEventListener('resize', updateLogoPosition);
 
         // Start Walking Character Spawner (sama seperti home page)
         this.startWaitingCharacterSpawner('host-walking-characters-container');
@@ -1649,7 +1677,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             try {
                 QRCode.toDataURL(url, {
                     width: 500,
-                    margin: 2,
+                    margin: 0,
                     color: {
                         dark: '#000000',
                         light: '#ffffff'
@@ -1885,8 +1913,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 if (emptyState) emptyState.classList.remove('hidden');
                 if (gridEl) gridEl.classList.add('hidden');
                 if (this.startBtn) {
-                    this.startBtn.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
-                    this.startBtn.classList.remove('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1');
+                    this.startBtn.classList.add('opacity-50', 'pointer-events-none', 'grayscale', 'cursor-not-allowed');
+                    this.startBtn.classList.remove('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1', 'cursor-pointer');
                     this.startBtn.onclick = null; // Disable
                 }
                 if (startHint) startHint.classList.remove('hidden');
@@ -1894,8 +1922,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 if (emptyState) emptyState.classList.add('hidden');
                 if (gridEl) gridEl.classList.remove('hidden');
                 if (this.startBtn) {
-                    this.startBtn.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
-                    this.startBtn.classList.add('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1');
+                    this.startBtn.classList.remove('opacity-50', 'pointer-events-none', 'grayscale', 'cursor-not-allowed');
+                    this.startBtn.classList.add('hover:brightness-110', 'active:border-b-0', 'active:translate-y-1', 'cursor-pointer');
                     this.startBtn.onclick = () => this.room.send("startGame");
                 }
                 if (startHint) startHint.classList.add('hidden');

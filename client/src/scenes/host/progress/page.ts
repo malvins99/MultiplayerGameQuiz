@@ -14,7 +14,6 @@ export class HostProgressScene extends Phaser.Scene {
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
     isMuted: boolean = false;
-    isMuted: boolean = false;
     private resizeListener: (() => void) | null = null;
 
     constructor() {
@@ -278,7 +277,6 @@ export class HostProgressScene extends Phaser.Scene {
 
             const updateProgress = () => {
                 const tag = container.getByName('nameTag') as Phaser.GameObjects.Text;
-                const progressStrText = container.getByName('progressStrText') as Phaser.GameObjects.Text;
                 const progressBar = container.getByName('progressBar') as Phaser.GameObjects.Graphics;
 
                 const answered = player.answeredQuestions || 0;
@@ -292,7 +290,6 @@ export class HostProgressScene extends Phaser.Scene {
                 const progress = Phaser.Math.Clamp(answered / target, 0, 1);
 
                 if (tag) tag.setText(player.name || 'Player');
-                if (progressStrText) progressStrText.setText(`${answered}/${target}`);
 
                 if (progressBar) {
                     progressBar.clear();
@@ -500,15 +497,13 @@ export class HostProgressScene extends Phaser.Scene {
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
         // Render font lebih besar dengan resolusi lebih tinggi lalu di-scale agar tetap tajam (anti-blur)
-        const nameText = this.add.text(0, -45, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
+        const nameText = this.add.text(0, -38, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
         nameText.setName('nameTag');
 
-        const progressStrText = this.add.text(0, -32, '0/0', { fontSize: '18px', fontFamily: '"Retro Gaming"', color: '#FEFF9F', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
-        progressStrText.setName('progressStrText');
-
-        const progressBar = this.add.graphics({ x: -18, y: -23 });
+        // Progress bar tepat di bawah nama (jarak ~6px dalam skala container)
+        const progressBar = this.add.graphics({ x: -18, y: -30 });
         progressBar.setName('progressBar');
 
-        container.add([nameText, progressStrText, progressBar]);
+        container.add([nameText, progressBar]);
     }
 }
