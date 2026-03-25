@@ -61,5 +61,58 @@
       "joining_msg": "Joining Room {code}...",
       "autojoin_failed": "Auto-join failed: "
     }
+  },
+  "select_quiz": {
+    "search_placeholder": "SEARCH QUIZ...",
+    "all": "ALL",
+    "prev": "Prev",
+    "next": "Next",
+    "favorites_tooltip": "Favorites",
+    "my_quiz_tooltip": "My Quiz",
+    "login_required_my_quiz": "Please login to view your quizzes.",
+    "login_required_favorite": "Please login to save favorites.",
+    "no_quiz_found": "No Quiz Found",
+    "reset_filter": "Reset Filter",
+    "going_back": "Going back..."
+  },
+  "categories": {
+    "math": "Mathematics",
+    "technology": "Technology",
+    "science": "Science",
+    "general": "General",
+    "history": "History",
+    "sports": "Sports",
+    "business": "Business",
+    "language": "Language",
+    "matematika": "Mathematics",
+    "teknologi": "Technology",
+    "sains": "Science",
+    "umum": "General",
+    "sejarah": "History",
+    "olahraga": "Sports",
+    "bisnis": "Business",
+    "bahasa": "Language"
+  },
+  "quiz_setting": {
+    "question_count": "QUESTION COUNT",
+    "timer": "TIMER",
+    "difficulty": "DIFFICULTY",
+    "music": "MUSIC",
+    "create": "CREATE",
+    "creating": "CREATING...",
+    "q_5": "5 Questions",
+    "q_10": "10 Questions",
+    "q_15": "15 Questions",
+    "q_20": "20 Questions",
+    "m_5": "5 Minutes",
+    "m_10": "10 Minutes",
+    "m_15": "15 Minutes",
+    "m_20": "20 Minutes",
+    "diff_easy": "Easy",
+    "diff_medium": "Medium",
+    "diff_hard": "Hard",
+    "going_back": "Going back...",
+    "create_failed": "Failed to create game session. Please try again.",
+    "create_error": "Error creating room. Check console."
   }
 }

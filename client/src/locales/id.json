@@ -61,5 +61,58 @@
       "joining_msg": "Bergabung ke Ruangan {code}...",
       "autojoin_failed": "Gagal bergabung otomatis: "
     }
+  },
+  "select_quiz": {
+    "search_placeholder": "CARI KUIS...",
+    "all": "SEMUA",
+    "prev": "SBLM",
+    "next": "LNJT",
+    "favorites_tooltip": "Favorit",
+    "my_quiz_tooltip": "Kuis Saya",
+    "login_required_my_quiz": "Silakan login untuk melihat kuis buatan Anda.",
+    "login_required_favorite": "Silakan login untuk menyimpan favorit.",
+    "no_quiz_found": "Kuis Tidak Ditemukan",
+    "reset_filter": "Hapus Filter",
+    "going_back": "Kembali..."
+  },
+  "categories": {
+    "math": "Matematika",
+    "technology": "Teknologi",
+    "science": "Sains",
+    "general": "Umum",
+    "history": "Sejarah",
+    "sports": "Olahraga",
+    "business": "Bisnis",
+    "language": "Bahasa",
+    "matematika": "Matematika",
+    "teknologi": "Teknologi",
+    "sains": "Sains",
+    "umum": "Umum",
+    "sejarah": "Sejarah",
+    "olahraga": "Olahraga",
+    "bisnis": "Bisnis",
+    "bahasa": "Bahasa"
+  },
+  "quiz_setting": {
+    "question_count": "JUMLAH SOAL",
+    "timer": "WAKTU",
+    "difficulty": "KESULITAN",
+    "music": "MUSIK",
+    "create": "BUAT GAME",
+    "creating": "MEMBUAT...",
+    "q_5": "5 Soal",
+    "q_10": "10 Soal",
+    "q_15": "15 Soal",
+    "q_20": "20 Soal",
+    "m_5": "5 Menit",
+    "m_10": "10 Menit",
+    "m_15": "15 Menit",
+    "m_20": "20 Menit",
+    "diff_easy": "Mudah",
+    "diff_medium": "Sedang",
+    "diff_hard": "Sulit",
+    "going_back": "Kembali...",
+    "create_failed": "Gagal membuat sesi permainan. Silakan coba lagi.",
+    "create_error": "Gagal membuat ruangan. Periksa koneksi Anda."
   }
 }

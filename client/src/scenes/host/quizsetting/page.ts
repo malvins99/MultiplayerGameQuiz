@@ -4,6 +4,7 @@ import { Quiz, fetchQuizById } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../../lib/supabaseB';
 import { authService } from '../../../services/auth/AuthService';
+import { i18n } from '../../../utils/i18n';
 
 export class QuizSettingManager {
     client!: Client;
@@ -76,6 +77,64 @@ export class QuizSettingManager {
         }
 
         window.addEventListener('popstate', this.handlePopState);
+
+        window.addEventListener('quizSettingsUIReRendered', () => {
+            this.quizSettingsUI = document.getElementById('quiz-settings-ui');
+            this.setupEventListeners();
+            
+            const titleEl = document.getElementById('settings-quiz-title');
+            const titleExpandBtn = document.getElementById('settings-title-expand-btn');
+            const titleExpandIcon = document.getElementById('settings-title-expand-icon');
+
+            if (titleEl && this.selectedQuiz) {
+                titleEl.innerText = this.selectedQuiz.title;
+
+                requestAnimationFrame(() => {
+                    if (titleEl.scrollHeight > titleEl.clientHeight) {
+                        if (titleExpandBtn) {
+                            titleExpandBtn.classList.remove('hidden');
+                            titleExpandBtn.onclick = () => {
+                                const isExpanded = !titleEl.classList.contains('line-clamp-2');
+                                if (isExpanded) {
+                                    titleEl.classList.add('line-clamp-2');
+                                    titleExpandIcon?.classList.remove('rotate-180');
+                                } else {
+                                    titleEl.classList.remove('line-clamp-2');
+                                    titleExpandIcon?.classList.add('rotate-180');
+                                }
+                            };
+                        }
+                    }
+                });
+            }
+
+            const diffMap: any = { 'mudah': 'quiz_setting.diff_easy', 'sedang': 'quiz_setting.diff_medium', 'sulit': 'quiz_setting.diff_hard' };
+            const qSpan = document.getElementById('settings-question-selected');
+            if (qSpan) qSpan.innerText = i18n.t(`quiz_setting.q_${this.settingsQuestionCount}`);
+            
+            const mSpan = document.getElementById('settings-timer-selected');
+            if (mSpan) mSpan.innerText = i18n.t(`quiz_setting.m_${this.settingsTimer / 60}`);
+            
+            const diffSpan = document.getElementById('settings-difficulty-selected');
+            if (diffSpan) diffSpan.innerText = i18n.t(diffMap[this.settingsDifficulty] || 'quiz_setting.diff_easy');
+            
+            const btn = document.getElementById('sound-toggle-btn');
+            const knob = document.getElementById('sound-toggle-knob');
+            if (this.soundEnabled) {
+                if (btn) { btn.classList.remove('bg-white'); btn.classList.add('bg-[#478D47]'); }
+                if (knob) knob.classList.add('translate-x-5');
+            }
+
+            document.querySelectorAll('.diff-opt').forEach(o => {
+                if ((o as HTMLElement).dataset.value === this.settingsDifficulty) o.classList.add('bg-[#F1F8E9]');
+            });
+            document.querySelectorAll('.timer-opt').forEach(o => {
+                if (parseInt((o as HTMLElement).dataset.value || '0') === this.settingsTimer) o.classList.add('bg-[#F1F8E9]');
+            });
+            document.querySelectorAll('.question-opt').forEach(o => {
+                if (parseInt((o as HTMLElement).dataset.value || '0') === this.settingsQuestionCount) o.classList.add('bg-[#F1F8E9]');
+            });
+        });
     }
 
     handlePopState = () => {
@@ -106,7 +165,7 @@ export class QuizSettingManager {
                     const text = document.getElementById('auth-loading-text');
                     if (overlay) {
                         overlay.classList.remove('hidden');
-                        if (text) text.innerText = 'Going back...';
+                        if (text) text.innerText = i18n.t('quiz_setting.going_back');
                     }
 
                     TransitionManager.close(() => {
@@ -132,7 +191,7 @@ export class QuizSettingManager {
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = target.dataset.value || 'mudah';
-                const label = target.dataset.label || 'Mudah';
+                const label = target.dataset.label || i18n.t('quiz_setting.diff_easy');
                 this.settingsDifficulty = val;
 
                 const display = document.getElementById('settings-difficulty-selected');
@@ -153,7 +212,7 @@ export class QuizSettingManager {
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = parseInt(target.dataset.value || '300');
-                const label = target.dataset.label || '5 Menit';
+                const label = target.dataset.label || i18n.t('quiz_setting.m_5');
                 this.settingsTimer = val;
 
                 const display = document.getElementById('settings-timer-selected');
@@ -174,7 +233,7 @@ export class QuizSettingManager {
             newOpt.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;
                 const val = parseInt(target.dataset.value || '5');
-                const label = target.dataset.label || '5 Soal';
+                const label = target.dataset.label || i18n.t('quiz_setting.q_5');
                 this.settingsQuestionCount = val;
 
                 const display = document.getElementById('settings-question-selected');
@@ -206,6 +265,10 @@ export class QuizSettingManager {
             };
         }
 
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+        }
+
         this._outsideClickHandler = (e: MouseEvent) => {
             const dropdowns = [
                 { menu: 'settings-timer-menu', trigger: 'settings-timer-trigger', arrow: 'settings-timer-arrow' },
@@ -235,7 +298,7 @@ export class QuizSettingManager {
 
         const settingsContinueBtn = document.getElementById('settings-continue-btn') as HTMLButtonElement;
         if (settingsContinueBtn) {
-            settingsContinueBtn.innerHTML = `CREATE`;
+            settingsContinueBtn.innerHTML = i18n.t('quiz_setting.create');
             settingsContinueBtn.disabled = false;
             settingsContinueBtn.classList.remove('opacity-80', 'cursor-not-allowed');
             settingsContinueBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
@@ -243,7 +306,7 @@ export class QuizSettingManager {
             const newContinueBtn = settingsContinueBtn.cloneNode(true) as HTMLButtonElement;
             settingsContinueBtn.parentNode?.replaceChild(newContinueBtn, settingsContinueBtn);
             newContinueBtn.onclick = () => {
-                newContinueBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> CREATING...`;
+                newContinueBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> ${i18n.t('quiz_setting.creating')}`;
                 newContinueBtn.disabled = true;
                 newContinueBtn.classList.add('opacity-80', 'cursor-not-allowed');
                 newContinueBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
@@ -328,9 +391,9 @@ export class QuizSettingManager {
 
             if (error) {
                 console.error("Supabase Session Error:", error);
-                alert("Failed to create game session. Please try again.");
+                alert(i18n.t('quiz_setting.create_failed'));
                 if (btn) {
-                    btn.innerHTML = 'CREATE';
+                    btn.innerHTML = i18n.t('quiz_setting.create');
                     btn.disabled = false;
                     btn.classList.remove('opacity-80', 'cursor-not-allowed');
                     btn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
@@ -405,9 +468,9 @@ export class QuizSettingManager {
 
         } catch (e) {
             console.error("Create room error", e);
-            alert("Error creating room. Check console.");
+            alert(i18n.t('quiz_setting.create_error'));
             if (btn) {
-                btn.innerHTML = 'CREATE';
+                btn.innerHTML = i18n.t('quiz_setting.create');
                 btn.disabled = false;
                 btn.classList.remove('opacity-80', 'cursor-not-allowed');
                 btn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');

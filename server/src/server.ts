@@ -63,6 +63,10 @@ if (!fs.existsSync(clientBuildPath)) {
 
 app.use(express.static(clientBuildPath));
 
+// SEO Files: Serve from subfolder at root level for search engine discovery
+app.get("/robots.txt", (req, res) => res.sendFile(path.join(clientBuildPath, "seo", "robots.txt")));
+app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(clientBuildPath, "seo", "sitemap.xml")));
+
 const server = http.createServer(app);
 const gameServer = new Server({
     server,
