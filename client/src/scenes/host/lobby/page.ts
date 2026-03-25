@@ -214,11 +214,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         const waitingUiEl = document.getElementById('waiting-ui');
         if (waitingUiEl) waitingUiEl.classList.add('hidden');
 
-        // Hapus countdown overlay jika ada
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
-        }
+        // Global TransitionManager handles countdown cleanup
 
         Router.navigate('/host/select-quiz');
         this.scene.start('LobbyScene');
@@ -1589,11 +1585,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             Router.navigate('/host/select-quiz');
             this.scene.start('LobbyScene');
 
-            // Clean up overlay
-            if (this.countdownOverlay) {
-                this.countdownOverlay.remove();
-                this.countdownOverlay = null;
-            }
+            // Global TransitionManager handles cleanup
         }
     }
 
