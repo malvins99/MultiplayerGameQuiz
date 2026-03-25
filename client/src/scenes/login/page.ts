@@ -2,6 +2,7 @@ import { Router } from '../../utils/Router';
 import { TransitionManager } from '../../utils/TransitionManager';
 import { authService } from '../../services/auth/AuthService';
 import { LoginUI } from './ui';
+import { i18n } from '../../utils/i18n';
 
 export class LoginManager {
     loginUI: HTMLElement | null = null;
@@ -72,6 +73,21 @@ export class LoginManager {
 
         // Listen for route changes
         window.addEventListener('popstate', () => this.handleRouting());
+
+        // Listen for UI re-renders (on language change)
+        window.addEventListener('loginUIReRendered', () => {
+            const oldEmail = (document.getElementById('login-email') as HTMLInputElement)?.value;
+            const oldPass = (document.getElementById('login-password') as HTMLInputElement)?.value;
+
+            this.loginUI = document.getElementById('login-ui');
+            this.setupEventListeners();
+
+            // Re-apply values
+            const emailInput = document.getElementById('login-email') as HTMLInputElement;
+            const passInput = document.getElementById('login-password') as HTMLInputElement;
+            if (emailInput && oldEmail) emailInput.value = oldEmail;
+            if (passInput && oldPass) passInput.value = oldPass;
+        });
     }
 
     initializeUI() {
@@ -151,6 +167,15 @@ export class LoginManager {
         if (passwordInput) {
             passwordInput.addEventListener('input', () => this.clearFieldError('password'));
         }
+
+        // Language Switchers
+        document.querySelectorAll('.lang-switch-btn').forEach(btn => {
+            (btn as HTMLElement).onclick = (e) => {
+                e.preventDefault();
+                const lang = btn.getAttribute('data-lang') as 'en' | 'id';
+                if (lang) i18n.setLanguage(lang);
+            };
+        });
     }
 
     async handleLogin() {
@@ -169,19 +194,19 @@ export class LoginManager {
 
         // Validate: email/username
         if (!identifier) {
-            this.showFieldError('email', 'Required');
+            this.showFieldError('email', i18n.t('login.errors.required'));
             hasError = true;
         } else if (identifier.includes('@')) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(identifier)) {
-                this.showFieldError('email', 'Invalid email format');
+                this.showFieldError('email', i18n.t('login.errors.invalid_email'));
                 hasError = true;
             }
         }
 
         // Validate: password
         if (!password) {
-            this.showFieldError('password', 'Required');
+            this.showFieldError('password', i18n.t('login.errors.required'));
             hasError = true;
         } else if (password.length < 6) {
             this.showFieldError('password', 'Minimum 6 characters');
@@ -243,7 +268,7 @@ export class LoginManager {
             if (passwordInput) passwordInput.disabled = true;
         } else {
             if (loginBtn) {
-                loginBtn.innerHTML = `<span class="material-symbols-outlined">login</span> LOGIN`;
+                loginBtn.innerHTML = `<span class="material-symbols-outlined">login</span> ${i18n.t('login.login_btn')}`;
                 loginBtn.removeAttribute('disabled');
                 loginBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -277,21 +302,23 @@ export class LoginManager {
         });
     }
 
-    /** Map Supabase error messages to user-friendly Indonesian messages */
+    /** Map Supabase error messages to user-friendly messages using i18n */
     mapErrorMessage(error: string): string {
+        if (error.toLowerCase().includes('invalid login credentials')) {
+            return i18n.t('login.errors.invalid_login');
+        }
+        
         const errorMap: Record<string, string> = {
-            'Invalid login credentials': 'Incorrect email/username or password',
-            'Email not confirmed': 'Email not verified, check your inbox',
-            'User not found': 'Account not found',
-            'Username not found': 'Username not found',
-            'Profile not found': 'Profile not found, contact admin',
-            'Profile not found. Please contact support.': 'Profile not found, contact admin',
-            'Your account has been blocked': 'Your account has been blocked',
-            'Login failed': 'Login failed, try again',
-            'Google login failed': 'Google login failed, try again',
-            'No session found': 'Session expired, please login again',
-            'An unexpected error occurred': 'Something went wrong, try again later',
-            'Too many requests': 'Too many attempts, please wait',
+            'Email not confirmed': i18n.getLanguage() === 'id' ? 'Email belum dikonfirmasi, periksa kotak masuk Anda' : 'Email not verified, check your inbox',
+            'User not found': i18n.getLanguage() === 'id' ? 'Akun tidak ditemukan' : 'Account not found',
+            'Username not found': i18n.getLanguage() === 'id' ? 'Nama pengguna tidak ditemukan' : 'Username not found',
+            'Profile not found': i18n.getLanguage() === 'id' ? 'Profil tidak ditemukan, hubungi admin' : 'Profile not found, contact admin',
+            'Your account has been blocked': i18n.getLanguage() === 'id' ? 'Akun Anda telah diblokir' : 'Your account has been blocked',
+            'Login failed': i18n.getLanguage() === 'id' ? 'Gagal masuk, coba lagi' : 'Login failed, try again',
+            'Google login failed': i18n.getLanguage() === 'id' ? 'Gagal masuk dengan Google, coba lagi' : 'Google login failed, try again',
+            'No session found': i18n.getLanguage() === 'id' ? 'Sesi berakhir, silakan masuk kembali' : 'Session expired, please login again',
+            'An unexpected error occurred': i18n.getLanguage() === 'id' ? 'Terjadi kesalahan, coba lagi nanti' : 'Something went wrong, try again later',
+            'Too many requests': i18n.getLanguage() === 'id' ? 'Terlalu banyak percobaan, silakan tunggu' : 'Too many attempts, please wait',
         };
 
         // Check for partial matches

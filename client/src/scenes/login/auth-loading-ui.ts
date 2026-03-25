@@ -1,3 +1,5 @@
+import { i18n } from '../../utils/i18n';
+
 export class AuthLoadingUI {
     static render() {
         let overlay = document.getElementById('auth-loading-overlay');
@@ -32,8 +34,8 @@ export class AuthLoadingUI {
                     <!-- Text -->
                     <div class="text-center space-y-3">
                         <p id="auth-loading-text" class="text-white font-['Retro_Gaming'] text-sm tracking-wider animate-pulse drop-shadow-[1px_1px_0_rgba(0,0,0,0.3)]">
-                        Completing login...</p>
-                        <p class="text-white/60 font-['Retro_Gaming'] text-[8px] tracking-widest uppercase">Please wait</p>
+                        ${i18n.t('loading.completing_login')}</p>
+                        <p class="text-white/60 font-['Retro_Gaming'] text-[8px] tracking-widest uppercase">${i18n.t('loading.please_wait')}</p>
                     </div>
                 </div>
             `;

@@ -1,3 +1,5 @@
+import { i18n } from '../../../utils/i18n';
+
 export class QuizSettingsUI {
     static render() {
         let quizSettingsUI = document.getElementById('quiz-settings-ui');
@@ -113,18 +115,18 @@ export class QuizSettingsUI {
                                     <!-- Question Count -->
                                     <div class="space-y-1 md:space-y-2 relative z-[60]">
                                         <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                            <span class="material-symbols-outlined text-sm">numbers</span> Jumlah Soal
+                                            <span class="material-symbols-outlined text-sm">numbers</span> ${i18n.t('quiz_setting.question_count')}
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-question-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5">
-                                                <span id="settings-question-selected" class="font-['Space_Grotesk'] tracking-wide">5 Soal</span>
+                                                <span id="settings-question-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.q_5')}</span>
                                                 <span id="settings-question-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-question-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
-                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="5" data-label="5 Soal">5 Soal</button>
-                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="10" data-label="10 Soal">10 Soal</button>
-                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="15" data-label="15 Soal">15 Soal</button>
-                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="20" data-label="20 Soal">20 Soal</button>
+                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="5" data-label="${i18n.t('quiz_setting.q_5')}">${i18n.t('quiz_setting.q_5')}</button>
+                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="10" data-label="${i18n.t('quiz_setting.q_10')}">${i18n.t('quiz_setting.q_10')}</button>
+                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="15" data-label="${i18n.t('quiz_setting.q_15')}">${i18n.t('quiz_setting.q_15')}</button>
+                                                <button class="question-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="20" data-label="${i18n.t('quiz_setting.q_20')}">${i18n.t('quiz_setting.q_20')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -132,18 +134,18 @@ export class QuizSettingsUI {
                                     <!-- Timer -->
                                     <div class="space-y-1 md:space-y-2 relative z-[50]">
                                         <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                            <span class="material-symbols-outlined text-sm">timer</span> Waktu
+                                            <span class="material-symbols-outlined text-sm">timer</span> ${i18n.t('quiz_setting.timer')}
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-timer-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5">
-                                                <span id="settings-timer-selected" class="font-['Space_Grotesk'] tracking-wide">5 Menit</span>
+                                                <span id="settings-timer-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.m_5')}</span>
                                                 <span id="settings-timer-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-timer-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
-                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="300" data-label="5 Menit">5 Menit</button>
-                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="600" data-label="10 Menit">10 Menit</button>
-                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="900" data-label="15 Menit">15 Menit</button>
-                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="1200" data-label="20 Menit">20 Menit</button>
+                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="300" data-label="${i18n.t('quiz_setting.m_5')}">${i18n.t('quiz_setting.m_5')}</button>
+                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="600" data-label="${i18n.t('quiz_setting.m_10')}">${i18n.t('quiz_setting.m_10')}</button>
+                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="900" data-label="${i18n.t('quiz_setting.m_15')}">${i18n.t('quiz_setting.m_15')}</button>
+                                                <button class="timer-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="1200" data-label="${i18n.t('quiz_setting.m_20')}">${i18n.t('quiz_setting.m_20')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -151,17 +153,17 @@ export class QuizSettingsUI {
                                     <!-- Difficulty -->
                                     <div class="space-y-1 md:space-y-2 relative z-[40]">
                                         <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                            <span class="material-symbols-outlined text-sm">hotel_class</span> Kesulitan
+                                            <span class="material-symbols-outlined text-sm">hotel_class</span> ${i18n.t('quiz_setting.difficulty')}
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-difficulty-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5">
-                                                <span id="settings-difficulty-selected" class="font-['Space_Grotesk'] tracking-wide">Mudah</span>
+                                                <span id="settings-difficulty-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.diff_easy')}</span>
                                                 <span id="settings-difficulty-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-difficulty-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
-                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="mudah" data-label="Mudah">Mudah</button>
-                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="sedang" data-label="Sedang">Sedang</button>
-                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="sulit" data-label="Sulit">Sulit</button>
+                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="mudah" data-label="${i18n.t('quiz_setting.diff_easy')}">${i18n.t('quiz_setting.diff_easy')}</button>
+                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="sedang" data-label="${i18n.t('quiz_setting.diff_medium')}">${i18n.t('quiz_setting.diff_medium')}</button>
+                                                <button class="diff-opt w-full text-left px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="sulit" data-label="${i18n.t('quiz_setting.diff_hard')}">${i18n.t('quiz_setting.diff_hard')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -169,10 +171,10 @@ export class QuizSettingsUI {
                                     <!-- Music Toggle -->
                                     <div class="space-y-1 md:space-y-2 relative z-[30]">
                                         <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
-                                            <span class="material-symbols-outlined text-sm">music_note</span> Music
+                                            <span class="material-symbols-outlined text-sm">music_note</span> ${i18n.t('quiz_setting.music')}
                                         </label>
                                         <div id="sound-toggle-container" class="w-full h-10 md:h-12 flex items-center bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl px-4 justify-between group hover:border-[#6CC452] transition-all cursor-pointer">
-                                            <span class="text-[#478D47] text-xs font-bold font-['Space_Grotesk'] tracking-wide">Music</span>
+                                            <span class="text-[#478D47] text-xs font-bold font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.music')}</span>
                                             <button id="sound-toggle-btn" class="w-10 h-6 bg-white border border-[#6CC452]/20 rounded-full relative transition-colors duration-300 cursor-pointer shadow-inner shrink-0 pointer-events-none">
                                                 <div id="sound-toggle-knob" class="absolute top-[1px] left-[2px] w-5 h-5 bg-[#6CC452] rounded-full shadow-md transform transition-transform duration-300"></div>
                                             </button>
@@ -184,7 +186,7 @@ export class QuizSettingsUI {
                             <!-- Footer -->
                             <div class="p-4 md:p-5 bg-[#F1F8E9] flex justify-center mt-auto border-t-2 border-[#6CC452]/10">
                                 <button id="settings-continue-btn" class="w-full md:w-auto px-12 h-12 md:h-14 bg-[#92C140] text-white font-bold text-base md:text-lg uppercase rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-lg">
-                                    CREATE
+                                    ${i18n.t('quiz_setting.create')}
                                 </button>
                             </div>
 
@@ -196,6 +198,17 @@ export class QuizSettingsUI {
 
             // Start Character Spawner
             QuizSettingsUI.startCharacterSpawner();
+            // Handle language change event
+            window.addEventListener('languageChanged', () => {
+                if (quizSettingsUI) {
+                    const isHidden = quizSettingsUI.classList.contains('hidden');
+                    quizSettingsUI.remove();
+                    QuizSettingsUI.render();
+                    const newUI = document.getElementById('quiz-settings-ui');
+                    if (newUI && !isHidden) newUI.classList.remove('hidden');
+                    window.dispatchEvent(new CustomEvent('quizSettingsUIReRendered'));
+                }
+            });
         }
     }
 

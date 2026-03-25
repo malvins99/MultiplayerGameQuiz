@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { i18n } from '../utils/i18n';
 
 export interface Quiz {
     id: string;
@@ -288,19 +289,12 @@ export async function fetchCategoriesWithRaw(): Promise<{ raw: string; display: 
  * e.g., "math" -> "Matematika", "technology" -> "Teknologi"
  */
 function formatCategory(category: string): string {
-    const categoryMap: Record<string, string> = {
-        'math': 'Matematika',
-        'technology': 'Teknologi',
-        'science': 'Sains',
-        'general': 'Umum',
-        'history': 'Sejarah',
-        'sports': 'Olahraga',
-        'business': 'Bisnis',
-    };
-
     const lower = category.toLowerCase();
-    if (categoryMap[lower]) {
-        return categoryMap[lower];
+    
+    // Check if translation exists
+    const translation = i18n.t(`categories.${lower}`);
+    if (translation && !translation.startsWith('categories.')) {
+        return translation;
     }
 
     // Capitalize first letter for unknown categories

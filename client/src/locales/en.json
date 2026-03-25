@@ -1,0 +1,118 @@
+{
+  "login": {
+    "title": "LOGIN",
+    "google_signin": "Sign in with Google",
+    "or": "or",
+    "email_username": "EMAIL / USERNAME",
+    "password": "PASSWORD",
+    "login_btn": "LOGIN",
+    "dont_have_account": "DON'T HAVE ACCOUNT?",
+    "register": "REGISTER",
+    "placeholders": {
+      "email": "player@game.com",
+      "password": "••••••••"
+    },
+    "errors": {
+      "required": "Required",
+      "invalid_email": "Enter a valid email",
+      "invalid_login": "Invalid email or password"
+    }
+  },
+  "loading": {
+    "completing_login": "Completing login...",
+    "please_wait": "Please wait"
+  },
+  "lobby": {
+    "guest": "Guest",
+    "menu": {
+      "language": "Language",
+      "logout": "Logout"
+    },
+    "host_card": {
+      "title": "HOST",
+      "desc": "create your game world and invite survivors",
+      "btn": "Create World"
+    },
+    "join_card": {
+      "title": "JOIN",
+      "desc": "enter code to join world",
+      "btn": "Join",
+      "placeholders": {
+        "nickname": "NICKNAME",
+        "code": "CODE"
+      },
+      "joining_btn": "JOINING..."
+    },
+    "logout_modal": {
+      "title": "Logout",
+      "desc": "Are you sure you want<br>to log out?",
+      "cancel": "Cancel",
+      "confirm": "Logout"
+    },
+    "join_errors": {
+      "invalid_code": "Enter a valid 6-digit code",
+      "required": "Required",
+      "room_not_found": "Room not found",
+      "game_started": "Game already started or finished",
+      "login_first": "Please login first",
+      "join_failed": "Failed to join, try again",
+      "room_closed": "Room closed or not found",
+      "conn_error": "Connection error, try again",
+      "joining_msg": "Joining Room {code}...",
+      "autojoin_failed": "Auto-join failed: "
+    }
+  },
+  "select_quiz": {
+    "search_placeholder": "SEARCH QUIZ...",
+    "all": "ALL",
+    "prev": "Prev",
+    "next": "Next",
+    "favorites_tooltip": "Favorites",
+    "my_quiz_tooltip": "My Quiz",
+    "login_required_my_quiz": "Please login to view your quizzes.",
+    "login_required_favorite": "Please login to save favorites.",
+    "no_quiz_found": "No Quiz Found",
+    "reset_filter": "Reset Filter",
+    "going_back": "Going back..."
+  },
+  "categories": {
+    "math": "Mathematics",
+    "technology": "Technology",
+    "science": "Science",
+    "general": "General",
+    "history": "History",
+    "sports": "Sports",
+    "business": "Business",
+    "language": "Language",
+    "matematika": "Mathematics",
+    "teknologi": "Technology",
+    "sains": "Science",
+    "umum": "General",
+    "sejarah": "History",
+    "olahraga": "Sports",
+    "bisnis": "Business",
+    "bahasa": "Language"
+  },
+  "quiz_setting": {
+    "question_count": "QUESTION COUNT",
+    "timer": "TIMER",
+    "difficulty": "DIFFICULTY",
+    "music": "MUSIC",
+    "create": "CREATE",
+    "creating": "CREATING...",
+    "q_5": "5 Questions",
+    "q_10": "10 Questions",
+    "q_15": "15 Questions",
+    "q_20": "20 Questions",
+    "m_5": "5 Minutes",
+    "m_10": "10 Minutes",
+    "m_15": "15 Minutes",
+    "m_20": "20 Minutes",
+    "diff_easy": "Easy",
+    "diff_medium": "Medium",
+    "diff_hard": "Hard",
+    "going_back": "Going back...",
+    "create_failed": "Failed to create game session. Please try again.",
+    "create_error": "Error creating room. Check console."
+  }
+}

@@ -4,6 +4,7 @@ import { TransitionManager } from '../../utils/TransitionManager';
 import { authService } from '../../services/auth/AuthService';
 import { supabaseB, SESSION_TABLE, PARTICIPANT_TABLE } from '../../lib/supabaseB';
 import { LobbyUI } from './ui';
+import { i18n } from '../../utils/i18n';
 
 export class LobbyManager {
     client!: Client;
@@ -79,6 +80,31 @@ export class LobbyManager {
         if (autoJoinTriggered) return;
 
         window.addEventListener('popstate', () => this.handleRouting());
+
+        window.addEventListener('lobbyUIReRendered', () => {
+            const oldNickname = (document.getElementById('lobby-nickname-input') as HTMLInputElement)?.value;
+            const oldCode = (document.getElementById('room-code-input') as HTMLInputElement)?.value;
+
+            this.lobbyUI = document.getElementById('lobby-ui');
+            this.setupEventListeners();
+            this.populateUserProfile();
+
+            // Re-apply values if they were user-entered, or fallback to profile
+            const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
+            const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
+            
+            if (nicknameInput && oldNickname) {
+                nicknameInput.value = oldNickname;
+            } else if (nicknameInput) {
+                const profile = authService.getStoredProfile();
+                if (profile) {
+                    nicknameInput.value = profile.nickname || profile.fullname || profile.username || '';
+                }
+            }
+
+            if (codeInput && oldCode) codeInput.value = oldCode;
+        });
+
         this.handleRouting();
     }
 
@@ -110,7 +136,7 @@ export class LobbyManager {
 
         const joinBtn = document.getElementById('join-room-btn') as HTMLButtonElement;
         if (joinBtn) {
-            joinBtn.innerHTML = `Join`;
+            joinBtn.innerHTML = i18n.t('lobby.join_card.btn');
             joinBtn.disabled = false;
             joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
             joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
@@ -152,7 +178,7 @@ export class LobbyManager {
     }
 
     private processAutoJoinWithVisuals(code: string) {
-        this.showJoinLoading(`Joining Room ${code}...`);
+        this.showJoinLoading(i18n.t('lobby.join_errors.joining_msg').replace('{code}', code));
         const profile = authService.getStoredProfile();
 
         if (!profile) {
@@ -177,7 +203,7 @@ export class LobbyManager {
             }).catch(err => {
                 this.hideJoinLoading();
                 this.showLobby();
-                this.showJoinError("Auto-join failed: " + (err.message || "Unknown error"));
+                this.showJoinError(i18n.t('lobby.join_errors.autojoin_failed') + (err.message || "Unknown error"));
             });
         }, 1000);
     }
@@ -243,8 +269,50 @@ export class LobbyManager {
                         lobbyMenuDropdown.classList.remove('scale-100', 'opacity-100');
                         lobbyMenuDropdown.classList.add('scale-95', 'opacity-0');
                         setTimeout(() => lobbyMenuDropdown.classList.add('hidden'), 200);
+                        
+                        // Close lang options when closing the main dropdown
+                        const langOptions = document.getElementById('lobby-lang-options');
+                        const langArrow = document.getElementById('lobby-lang-arrow');
+                        if (langOptions) langOptions.classList.add('hidden');
+                        if (langArrow) langArrow.style.transform = 'rotate(0deg)';
                     }
                 }
+            });
+
+            const langToggleBtn = document.getElementById('lobby-lang-toggle-btn');
+            const langOptions = document.getElementById('lobby-lang-options');
+            const langArrow = document.getElementById('lobby-lang-arrow');
+
+            if (langToggleBtn && langOptions) {
+                langToggleBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const isHidden = langOptions.classList.contains('hidden');
+                    if (isHidden) {
+                        langOptions.classList.remove('hidden');
+                        if (langArrow) langArrow.style.transform = 'rotate(180deg)';
+                    } else {
+                        langOptions.classList.add('hidden');
+                        if (langArrow) langArrow.style.transform = 'rotate(0deg)';
+                    }
+                };
+            }
+
+            document.querySelectorAll('.lobby-lang-btn').forEach(btn => {
+                (btn as HTMLButtonElement).onclick = () => {
+                    const lang = (btn as HTMLElement).dataset.lang as 'en' | 'id' | 'ar';
+                    console.log("Language selected:", lang);
+                    
+                    if (lang === 'ar') {
+                        // For now we only have EN and ID in locales, but we can set it
+                        // if we want to support Arabic later. 
+                        // i18n.setLanguage(lang as any); 
+                        return;
+                    }
+                    
+                    if (lang) {
+                        i18n.setLanguage(lang);
+                    }
+                };
             });
         }
 
@@ -475,11 +543,11 @@ export class LobbyManager {
         let hasError = false;
 
         if (!cleanCode || cleanCode.length !== 6) {
-            this.showJoinFieldError('roomcode', 'Enter a valid 6-digit code');
+            this.showJoinFieldError('roomcode', i18n.t('lobby.join_errors.invalid_code'));
             hasError = true;
         }
         if (!nickname) {
-            this.showJoinFieldError('nickname', 'Required');
+            this.showJoinFieldError('nickname', i18n.t('lobby.join_errors.required'));
             hasError = true;
         }
         if (hasError) return;
@@ -488,12 +556,12 @@ export class LobbyManager {
         const setBtnLoading = (loading: boolean) => {
             if (!joinBtn) return;
             if (loading) {
-                joinBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> JOINING...`;
+                joinBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-xl font-bold">refresh</span> ${i18n.t('lobby.join_card.joining_btn')}`;
                 joinBtn.disabled = true;
                 joinBtn.classList.add('opacity-80', 'cursor-not-allowed');
                 joinBtn.classList.remove('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
             } else {
-                joinBtn.innerHTML = `Join`;
+                joinBtn.innerHTML = i18n.t('lobby.join_card.btn');
                 joinBtn.disabled = false;
                 joinBtn.classList.remove('opacity-80', 'cursor-not-allowed');
                 joinBtn.classList.add('active:translate-y-1', 'active:border-b-0', 'hover:brightness-110');
@@ -509,20 +577,20 @@ export class LobbyManager {
                 .single();
 
             if (sessionError || !sessionData) {
-                this.showJoinFieldError('roomcode', 'Room not found');
+                this.showJoinFieldError('roomcode', i18n.t('lobby.join_errors.room_not_found'));
                 setBtnLoading(false);
                 return;
             }
 
             if (sessionData.status !== 'waiting') {
-                this.showJoinError('Game already started or finished');
+                this.showJoinError(i18n.t('lobby.join_errors.game_started'));
                 setBtnLoading(false);
                 return;
             }
 
             const profile = authService.getStoredProfile();
             if (!profile) {
-                this.showJoinError('Please login first');
+                this.showJoinError(i18n.t('lobby.join_errors.login_first'));
                 return;
             }
 
@@ -540,7 +608,7 @@ export class LobbyManager {
                     score: 0
                 });
                 if (partError && partError.code !== '23505') {
-                    this.showJoinError('Failed to join, try again');
+                    this.showJoinError(i18n.t('lobby.join_errors.join_failed'));
                     return;
                 }
             } else {
@@ -569,12 +637,12 @@ export class LobbyManager {
                     this.startManager('PlayerWaitingRoomManager', { room, isHost: false });
                 });
             } else {
-                this.showJoinFieldError('roomcode', 'Room closed or not found');
+                this.showJoinFieldError('roomcode', i18n.t('lobby.join_errors.room_closed'));
                 setBtnLoading(false);
             }
         } catch (e) {
             setBtnLoading(false);
-            this.showJoinError('Connection error, try again');
+            this.showJoinError(i18n.t('lobby.join_errors.conn_error'));
         }
     }
 

@@ -1,3 +1,5 @@
+import { i18n } from '../../../utils/i18n';
+
 export class QuizSelectionUI {
     static render() {
         let quizSelectionUI = document.getElementById('quiz-selection-ui');
@@ -103,7 +105,7 @@ export class QuizSelectionUI {
                                 <div class="relative flex-grow flex items-center">
                                     <input id="quiz-search-input"
                                     class="w-full h-10 md:h-12 pl-4 pr-12 bg-[#F1F8E9] border-none focus:ring-4 focus:ring-[#6CC452]/20 text-[#478D47] placeholder:text-[#6CC452]/40 font-medium text-base md:text-xl font-['Retro_Gaming'] tracking-tight rounded-xl"
-                                    placeholder="SEARCH QUIZ..." type="text" />
+                                    placeholder="${i18n.t('select_quiz.search_placeholder')}" type="text" />
                                     <button id="search-trigger-btn" class="absolute right-4 text-[#6CC452] hover:scale-110 transition-transform cursor-pointer p-1">
                                         <span class="material-symbols-outlined font-bold">search</span>
                                     </button>
@@ -111,7 +113,7 @@ export class QuizSelectionUI {
                                 <!-- Middle: Custom Dropdown -->
                                 <div class="relative min-w-[200px] shrink-0 border-t md:border-t-0 border-[#6CC452]/10 md:border-l md:border-[#6CC452]/20 z-50">
                                     <button id="custom-cat-trigger" class="w-full h-10 md:h-12 flex items-center justify-between pl-4 pr-3 text-[#478D47] text-xs md:text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:bg-[#F1F8E9] transition-all focus:outline-none group rounded-xl">
-                                        <span id="custom-cat-selected" class="truncate mr-2">ALL</span>
+                                        <span id="custom-cat-selected" class="truncate mr-2">${i18n.t('select_quiz.all')}</span>
                                         <span id="custom-cat-arrow" class="material-symbols-outlined text-sm md:text-lg text-[#6CC452] transition-transform duration-300 group-hover:rotate-180">expand_more</span>
                                     </button>
                                     <div id="custom-cat-menu" class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl origin-top transform transition-all duration-200 scale-95 opacity-0 flex flex-col p-1 max-h-[50vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar z-50">
@@ -120,10 +122,10 @@ export class QuizSelectionUI {
                                 </div>
                                 <!-- Right: Icons -->
                                 <div class="flex items-center gap-2 pl-2 border-t md:border-t-0 border-[#6CC452]/10 md:border-l md:border-[#6CC452]/20 py-2 md:py-0 justify-end px-2">
-                                    <button id="quiz-filter-fav-btn" class="flex items-center justify-center transition-all group p-1" title="Favorites">
+                                    <button id="quiz-filter-fav-btn" class="flex items-center justify-center transition-all group p-1" title="${i18n.t('select_quiz.favorites_tooltip')}">
                                         <span class="material-symbols-outlined text-[#94A3B8] hover:scale-125 transition-transform text-2xl font-bold">favorite</span>
                                     </button>
-                                    <button id="quiz-filter-my-btn" class="w-10 h-10 rounded-xl bg-[#F1F8E9] border-2 border-[#6CC452]/20 hover:border-[#6CC452] hover:bg-white flex items-center justify-center transition-all group" title="My Quiz">
+                                    <button id="quiz-filter-my-btn" class="w-10 h-10 rounded-xl bg-[#F1F8E9] border-2 border-[#6CC452]/20 hover:border-[#6CC452] hover:bg-white flex items-center justify-center transition-all group" title="${i18n.t('select_quiz.my_quiz_tooltip')}">
                                         <span class="material-symbols-outlined text-[#6CC452]/40 group-hover:text-[#6CC452] text-lg">person</span>
                                     </button>
                                 </div>
@@ -139,11 +141,11 @@ export class QuizSelectionUI {
                         <div class="pt-4 pb-2 flex justify-center items-center gap-4 shrink-0 w-full mt-auto">
                             <button id="prev-page-btn" class="px-3 py-1.5 bg-[#6CC452] rounded-xl border border-b-4 border-[#478D47] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
                                 <span class="material-symbols-outlined text-base">chevron_left</span>
-                                <span class="text-base font-bold uppercase">Prev</span>
+                                <span class="text-base font-bold uppercase">${i18n.t('select_quiz.prev')}</span>
                             </button>
                             <div id="pagination-numbers" class="flex items-center gap-2"></div>
                             <button id="next-page-btn" class="px-3 py-1.5 bg-[#6CC452] rounded-xl border border-b-4 border-[#478D47] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
-                                <span class="text-base font-bold uppercase">Next</span>
+                                <span class="text-base font-bold uppercase">${i18n.t('select_quiz.next')}</span>
                                 <span class="material-symbols-outlined text-base">chevron_right</span>
                             </button>
                         </div>
@@ -191,6 +193,18 @@ export class QuizSelectionUI {
                 `;
                 document.head.appendChild(style);
             }
+
+            // Handle language change event
+            window.addEventListener('languageChanged', () => {
+                if (quizSelectionUI) {
+                    const isHidden = quizSelectionUI.classList.contains('hidden');
+                    quizSelectionUI.remove();
+                    QuizSelectionUI.render();
+                    const newUI = document.getElementById('quiz-selection-ui');
+                    if (newUI && !isHidden) newUI.classList.remove('hidden');
+                    window.dispatchEvent(new CustomEvent('selectQuizUIReRendered'));
+                }
+            });
         }
     }
 

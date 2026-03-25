@@ -3,6 +3,7 @@ import { Router } from '../../../utils/Router';
 import { Quiz, fetchQuizzesPaginated, fetchCategoriesWithRaw, toggleFavoriteInSupabase, fetchUserFavorites } from '../../../data/QuizData';
 import { TransitionManager } from '../../../utils/TransitionManager';
 import { authService } from '../../../services/auth/AuthService';
+import { i18n } from '../../../utils/i18n';
 
 export class SelectQuizManager {
     client!: Client;
@@ -43,6 +44,33 @@ export class SelectQuizManager {
 
         this.createTooltip();
         this.setupEventListeners();
+
+        window.addEventListener('selectQuizUIReRendered', async () => {
+            this.quizSelectionUI = document.getElementById('quiz-selection-ui');
+            const oldSearch = this.searchQuery;
+            
+            this.setupEventListeners();
+            
+            const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
+            if (searchInput) searchInput.value = oldSearch;
+            
+            this.updateFilterUI();
+            
+            await this.loadQuizData();
+            
+            const menu = document.getElementById('custom-cat-menu');
+            if (menu && this.selectedCategory) {
+                const btns = menu.querySelectorAll('button');
+                btns.forEach(b => {
+                    b.classList.add('text-[#478D47]');
+                    b.classList.remove('bg-[#F1F8E9]', 'font-bold');
+                    if (b.dataset.value === this.selectedCategory) {
+                        b.classList.add('bg-[#F1F8E9]', 'font-bold');
+                    }
+                });
+            }
+        });
+
         this.showQuizSelection();
 
         Router.navigate('/host/select-quiz');
@@ -66,9 +94,30 @@ export class SelectQuizManager {
 
             this.favorites = new Set(userFavorites);
 
+            const oldSelectedRaw = this.selectedCategory ? this.rawCategoryMap.get(this.selectedCategory) : null;
+
             this.rawCategoryMap.clear();
             categoryPairs.forEach(c => this.rawCategoryMap.set(c.display, c.raw));
             this.populateCategories(categoryPairs.map(c => c.display));
+
+            if (oldSelectedRaw) {
+                let found = false;
+                for (const [display, raw] of this.rawCategoryMap.entries()) {
+                    if (raw === oldSelectedRaw) {
+                        this.selectedCategory = display;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) this.selectedCategory = '';
+            } else {
+                this.selectedCategory = '';
+            }
+
+            const selectedText = document.getElementById('custom-cat-selected');
+            if (selectedText) {
+                selectedText.innerText = this.selectedCategory || i18n.t('select_quiz.all');
+            }
 
             await this.fetchPage();
         } catch (err) {
@@ -159,7 +208,7 @@ export class SelectQuizManager {
         }
 
         if (customMenu) {
-            const allBtn = this.createCustomOption('ALL', '');
+            const allBtn = this.createCustomOption(i18n.t('select_quiz.all'), '');
             customMenu.appendChild(allBtn);
 
             categories.forEach(cat => {
@@ -212,7 +261,7 @@ export class SelectQuizManager {
                 const text = document.getElementById('auth-loading-text');
                 if (overlay) {
                     overlay.classList.remove('hidden');
-                    if (text) text.innerText = 'Going back...';
+                    if (text) text.innerText = i18n.t('select_quiz.going_back');
                 }
 
                 TransitionManager.close(() => {
@@ -233,6 +282,10 @@ export class SelectQuizManager {
             this.handleCategoryChange(val, label);
         });
 
+        if (this._outsideClickHandler) {
+            document.removeEventListener('click', this._outsideClickHandler);
+        }
+        
         this._outsideClickHandler = (e: MouseEvent) => {
             const dropdowns = [{ menu: 'custom-cat-menu', trigger: 'custom-cat-trigger', arrow: 'custom-cat-arrow' }];
             dropdowns.forEach(d => {
@@ -276,7 +329,7 @@ export class SelectQuizManager {
             myQuizBtn.onclick = () => {
                 const profile = authService.getStoredProfile();
                 if (!profile) {
-                    alert('Silakan login untuk melihat quiz buatan Anda.');
+                    alert(i18n.t('select_quiz.login_required_my_quiz'));
                     return;
                 }
                 this.showMyQuizzesOnly = !this.showMyQuizzesOnly;
@@ -387,7 +440,7 @@ export class SelectQuizManager {
     async toggleFavorite(quizId: string) {
         const profile = authService.getStoredProfile();
         if (!profile) {
-            alert("Silakan login untuk menyimpan favorit.");
+            alert(i18n.t('select_quiz.login_required_favorite'));
             return;
         }
 
@@ -415,7 +468,7 @@ export class SelectQuizManager {
         if (searchInput) searchInput.value = '';
 
         this.updateFilterUI();
-        this.handleCategoryChange('', 'ALL');
+        this.handleCategoryChange('', i18n.t('select_quiz.all'));
     }
 
     applyFilters() {
@@ -443,10 +496,10 @@ export class SelectQuizManager {
                         <span class="material-symbols-outlined text-3xl text-white/20">search_off</span>
                     </div>
                     <p class="text-white/70 font-['Retro_Gaming'] text-lg uppercase mb-2 tracking-widest">
-                        Quiz Tidak Ditemukan
+                        ${i18n.t('select_quiz.no_quiz_found')}
                     </p>
                     <button id="reset-filters-btn" class="px-6 py-3 bg-[#1F7D53]/10 border border-[#1F7D53]/30 text-[#1F7D53] hover:bg-[#1F7D53] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">refresh</span> Reset Filter
+                        <span class="material-symbols-outlined text-sm">refresh</span> ${i18n.t('select_quiz.reset_filter')}
                     </button>
                 </div>
             `;
