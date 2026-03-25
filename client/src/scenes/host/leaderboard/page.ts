@@ -16,6 +16,7 @@ export class HostLeaderboardManager {
     private q: any;
     private sessionId: string | null = null;
     private isHost: boolean = true;
+    private spawnerInterval: any = null;
 
     start(data?: { rankings?: any[], isHost?: boolean, lastGameOptions?: any, lastSelectedQuiz?: any, mySessionId?: string }) {
         this.initializeClient();
@@ -91,6 +92,9 @@ export class HostLeaderboardManager {
 
         Router.navigate('/host/leaderboard');
         this.container.innerHTML = LeaderboardUI.generateHTML(this.rankings);
+
+        this.startCharacterSpawner();
+
         this.attachListeners();
     }
 
@@ -99,46 +103,40 @@ export class HostLeaderboardManager {
         const restartBtn = document.getElementById('lb-restart-btn');
         const statsBtn = document.getElementById('lb-stats-btn');
 
-        if (statsBtn) {
-            statsBtn.onclick = () => {
-                // Priority for Supabase Session ID: 
-                // 1. Direct from options passed to start()
-                // 2. Consistent stored key 'supabaseSessionId'
-                // 3. Fallback to ranking entries (usually contains the Supabase ID)
-                // 4. Stored manager options
-                let sid = this.opts?.sessionId || 
-                            localStorage.getItem('supabaseSessionId');
-                
-                if (!sid && this.rankings.length > 0) {
-                    sid = this.rankings[0].sessionId;
-                }
+        const homeBtnMobile = document.getElementById('lb-home-btn-mobile');
+        const restartBtnMobile = document.getElementById('lb-restart-btn-mobile');
+        const statsBtnMobile = document.getElementById('lb-stats-btn-mobile');
 
-                if (!sid) {
-                    sid = localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
-                          localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1];
-                }
-                
-                if (sid && sid !== "undefined" && sid !== "null") {
-                    window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
-                } else {
-                    alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
-                }
-            };
-        }
+        const handleStats = () => {
+            let sid = this.opts?.sessionId || localStorage.getItem('supabaseSessionId');
+            if (!sid && this.rankings.length > 0) sid = this.rankings[0].sessionId;
+            if (!sid) {
+                sid = localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
+                      localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1];
+            }
+            if (sid && sid !== "undefined" && sid !== "null") {
+                window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+            } else {
+                alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
+            }
+        };
 
-        if (homeBtn) {
-            homeBtn.onclick = () => {
-                TransitionManager.close(() => {
-                    this.cleanup();
-                    window.history.pushState({}, '', '/');
-                    const manager = new LobbyManager();
-                    manager.init();
-                });
-            };
-        }
+        if (statsBtn) statsBtn.onclick = handleStats;
+        if (statsBtnMobile) statsBtnMobile.onclick = handleStats;
 
-        if (restartBtn) {
-            restartBtn.onclick = async () => {
+        const handleHome = () => {
+            TransitionManager.close(() => {
+                this.cleanup();
+                window.history.pushState({}, '', '/');
+                const manager = new LobbyManager();
+                manager.init();
+            });
+        };
+
+        if (homeBtn) homeBtn.onclick = handleHome;
+        if (homeBtnMobile) homeBtnMobile.onclick = handleHome;
+
+        const handleRestart = async () => {
                 if (this.opts && !this.q && this.opts.quizId) {
                     try {
                         this.q = await import('../../../data/QuizData').then(m => m.fetchQuizById(this.opts.quizId));
@@ -171,10 +169,20 @@ export class HostLeaderboardManager {
                     alert("Tidak dapat menemukan data kuis untuk mengulang permainan. Silakan kembali ke Lobby.");
                 }
             };
+        
+        if (restartBtn) {
+            restartBtn.onclick = handleRestart;
+        }
+        if (restartBtnMobile) {
+            restartBtnMobile.onclick = handleRestart;
         }
     }
 
     cleanup() {
+        if (this.spawnerInterval) {
+            clearInterval(this.spawnerInterval);
+            this.spawnerInterval = null;
+        }
         if (this.container) {
             if (this.container.parentNode) this.container.parentNode.removeChild(this.container);
             this.container.remove();
@@ -185,5 +193,35 @@ export class HostLeaderboardManager {
             s.remove();
         }
         OrientationManager.disable();
+    }
+
+    private startCharacterSpawner() {
+        if (this.spawnerInterval) return;
+        const container = document.getElementById('leaderboard-walking-characters-container');
+        if (!container) return;
+        this.checkAndSpawn(container);
+        this.spawnerInterval = setInterval(() => this.checkAndSpawn(container), 5000);
+    }
+
+    private checkAndSpawn(container: HTMLElement) {
+        const activeChars = container.querySelectorAll('.walking-char').length;
+        if (activeChars >= 3) return;
+        if (Math.random() < (activeChars === 0 ? 0.8 : 0.4)) {
+            this.spawnCharacter(container);
+        }
+    }
+
+    private spawnCharacter(container: HTMLElement) {
+        const char = document.createElement('div');
+        char.className = 'walking-char';
+        const fromRight = Math.random() > 0.5;
+        const speed = 20 + Math.random() * 10;
+        if (fromRight) {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
+        } else {
+            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
+        }
+        container.appendChild(char);
+        setTimeout(() => { if (char.parentElement) char.remove(); }, speed * 1000 + 500);
     }
 }

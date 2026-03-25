@@ -583,11 +583,13 @@ export class PlayerWaitingRoomManager {
             <!-- Walking Characters Container -->
             <div id="player-waiting-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
             
-            <!-- LOGO TOP LEFT -->
-            <img src="/logo/Zigma-logo-fix.webp" class="logo-tl z-20 object-contain" />
+            <!-- LOGO ZIGMA: Tengah atas di mobile, Kiri atas di desktop -->
+            <img src="/logo/Zigma-logo-fix.webp" id="player-logo-zigma"
+                class="z-20 object-contain" style="position:absolute; top:0px; left:50%; transform:translateX(-50%); width:10rem;" />
             
-            <!-- LOGO TOP RIGHT -->
-            <img src="/logo/gameforsmart-logo-fix.webp" class="logo-tr z-20 object-contain" />
+            <!-- LOGO GAME FOR SMART: Sembunyi di mobile, Kanan atas di desktop -->
+            <img src="/logo/gameforsmart-logo-fix.webp" id="player-logo-gfs"
+                class="z-20 object-contain" style="position:absolute; display:none;" />
 
             <div class="relative z-10 flex flex-col items-center justify-start w-full h-screen p-4 md:pt-20 pt-16 overflow-hidden">
                 <!-- Main Content Box (Host Style Container) -->
@@ -619,6 +621,38 @@ export class PlayerWaitingRoomManager {
                 </button>
             </div>
         `;
+
+        // Responsive logo positioning: Desktop = 2 logo (asli), Mobile = hanya Zigma tengah
+        const pZigmaLogo = document.getElementById('player-logo-zigma');
+        const pGfsLogo = document.getElementById('player-logo-gfs');
+        const updatePlayerLogos = () => {
+            const isDesktop = window.innerWidth >= 768;
+            if (pZigmaLogo) {
+                if (isDesktop) {
+                    pZigmaLogo.style.top = '-30px';
+                    pZigmaLogo.style.left = '-40px';
+                    pZigmaLogo.style.transform = 'none';
+                    pZigmaLogo.style.width = '16rem';
+                } else {
+                    pZigmaLogo.style.top = '0px';
+                    pZigmaLogo.style.left = '50%';
+                    pZigmaLogo.style.transform = 'translateX(-50%)';
+                    pZigmaLogo.style.width = '10rem';
+                }
+            }
+            if (pGfsLogo) {
+                if (isDesktop) {
+                    pGfsLogo.style.display = 'block';
+                    pGfsLogo.style.top = '-45px';
+                    pGfsLogo.style.right = '-15px';
+                    pGfsLogo.style.width = '20rem';
+                } else {
+                    pGfsLogo.style.display = 'none';
+                }
+            }
+        };
+        updatePlayerLogos();
+        window.addEventListener('resize', updatePlayerLogos);
 
         // Start Walking Character Spawner (sama seperti home page)
         this.startWaitingCharacterSpawner('player-waiting-characters-container');

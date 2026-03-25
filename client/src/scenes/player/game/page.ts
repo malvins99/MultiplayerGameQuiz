@@ -600,6 +600,7 @@ export class GameScene extends Phaser.Scene {
             this.events.once('shutdown', () => {
                 uiLayer.classList.add('hidden');
                 this.scene.stop('UIScene');
+                if (this.quizPopup) this.quizPopup.hide();
                 OrientationManager.disable();
             });
         }
@@ -616,6 +617,7 @@ export class GameScene extends Phaser.Scene {
 
         this.room.onMessage('playerFinished', (data: any) => {
             this.registry.set('leaderboardData', [data]);
+            if (this.quizPopup) this.quizPopup.hide();
             TransitionManager.close(() => {
                 const engine = (window as any).gameInstance;
                 if (engine) {
@@ -633,6 +635,8 @@ export class GameScene extends Phaser.Scene {
             const isHost = this.room.sessionId === this.room.state.hostId;
             this.registry.set('isHost', isHost);
             this.registry.set('leaderboardData', data.rankings);
+
+            if (this.quizPopup) this.quizPopup.hide();
 
             if (isHost) {
                 this.room.leave();
