@@ -24,6 +24,12 @@ export const TransitionManager = {
             return;
         }
 
+        // If already active and iris is closed, just run callback immediately
+        if (overlay.classList.contains('overlay-active') && overlay.classList.contains('iris-close')) {
+            callback();
+            return;
+        }
+
         // Reset
         overlay.classList.remove('iris-open');
         overlay.classList.add('overlay-active'); // Visible
@@ -74,50 +80,38 @@ export const TransitionManager = {
             el.style.flexDirection = 'column';
             el.style.alignItems = 'center';
             el.style.justifyContent = 'center';
-            el.style.background = '#000'; // Absolute black base
+            el.style.background = '#000'; // Full black backdrop
             el.style.zIndex = '10001';
             el.style.pointerEvents = 'none';
 
-            // Base Pattern Layer
-            const pattern = document.createElement('div');
-            pattern.style.position = 'absolute';
-            pattern.style.inset = '0';
-            pattern.style.backgroundImage = 'url("/assets/bg_pattern.png")';
-            pattern.style.backgroundSize = '400px';
-            pattern.style.opacity = '0.07';
-            pattern.style.imageRendering = 'pixelated';
-            el.appendChild(pattern);
-
-            // Perspective Gradient for depth
-            const gradient = document.createElement('div');
-            gradient.style.position = 'absolute';
-            gradient.style.inset = '0';
-            gradient.style.background = 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%)';
-            el.appendChild(gradient);
+            // Add Bounce Animation Style
+            const styleId = 'tm-countdown-styles';
+            if (!document.getElementById(styleId)) {
+                const style = document.createElement('style');
+                style.id = styleId;
+                style.innerHTML = `
+                    @keyframes tm-bounce {
+                        0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+                        50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+                    }
+                    .tm-animate-bounce { animation: tm-bounce 1s infinite; }
+                `;
+                document.head.appendChild(style);
+            }
 
             // Main Text Container
+            const container = document.createElement('div');
+            container.classList.add('tm-animate-bounce');
+            el.appendChild(container);
+
             const textContent = document.createElement('div');
             textContent.id = 'transition-countdown-text';
-            textContent.style.position = 'relative';
             textContent.style.fontFamily = "'Retro Gaming', monospace";
-            textContent.style.fontSize = '120px'; // Matched to 120px
-            textContent.style.color = '#00ff88'; // Matched to #00ff88
-            textContent.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))'; // Matched shadow
-            textContent.style.transition = 'transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            
-            // Add Bounce Animation
-            const bounceStyle = document.createElement('style');
-            bounceStyle.innerHTML = `
-                @keyframes tm-bounce {
-                    0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-                    50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-                }
-                .tm-animate-bounce { animation: tm-bounce 1s infinite; }
-            `;
-            document.head.appendChild(bounceStyle);
-            textContent.classList.add('tm-animate-bounce');
-
-            el.appendChild(textContent);
+            textContent.style.fontSize = '120px'; // Matched to player
+            textContent.style.color = '#00ff88'; // Matched to player
+            textContent.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
+            textContent.style.transition = 'transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            container.appendChild(textContent);
 
             overlay.appendChild(el);
         }
@@ -131,7 +125,7 @@ export const TransitionManager = {
         if (text.length > 5) {
             textEl.style.fontSize = '60px';
         } else {
-            textEl.style.fontSize = '120px'; // Matched
+            textEl.style.fontSize = '120px';
         }
 
         // Color Logic
@@ -139,7 +133,7 @@ export const TransitionManager = {
             textEl.style.color = '#fff';
             textEl.style.filter = 'drop-shadow(0 0 50px #fff)';
         } else {
-            textEl.style.color = '#00ff88'; // Matched
+            textEl.style.color = '#00ff88';
             textEl.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
         }
 

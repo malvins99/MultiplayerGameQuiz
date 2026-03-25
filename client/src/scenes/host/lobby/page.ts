@@ -35,8 +35,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
-    countdownOverlay: HTMLElement | null = null;
-    countdownText: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
@@ -341,20 +339,22 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         this.room.state.players.onRemove(() => this.updateAll());
 
         // Listen for Countdown
-        this.room.state.listen("countdown", (val: number) => {
+        this.room.state.listen("countdown", (val: number, previousVal: number) => {
             if (val > 0) {
-                if (this.countdownOverlay) {
-                    this.countdownOverlay.classList.remove('hidden');
-                    this.countdownOverlay.style.opacity = '1';
-                }
-                if (this.countdownText) this.countdownText.innerText = val.toString();
+                // --- UNIFIED GLOBAL COUNTDOWN ---
+                TransitionManager.ensureClosed();
+                TransitionManager.setCountdownText(val.toString());
 
-                // Hide main UI for "full block black" effect
+                // --- OPTIMIZATION: Start Game Transition Early ---
+                // Similar to player side, we start loading the scene in background during countdown
+                this.handleGameStart();
+
+                // Hide main UI
                 if (this.isHost && this.waitingUI) {
                     this.waitingUI.classList.add('hidden');
                 }
-            } else if (val === 0) {
-                if (this.countdownText) this.countdownText.innerText = "GO!";
+            } else if (val === 0 && (previousVal || 0) > 0) {
+                TransitionManager.setCountdownText("GO!");
             }
         });
 
@@ -834,20 +834,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         `;
         document.body.appendChild(hostExitModal);
 
-        // Create Countdown Overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black flex items-center justify-center hidden';
-        overlay.innerHTML = `
-            <div class="flex flex-col items-center animate-bounce">
-                <div id="countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
-                    10
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        this.countdownOverlay = overlay;
-        this.countdownText = document.getElementById('countdown-text');
+        // Create Countdown Overlay (Removed - now handled by TransitionManager)
 
         // Re-assign references
         this.roomCodeEl = document.getElementById('host-room-code');
@@ -2042,22 +2029,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 });
         }
 
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
+        // OPTIMIZATION: Instant Transition
+        // We use sceneTo directly which is now idempotent.
+        // It will handle the iris closing if it's not already closed.
+        if (this.waitingUI) this.waitingUI.classList.add('hidden');
+
+        if (this.isHost) {
+            Router.navigate('/host/progress');
+            TransitionManager.sceneTo(this, 'HostProgressScene', { room: this.room });
+        } else {
+            Router.navigate('/game');
+            this.scene.start('GameScene', { room: this.room });
         }
-
-        TransitionManager.close(() => {
-            if (this.waitingUI) this.waitingUI.classList.add('hidden');
-
-            if (this.isHost) {
-                Router.navigate('/host/progress');
-                TransitionManager.sceneTo(this, 'HostProgressScene', { room: this.room });
-            } else {
-                Router.navigate('/game');
-                this.scene.start('GameScene', { room: this.room });
-            }
-        });
     }
 
     // Walking character spawner — sama persis seperti home page

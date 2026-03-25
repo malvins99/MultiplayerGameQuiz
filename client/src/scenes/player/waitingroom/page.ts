@@ -27,8 +27,6 @@ export class PlayerWaitingRoomManager {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
-    countdownOverlay: HTMLElement | null = null;
-    countdownText: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
@@ -105,10 +103,7 @@ export class PlayerWaitingRoomManager {
         const waitingUiEl = document.getElementById('waiting-ui');
         if (waitingUiEl) waitingUiEl.classList.add('hidden');
 
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
-        }
+        // TransitionManager handles countdown cleanup
 
         document.getElementById('exit-confirm-modal')?.remove();
         Router.navigate('/');
@@ -193,24 +188,20 @@ export class PlayerWaitingRoomManager {
         this.updateAll();
         this.updateUILayout();
 
-        // Inject Countdown Overlay (Shared)
-        this.createCountdownOverlay();
+        // Using shared TransitionManager for countdown
 
         // Listen for Countdown
         if (this.room) {
             this.room.state.listen("countdown", (val: number, previousVal: number) => {
                 if (val > 0) {
-                    if (this.countdownOverlay) this.countdownOverlay.classList.remove('hidden');
-                    if (this.countdownText) this.countdownText.innerText = val.toString();
+                    // --- GLOBAL UNIFIED COUNTDOWN ---
+                    TransitionManager.ensureClosed();
+                    TransitionManager.setCountdownText(val.toString());
 
                     // --- OPTIMIZATION: Start Game Transition Early ---
-                    // Switch to GameScene immediately so it can load in background
                     this.handleGameStart();
                 } else if (val === 0 && (previousVal || 0) > 0) {
-                    if (this.countdownText) this.countdownText.innerText = "GO!";
-                } else if (val === 0) {
-                    // If it starts at 0 or after GO!, hide
-                    if (this.countdownOverlay) this.countdownOverlay.classList.add('hidden');
+                    TransitionManager.setCountdownText("GO!");
                 }
             });
 
@@ -225,10 +216,7 @@ export class PlayerWaitingRoomManager {
         if (this.isGameStarting) return;
         this.isGameStarting = true;
 
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
-        }
+        // TransitionManager handles countdown cleanup
 
         // --- OPTIMIZATION: Instant Transition ---
         // We use ensureClosed() to skip the 650ms "close" animation delay
@@ -240,21 +228,7 @@ export class PlayerWaitingRoomManager {
         this.startGameEngine('GameScene', { room: this.room });
     }
 
-    createCountdownOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'player-countdown-overlay';
-        overlay.className = 'fixed inset-0 z-50 bg-black flex items-center justify-center hidden';
-        overlay.innerHTML = `
-            <div class="flex flex-col items-center animate-bounce">
-                <div id="player-countdown-text" class="text-[120px] font-['Retro_Gaming'] text-[#00ff88] drop-shadow-[0_0_30px_rgba(0,255,136,0.6)]">
-                    10
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        this.countdownOverlay = overlay;
-        this.countdownText = document.getElementById('player-countdown-text');
-    }
+    // createCountdownOverlay removed - using global TransitionManager
 
     setupPlayerUI() {
         if (!this.waitingUI) return;
@@ -824,10 +798,7 @@ export class PlayerWaitingRoomManager {
 
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
-        if (this.countdownOverlay) {
-            this.countdownOverlay.remove();
-            this.countdownOverlay = null;
-        }
+        // TransitionManager handles iris/overlay
 
         const lobbyUI = document.getElementById('lobby-ui');
         if (lobbyUI) lobbyUI.classList.remove('hidden');
