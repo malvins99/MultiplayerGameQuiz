@@ -14,6 +14,8 @@ export class HostProgressScene extends Phaser.Scene {
     disposers: Array<() => void> = [];
     minZoom: number = 0.8;
     isMuted: boolean = false;
+    isGameStarted: boolean = false;
+    isGameReady: boolean = false; // Block iris until map/UI load complete
     private resizeListener: (() => void) | null = null;
 
     constructor() {
@@ -33,10 +35,34 @@ export class HostProgressScene extends Phaser.Scene {
         this.registry.set('room', this.room);
 
         // Register message listeners directly on room
-        console.log(`[Spectator][Room:${this.room.id}] Registering timerUpdate handler. SessionId: ${this.room.sessionId}`);
-        this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
-            this.updateTimer(data.remaining);
-        });
+        console.log(`[Spectator][Room:${this.room.id}] Registering message handlers. SessionId: ${this.room.sessionId}`);
+        if (this.room) {
+            this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
+                this.updateTimer(data.remaining);
+            });
+
+            // --- UNIFIED GLOBAL COUNTDOWN SYNC ---
+            // If the scene starts during countdown (early loading), keep the overlay updated
+            this.room.state.listen("countdown", (val: number, previousVal: number) => {
+                if (val > 0) {
+                    TransitionManager.ensureClosed(); // Stay black during load
+                    TransitionManager.setCountdownText(val.toString());
+                } else if (val === 0 && (previousVal || 0) > 0) {
+                    TransitionManager.setCountdownText("GO!");
+                }
+            });
+
+            // Listen for game start to open the iris
+            this.room.state.listen("isGameStarted", (isStarted: boolean) => {
+                if (isStarted) {
+                    this.isGameStarted = true;
+                    TransitionManager.setCountdownText(""); // Clear "GO!" or countdown
+                    if (this.isGameReady) {
+                        TransitionManager.open();
+                    }
+                }
+            });
+        }
 
         this.room.onMessage('gameEnded', (data: any) => {
             console.log(`[Spectator][Room:${this.room.id}] Game ended. Leaving room and transitioning...`);
@@ -319,7 +345,14 @@ export class HostProgressScene extends Phaser.Scene {
         }));
 
         this.time.delayedCall(500, () => this.focusOnAllPlayers());
-        TransitionManager.open();
+        
+        // --- OPTIMIZATION: Wait for Game Start ---
+        // TransitionManager.open() is now handled in init() via the isGameStarted listener
+        // to ensure it only opens when the countdown hits 0.
+        this.isGameReady = true; 
+        if (this.room.state.isGameStarted) {
+            TransitionManager.open();
+        }
     }
 
     createUI() {
@@ -497,11 +530,13 @@ export class HostProgressScene extends Phaser.Scene {
 
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
         // Render font lebih besar dengan resolusi lebih tinggi lalu di-scale agar tetap tajam (anti-blur)
-        const nameText = this.add.text(0, -38, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
+        // Lowered position from -38 to -25 to be closer to player head
+        const nameText = this.add.text(0, -25, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
         nameText.setName('nameTag');
 
         // Progress bar tepat di bawah nama (jarak ~6px dalam skala container)
-        const progressBar = this.add.graphics({ x: -18, y: -30 });
+        // Lowered progress bar from -30 to -17
+        const progressBar = this.add.graphics({ x: -18, y: -17 });
         progressBar.setName('progressBar');
 
         container.add([nameText, progressBar]);
