@@ -35,6 +35,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
+    countdownOverlay: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
