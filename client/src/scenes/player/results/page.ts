@@ -3,6 +3,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 import { Router } from '../../../utils/Router';
 import { LobbyManager } from '../../lobby/page';
 import { OrientationManager } from '../../../utils/OrientationManager';
+import { i18n } from '../../../utils/i18n';
 
 interface RankingEntry {
     rank: number;
@@ -29,7 +30,10 @@ export class ResultManager {
 
     start(data?: { room?: any, leaderboardData?: any[] }) {
         TransitionManager.ensureClosed();
-        OrientationManager.requirePortrait();
+        OrientationManager.requirePortrait(i18n.t('player_result.portrait_req_title'), i18n.t('player_result.portrait_req_desc'));
+
+        // Listen for language changes
+        window.addEventListener('languageChanged', this.handleLangChange);
 
         let registryRankings = data?.leaderboardData || [];
         this.room = data?.room;
@@ -396,42 +400,42 @@ export class ResultManager {
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
                         <div class="stat-value">${myEntry.rank === -1 ? '#?' : '#' + myEntry.rank}</div>
-                        <div class="stat-label">RANK</div>
+                        <div id="txt-pr-rank" class="stat-label">${i18n.t('player_result.rank')}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">workspace_premium</span>
                         <div class="stat-value">${myEntry.score}</div>
-                        <div class="stat-label">SCORE</div>
+                        <div id="txt-pr-score" class="stat-label">${i18n.t('player_result.score')}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">task_alt</span>
                         <div class="stat-value">${myEntry.correctAnswers}/5</div>
-                        <div class="stat-label">CORRECT</div>
+                        <div id="txt-pr-correct" class="stat-label">${i18n.t('player_result.correct')}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">schedule</span>
                         <div class="stat-value">${formatTime(myEntry.duration)}</div>
-                        <div class="stat-label">TIME</div>
+                        <div id="txt-pr-time" class="stat-label">${i18n.t('player_result.time')}</div>
                     </div>
                 </div>
             </div>
 
             <div class="lb-footer">
-                <button id="lb-home-btn" class="nav-btn btn-left">
+                <button id="lb-home-btn" class="nav-btn btn-left" title="${i18n.t('player_result.title_home')}">
                     <span class="material-symbols-outlined">home</span>
                 </button>
                 
                 <button id="lb-home-btn-mobile" class="nav-btn-wide">
                     <span class="material-symbols-outlined">home</span>
-                    HOME
+                    <span id="txt-pr-home">${i18n.t('player_result.home')}</span>
                 </button>
                 
                 <button id="lb-stats-btn-mobile" class="nav-btn-wide">
                     <span class="material-symbols-outlined">analytics</span>
-                    STATISTICS
+                    <span id="txt-pr-stats">${i18n.t('player_result.stats')}</span>
                 </button>
 
-                <button id="lb-stats-btn" class="nav-btn btn-right">
+                <button id="lb-stats-btn" class="nav-btn btn-right" title="${i18n.t('player_result.title_stats')}">
                     <span class="material-symbols-outlined">analytics</span>
                 </button>
             </div>
@@ -492,7 +496,7 @@ export class ResultManager {
         if (sid) {
             window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
         } else {
-            alert("ID Sesi tidak ditemukan.");
+            alert(i18n.t('player_result.no_session'));
         }
     }
 
@@ -505,7 +509,29 @@ export class ResultManager {
         const style = document.getElementById('result-styles');
         if (style) style.remove();
         OrientationManager.disable();
+        window.removeEventListener('languageChanged', this.handleLangChange);
     }
+    
+    private handleLangChange = () => {
+        const hRank = document.getElementById('txt-pr-rank');
+        if (hRank) hRank.innerText = i18n.t('player_result.rank');
+        const hScore = document.getElementById('txt-pr-score');
+        if (hScore) hScore.innerText = i18n.t('player_result.score');
+        const hCorrect = document.getElementById('txt-pr-correct');
+        if (hCorrect) hCorrect.innerText = i18n.t('player_result.correct');
+        const hTime = document.getElementById('txt-pr-time');
+        if (hTime) hTime.innerText = i18n.t('player_result.time');
+
+        const btnHome = document.getElementById('lb-home-btn');
+        if (btnHome) btnHome.title = i18n.t('player_result.title_home');
+        const btnStats = document.getElementById('lb-stats-btn');
+        if (btnStats) btnStats.title = i18n.t('player_result.title_stats');
+
+        const txtHome = document.getElementById('txt-pr-home');
+        if (txtHome) txtHome.innerText = i18n.t('player_result.home');
+        const txtStats = document.getElementById('txt-pr-stats');
+        if (txtStats) txtStats.innerText = i18n.t('player_result.stats');
+    };
 
     private startCharacterSpawner() {
         if (this.spawnerInterval) return;

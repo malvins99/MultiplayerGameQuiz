@@ -1,3 +1,5 @@
+import { i18n } from '../../../utils/i18n';
+
 export interface RankingEntry {
     rank: number;
     sessionId: string;
@@ -224,10 +226,10 @@ export class LeaderboardUI {
                         <!-- Header -->
                         <div class="bg-black/80 border-b-[3px] border-primary/20 relative shrink-0">
                             <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[8px] md:text-xs">
-                                <div class="text-center">RANK</div>
-                                <div>PLAYER</div>
-                                <div class="text-center">SCORE</div>
-                                <div class="text-center">TIME</div>
+                                <div id="hdr-lb-rank" class="text-center">${i18n.t('host_leaderboard.rank')}</div>
+                                <div id="hdr-lb-player">${i18n.t('host_leaderboard.player')}</div>
+                                <div id="hdr-lb-score" class="text-center">${i18n.t('host_leaderboard.score')}</div>
+                                <div id="hdr-lb-time" class="text-center">${i18n.t('host_leaderboard.time')}</div>
                             </div>
                         </div>
                         
@@ -241,16 +243,16 @@ export class LeaderboardUI {
 
                 <!-- FLOATING ACTIONS (Left & Right) -->
                 <div class="desktop-floating-actions fixed top-[40%] md:top-1/2 left-4 md:left-6 -translate-y-1/2 flex-col gap-4 z-50">
-                    <button id="lb-home-btn" class="nav-btn" title="Home">
+                    <button id="lb-home-btn" class="nav-btn" title="${i18n.t('host_leaderboard.title_home')}">
                         <span class="material-symbols-outlined">home</span>
                     </button>
-                    <button id="lb-restart-btn" class="nav-btn" title="Play Again">
+                    <button id="lb-restart-btn" class="nav-btn" title="${i18n.t('host_leaderboard.title_restart')}">
                         <span class="material-symbols-outlined">restart_alt</span>
                     </button>
                 </div>
 
                 <div class="desktop-floating-actions fixed top-[40%] md:top-1/2 right-4 md:right-6 -translate-y-1/2 flex-col gap-4 z-50">
-                    <button id="lb-stats-btn" class="nav-btn" title="Statistics">
+                    <button id="lb-stats-btn" class="nav-btn" title="${i18n.t('host_leaderboard.title_stats')}">
                         <span class="material-symbols-outlined">analytics</span>
                     </button>
                 </div>
@@ -258,13 +260,13 @@ export class LeaderboardUI {
                 <!-- MOBILE FOOTER ACTIONS -->
                 <div class="lb-footer-mobile">
                     <button id="lb-home-btn-mobile" class="nav-btn-wide">
-                        <span class="material-symbols-outlined text-[14px]">home</span>HOME
+                        <span class="material-symbols-outlined text-[14px]">home</span><span id="txt-lb-home">${i18n.t('host_leaderboard.home')}</span>
                     </button>
                     <button id="lb-restart-btn-mobile" class="nav-btn-wide">
-                        <span class="material-symbols-outlined text-[14px]">restart_alt</span>RESTART
+                        <span class="material-symbols-outlined text-[14px]">restart_alt</span><span id="txt-lb-restart">${i18n.t('host_leaderboard.restart')}</span>
                     </button>
                     <button id="lb-stats-btn-mobile" class="nav-btn-wide">
-                        <span class="material-symbols-outlined text-[14px]">analytics</span>STATS
+                        <span class="material-symbols-outlined text-[14px]">analytics</span><span id="txt-lb-stats">${i18n.t('host_leaderboard.stats')}</span>
                     </button>
                 </div>
             </div>
