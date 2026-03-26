@@ -143,12 +143,12 @@ export class LeaderboardUI {
                         
                     </div>
 
-                    <div class="text-sm md:text-2xl mb-2 font-bold text-center leading-tight drop-shadow-lg" style="color: ${colorHex}; font-family: 'Retro Gaming', monospace; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; letter-spacing: 1px;">${p.name}</div>
+                    <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: ${colorHex}; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">${p.name}</div>
 
                     <!-- The literal podium block (Hidden on mobile) -->
                     <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
                         <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10"></div>
-                        <div class="text-2xl md:text-5xl font-bold mb-2 drop-shadow-[0_0_10px_rgba(0,0,0,1)] relative z-10" style="color: ${colorHex}">${p.score}</div>
+                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: ${colorHex}">${p.score}</div>
                         <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
                     </div>
                 </div>
@@ -163,9 +163,9 @@ export class LeaderboardUI {
                 <div class="flex items-center gap-2 md:gap-3">
                     <div class="hidden md:flex w-10 h-10 rounded-full bg-[#e2e8f0]/95 border-2 border-white/10 items-center justify-center font-bold text-sm group-hover:border-primary transition-colors overflow-hidden relative podium-avatar">
                         <div class="char-anim-sm" style="background-image: url('/assets/base_idle_strip9.png')"></div>
-                        ${hairKey ? `<div class="char-anim-sm" style="background-image: url('/assets/${hairKey}_idle_strip9.png')</div>` : ''}
+                        ${hairKey ? `<div class="char-anim-sm" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
                     </div>
-                    <div class="font-bold text-[10px] md:text-base truncate max-w-[150px] md:max-w-[300px]">${p.name}</div>
+                    <div class="font-bold text-[11px] md:text-base truncate max-w-[150px] md:max-w-[300px] py-1 font-['Space_Grotesk'] tracking-wide uppercase">${p.name}</div>
                 </div>
                 <div class="text-center text-primary font-bold text-xs md:text-lg">${p.score}</div>
                 <div class="text-center text-white/50 text-[10px] md:text-sm font-bold">
@@ -223,7 +223,7 @@ export class LeaderboardUI {
                     <div class="w-full max-w-4xl bg-[#1a1a20]/90 border-[3px] border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,255,85,0.1)] overflow-hidden shrink-0 md:mb-20 flex flex-col flex-1 md:flex-none min-h-0">
                         <!-- Header -->
                         <div class="bg-black/80 border-b-[3px] border-primary/20 relative shrink-0">
-                            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[8px] md:text-xs">
+                            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[8px] md:text-xs font-['Retro_Gaming']">
                                 <div class="text-center">RANK</div>
                                 <div>PLAYER</div>
                                 <div class="text-center">SCORE</div>

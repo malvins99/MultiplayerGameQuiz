@@ -190,6 +190,11 @@ export class LobbyUI {
                     </div>
                 </div>
 
+                <!-- Fullscreen Button -->
+                <button id="lobby-fullscreen-btn" class="fixed bottom-4 right-4 z-[100] w-12 h-12 md:w-14 md:h-14 bg-white border-2 border-[#6CC452] rounded-full flex items-center justify-center hover:bg-[#F1F8E9] shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer">
+                    <span id="lobby-fullscreen-icon" class="material-symbols-outlined text-[#478D47] text-2xl md:text-3xl">fullscreen</span>
+                </button>
+
                 <!-- Logout Modal -->
                 <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
                     <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
@@ -216,6 +221,40 @@ export class LobbyUI {
             // Start Character Spawner
             LobbyUI.startCharacterSpawner();
 
+            // Fullscreen Logic
+            const fsBtn = document.getElementById('lobby-fullscreen-btn');
+            if (fsBtn) {
+                fsBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+                        const docEl = document.documentElement as any;
+                        if (docEl.requestFullscreen) docEl.requestFullscreen();
+                        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+                        else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+                    } else {
+                        const doc = document as any;
+                        if (doc.exitFullscreen) doc.exitFullscreen();
+                        else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+                        else if (doc.msExitFullscreen) doc.msExitFullscreen();
+                    }
+                });
+            }
+
+            if (!LobbyUI.fsListenerAdded) {
+                LobbyUI.fsListenerAdded = true;
+                const updateFsIcon = () => {
+                    const fsIcon = document.getElementById('lobby-fullscreen-icon');
+                    if (fsIcon) {
+                        if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+                            fsIcon.textContent = 'fullscreen_exit';
+                        } else {
+                            fsIcon.textContent = 'fullscreen';
+                        }
+                    }
+                };
+                document.addEventListener('fullscreenchange', updateFsIcon);
+                document.addEventListener('webkitfullscreenchange', updateFsIcon);
+            }
+
             // Handle language change event
             window.addEventListener('languageChanged', () => {
                 if (lobbyUI) {
@@ -233,6 +272,7 @@ export class LobbyUI {
     }
 
     private static spawnerInterval: any = null;
+    private static fsListenerAdded: boolean = false;
     private static startCharacterSpawner() {
         if (this.spawnerInterval) return;
 
