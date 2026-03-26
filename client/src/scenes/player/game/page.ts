@@ -889,7 +889,7 @@ export class GameScene extends Phaser.Scene {
     resetCamera() {
         if (!this.isZooming) return;
         this.isZooming = false;
-
+        
         const targetZoom = window.innerWidth <= 768 ? 1.2 : 2;
         this.cameras.main.zoomTo(targetZoom, 800, 'Power2');
         if (this.currentPlayer) this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
@@ -1049,7 +1049,7 @@ export class GameScene extends Phaser.Scene {
                 if (entity) {
                     const tx = entity.getData('targetX');
                     const ty = entity.getData('targetY');
-
+                    
                     const isVisible = viewRect.contains(entity.x, entity.y);
                     entity.setVisible(isVisible);
                     if (this.nameTagContainers[sid]) this.nameTagContainers[sid].setVisible(isVisible);
