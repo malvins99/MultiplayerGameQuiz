@@ -686,6 +686,14 @@ export class GameScene extends Phaser.Scene {
             console.warn(`[GameScene] Disconnected from room (code: ${code})`);
             this.isGameReady = false;
         });
+
+        // Pastikan kamera menyesuaikan kembali ke lebar/tinggi asli setelah layar dire-orientasi / diputar
+        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+            if (this.cameras.main) {
+                this.cameras.main.setSize(gameSize.width, gameSize.height);
+                this.cameras.main.setZoom(window.innerWidth <= 768 ? 1.2 : 2);
+            }
+        });
     }
 
 

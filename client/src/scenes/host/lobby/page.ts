@@ -2094,13 +2094,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         }
 
         // OPTIMIZATION: Instant Transition
-        // We use sceneTo directly which is now idempotent.
-        // It will handle the iris closing if it's not already closed.
+        // We use pure scene.start() so it won't trigger TransitionManager's auto-open after 600ms,
+        // allowing the countdown logic to maintain the closed status.
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
 
         if (this.isHost) {
             Router.navigate('/host/progress');
-            TransitionManager.sceneTo(this, 'HostProgressScene', { room: this.room });
+            this.scene.start('HostProgressScene', { room: this.room });
         } else {
             Router.navigate('/game');
             this.scene.start('GameScene', { room: this.room });

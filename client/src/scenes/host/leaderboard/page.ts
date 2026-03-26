@@ -125,11 +125,9 @@ export class HostLeaderboardManager {
         if (statsBtnMobile) statsBtnMobile.onclick = handleStats;
 
         const handleHome = () => {
-            TransitionManager.close(() => {
+            TransitionManager.transitionTo(() => {
                 this.cleanup();
-                window.history.pushState({}, '', '/');
-                const manager = new LobbyManager();
-                manager.init();
+                window.location.href = '/';
             });
         };
 
