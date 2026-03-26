@@ -39,13 +39,13 @@ export class LeaderboardUI {
             .lb-footer-mobile { display: none; }
             .desktop-floating-actions { display: none; }
             .nav-btn {
-                pointer-events: auto; background: #92C140; border: none; border-bottom: 4px solid #386938; border-radius: 12px;
+                pointer-events: auto; background: #336B23; border: none; border-bottom: 4px solid #1F4514; border-radius: 12px;
                 width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: all 0.2s;
                 box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             }
-            .nav-btn:hover { filter: brightness(110%); }
+            .nav-btn:hover { filter: brightness(85%); }
             .nav-btn:active { transform: translateY(4px); border-bottom-width: 0; }
-            .nav-btn .material-symbols-outlined { font-size: 30px; }
+            .nav-btn .material-symbols-outlined { font-size: 30px; color: white; }
             @media (max-width: 768px) {
                 .logo-left, .logo-right { display: none; }
                 .logo-center { display: block; width: 8rem; top: 10px; }
@@ -57,9 +57,11 @@ export class LeaderboardUI {
                     display: flex; align-items: center; justify-content: center; gap: 4px;
                     font-family: 'Retro Gaming', monospace; font-size: 9px; text-transform: uppercase;
                     border: none; cursor: pointer; transition: all 0.2s;
-                    background: #92C140; color: white; border-bottom: 3px solid #478D47; box-shadow: 0 6px 0 #478D47;
+                    background: #336B23; color: white; border-bottom: 3px solid #1F4514; box-shadow: 0 6px 0 #1F4514;
                 }
-                .nav-btn-wide:active { transform: translateY(2px); border-bottom-width: 2px; box-shadow: 0 4px 0 #478D47; }
+                .nav-btn-wide:hover { filter: brightness(85%); }
+                .nav-btn-wide:active { transform: translateY(2px); border-bottom-width: 2px; box-shadow: 0 4px 0 #1F4514; }
+                .nav-btn-wide .material-symbols-outlined { color: white; }
             }
             @media (min-width: 768px) {
                 .desktop-floating-actions {
@@ -143,12 +145,12 @@ export class LeaderboardUI {
                         
                     </div>
 
-                    <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: ${colorHex}; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.name}</div>
+                    <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: #ffffff; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.name}</div>
 
                     <!-- The literal podium block (Hidden on mobile) -->
                     <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
                         <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10"></div>
-                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: ${colorHex}; -webkit-font-smoothing: none;">${p.score}</div>
+                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: #ffffff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.score}</div>
                         <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
                     </div>
                 </div>
@@ -158,17 +160,17 @@ export class LeaderboardUI {
         const tableHtml = others.map((p) => {
             const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
             return `
-            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 text-white items-center border-b border-white/5 hover:bg-white/5 transition-colors group font-['Retro_Gaming']" style="-webkit-font-smoothing: none;">
-                <div class="text-center font-bold text-white/50 group-hover:text-primary transition-colors text-xs md:text-base">${p.rank}</div>
+            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 text-gray-800 items-center border-b border-gray-200 hover:bg-gray-100 transition-colors group font-['Retro_Gaming']" style="-webkit-font-smoothing: none;">
+                <div class="text-center font-bold text-gray-600 group-hover:text-[#336B23] transition-colors text-sm md:text-lg">${p.rank}</div>
                 <div class="flex items-center gap-2 md:gap-3">
-                    <div class="hidden md:flex w-10 h-10 rounded-full bg-[#e2e8f0]/95 border-2 border-white/10 items-center justify-center font-bold text-sm group-hover:border-primary transition-colors overflow-hidden relative podium-avatar">
+                    <div class="hidden md:flex w-10 h-10 rounded-full bg-[#e2e8f0]/95 border-2 border-gray-300 items-center justify-center font-bold text-sm group-hover:border-[#336B23] transition-colors overflow-hidden relative podium-avatar">
                         <div class="char-anim-sm" style="background-image: url('/assets/base_idle_strip9.png')"></div>
                         ${hairKey ? `<div class="char-anim-sm" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
                     </div>
-                    <div class="font-bold text-[10px] md:text-base truncate max-w-[150px] md:max-w-[300px] py-1 uppercase">${p.name}</div>
+                    <div class="font-bold text-xs md:text-lg truncate max-w-[150px] md:max-w-[300px] py-1 uppercase text-[#336B23]">${p.name}</div>
                 </div>
-                <div class="text-center text-primary font-bold text-xs md:text-lg">${p.score}</div>
-                <div class="text-center text-white/50 text-[10px] md:text-sm font-bold">
+                <div class="text-center text-[#478D47] font-bold text-sm md:text-xl">${p.score}</div>
+                <div class="text-center text-gray-700 text-xs md:text-base font-bold">
                     ${formatTime(p.duration)}
                 </div>
             </div>
@@ -220,10 +222,10 @@ export class LeaderboardUI {
 
                     <!-- Leaderboard Table Card -->
                     ${others.length > 0 ? `
-                    <div class="w-full max-w-4xl bg-[#1a1a20]/90 border-[3px] border-primary/30 rounded-3xl shadow-[0_0_50px_rgba(0,255,85,0.1)] overflow-hidden shrink-0 md:mb-20 flex flex-col flex-1 md:flex-none min-h-0">
+                    <div class="w-full max-w-4xl bg-white border-[3px] border-[#336B23] rounded-3xl shadow-[0_0_30px_rgba(51,107,35,0.2)] overflow-hidden shrink-0 md:mb-20 flex flex-col flex-1 md:flex-none min-h-0">
                         <!-- Header -->
-                        <div class="bg-black/80 border-b-[3px] border-primary/20 relative shrink-0">
-                            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-primary/80 uppercase tracking-widest text-[8px] md:text-xs font-['Retro_Gaming']">
+                        <div class="bg-[#F1F8E9] border-b-[3px] border-[#336B23] relative shrink-0">
+                            <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-[#6CC452] uppercase tracking-widest text-sm md:text-lg font-['Retro_Gaming']" style="text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">
                                 <div class="text-center">RANK</div>
                                 <div>PLAYER</div>
                                 <div class="text-center">SCORE</div>

@@ -136,6 +136,15 @@ export class LobbyUI {
                                         <span class="text-[9px] opacity-30 font-bold group-hover/item:opacity-100 transition-opacity uppercase shrink-0 ml-2">AR</span>
                                     </button>
                                 </div>
+                                <div id="lobby-sound-container" class="w-full text-left px-4 py-2.5 text-[10px] font-['Retro_Gaming'] text-[#6CC452] border-b border-[#6CC452]/10 mb-1 uppercase tracking-widest flex items-center justify-between hover:bg-[#F1F8E9] transition-colors rounded-lg group cursor-pointer">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[16px] group-hover:rotate-12 transition-transform">music_note</span>
+                                        <span>${i18n.t('quiz_setting.music')}</span>
+                                    </div>
+                                    <button id="lobby-sound-btn" class="w-10 h-6 bg-white border border-[#6CC452]/20 rounded-full relative transition-colors duration-300 shadow-inner shrink-0 pointer-events-none">
+                                        <div id="lobby-sound-knob" class="absolute top-[1px] left-[2px] w-5 h-5 bg-[#6CC452] rounded-full shadow-md transform transition-transform duration-300"></div>
+                                    </button>
+                                </div>
                                 <button id="lobby-menu-logout-btn" class="w-full text-left px-4 py-3 text-sm font-['Retro_Gaming'] hover:bg-red-50 rounded-lg transition-colors text-red-500 uppercase tracking-tight flex items-center gap-3">
                                     <span class="material-symbols-outlined text-sm">logout</span> ${i18n.t('lobby.menu.logout')}
                                 </button>
