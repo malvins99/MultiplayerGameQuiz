@@ -9,6 +9,7 @@ import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
 import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
 import * as QRCode from 'qrcode';
+import { i18n } from '../../../utils/i18n';
 
 export class HostWaitingRoomScene extends Phaser.Scene {
     room!: Room;
@@ -35,6 +36,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
     copyFeedback: HTMLElement | null = null;
     roomQrCode: HTMLImageElement | null = null;
     backBtn: HTMLElement | null = null;
+    countdownOverlay: HTMLElement | null = null;
 
     // Feature
     characterPopup: CharacterSelectPopup | null = null;
@@ -178,8 +180,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
                 
                 <div class="space-y-4 text-center">
-                    <h2 class="text-white font-['Press_Start_2P'] text-sm md:text-base tracking-[4px] uppercase">Restoring Session</h2>
-                    <p class="text-primary/60 font-['Press_Start_2P'] text-[9px] animate-bounce tracking-widest">Syncing with server...</p>
+                    <h2 class="text-white font-['Press_Start_2P'] text-sm md:text-base tracking-[4px] uppercase">${i18n.t('host_lobby.restoring_session')}</h2>
+                    <p class="text-primary/60 font-['Press_Start_2P'] text-[9px] animate-bounce tracking-widest">${i18n.t('host_lobby.syncing')}</p>
                 </div>
 
                 <!-- Progress Bar Style -->
@@ -513,6 +515,76 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             this.setupCharacterCustomization();
             this.setupQRPopup();
         }
+
+        // --- Multi-Language Support Event ---
+        window.addEventListener('languageChanged', () => {
+            // Player UI Updates
+            const pSelectedChar = document.getElementById('player-ui-selected-char');
+            if (pSelectedChar) pSelectedChar.innerText = i18n.t('host_lobby.selected_character');
+
+            const pYourName = document.getElementById('player-ui-your-name');
+            if (pYourName) pYourName.innerText = i18n.t('host_lobby.your_name');
+
+            const pNameInput = document.getElementById('player-name-input') as HTMLInputElement;
+            if (pNameInput) pNameInput.placeholder = i18n.t('host_lobby.player_placeholder');
+
+            const pStartBtn = document.getElementById('start-game-btn');
+            if (pStartBtn) pStartBtn.innerText = i18n.t('host_lobby.start_game');
+
+            const pWaitMsg = document.getElementById('player-ui-waiting-host');
+            if (pWaitMsg) pWaitMsg.innerText = i18n.t('host_lobby.waiting_host');
+
+            // Host UI Updates
+            const hCode = document.getElementById('host-ui-code-text');
+            if (hCode) hCode.innerText = i18n.t('host_lobby.code');
+            
+            const hBackBtn = document.getElementById('host-back-btn');
+            if (hBackBtn) hBackBtn.innerText = i18n.t('host_lobby.exit');
+
+            const hStartBtn = document.getElementById('host-start-btn');
+            if (hStartBtn) hStartBtn.innerText = i18n.t('host_lobby.start');
+
+            const hEmptyMsg = document.getElementById('host-ui-empty-msg');
+            if (hEmptyMsg) hEmptyMsg.innerText = i18n.t('host_lobby.waiting_players_join');
+
+            // Modals
+            const mLeaveTitle = document.getElementById('host-ui-leave-title');
+            if (mLeaveTitle) mLeaveTitle.innerText = i18n.t('host_lobby.leave_room_title');
+
+            const mLeaveDesc = document.getElementById('host-ui-leave-desc');
+            if (mLeaveDesc) mLeaveDesc.innerText = i18n.t('host_lobby.leave_room_desc');
+
+            const mLeaveNo = document.getElementById('host-confirm-no');
+            if (mLeaveNo) mLeaveNo.innerText = i18n.t('host_lobby.no');
+
+            const mLeaveYes = document.getElementById('host-confirm-yes');
+            if (mLeaveYes) mLeaveYes.innerText = i18n.t('host_lobby.yes');
+
+            const mMngGrpTitle = document.getElementById('host-ui-invite-group-title');
+            if (mMngGrpTitle) mMngGrpTitle.innerHTML = `<span class="material-symbols-outlined text-primary text-3xl">group</span> ${i18n.t('host_lobby.invite_groups')}`;
+            
+            const mMngGrpSearch = document.getElementById('group-search-input') as HTMLInputElement;
+            if (mMngGrpSearch) mMngGrpSearch.placeholder = i18n.t('host_lobby.search_group');
+
+            const mMngGrpClose = document.getElementById('cancel-invite-groups-btn');
+            if (mMngGrpClose) mMngGrpClose.innerText = i18n.t('host_lobby.close');
+
+            const mInvFrndTitle = document.getElementById('host-ui-invite-friend-title');
+            if (mInvFrndTitle) mInvFrndTitle.innerHTML = `<span class="material-symbols-outlined text-secondary text-3xl">person_add</span> ${i18n.t('host_lobby.invite_friends')}`;
+
+            const mInvFrndSearch = document.getElementById('friend-search-input') as HTMLInputElement;
+            if (mInvFrndSearch) mInvFrndSearch.placeholder = i18n.t('host_lobby.search_friend');
+
+            const mInvFrndClose = document.getElementById('cancel-invite-friends-btn');
+            if (mInvFrndClose) mInvFrndClose.innerText = i18n.t('host_lobby.close');
+
+            // Force Re-renders
+            this.updateHostStatus();
+            this.updateRoomList();
+            this.updatePlayerGrid();
+            this.renderManageUsersList();
+            this.renderFriendsList();
+        });
     }
 
     createHostLayout() {
@@ -661,11 +733,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
                             <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
-                                EXIT
+                                ${i18n.t('host_lobby.exit')}
                             </button>
                             <!-- Start Button -->
                             <button id="host-start-btn" class="px-6 md:px-8 py-2 md:py-3 h-[40px] md:h-[52px] bg-[#92C140] text-white font-bold font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-not-allowed shrink-0">
-                                Start
+                                ${i18n.t('host_lobby.start')}
                             </button>
                         </div>
                     </div>
@@ -677,7 +749,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             <div class="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center border-2 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                                 <span class="material-symbols-outlined text-6xl text-white">person_add</span>
                             </div>
-                            <p class="text-white font-['Retro_Gaming'] text-xs tracking-widest animate-pulse font-bold">Waiting for players to join...</p>
+                            <p id="host-ui-empty-msg" class="text-white font-['Retro_Gaming'] text-xs tracking-widest animate-pulse font-bold">${i18n.t('host_lobby.waiting_players_join')}</p>
                         </div>
                         
                         <!-- Grid Container -->
@@ -694,17 +766,17 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     
                     <span class="material-symbols-outlined text-6xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(255,0,0,0.5)]">warning</span>
                     
-                    <h3 class="text-xl text-white font-['Retro_Gaming'] mb-4 leading-relaxed">LEAVE ROOM?</h3>
-                    <p class="text-white/60 font-['Retro_Gaming'] text-[10px] mb-8 leading-loose">
-                        Room will be destroyed and all players disconnected.
+                    <h3 id="host-ui-leave-title" class="text-xl text-white font-['Retro_Gaming'] mb-4 leading-relaxed">${i18n.t('host_lobby.leave_room_title')}</h3>
+                    <p id="host-ui-leave-desc" class="text-white/60 font-['Retro_Gaming'] text-[10px] mb-8 leading-loose">
+                        ${i18n.t('host_lobby.leave_room_desc')}
                     </p>
 
                     <div class="flex gap-4 justify-center">
                         <button id="host-confirm-no" class="px-6 py-3 bg-white/10 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-white/20 hover:bg-white/20 active:border-b-0 active:translate-y-1 transition-all">
-                            NO
+                            ${i18n.t('host_lobby.no')}
                         </button>
                         <button id="host-confirm-yes" class="px-6 py-3 bg-red-500 text-white font-['Retro_Gaming'] text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-[0_0_15px_rgba(255,0,0,0.4)]">
-                            YES
+                            ${i18n.t('host_lobby.yes')}
                         </button>
                     </div>
                 </div>
@@ -716,9 +788,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
                     <div class="flex justify-between items-center -mt-4 mb-6 z-10 shrink-0">
-                        <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
+                        <h3 id="host-ui-invite-group-title" class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,255,136,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-3xl">group</span>
-                            Invite Groups
+                            ${i18n.t('host_lobby.invite_groups')}
                         </h3>
                         <button id="close-manage-users-btn" class="login-mobile-only text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
                             <span class="material-symbols-outlined text-2xl">close</span>
@@ -727,7 +799,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Search Input -->
                     <div class="bg-black/40 border border-transparent rounded-xl flex items-center -mt-4 p-2 mb-4 shrink-0 relative z-10 focus-within:border-primary transition-colors">
-                        <input type="text" id="group-search-input" placeholder="Search group..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <input type="text" id="group-search-input" placeholder="${i18n.t('host_lobby.search_group')}" class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="group-search-btn" class="w-10 h-10 rounded-lg bg-primary/20 text-primary border border-primary/50 flex items-center justify-center hover:bg-primary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
@@ -741,7 +813,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Footer -->
                     <div class="login-desktop-only mt-4 pt-4 border-t border-white/10 z-10 shrink-0 text-right">
                         <button id="cancel-invite-groups-btn" class="px-7 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer inline-block">
-                            CLOSE
+                            ${i18n.t('host_lobby.close')}
                         </button>
                     </div>
                 </div>
@@ -753,9 +825,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div class="absolute inset-0 pixel-bg-pattern opacity-10 pointer-events-none"></div>
                     
                     <div class="flex justify-between items-center -mt-4 mb-6 z-10 shrink-0">
-                        <h3 class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
+                        <h3 id="host-ui-invite-friend-title" class="text-lg md:text-xl text-white font-['Retro_Gaming'] drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] flex items-center gap-3">
                             <span class="material-symbols-outlined text-secondary text-3xl">person_add</span>
-                            Invite Friends
+                            ${i18n.t('host_lobby.invite_friends')}
                         </h3>
                         <button id="close-add-user-btn" class="login-mobile-only text-white/50 hover:text-white transition-colors cursor-pointer w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10">
                             <span class="material-symbols-outlined text-2xl">close</span>
@@ -764,7 +836,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                     <!-- Search Input -->
                     <div class="bg-black/40 border border-transparent -mt-4 rounded-xl flex items-center p-2 mb-4 shrink-0 relative z-10 focus-within:border-secondary transition-colors">
-                        <input type="text" id="friend-search-input" placeholder="Search friend..." class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
+                        <input type="text" id="friend-search-input" placeholder="${i18n.t('host_lobby.search_friend')}" class="flex-1 bg-transparent px-3 text-white outline-none focus:outline-none focus:ring-0 focus:border-transparent border-none font-['Retro_Gaming'] text-[10px] md:text-[11px] placeholder:text-white/30 w-full" />
                         <button id="friend-search-btn" class="w-10 h-10 rounded-lg bg-secondary/20 text-secondary border border-secondary/50 flex items-center justify-center hover:bg-secondary hover:text-black transition-all cursor-pointer shrink-0">
                             <span class="material-symbols-outlined text-lg">search</span>
                         </button>
@@ -777,7 +849,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Footer -->
                     <div class="login-desktop-only mt-4 pt-4 border-t border-white/10 z-10 shrink-0 text-right">
                         <button id="cancel-invite-friends-btn" class="px-7 py-3 bg-white/10 hover:bg-white/20 text-white font-['Retro_Gaming'] text-[10px] rounded-xl border-b-4 border-white/20 active:border-b-0 active:translate-y-1 transition-all cursor-pointer inline-block">
-                            CLOSE
+                            ${i18n.t('host_lobby.close')}
                         </button>
                     </div>
                 </div>
@@ -817,13 +889,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         hostExitModal.innerHTML = `
             <div class="bg-surface-dark border-4 border-red-500/50 rounded-2xl p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_30px_rgba(239,68,68,0.2)]">
                 <span class="material-symbols-outlined text-5xl text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">warning</span>
-                <h3 class="text-white font-['Press_Start_2P'] text-sm md:text-base leading-loose mb-6">End Game Wait<br>& Close Room?</h3>
+                <h3 id="host-ui-confirm-end" class="text-white font-['Press_Start_2P'] text-sm md:text-base leading-loose mb-6">${i18n.t('host_lobby.end_game_title')}</h3>
                 <div class="flex flex-col gap-3">
                     <button id="host-confirm-yes" class="w-full py-4 bg-red-500 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-xs rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer">
-                        YES, END GAME
+                        ${i18n.t('host_lobby.yes_end_game')}
                     </button>
                     <button id="host-confirm-no" class="w-full py-4 bg-white/10 text-white font-['Press_Start_2P'] uppercase text-[10px] md:text-xs rounded-xl hover:bg-white/20 transition-all cursor-pointer">
-                        CANCEL
+                        ${i18n.t('host_lobby.cancel')}
                     </button>
                 </div>
             </div>
@@ -952,7 +1024,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             const origText = textSpan.innerText;
                             iconSpan.innerHTML = 'check';
                             iconSpan.classList.add('text-secondary');
-                            textSpan.innerText = 'COPIED!';
+                            textSpan.innerText = i18n.t('host_lobby.copied');
                             textSpan.classList.add('text-secondary');
                             setTimeout(() => {
                                 iconSpan.innerHTML = origIcon;
@@ -976,7 +1048,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             <div class="py-12 flex flex-col items-center justify-center gap-3">
                 <span class="material-symbols-outlined text-4xl text-gray-300 animate-spin">refresh</span>
                 <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
-                    Loading groups...
+                    ${i18n.t('host_lobby.loading_groups')}
                 </span>
             </div>
         `;
@@ -998,7 +1070,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <div class="py-12 flex flex-col items-center justify-center gap-3">
                         <span class="material-symbols-outlined text-4xl text-gray-300">groups</span>
                         <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
-                            Please login to<br>view groups.
+                            ${i18n.t('host_lobby.login_to_view_groups')}
                         </span>
                     </div>
                 `;
@@ -1118,11 +1190,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                             if (error) throw error;
                         }
 
-                        this.showToast(`Invited ${group.name || 'group'}!`);
+                        this.showToast(`${i18n.t('host_lobby.invited_toast')}${group.name || 'group'}!`);
 
                     } catch (error: any) {
                         console.error('Failed to send group invite:', error);
-                        this.showToast('Failed to invite: ' + (error?.message || String(error)), true);
+                        this.showToast(`${i18n.t('host_lobby.failed_invite')}` + (error?.message || String(error)), true);
                         this.selectedGroups.delete(groupId);
                         this.renderManageUsersList();
                     }
@@ -1164,7 +1236,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <div class="py-12 flex flex-col items-center justify-center gap-3">
                     <span class="material-symbols-outlined text-4xl text-gray-300">error</span>
                     <span class="text-gray-400 font-bold text-sm tracking-wide text-center">
-                        Failed to load groups.
+                        ${i18n.t('host_lobby.failed_load_groups')}
                     </span>
                 </div>
             `;
@@ -1185,7 +1257,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <div class="py-12 flex flex-col items-center justify-center gap-3">
                     <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
                     <span class="text-white/30 font-['Retro_Gaming'] text-[9px] leading-loose text-center px-4">
-                        ${this.allFetchedGroups.length === 0 ? "You haven't joined<br>any groups yet." : "No groups found<br>for your search."}
+                        ${this.allFetchedGroups.length === 0 ? i18n.t('host_lobby.no_groups_yet') : i18n.t('host_lobby.no_groups_found')}
                     </span>
                 </div>
             `;
@@ -1205,15 +1277,15 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (canInvite) {
                 if (isSelected) {
                     btnHtml = `<button class="px-3 py-2 bg-primary/30 text-white/50 border border-primary/50 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-not-allowed min-w-[70px] flex items-center justify-center gap-1.5" disabled>
-                        <span class="material-symbols-outlined text-[10px]">check</span> INVITED
+                        <span class="material-symbols-outlined text-[10px]">check</span> ${i18n.t('host_lobby.invited')}
                     </button>`;
                 } else {
                     btnHtml = `<button onclick="window.inviteGroup('${group.id}')" class="px-3 py-2 bg-primary text-black border border-primary hover:brightness-110 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
-                        INVITE
+                        ${i18n.t('host_lobby.invite')}
                     </button>`;
                 }
             } else {
-                btnHtml = `<div class="px-3 py-2 text-white/30 font-['Retro_Gaming'] text-[7px] md:text-[8px] bg-white/5 border border-white/5 rounded-lg flex items-center justify-center min-w-[70px]">MEMBER</div>`;
+                btnHtml = `<div class="px-3 py-2 text-white/30 font-['Retro_Gaming'] text-[7px] md:text-[8px] bg-white/5 border border-white/5 rounded-lg flex items-center justify-center min-w-[70px]">${i18n.t('host_lobby.member')}</div>`;
             }
 
             html += `
@@ -1246,7 +1318,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         listContainer.innerHTML = `
             <div class="py-12 flex flex-col items-center justify-center gap-3">
                 <span class="material-symbols-outlined text-3xl animate-spin text-secondary">refresh</span>
-                <span class="text-white/50 font-['Retro_Gaming'] text-[8px] tracking-widest uppercase">Loading Friends...</span>
+                <span class="text-white/50 font-['Retro_Gaming'] text-[8px] tracking-widest uppercase">${i18n.t('host_lobby.loading_friends')}</span>
             </div>
         `;
 
@@ -1263,7 +1335,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             if (!userId) {
                 console.warn("[Lobby] No userId found for friends list");
-                listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px]">Please login first.</div>`;
+                listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px]">${i18n.t('host_lobby.login_first')}</div>`;
                 return;
             }
 
@@ -1352,10 +1424,10 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         const { error } = await supabase.from('notifications').insert(notificationsToInsert);
                         if (error) throw error;
 
-                        this.showToast(`Invited ${friend.username || 'friend'}!`);
+                        this.showToast(`${i18n.t('host_lobby.invited_toast')}${friend.username || 'friend'}!`);
                     } catch (error: any) {
                         console.error('Failed to send friend invite:', error);
-                        this.showToast('Failed to invite: ' + (error?.message || String(error)), true);
+                        this.showToast(`${i18n.t('host_lobby.failed_invite')}` + (error?.message || String(error)), true);
                         this.selectedFriends.delete(friendId);
                         this.renderFriendsList();
                     }
@@ -1382,7 +1454,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         } catch (error: any) {
             console.error('Failed to load friends list:', error);
-            listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px] leading-loose">Failed to load friends.<br/>${error?.message || String(error)}</div>`;
+            listContainer.innerHTML = `<div class="text-center text-red-500 py-4 font-['Retro_Gaming'] text-[10px] leading-loose">${i18n.t('host_lobby.failed_load_friends')}<br/>${error?.message || String(error)}</div>`;
         }
     }
 
@@ -1400,7 +1472,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 <div class="py-12 flex flex-col items-center justify-center gap-3">
                     <span class="material-symbols-outlined text-4xl text-white/20">sentiment_dissatisfied</span>
                     <span class="text-white/30 font-['Retro_Gaming'] text-[9px] leading-loose text-center px-4">
-                        ${this.allFetchedFriends.length === 0 ? "You don't have<br>any friends yet." : "No friends found<br>for your search."}
+                        ${this.allFetchedFriends.length === 0 ? i18n.t('host_lobby.no_friends_yet') : i18n.t('host_lobby.no_friends_found')}
                     </span>
                 </div>
             `;
@@ -1417,11 +1489,11 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             let btnHtml = '';
             if (isSelected) {
                 btnHtml = `<button class="px-3 py-2 bg-secondary/30 text-white/50 border border-secondary/50 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-not-allowed min-w-[70px] flex items-center justify-center gap-1.5" disabled>
-                    <span class="material-symbols-outlined text-[10px]">check</span> INVITED
+                    <span class="material-symbols-outlined text-[10px]">check</span> ${i18n.t('host_lobby.invited')}
                 </button>`;
             } else {
                 btnHtml = `<button onclick="window.inviteFriend('${friend.id}')" class="px-3 py-2 bg-secondary text-black border border-secondary hover:brightness-110 rounded-lg font-['Retro_Gaming'] text-[8px] transition-all cursor-pointer min-w-[70px]">
-                    INVITE
+                    ${i18n.t('host_lobby.invite')}
                 </button>`;
             }
 
@@ -1692,12 +1764,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             // New Host Layout Header
             const hostHeader = document.getElementById('host-player-count');
             if (hostHeader) {
-                const label = totalPlayers > 1 ? 'Players' : 'Player';
+                const label = totalPlayers > 1 ? i18n.t('host_lobby.players_plural') : i18n.t('host_lobby.player_singular');
                 hostHeader.innerText = `${totalPlayers} ${label}`;
             }
         } else {
             // Player view header logic (Existing)
-            const labelText = totalPlayers === 1 ? 'PLAYER' : 'PLAYERS';
+            const labelText = totalPlayers === 1 ? i18n.t('host_lobby.player_upper') : i18n.t('host_lobby.players_upper');
             const headerText = document.getElementById('waiting-header-text');
             if (headerText) {
                 headerText.innerHTML = `
@@ -1731,7 +1803,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     ? 'bg-primary text-black font-bold pixel-btn-green border-black'
                     : 'bg-secondary text-black font-bold pixel-btn-blue border-black hover:brightness-110';
 
-            const btnText = isMyRoom ? 'JOINED' : isFull ? 'FULL' : 'JOIN';
+            const btnText = isMyRoom ? i18n.t('host_lobby.joined') : isFull ? i18n.t('host_lobby.full') : i18n.t('host_lobby.join');
             // Host cannot join rooms
             const action = (this.isHost || isFull || isMyRoom) ? '' : `onclick = "window.switchRoom('${subRoom.id}')"`;
             const btnVisibility = this.isHost ? 'invisible' : '';
@@ -1752,7 +1824,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     count++;
                 }
             });
-            if (count === 0) playerListHTML = '<span class="text-[10px] text-white/30 italic pl-1">Empty</span>';
+            if (count === 0) playerListHTML = `<span class="text-[10px] text-white/30 italic pl-1">${i18n.t('host_lobby.empty')}</span>`;
 
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
@@ -1829,13 +1901,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </style>
                     <div id="kick-box">
                         <span class="material-symbols-outlined text-red-500 text-[48px] mb-4">block</span>
-                        <h2 class="text-red-500 font-bold mb-2 font-['Press_Start_2P'] text-sm">KICK PLAYER ?</h2>
+                        <h2 class="text-red-500 font-bold mb-2 font-['Press_Start_2P'] text-sm">${i18n.t('host_lobby.kick_title')}</h2>
                         <p class="text-white/70 text-xs mb-6 font-['Press_Start_2P'] leading-relaxed">
-                            Keluarkan <span class="text-white font-bold">${playerName}</span><br>dari ruangan?
+                            ${i18n.t('host_lobby.kick_desc_1')}<span class="text-white font-bold">${playerName}</span><br>${i18n.t('host_lobby.kick_desc_2')}
                         </p>
                         <div class="flex justify-center gap-3">
-                            <button id="cancel-kick" class="btn-c-gray">BATAL</button>
-                            <button id="confirm-kick" class="btn-c-red">KICK!</button>
+                            <button id="cancel-kick" class="btn-c-gray">${i18n.t('host_lobby.cancel')}</button>
+                            <button id="confirm-kick" class="btn-c-red">${i18n.t('host_lobby.kick_btn')}</button>
                         </div>
                     </div>
                 `;

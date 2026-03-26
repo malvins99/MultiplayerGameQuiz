@@ -141,7 +141,11 @@ export class GameScene extends Phaser.Scene {
         this.load.image('expression_alerted', '/assets/expression_alerted.png');
     }
 
-    create() {
+    private async yieldThread() {
+        return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    async create() {
         // DEBUG: Check if textures are loaded
         console.log('[DEBUG] Textures loaded:');
         console.log('  skeleton_idle:', this.textures.exists('skeleton_idle'));
@@ -168,6 +172,7 @@ export class GameScene extends Phaser.Scene {
         if (difficulty === 'sulit') mapKey = 'map_hard';
 
         this.map = this.make.tilemap({ key: mapKey });
+        await this.yieldThread(); // Menerapkan Teknik Time-Slicing agar countdown background tetap mulus
 
         // Add both tilesets
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
@@ -213,6 +218,8 @@ export class GameScene extends Phaser.Scene {
         }
 
         // --- Animations ---
+        await this.yieldThread(); // Mencicil beban CPU
+
         // Base Animations
         this.anims.create({
             key: 'walk',
@@ -288,6 +295,8 @@ export class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
 
         // --- Player Sync ---
+        await this.yieldThread(); // Mencegah freeze saat banyak player sinkronisasi pertama kali
+
         this.room.state.players.onAdd((player: any, sessionId: string) => {
             const myPlayer = this.room.state.players.get(this.room.sessionId);
             if (!myPlayer || player.subRoomId !== myPlayer.subRoomId) return;
