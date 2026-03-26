@@ -175,7 +175,7 @@ export class LeaderboardUI {
         `}).join('');
 
         return `
-            <div class="fixed inset-0 w-full h-screen overflow-hidden text-white pointer-events-auto select-none" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);">
+            <div translate="no" class="notranslate fixed inset-0 w-full h-screen overflow-hidden text-white pointer-events-auto select-none" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);">
                 
                 <!-- Pixel-art Background Decorations -->
                 <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
