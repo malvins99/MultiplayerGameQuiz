@@ -52,8 +52,8 @@ export function initializeGame(startScene?: string, sceneData?: any) {
             powerPreference: 'high-performance',
             batchSize: 2000
         },
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: '100%',
+        height: '100%',
         parent: 'app',
         physics: {
             default: 'arcade',
