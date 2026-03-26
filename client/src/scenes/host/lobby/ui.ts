@@ -1,3 +1,5 @@
+import { i18n } from '../../../utils/i18n';
+
 export class WaitingRoomUI {
     static render() {
         let waitingUI = document.getElementById('waiting-ui');
@@ -24,7 +26,7 @@ export class WaitingRoomUI {
 
                         <!-- 1. Character Selection -->
                         <div id="character-selection-section" class="space-y-2 shrink-0 w-full">
-                        <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">Selected Character
+                        <p id="player-ui-selected-char" class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">${i18n.t('host_lobby.selected_character')}
                         </p>
 
                         <div class="flex items-center gap-2">
@@ -48,11 +50,11 @@ export class WaitingRoomUI {
 
                         <!-- 2. Name Input -->
                         <div id="player-name-section" class="space-y-1 shrink-0">
-                        <p class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">Your Name</p>
+                        <p id="player-ui-your-name" class="text-[9px] font-bold text-white/40 uppercase tracking-widest text-center">${i18n.t('host_lobby.your_name')}</p>
                         <div class="relative group">
                             <input id="player-name-input"
                             class="w-full h-11 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-[11px] placeholder:text-white/20 font-['Retro_Gaming'] text-center rounded-xl transition-all hover:border-white/20"
-                            placeholder="PLAYER" type="text" maxlength="12" />
+                            placeholder="${i18n.t('host_lobby.player_placeholder')}" type="text" maxlength="12" />
                             <div
                             class="absolute right-3 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none group-focus-within:opacity-100 transition-opacity">
                             <span class="material-symbols-outlined text-primary text-sm">edit</span>
@@ -103,7 +105,7 @@ export class WaitingRoomUI {
                                 class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span class="relative inline-flex rounded-full size-3 bg-primary"></span>
                             </span>
-                            Connected Players
+                            ${i18n.t('host_lobby.connected_players')}
                         </h3>
                         <div id="player-count"
                             class="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded text-[10px] font-bold font-['Retro_Gaming']">
@@ -120,12 +122,12 @@ export class WaitingRoomUI {
                     <div class="shrink-0 relative">
                         <button id="start-game-btn"
                         class="w-full py-6 bg-primary text-background-dark font-bold text-xl uppercase pixel-btn-green border-4 border-black active:translate-y-1 transition-transform hidden font-['Retro_Gaming'] shadow-[0_10px_0_#000] hover:brightness-110 mb-2">
-                        START GAME
+                        ${i18n.t('host_lobby.start_game')}
                         </button>
                         <div id="waiting-msg"
                         class="w-full py-6 flex items-center justify-center bg-black/20 border-4 border-black/20 rounded-xl">
-                        <p class="text-white/30 text-xs font-bold uppercase tracking-widest animate-pulse font-['Retro_Gaming']">
-                            Waiting for host...</p>
+                        <p id="player-ui-waiting-host" class="text-white/30 text-xs font-bold uppercase tracking-widest animate-pulse font-['Retro_Gaming']">
+                            ${i18n.t('host_lobby.waiting_host')}</p>
                         </div>
                     </div>
                     </section>

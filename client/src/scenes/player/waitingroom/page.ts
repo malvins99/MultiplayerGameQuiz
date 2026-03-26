@@ -4,6 +4,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
 import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
+import { i18n } from '../../../utils/i18n';
 
 export class PlayerWaitingRoomManager {
     room!: Room;
@@ -140,6 +141,27 @@ export class PlayerWaitingRoomManager {
     }
 
     private start() {
+        // Multi-Language Support Event
+        window.addEventListener('languageChanged', () => {
+            if (this.backBtn) this.backBtn.innerText = i18n.t('player_lobby.exit');
+            const chooseBtn = document.getElementById('player-choose-char-btn');
+            if (chooseBtn) chooseBtn.innerText = i18n.t('player_lobby.choose_character');
+
+            const exitTitle = document.getElementById('exit-confirm-title');
+            if (exitTitle) exitTitle.innerHTML = i18n.t('player_lobby.dialog_exit_title');
+
+            const exitDesc = document.getElementById('exit-confirm-desc');
+            if (exitDesc) exitDesc.innerHTML = i18n.t('player_lobby.dialog_exit_desc');
+
+            const exitCancel = document.getElementById('exit-cancel-btn');
+            if (exitCancel) exitCancel.innerText = i18n.t('player_lobby.dialog_exit_cancel');
+
+            const exitConfirm = document.getElementById('exit-confirm-btn');
+            if (exitConfirm) exitConfirm.innerText = i18n.t('player_lobby.dialog_exit_confirm');
+
+            this.updatePlayerGrid();
+        });
+
         // Grab DOM elements
         this.waitingUI = document.getElementById('waiting-ui');
 
@@ -586,12 +608,12 @@ export class PlayerWaitingRoomManager {
             <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-30 w-[90%] md:w-auto justify-center">
                 <!-- EXIT Button (Red Host Style) -->
                 <button id="player-back-btn" class="standard-pixel-btn btn-exit-standard">
-                    EXIT
+                    ${i18n.t('player_lobby.exit')}
                 </button>
 
                 <!-- Pill Choose Character (Host Start Button Style) -->
                 <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
-                    CHOOSE CHARACTER
+                    ${i18n.t('player_lobby.choose_character')}
                 </button>
             </div>
         `;
@@ -757,11 +779,11 @@ export class PlayerWaitingRoomManager {
                 .btn-confirm-exit:active { border-bottom-width: 2px; transform: translateY(2px); }
             </style>
             <div id="exit-confirm-box">
-                <h2>⚠ KELUAR?</h2>
-                <p>Kamu akan meninggalkan<br>ruangan ini.</p>
+                <h2 id="exit-confirm-title">${i18n.t('player_lobby.dialog_exit_title')}</h2>
+                <p id="exit-confirm-desc">${i18n.t('player_lobby.dialog_exit_desc')}</p>
                 <div class="exit-btn-row">
-                    <button class="btn-cancel-exit" id="exit-cancel-btn">BATAL</button>
-                    <button class="btn-confirm-exit" id="exit-confirm-btn">YA, KELUAR</button>
+                    <button class="btn-cancel-exit" id="exit-cancel-btn">${i18n.t('player_lobby.dialog_exit_cancel')}</button>
+                    <button class="btn-confirm-exit" id="exit-confirm-btn">${i18n.t('player_lobby.dialog_exit_confirm')}</button>
                 </div>
             </div>
         `;
@@ -957,7 +979,7 @@ export class PlayerWaitingRoomManager {
         players.forEach((player) => {
             const isMe = player.sessionId === this.mySessionId;
             const cardClass = isMe ? 'player-card-standard player-card-active' : 'player-card-standard';
-            const youPill = isMe ? '<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 pill-you">YOU</div>' : '';
+            const youPill = isMe ? `<div class="absolute -bottom-3 left-1/2 -translate-x-1/2 pill-you">${i18n.t('player_lobby.you')}</div>` : '';
 
             html += `
                 <div class="${cardClass} player-card-wrapper">

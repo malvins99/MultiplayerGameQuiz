@@ -141,7 +141,11 @@ export class HostProgressScene extends Phaser.Scene {
         });
     }
 
-    create() {
+    private async yieldThread() {
+        return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    async create() {
         console.log(`[Spectator][Room:${this.room?.id}] Creating... SessionId: ${this.room?.sessionId}`);
         if (!this.room) {
             console.error("[Spectator] Create failed: No room!");
@@ -153,6 +157,7 @@ export class HostProgressScene extends Phaser.Scene {
         const mapKey = difficulty === 'sedang' ? 'map_medium' : difficulty === 'sulit' ? 'map_hard' : 'map_easy';
 
         this.map = this.make.tilemap({ key: mapKey });
+        await this.yieldThread(); // Menerapkan Teknik Time-Slicing agar UI tetap responsif
         const tileset1 = this.map.addTilesetImage('spr_tileset_sunnysideworld_16px', 'tiles');
         const tileset2 = this.map.addTilesetImage('spr_tileset_sunnysideworld_forest_32px', 'forest_tiles');
         const tileset3 = this.map.addTilesetImage('spr_deco_coracle_strip4', 'coracle_tiles');
@@ -184,6 +189,7 @@ export class HostProgressScene extends Phaser.Scene {
         if (this.textures.exists('windmill_tiles')) this.textures.get('windmill_tiles').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
         // --- Animations ---
+        await this.yieldThread(); // Mencicil proses pembuatan texturing dan animasi
         if (!this.anims.exists('idle')) {
             this.anims.create({
                 key: 'idle', frames: this.anims.generateFrameNumbers('base_idle', { start: 0, end: 8 }), frameRate: 10, repeat: -1
@@ -205,6 +211,7 @@ export class HostProgressScene extends Phaser.Scene {
         });
 
         // --- Camera Setup ---
+        await this.yieldThread(); // Mencicil proses kalkulasi viewport
         const updateCamera = () => {
             if (!this.cameras || !this.cameras.main || !this.map) return;
 
