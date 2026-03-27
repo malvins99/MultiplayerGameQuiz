@@ -314,6 +314,31 @@ export class LobbyManager {
                     }
                 };
             });
+
+            const soundContainer = document.getElementById('lobby-sound-container');
+            if (soundContainer) {
+                let soundEnabled = localStorage.getItem('globalSoundEnabled') === 'true';
+                const sBtn = document.getElementById('lobby-sound-btn');
+                const sKnob = document.getElementById('lobby-sound-knob');
+                
+                if (soundEnabled) {
+                    if (sBtn) { sBtn.classList.remove('bg-white'); sBtn.classList.add('bg-[#478D47]'); }
+                    if (sKnob) sKnob.classList.add('translate-x-5');
+                }
+
+                soundContainer.onclick = (e) => {
+                    e.stopPropagation();
+                    soundEnabled = !soundEnabled;
+                    localStorage.setItem('globalSoundEnabled', String(soundEnabled));
+                    if (soundEnabled) {
+                        if (sBtn) { sBtn.classList.remove('bg-white'); sBtn.classList.add('bg-[#478D47]'); }
+                        if (sKnob) sKnob.classList.add('translate-x-5');
+                    } else {
+                        if (sBtn) { sBtn.classList.remove('bg-[#478D47]'); sBtn.classList.add('bg-white'); }
+                        if (sKnob) sKnob.classList.remove('translate-x-5');
+                    }
+                };
+            }
         }
 
         const logoutModal = document.getElementById('logout-modal');
