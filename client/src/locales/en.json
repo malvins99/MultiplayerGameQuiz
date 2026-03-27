@@ -177,5 +177,35 @@
     "dialog_exit_desc": "You are going to leave<br>this room.",
     "dialog_exit_cancel": "CANCEL",
     "dialog_exit_confirm": "YES, EXIT"
+  },
+  "host_leaderboard": {
+    "rank": "RANK",
+    "player": "PLAYER",
+    "score": "SCORE",
+    "time": "TIME",
+    "home": "HOME",
+    "restart": "RESTART",
+    "stats": "STATS",
+    "title_home": "Home",
+    "title_restart": "Play Again",
+    "title_stats": "Statistics",
+    "portrait_req_title": "PORTRAIT MODE REQUIRED",
+    "portrait_req_desc": "portrait mode is required",
+    "no_session_id": "Session ID not found. Cannot open statistics.",
+    "restart_error": "Restart error. Returning to lobby.",
+    "no_quiz_data": "Cannot find quiz data to restart the game. Please return to Lobby."
+  },
+  "player_result": {
+    "rank": "RANK",
+    "score": "SCORE",
+    "correct": "CORRECT",
+    "time": "TIME",
+    "home": "HOME",
+    "stats": "STATISTICS",
+    "title_home": "Home",
+    "title_stats": "Statistics",
+    "no_session": "Session ID not found.",
+    "portrait_req_title": "PORTRAIT MODE REQUIRED",
+    "portrait_req_desc": "portrait mode is required"
   }
 }

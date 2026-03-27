@@ -177,5 +177,35 @@
     "dialog_exit_desc": "Kamu akan meninggalkan<br>ruangan ini.",
     "dialog_exit_cancel": "BATAL",
     "dialog_exit_confirm": "YA, KELUAR"
+  },
+  "host_leaderboard": {
+    "rank": "JUARA",
+    "player": "PEMAIN",
+    "score": "SKOR",
+    "time": "WAKTU",
+    "home": "BERANDA",
+    "restart": "ULANGI",
+    "stats": "STATISTIK",
+    "title_home": "Beranda",
+    "title_restart": "Ulangi Permainan",
+    "title_stats": "Statistik",
+    "portrait_req_title": "MODE POTRET DIPERLUKAN",
+    "portrait_req_desc": "mode potret diperlukan",
+    "no_session_id": "ID Sesi tidak ditemukan. Tidak dapat membuka statistik.",
+    "restart_error": "Terjadi kesalahan saat mengulang. Kembali ke lobi.",
+    "no_quiz_data": "Tidak dapat menemukan data kuis untuk mengulang permainan. Silakan kembali ke Lobby."
+  },
+  "player_result": {
+    "rank": "JUARA",
+    "score": "SKOR",
+    "correct": "BENAR",
+    "time": "WAKTU",
+    "home": "BERANDA",
+    "stats": "STATISTIK",
+    "title_home": "Beranda",
+    "title_stats": "Statistik",
+    "no_session": "ID Sesi tidak ditemukan.",
+    "portrait_req_title": "MODE POTRET DIPERLUKAN",
+    "portrait_req_desc": "mode potret diperlukan"
   }
 }

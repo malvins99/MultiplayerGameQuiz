@@ -8,6 +8,7 @@ import { LobbyManager } from '../../../scenes/lobby/page';
 import { initializeGame } from '../../../game';
 import { OrientationManager } from '../../../utils/OrientationManager';
 import { GlobalBackground } from '../../../ui/shared/GlobalBackground';
+import { i18n } from '../../../utils/i18n';
 
 export class HostLeaderboardManager {
     private container!: HTMLDivElement;
@@ -21,7 +22,10 @@ export class HostLeaderboardManager {
     start(data?: { rankings?: any[], isHost?: boolean, lastGameOptions?: any, lastSelectedQuiz?: any, mySessionId?: string }) {
         this.initializeClient();
         TransitionManager.ensureClosed();
-        OrientationManager.requirePortrait('MODE PORTRAIT DIPERLUKAN', 'mode potrait di perlukan');
+        OrientationManager.requirePortrait(i18n.t('host_leaderboard.portrait_req_title'), i18n.t('host_leaderboard.portrait_req_desc'));
+
+        // Listen for language changes
+        window.addEventListener('languageChanged', this.handleLangChange);
 
         // Data passing via args or localStorage backup
         let rankingsData = data?.rankings;
@@ -117,7 +121,7 @@ export class HostLeaderboardManager {
             if (sid && sid !== "undefined" && sid !== "null") {
                 window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
             } else {
-                alert("ID Sesi tidak ditemukan. Tidak dapat membuka statistik.");
+                alert(i18n.t('host_leaderboard.no_session_id'));
             }
         };
 
@@ -157,14 +161,14 @@ export class HostLeaderboardManager {
                             setTimeout(() => TransitionManager.open(), 600);
                         } catch (e) {
                             console.error(e);
-                            alert("Restart error. Returning to lobby.");
+                            alert(i18n.t('host_leaderboard.restart_error'));
                             this.cleanup();
                             const manager = new LobbyManager();
                             manager.init();
                         }
                     });
                 } else {
-                    alert("Tidak dapat menemukan data kuis untuk mengulang permainan. Silakan kembali ke Lobby.");
+                    alert(i18n.t('host_leaderboard.no_quiz_data'));
                 }
             };
         
@@ -188,6 +192,31 @@ export class HostLeaderboardManager {
             s.remove();
         }
         OrientationManager.disable();
+        window.removeEventListener('languageChanged', this.handleLangChange);
     }
 
+    private handleLangChange = () => {
+        const hRank = document.getElementById('hdr-lb-rank');
+        if (hRank) hRank.innerText = i18n.t('host_leaderboard.rank');
+        const hPlayer = document.getElementById('hdr-lb-player');
+        if (hPlayer) hPlayer.innerText = i18n.t('host_leaderboard.player');
+        const hScore = document.getElementById('hdr-lb-score');
+        if (hScore) hScore.innerText = i18n.t('host_leaderboard.score');
+        const hTime = document.getElementById('hdr-lb-time');
+        if (hTime) hTime.innerText = i18n.t('host_leaderboard.time');
+        
+        const btnHome = document.getElementById('lb-home-btn');
+        if (btnHome) btnHome.title = i18n.t('host_leaderboard.title_home');
+        const btnRestart = document.getElementById('lb-restart-btn');
+        if (btnRestart) btnRestart.title = i18n.t('host_leaderboard.title_restart');
+        const btnStats = document.getElementById('lb-stats-btn');
+        if (btnStats) btnStats.title = i18n.t('host_leaderboard.title_stats');
+
+        const txtHome = document.getElementById('txt-lb-home');
+        if (txtHome) txtHome.innerText = i18n.t('host_leaderboard.home');
+        const txtRestart = document.getElementById('txt-lb-restart');
+        if (txtRestart) txtRestart.innerText = i18n.t('host_leaderboard.restart');
+        const txtStats = document.getElementById('txt-lb-stats');
+        if (txtStats) txtStats.innerText = i18n.t('host_leaderboard.stats');
+    };
 }
