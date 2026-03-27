@@ -37,12 +37,14 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+
   <!-- Primary Meta Tags -->
   <title>Zigma</title>
   <meta name="title" content="Zigma" />
-  <meta name="description" content="Zigma is a multiplayer RPG quiz game where knowledge is power! Join your friends and compete in epic quiz battles." />
-  <meta name="keywords" content="multiplayer quiz, RPG game, educational game, Zigma, quiz RPG, browser game, learning through play" />
+  <meta name="description"
+    content="Zigma is a multiplayer RPG quiz game where knowledge is power! Join your friends and compete in epic quiz battles." />
+  <meta name="keywords"
+    content="multiplayer quiz, RPG game, educational game, Zigma, quiz RPG, browser game, learning through play" />
   <meta name="author" content="Zigma Team" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://zigma.ubig.web.id/" />
@@ -51,14 +53,16 @@
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://zigma.ubig.web.id/" />
   <meta property="og:title" content="Zigma - Mind Venture | Multiplayer RPG Quiz" />
-  <meta property="og:description" content="Embark on a mystical adventure in Mind Venture by Zigma. A multiplayer RPG quiz game where knowledge is power!" />
+  <meta property="og:description"
+    content="Embark on a mystical adventure in Mind Venture by Zigma. A multiplayer RPG quiz game where knowledge is power!" />
   <meta property="og:image" content="https://zigma.ubig.web.id/logo/Zigma-logo-fix.webp" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://zigma.ubig.web.id/" />
   <meta property="twitter:title" content="Zigma - Mind Venture | Multiplayer RPG Quiz" />
-  <meta property="twitter:description" content="Embark on a mystical adventure in Mind Venture by Zigma. A multiplayer RPG quiz game where knowledge is power!" />
+  <meta property="twitter:description"
+    content="Embark on a mystical adventure in Mind Venture by Zigma. A multiplayer RPG quiz game where knowledge is power!" />
   <meta property="twitter:image" content="https://zigma.ubig.web.id/logo/Zigma-logo-fix.webp" />
 
   <!-- Theme Color for browsers -->
@@ -634,36 +638,75 @@
       }
     }
 
+    @keyframes base-idle-cycle {
+      from {
+        background-position-x: 0;
+      }
+
+      to {
+        background-position-x: -900%;
+      }
+    }
+
+    @keyframes walk-across-left-flipped {
+      from {
+        transform: translateX(100vw) scale(-1, 1);
+      }
+
+      to {
+        transform: translateX(-240px) scale(-1, 1);
+      }
+    }
+
     @keyframes walk-across-right {
       from {
-        left: -240px;
+        transform: translateX(-240px) scale(1, 1);
       }
 
       to {
-        left: 100vw;
+        transform: translateX(100vw) scale(1, 1);
       }
     }
 
-    @keyframes walk-across-left {
-      from {
-        left: 100vw;
-      }
-
-      to {
-        left: -240px;
-      }
-    }
-
-    .walking-char {
+    .walking-char-container {
       position: absolute;
-      bottom: 5px;
+      bottom: -60px;
       width: 240px;
       height: 160px;
-      background-image: url('/assets/base_walk_strip8.png');
+      z-index: 5;
+      pointer-events: none;
+      will-change: transform, left, top;
+      transition: filter 0.2s;
+      touch-action: none; /* Prevent scrolling while dragging */
+    }
+
+    .walking-char-container.is-dragged {
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+      transform: scale(1.1);
+      z-index: 1000 !important;
+      transition: none; /* Disable transition while dragging for instant feedback */
+    }
+
+    .walking-char-sprite {
+      width: 100%;
+      height: 100%;
+      background-size: 800% 100%;
+      background-repeat: repeat-x;
+      image-rendering: pixelated;
+    }
+
+    /* Backward compatibility for other pages */
+    .walking-char {
+      position: absolute;
+      bottom: -15px;
+      width: 240px;
+      height: 160px;
       background-size: 800% 100%;
       background-repeat: repeat-x;
       image-rendering: pixelated;
       z-index: 5;
+      pointer-events: none;
+      will-change: transform;
     }
 
     @keyframes spin {
@@ -703,7 +746,7 @@
       backface-visibility: hidden;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-BhSA6eMx.js"></script>
+  <script type="module" crossorigin src="/assets/index-MceoIJHw.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white">
@@ -729,7 +772,7 @@
   <!-- GLOBAL TRANSITION OVERLAY -->
   <div id="transition-overlay"></div>
 
-  <!-- MAIN SCRIPT -->
+  <!-- MAIN SCRIPT -->
 </body>
 
 </html>

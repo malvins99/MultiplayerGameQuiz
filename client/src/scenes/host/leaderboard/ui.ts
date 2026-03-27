@@ -141,7 +141,7 @@ export class LeaderboardUI {
                     <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: #ffffff; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.name}</div>
 
                     <!-- The literal podium block (Hidden on mobile) -->
-                    <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
+                    <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden pointer-events-auto" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
                         <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10"></div>
                         <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: #ffffff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.score}</div>
                         <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
@@ -180,7 +180,7 @@ export class LeaderboardUI {
                 <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart Logo" class="logo-right" />
 
                 <!-- MAIN CONTENT AREA: overflow-hidden for mobile to prevent scrollbars, auto for desktop -->
-                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-24 md:pt-28 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto custom-scrollbar">
+                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-24 md:pt-28 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto custom-scrollbar pointer-events-none">
                     
 
 
@@ -191,7 +191,7 @@ export class LeaderboardUI {
 
                     <!-- Leaderboard Table Card -->
                     ${others.length > 0 ? `
-                    <div class="w-full max-w-4xl bg-white border-[3px] border-[#336B23] rounded-3xl shadow-[0_0_30px_rgba(51,107,35,0.2)] overflow-hidden shrink-0 md:mb-20 flex flex-col flex-1 md:flex-none min-h-0">
+                    <div class="w-full max-w-4xl bg-white border-[3px] border-[#336B23] rounded-3xl shadow-[0_0_30px_rgba(51,107,35,0.2)] overflow-hidden shrink-0 md:mb-20 flex flex-col flex-1 md:flex-none min-h-0 pointer-events-auto">
                         <!-- Header -->
                         <div class="bg-[#F1F8E9] border-b-[3px] border-[#336B23] relative shrink-0">
                             <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 md:p-5 font-bold text-[#6CC452] uppercase tracking-widest text-sm md:text-lg font-['Retro_Gaming']" style="text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">

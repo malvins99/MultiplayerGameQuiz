@@ -12,9 +12,9 @@ export class LobbyUI {
                 ${GlobalBackground.getHTML('lobby')}
 
                 <!-- Scrollable Content Layer -->
-                <div class="absolute inset-0 overflow-y-auto flex flex-col no-scrollbar">
+                <div class="absolute inset-0 overflow-y-auto flex flex-col no-scrollbar pointer-events-none">
                     <!-- Top Navigation -->
-                    <div class="relative z-50 flex items-start justify-between p-4 md:p-6 w-full">
+                    <div class="relative z-50 flex items-start justify-between p-4 md:p-6 w-full pointer-events-auto">
                     <div class="select-none flex items-start">
                         <img src="/logo/gameforsmart-logo-fix.webp" alt="Partner Logo"
                             class="h-12 md:h-[130px] w-auto object-contain mt-1 md:-mt-5 -ms-2" draggable="false" />
@@ -81,14 +81,14 @@ export class LobbyUI {
                 </div>
 
                 <!-- Main Content (Logo + Cards) -->
-                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-0 px-4 md:justify-center md:-mt-52 pb-6">
+                <div class="relative z-10 flex-1 flex flex-col items-center justify-start pt-0 px-4 md:justify-center md:-mt-52 pb-6 pointer-events-none">
                     <!-- Mega Central Logo -->
-                    <div class="mb-2 md:-mb-6 md:-mt-14 z-10">
+                    <div class="mb-2 md:-mb-6 md:-mt-14 z-10 pointer-events-auto">
                         <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" class="h-24 md:h-[280px] w-auto object-contain" draggable="false" />
                     </div>
 
                     <!-- Action Cards Container (Uber Tight Spacing) -->
-                    <div class="flex flex-col md:flex-row gap-3 md:gap-5 w-full max-w-4xl justify-center items-stretch z-20">
+                    <div class="flex flex-col md:flex-row gap-3 md:gap-5 w-full max-w-4xl justify-center items-stretch z-20 pointer-events-auto">
                         <div class="group flex-1 max-w-[320px] mx-auto md:mx-0 w-full bg-white border-4 border-[#6CC452] border-b-[10px] border-b-[#478D47] rounded-[24px] md:rounded-[28px] p-4 md:p-5 flex flex-col items-center text-center hover:bg-[#F1F8E9] transition-all duration-300 shadow-2xl">
                             <div class="w-12 h-12 md:w-14 md:h-14 bg-[#F1F8E9] border-2 border-[#478D47] rounded-2xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
                                 <span class="material-symbols-outlined text-[#478D47] text-2xl md:text-3xl" style="font-variation-settings: 'FILL' 1;">flag</span>

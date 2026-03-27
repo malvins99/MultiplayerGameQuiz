@@ -16,6 +16,11 @@
  */
 export class GlobalBackground {
     private static spawnerIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
+    private static draggedElement: HTMLElement | null = null;
+    private static dragOffset = { x: 0, y: 0 };
+    private static lastPointerPos = { x: 0, y: 0 };
+    private static velocity = { x: 0, y: 0 };
+    private static isInitialized = false;
 
     /**
      * Returns the full background HTML string.
@@ -101,10 +106,137 @@ export class GlobalBackground {
         `;
     }
 
+    private static initGlobalListeners() {
+        if (this.isInitialized) return;
+        this.isInitialized = true;
+
+        window.addEventListener('resize', () => {
+            // Update destination for characters that are currently resuming walk
+            const characters = document.querySelectorAll('.walking-char-container:not(.is-dragged)');
+            characters.forEach((char: any) => {
+                const speed = parseFloat(char.dataset.speed || '25');
+                const fromRight = char.dataset.fromRight === 'true';
+                
+                // If it has a manual left transition active
+                if (char.style.transition.includes('left')) {
+                    const currentLeft = char.getBoundingClientRect().left;
+                    const targetLeft = fromRight ? -240 : window.innerWidth;
+                    const totalDist = window.innerWidth + 240;
+                    const remainingDist = Math.abs(targetLeft - currentLeft);
+                    const remainingTime = (remainingDist / totalDist) * speed;
+
+                    char.style.transition = `left ${remainingTime}s linear, bottom 0.3s ease-out`;
+                    char.style.left = `${targetLeft}px`;
+                }
+            });
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!this.draggedElement) return;
+            
+            // Calculate velocity
+            this.velocity.x = e.clientX - this.lastPointerPos.x;
+            this.velocity.y = e.clientY - this.lastPointerPos.y;
+            this.lastPointerPos.x = e.clientX;
+            this.lastPointerPos.y = e.clientY;
+
+            const x = e.clientX - this.dragOffset.x;
+            const y = e.clientY - this.dragOffset.y;
+            
+            this.draggedElement.style.left = `${x}px`;
+            this.draggedElement.style.top = `${y}px`;
+            this.draggedElement.style.bottom = 'auto';
+            
+            const fromRight = this.draggedElement.dataset.fromRight === 'true';
+            this.draggedElement.style.transform = fromRight ? 'scale(-1, 1)' : 'none';
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (!this.draggedElement) return;
+            
+            const char = this.draggedElement;
+            char.classList.remove('is-dragged');
+            char.style.cursor = 'grab';
+            const fromRight = char.dataset.fromRight === 'true';
+            
+            // Re-enable walking animation
+            const sprite = char.querySelector('.walking-char-sprite') as HTMLElement;
+            if (sprite) sprite.style.animationPlayState = 'running';
+            char.style.transform = fromRight ? 'scale(-1, 1)' : 'none';
+            
+            // 1. Momentum & Gravity Effect (Throwing)
+            const throwX = this.velocity.x * 20;
+            const throwY = this.velocity.y < 0 ? this.velocity.y * 10 : 0; // Only jump up if vy is negative
+            const currentLeft = char.getBoundingClientRect().left;
+            const currentTop = char.getBoundingClientRect().top;
+            
+            const targetX = currentLeft + throwX;
+            const floorTop = window.innerHeight - 100;
+            const peakTop = currentTop + throwY;
+
+            // Apply consistent rotation/scale
+            char.style.transform = fromRight ? 'scale(-1, 1)' : 'none';
+
+            if (throwY < -10) { // Lower threshold for "upward" feel
+                // Parabolic: Up then Down
+                char.style.transition = 'top 0.4s cubic-bezier(0.33, 1, 0.68, 1), left 1.2s cubic-bezier(0.1, 0, 0.2, 1)';
+                char.style.left = `${targetX}px`;
+                char.style.top = `${peakTop}px`;
+                
+                setTimeout(() => {
+                    if (char.parentElement && this.draggedElement !== char) {
+                        char.style.transition = 'top 0.8s cubic-bezier(0.5, 0, 0.75, 0), left 0.8s linear';
+                        char.style.top = `${floorTop}px`;
+                    }
+                }, 400);
+
+                setTimeout(() => {
+                    this.resumeWalking(char, targetX);
+                }, 1200);
+            } else {
+                // Normal fall - but still with momentum!
+                char.style.transition = 'top 0.8s cubic-bezier(0.4, 0, 0.2, 1), left 0.8s cubic-bezier(0.1, 0, 0.2, 1)';
+                char.style.left = `${targetX}px`;
+                char.style.top = `${floorTop}px`;
+
+                setTimeout(() => {
+                    this.resumeWalking(char, targetX);
+                }, 800);
+            }
+
+            this.draggedElement = null;
+        });
+    }
+
+    private static resumeWalking(char: HTMLElement, lastTargetX: number) {
+        if (!char.parentElement) return;
+        
+        const speed = parseFloat(char.dataset.speed || '25');
+        const fromRight = char.dataset.fromRight === 'true';
+        const currentLeft = char.getBoundingClientRect().left;
+        
+        const targetLeft = fromRight ? -240 : window.innerWidth;
+        const totalDist = window.innerWidth + 240;
+        const remainingDist = Math.abs(targetLeft - currentLeft);
+        const remainingTime = (remainingDist / totalDist) * speed;
+
+        // Re-anchor to bottom for responsiveness
+        char.style.transition = `left ${remainingTime}s linear, bottom 0.3s ease-out`;
+        char.style.top = 'auto';
+        char.style.bottom = '-60px'; 
+        char.style.left = `${targetLeft}px`;
+        char.style.transform = fromRight ? 'scale(-1, 1)' : 'none';
+        
+        // Re-enable walking sprite animation (if not already)
+        const sprite = char.querySelector('.walking-char-sprite') as HTMLElement;
+        if (sprite) sprite.style.animationPlayState = 'running';
+    }
+
     /**
      * Starts the walking character spawner for a given container.
      */
     static startCharacterSpawner(id: string): void {
+        this.initGlobalListeners();
         if (this.spawnerIntervals.has(id)) return;
 
         const container = document.getElementById(`${id}-walking-characters-container`);
@@ -176,11 +308,67 @@ export class GlobalBackground {
 
         const moveAnim = fromRight ? 'walk-across-left-flipped' : 'walk-across-right';
         charContainer.style.animation = `${moveAnim} ${speed}s linear forwards`;
+        
+        // Metadata for interaction
+        charContainer.dataset.speed = speed.toString();
+        charContainer.dataset.fromRight = fromRight.toString();
+
+        // Interaction logic
+        charContainer.style.pointerEvents = 'auto';
+        charContainer.style.cursor = 'grab';
+
+        charContainer.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            this.draggedElement = charContainer;
+            
+            // Reset velocity tracking
+            this.lastPointerPos.x = e.clientX;
+            this.lastPointerPos.y = e.clientY;
+            this.velocity.x = 0;
+            this.velocity.y = 0;
+            
+            // 1. Get current physical position (including any animation or transition)
+            const rect = charContainer.getBoundingClientRect();
+            
+            // 2. Set absolute position to match current visual position
+            charContainer.style.left = `${rect.left}px`;
+            charContainer.style.top = `${rect.top}px`;
+            charContainer.style.bottom = 'auto'; // Remove any relative positioning
+            
+            // 3. Remove animations and transitions so it's fully manual
+            const fromRight = charContainer.dataset.fromRight === 'true';
+            charContainer.style.animation = 'none';
+            charContainer.style.transition = 'none';
+            charContainer.style.transform = fromRight ? 'scale(-1, 1)' : 'none'; // CRITICAL: Keep flip if fromRight
+            
+            // 4. Record mouse offset relative to this frozen position
+            this.dragOffset.x = e.clientX - rect.left;
+            this.dragOffset.y = e.clientY - rect.top;
+            
+            charContainer.classList.add('is-dragged');
+            charContainer.style.cursor = 'grabbing';
+            charContainer.style.zIndex = '1000';
+            
+            if (sprite) sprite.style.animationPlayState = 'paused';
+        });
 
         container.appendChild(charContainer);
 
-        setTimeout(() => {
-            if (charContainer.parentElement) charContainer.remove();
-        }, speed * 1000 + 500);
+        // Cleanup only when it actually reaches the screen edge
+        const cleanup = () => {
+            if (charContainer.parentElement && this.draggedElement !== charContainer) {
+                const rect = charContainer.getBoundingClientRect();
+                const isOffLeft = rect.right < 0;
+                const isOffRight = rect.left > window.innerWidth;
+                
+                if (isOffLeft || isOffRight) {
+                    charContainer.remove();
+                }
+            }
+        };
+        charContainer.addEventListener('animationend', cleanup);
+        charContainer.addEventListener('transitionend', (e) => {
+            if (e.propertyName === 'left') cleanup();
+        });
     }
 }

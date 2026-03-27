@@ -5,9 +5,21 @@ import { QUESTIONS } from "../dummyQuestions";
 import { MapParser } from "../utils/MapParser";
 
 const ROOM_CONFIG = {
-    mudah: { maxPlayers: 50, targetQuestions: 5, enemiesPerPlayer: 10 },
-    sedang: { maxPlayers: 50, targetQuestions: 10, enemiesPerPlayer: 20 },
-    sulit: { maxPlayers: 50, targetQuestions: 20, enemiesPerPlayer: 40 }
+    mudah: { 
+        maxPlayers: 50, targetQuestions: 5, enemiesPerPlayer: 10, enemySpeed: 110,
+        fleeRadius: 180, minEnemyDist: 80, recalcInterval: 500, restDurationMin: 2000, restDurationMax: 3000,
+        waypointCandidates: 12
+    },
+    sedang: { 
+        maxPlayers: 50, targetQuestions: 10, enemiesPerPlayer: 20, enemySpeed: 150,
+        fleeRadius: 180, minEnemyDist: 120, recalcInterval: 200, restDurationMin: 1000, restDurationMax: 2000,
+        waypointCandidates: 24
+    },
+    sulit: { 
+        maxPlayers: 50, targetQuestions: 20, enemiesPerPlayer: 40, enemySpeed: 165,
+        fleeRadius: 180, minEnemyDist: 150, recalcInterval: 100, restDurationMin: 500, restDurationMax: 1000,
+        waypointCandidates: 36
+    }
 };
 
 const LOBBY_MAX_PLAYERS = 51; // 50 players + 1 host
@@ -493,42 +505,37 @@ export class GameRoom extends Room<GameState> {
     update(deltaTime: number) {
         if (!this.state.isGameStarted) return;
 
-        const ENEMY_SPEED = 110; // px/sec
-        const FLEE_RADIUS = 180; // Distance to trigger flee
-        const REST_DURATION_MIN = 2000; // 2 seconds
-        const REST_DURATION_MAX = 3000; // 3 seconds
-        const ARRIVAL_THRESHOLD = 20; // px - considered "arrived" at waypoint
+        // Ambil config berdasarkan tingkat kesulitan
+        const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG] || ROOM_CONFIG.mudah;
+        const ENEMY_SPEED = config.enemySpeed; 
+        const FLEE_RADIUS = config.fleeRadius; // Jarak untuk memicu melarikan diri
+        const REST_DURATION_MIN = config.restDurationMin; 
+        const REST_DURATION_MAX = config.restDurationMax;
+        const ARRIVAL_THRESHOLD = 20; // px - dianggap "sampai" di titik tujuan
 
         const now = Date.now();
 
         // Process each enemy
         this.state.enemies.forEach(enemy => {
-            if (!enemy.isAlive) return;
-
-            // If busy (in quiz), DO NOT MOVE
-            if (enemy.isBusy) return;
+            if (!enemy.isAlive || enemy.isBusy) return;
 
             const owner = this.state.players.get(enemy.ownerId);
             if (!owner) return;
 
-            // Check if resting
-            if (enemy.restUntil > 0) {
-                if (now < enemy.restUntil) {
-                    // Still resting
-                    enemy.isFleeing = false;
-                    return;
-                } else {
-                    // Rest period over
-                    enemy.restUntil = 0;
-                }
+            // Rest logic (If active, still don't move)
+            if (enemy.restUntil > 0 && now < enemy.restUntil) {
+                enemy.isFleeing = false;
+                return;
+            } else {
+                enemy.restUntil = 0;
             }
 
-            // Calculate distance to owner
+            // 1. Calculate Distances
             const dx = enemy.x - owner.x;
             const dy = enemy.y - owner.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            // Calculate distance to owner's target (Intent-based fleeing)
+            // 2. Intent-Based Check (If player is moving towards enemy)
             let distToTarget = Infinity;
             if (owner.targetX > 0 && owner.targetY > 0) {
                 const tdx = enemy.x - owner.targetX;
@@ -536,113 +543,84 @@ export class GameRoom extends Room<GameState> {
                 distToTarget = Math.sqrt(tdx * tdx + tdy * tdy);
             }
 
-            // Flee if currently near player OR if player is explicitly targeting near the enemy
-            if (dist < FLEE_RADIUS || distToTarget < (FLEE_RADIUS * 0.7)) {
-                // Need to flee!
+            // 3. Trigger Fleeing (Sensitivity)
+            if (dist < FLEE_RADIUS || distToTarget < (FLEE_RADIUS * 0.7) || enemy.isFleeing) {
                 enemy.isFleeing = true;
+                enemy.restUntil = 0; // Cancel rest if being chased
 
-                // Dynamic Recalculation Logic
-                // If already fleeing, check if we need to change destination (e.g. cut off or too close)
-                const RECALC_INTERVAL = 200; // ms (Faster reflex)
-                let needsNewWaypoint = false;
+                // --- PROFESSIONAL STEERING BEHAVIOR ---
+                // Flee Vector (Away from player)
+                let fleeX = dx / (dist || 1);
+                let fleeY = dy / (dist || 1);
 
-                if (enemy.targetX === 0 && enemy.targetY === 0) {
-                    needsNewWaypoint = true;
-                } else if (now - enemy.lastRecalc > RECALC_INTERVAL) {
-                    // 1. Intercept Check: Is player closer to our target than we are?
-                    const distPlayerToTarget = Math.sqrt(Math.pow(owner.x - enemy.targetX, 2) + Math.pow(owner.y - enemy.targetY, 2));
-                    const distEnemyToTarget = Math.sqrt(Math.pow(enemy.x - enemy.targetX, 2) + Math.pow(enemy.y - enemy.targetY, 2));
+                // Separation Vector (Away from other enemies)
+                let sepX = 0;
+                let sepY = 0;
+                let neighbors = 0;
+                const MIN_DIST = config.minEnemyDist;
 
-                    // 2. Proximity Check: Is player getting too close?
-                    const isTooClose = dist < FLEE_RADIUS * 0.6;
+                this.state.enemies.forEach(other => {
+                    if (other === enemy || !other.isAlive || other.ownerId !== enemy.ownerId) return;
+                    const sdx = enemy.x - other.x;
+                    const sdy = enemy.y - other.y;
+                    const sdistSq = sdx * sdx + sdy * sdy;
 
-                    // 3. Directional Check: Is our CURRENT path actually bringing us CLOSER to the player?
-                    // (Check distance to player from a projected point on our path)
-                    const toTargetX = enemy.targetX - enemy.x;
-                    const toTargetY = enemy.targetY - enemy.y;
-                    const mag = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
-                    const projectX = enemy.x + (toTargetX / mag) * 50;
-                    const projectY = enemy.y + (toTargetY / mag) * 50;
-                    const distProjectedToPlayer = Math.sqrt(Math.pow(projectX - owner.x, 2) + Math.pow(projectY - owner.y, 2));
-
-                    const isPathUnsafe = distProjectedToPlayer < dist; // Path moves closer to player
-
-                    if (distPlayerToTarget < distEnemyToTarget || isTooClose || isPathUnsafe) {
-                        needsNewWaypoint = true;
-                        // console.log(`Enemy ${enemy.questionId} escaping dynamically. Reason: ${distPlayerToTarget < distEnemyToTarget ? 'CutOff' : isTooClose ? 'TooClose' : 'UnsafePath'}`);
-                    }
-                }
-
-                if (needsNewWaypoint) {
-                    const waypoint = this.pickWaypointAwayFromPlayer(enemy, owner);
-                    enemy.targetX = waypoint.x;
-                    enemy.targetY = waypoint.y;
-                    enemy.lastRecalc = now;
-                }
-
-                // Move toward waypoint
-                const toTargetX = enemy.targetX - enemy.x;
-                const toTargetY = enemy.targetY - enemy.y;
-                const distToTarget = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
-
-                if (distToTarget < ARRIVAL_THRESHOLD) {
-                    // Arrived at waypoint - rest
-                    const restTime = REST_DURATION_MIN + Math.random() * (REST_DURATION_MAX - REST_DURATION_MIN);
-                    enemy.restUntil = now + restTime;
-                    enemy.targetX = 0;
-                    enemy.targetY = 0;
-                    enemy.isFleeing = false;
-                } else {
-                    // Move toward target
-                    const vx = toTargetX / distToTarget;
-                    const vy = toTargetY / distToTarget;
-                    const moveDist = (ENEMY_SPEED * deltaTime) / 1000;
-
-                    let nextX = enemy.x + vx * moveDist;
-                    let nextY = enemy.y + vy * moveDist;
-
-                    // Boundary check
-                    const maxX = this.cachedMapData ? this.cachedMapData.mapWidth : 2000;
-                    const maxY = this.cachedMapData ? this.cachedMapData.mapHeight : 1120;
-
-                    if (nextX < 50) nextX = 50;
-                    if (nextX > maxX - 50) nextX = maxX - 50;
-                    if (nextY < 50) nextY = 50;
-                    if (nextY > maxY - 50) nextY = maxY - 50;
-
-                    enemy.x = nextX;
-                    enemy.y = nextY;
-                }
-
-                // --- SEPARATION LOGIC (Avoid Clumping) ---
-                const MIN_DIST = 80; // Maintain at least 80px distance
-                this.state.enemies.forEach(otherEnemy => {
-                    if (otherEnemy === enemy || !otherEnemy.isAlive || otherEnemy.ownerId !== enemy.ownerId) return;
-
-                    const sepDx = enemy.x - otherEnemy.x;
-                    const sepDy = enemy.y - otherEnemy.y;
-                    const sepDistSq = sepDx * sepDx + sepDy * sepDy;
-
-                    if (sepDistSq < MIN_DIST * MIN_DIST) {
-                        const d = Math.sqrt(sepDistSq) || 1;
-                        const pushForce = (MIN_DIST - d) / d * 0.4; // Nudge value
-
-                        enemy.x += sepDx * pushForce;
-                        enemy.y += sepDy * pushForce;
+                    if (sdistSq < MIN_DIST * MIN_DIST) {
+                        const sd = Math.sqrt(sdistSq) || 1;
+                        const weight = (MIN_DIST - sd) / MIN_DIST; // More weight if closer
+                        sepX += (sdx / sd) * weight;
+                        sepY += (sdy / sd) * weight;
+                        neighbors++;
                     }
                 });
+
+                // Combine Forces
+                const sepWeight = (this.state.difficulty === 'sulit') ? 2.5 : 1.8;
+                let moveX = fleeX * 1.0 + (neighbors > 0 ? (sepX / neighbors) * sepWeight : 0);
+                let moveY = fleeY * 1.0 + (neighbors > 0 ? (sepY / neighbors) * sepWeight : 0);
+
+                // Normalize Direction
+                const moveMag = Math.sqrt(moveX * moveX + moveY * moveY) || 1;
+                moveX /= moveMag;
+                moveY /= moveMag;
+
+                // Move with Speed
+                const step = ENEMY_SPEED * (deltaTime / 1000);
+                enemy.x += moveX * step;
+                enemy.y += moveY * step;
+
+                // Boundary Constraints & Spawn Zone Constraints
+                const mapWidth = this.cachedMapData ? this.cachedMapData.mapWidth : 2000;
+                const mapHeight = this.cachedMapData ? this.cachedMapData.mapHeight : 1120;
+                
+                // Keep inside spawn zone if assigned
+                const mapData = this.cachedMapData || MapParser.loadMapData(this.state.difficulty);
+                if (enemy.spawnZoneIndex !== -1 && mapData?.enemySpawnZones?.[enemy.spawnZoneIndex]) {
+                    const zone = mapData.enemySpawnZones[enemy.spawnZoneIndex];
+                    enemy.x = Math.max(zone.x, Math.min(zone.x + zone.width, enemy.x));
+                    enemy.y = Math.max(zone.y, Math.min(zone.y + zone.height, enemy.y));
+                } else {
+                    enemy.x = Math.max(50, Math.min(mapWidth - 50, enemy.x));
+                    enemy.y = Math.max(50, Math.min(mapHeight - 50, enemy.y));
+                }
+
+                // Stop fleeing if safe
+                if (dist > FLEE_RADIUS * 1.5) {
+                    enemy.isFleeing = false;
+                    enemy.restUntil = now + REST_DURATION_MIN + Math.random() * (REST_DURATION_MAX - REST_DURATION_MIN);
+                }
             } else {
-                // Player far away - idle
                 enemy.isFleeing = false;
-                enemy.targetX = 0;
-                enemy.targetY = 0;
             }
         });
     }
 
-    // Pick a waypoint that's away from the player
+    // Pick a waypoint that's away from the player AND other enemies
     private pickWaypointAwayFromPlayer(enemy: Enemy, player: Player): { x: number, y: number } {
-        // Generate waypoints from enemy's spawn zone
+        const config = ROOM_CONFIG[this.state.difficulty as keyof typeof ROOM_CONFIG] || ROOM_CONFIG.mudah;
+        const numCandidates = config.waypointCandidates || 12;
+        const minEnemyDist = config.minEnemyDist || 80;
+
         const candidates: { x: number, y: number, score: number }[] = [];
 
         // Load map data to get zone info
@@ -653,28 +631,34 @@ export class GameRoom extends Room<GameState> {
             zone = mapData.enemySpawnZones[enemy.spawnZoneIndex];
         }
 
-        // Generate 12 random candidate waypoints in the zone for better variety
-        for (let i = 0; i < 12; i++) {
+        // Generate candidate waypoints in the zone
+        for (let i = 0; i < numCandidates; i++) {
             const wx = zone.x + Math.random() * (zone.width || 200);
             const wy = zone.y + Math.random() * (zone.height || 200);
 
-            // Calculate distance from player
+            // Distance calculations
             const dx = wx - player.x;
             const dy = wy - player.y;
             const distFromPlayer = Math.sqrt(dx * dx + dy * dy);
-
-            // Calculate "Evasion Score"
-            // We want points that are:
-            // 1. Far from the player (primary goal)
-            // 2. Not too far from the enemy (to avoid extreme jumps)
-            // 3. Different from current target (to ensure change)
             const distFromEnemy = Math.sqrt(Math.pow(wx - enemy.x, 2) + Math.pow(wy - enemy.y, 2));
 
-            // Weight: 70% distance from player, 30% closeness to enemy (efficiency)
-            let score = distFromPlayer * 1.5 - distFromEnemy * 0.2;
+            // Base score: Favor points far from player and relatively close to current pos for efficiency
+            let score = distFromPlayer * 2.0 - distFromEnemy * 0.1;
 
-            // Penalty if the point is too close to current enemy position (don't stay still)
-            if (distFromEnemy < 50) score -= 1000;
+            // Penalty 1: Stay away from other enemies (Avoid clumping/trapping)
+            this.state.enemies.forEach(other => {
+                if (other === enemy || !other.isAlive || other.ownerId !== enemy.ownerId) return;
+                const d = Math.sqrt(Math.pow(wx - other.x, 2) + Math.pow(wy - other.y, 2));
+                if (d < minEnemyDist * 1.2) {
+                    score -= 1000 * (1 - d / (minEnemyDist * 1.2));
+                }
+            });
+
+            // Penalty 2: Don't stay exactly where we are
+            if (distFromEnemy < 40) score -= 2000;
+
+            // Penalty 3: Prefer points that are "behind" the enemy relative to the player
+            // (Vector dot product could be used, but let's keep it simple for now)
 
             candidates.push({ x: wx, y: wy, score: score });
         }
