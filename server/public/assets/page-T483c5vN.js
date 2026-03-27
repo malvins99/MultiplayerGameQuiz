@@ -1,4 +1,4 @@
-import{T as r,R as d}from"./index-BhSA6eMx.js";import{O as l}from"./OrientationManager-Br2LilYK.js";class h{constructor(){this.rankings=[],this.mySessionId="",this.roomId="",this.supabaseSessionId="",this.spawnerInterval=null}start(t){r.ensureClosed(),l.requirePortrait();let e=(t==null?void 0:t.leaderboardData)||[];this.room=t==null?void 0:t.room;let s=this.room?this.room.sessionId:"",i=this.room?this.room.id:"";if(this.supabaseSessionId=localStorage.getItem("supabaseSessionId")||"",e.length>0&&s&&i)this.rankings=e,this.mySessionId=s,this.roomId=i,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId}));else{const a=sessionStorage.getItem("playerResultState");if(a){const o=JSON.parse(a);this.rankings=o.rankings,this.mySessionId=o.mySessionId,this.roomId=o.roomId,o.supabaseSessionId&&(this.supabaseSessionId=o.supabaseSessionId)}}const n=document.getElementById("result-ui");if(n&&n.remove(),this.container=document.createElement("div"),this.container.id="result-ui",this.container.style.position="absolute",this.container.style.top="0",this.container.style.left="0",this.container.style.width="100%",this.container.style.height="100%",this.container.style.zIndex="1000",document.body.appendChild(this.container),!document.getElementById("result-styles")){const a=document.createElement("style");a.id="result-styles",a.innerHTML=this.getStyles(),document.head.appendChild(a)}this.renderIndividualResult(),this.room&&this.room.onMessage("gameEnded",a=>{this.rankings=a.rankings,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId})),this.renderIndividualResult()}),setTimeout(()=>{r.open()},100)}getStyles(){return`
+import{i as e,T as l,R as m,G as d}from"./index-MceoIJHw.js";import{O as c}from"./OrientationManager-Br2LilYK.js";class g{constructor(){this.rankings=[],this.mySessionId="",this.roomId="",this.supabaseSessionId="",this.handleLangChange=()=>{const t=document.getElementById("txt-pr-rank");t&&(t.innerText=e.t("player_result.rank"));const o=document.getElementById("txt-pr-score");o&&(o.innerText=e.t("player_result.score"));const s=document.getElementById("txt-pr-correct");s&&(s.innerText=e.t("player_result.correct"));const i=document.getElementById("txt-pr-time");i&&(i.innerText=e.t("player_result.time"));const a=document.getElementById("lb-home-btn");a&&(a.title=e.t("player_result.title_home"));const n=document.getElementById("lb-stats-btn");n&&(n.title=e.t("player_result.title_stats"));const r=document.getElementById("txt-pr-home");r&&(r.innerText=e.t("player_result.home"));const p=document.getElementById("txt-pr-stats");p&&(p.innerText=e.t("player_result.stats"))}}start(t){l.ensureClosed(),c.requirePortrait(e.t("player_result.portrait_req_title"),e.t("player_result.portrait_req_desc")),window.addEventListener("languageChanged",this.handleLangChange);let o=(t==null?void 0:t.leaderboardData)||[];this.room=t==null?void 0:t.room;let s=this.room?this.room.sessionId:"",i=this.room?this.room.id:"";if(this.supabaseSessionId=localStorage.getItem("supabaseSessionId")||"",o.length>0&&s&&i)this.rankings=o,this.mySessionId=s,this.roomId=i,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId}));else{const n=sessionStorage.getItem("playerResultState");if(n){const r=JSON.parse(n);this.rankings=r.rankings,this.mySessionId=r.mySessionId,this.roomId=r.roomId,r.supabaseSessionId&&(this.supabaseSessionId=r.supabaseSessionId)}}const a=document.getElementById("result-ui");if(a&&a.remove(),this.container=document.createElement("div"),this.container.id="result-ui",this.container.style.position="absolute",this.container.style.top="0",this.container.style.left="0",this.container.style.width="100%",this.container.style.height="100%",this.container.style.zIndex="1000",this.container.style.pointerEvents="none",document.body.appendChild(this.container),!document.getElementById("result-styles")){const n=document.createElement("style");n.id="result-styles",n.innerHTML=this.getStyles(),document.head.appendChild(n)}this.renderIndividualResult(),this.room&&this.room.onMessage("gameEnded",n=>{this.rankings=n.rankings,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId})),this.renderIndividualResult()}),setTimeout(()=>{l.open()},100)}getStyles(){return`
             @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
             #result-ui {
@@ -18,28 +18,6 @@ import{T as r,R as d}from"./index-BhSA6eMx.js";import{O as l}from"./OrientationM
                 background-image: radial-gradient(#2d5a30 1px, transparent 1px);
                 background-size: 24px 24px;
             }
-            .firefly {
-                position: absolute;
-                width: 4px; height: 4px;
-                background: #FEFF9F;
-                border-radius: 50%;
-                filter: blur(1px);
-                animation: firefly-bounce 4s infinite ease-in-out;
-                z-index: 1;
-            }
-            @keyframes firefly-bounce {
-                0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
-                50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-            }
-            @keyframes drift {
-                from { transform: translateX(-100%) scale(var(--s)); }
-                to { transform: translateX(100vw) scale(var(--s)); }
-            }
-            @keyframes drift-reverse {
-                from { transform: translateX(100vw) scale(var(--s)); }
-                to { transform: translateX(-100%) scale(var(--s)); }
-            }
-            .cloud { position: absolute; pointer-events: none; }
 
             .result-card {
                 background: white;
@@ -108,34 +86,17 @@ import{T as r,R as d}from"./index-BhSA6eMx.js";import{O as l}from"./OrientationM
             }
             .nav-btn {
                 pointer-events: auto; 
-                background: #92C140; 
+                background: #336B23; 
                 border: none;
-                border-bottom: 4px solid #386938;
+                border-bottom: 4px solid #1F4514;
                 border-radius: 12px; 
                 width: 72px; height: 72px;
                 display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: all 0.2s;
                 box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             }
-            .nav-btn:hover { filter: brightness(110%); }
+            .nav-btn:hover { filter: brightness(85%); }
             .nav-btn:active { transform: translateY(4px); border-bottom-width: 0; }
             .nav-btn .material-symbols-outlined { font-size: 30px; }
- Simon: Darkened border-bottom to #386938.
-
-            @keyframes base-walk-cycle { from { background-position: 0 0; } to { background-position: -768px 0; } }
-            @keyframes walk-across-right { from { transform: translate3d(-100px, 0, 0) scale(1.5, 1.5); } to { transform: translate3d(100vw, 0, 0) scale(1.5, 1.5); } }
-            @keyframes walk-across-left { from { transform: translate3d(100vw, 0, 0) scale(-1.5, 1.5); } to { transform: translate3d(-100px, 0, 0) scale(-1.5, 1.5); } }
-            .walking-char {
-                position: absolute;
-                bottom: 20px;
-                left: 0;
-                width: 96px; height: 64px;
-                background-image: url('/assets/base_walk_strip8.png');
-                background-size: 768px 64px;
-                image-rendering: pixelated;
-                z-index: 2;
-                pointer-events: none;
-                will-change: transform;
-            }
 
             .logo-center {
                 position: fixed;
@@ -207,62 +168,39 @@ import{T as r,R as d}from"./index-BhSA6eMx.js";import{O as l}from"./OrientationM
                 .nav-btn-wide {
                     flex: 1;
                     pointer-events: auto;
-                    height: 56px;
+                    height: 44px;
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 10px;
+                    gap: 4px;
                     font-family: 'Retro Gaming', monospace;
-                    font-size: 14px;
+                    font-size: 9px;
                     text-transform: uppercase;
                     border: none;
                     cursor: pointer;
                     transition: all 0.2s;
-                    background: #92C140; 
+                    background: #336B23; 
                     color: white;
-                    border-bottom: 4px solid #386938;
-                    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+                    border-bottom: 3px solid #1F4514;
+                    box-shadow: 0 6px 0 #1F4514;
                 }
-                .nav-btn-wide:hover { filter: brightness(110%); }
-                .nav-btn-wide:active { transform: translateY(4px); border-bottom-width: 0; }
+                .nav-btn-wide:hover { filter: brightness(85%); }
+                .nav-btn-wide:active { transform: translateY(2px); border-bottom-width: 2px; box-shadow: 0 4px 0 #1F4514; }
                 .nav-btn { display: none; }
- Simon: Darkened border-bottom to #386938 for mobile.
             }
 
             @media (min-width: 769px) {
                 .nav-btn-wide { display: none; }
             }
-        `}renderIndividualResult(){d.navigate("/player/result"),this.container.innerHTML="";const t=this.rankings.find(i=>i.sessionId===this.mySessionId)||this.rankings[0];if(!t)return;const e=i=>{const n=Math.floor(i/1e3),a=Math.floor(n/60),o=n%60;return`${a.toString().padStart(2,"0")}:${o.toString().padStart(2,"0")}`},s=this.getCharacterVisuals(t);this.container.innerHTML=`
-            <!-- Pixel-art Background Decorations -->
-            <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <div class="absolute inset-0 pixel-bg-pattern opacity-[0.06]"></div>
-
-                <!-- Clouds -->
-                <div class="cloud top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="--s: 1.0; left: -10%;">
-                    <div class="relative w-10 h-3 bg-white"><div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div></div>
-                </div>
-                <div class="cloud top-[45%] opacity-15 animate-[drift-reverse_95s_linear_infinite]" style="--s: 0.8; left: 80%;">
-                    <div class="relative w-12 h-4 bg-[#D3EE98]"><div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div></div>
-                </div>
-                <div class="cloud top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="--s: 1.2; left: 40%;">
-                    <div class="relative w-14 h-4 bg-white"><div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div></div>
-                </div>
-
-                <!-- Fireflies -->
-                <div class="firefly" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
-                <div class="firefly" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
-                <div class="firefly" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
-            </div>
-
-            <!-- Walking Characters Container -->
-            <div id="result-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+        `}renderIndividualResult(){m.navigate("/player/result"),this.container.innerHTML="";const t=this.rankings.find(i=>i.sessionId===this.mySessionId)||this.rankings[0];if(!t)return;const o=i=>{const a=Math.floor(i/1e3),n=Math.floor(a/60),r=a%60;return`${n.toString().padStart(2,"0")}:${r.toString().padStart(2,"0")}`},s=this.getCharacterVisuals(t);this.container.innerHTML=`
+            ${d.getHTML("result")}
 
             <img src="/logo/Zigma-logo-fix.webp" class="logo-center" />
             <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
             <img src="/logo/gameforsmart-logo-fix.webp" class="logo-right" />
 
-            <div class="result-card">
+            <div class="result-card pointer-events-auto">
                 <div class="result-avatar-container">
                     <div class="char-anim result-char anim-play" style="${s.base}"></div>
                     ${s.hair?`<div class="char-anim result-char anim-play" style="${s.hair}"></div>`:""}
@@ -273,43 +211,43 @@ import{T as r,R as d}from"./index-BhSA6eMx.js";import{O as l}from"./OrientationM
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
                         <div class="stat-value">${t.rank===-1?"#?":"#"+t.rank}</div>
-                        <div class="stat-label">RANK</div>
+                        <div id="txt-pr-rank" class="stat-label">${e.t("player_result.rank")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">workspace_premium</span>
                         <div class="stat-value">${t.score}</div>
-                        <div class="stat-label">SCORE</div>
+                        <div id="txt-pr-score" class="stat-label">${e.t("player_result.score")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">task_alt</span>
                         <div class="stat-value">${t.correctAnswers}/5</div>
-                        <div class="stat-label">CORRECT</div>
+                        <div id="txt-pr-correct" class="stat-label">${e.t("player_result.correct")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">schedule</span>
-                        <div class="stat-value">${e(t.duration)}</div>
-                        <div class="stat-label">TIME</div>
+                        <div class="stat-value">${o(t.duration)}</div>
+                        <div id="txt-pr-time" class="stat-label">${e.t("player_result.time")}</div>
                     </div>
                 </div>
             </div>
 
             <div class="lb-footer">
-                <button id="lb-home-btn" class="nav-btn btn-left">
+                <button id="lb-home-btn" class="nav-btn btn-left" title="${e.t("player_result.title_home")}">
                     <span class="material-symbols-outlined">home</span>
                 </button>
                 
                 <button id="lb-home-btn-mobile" class="nav-btn-wide">
                     <span class="material-symbols-outlined">home</span>
-                    HOME
+                    <span id="txt-pr-home">${e.t("player_result.home")}</span>
                 </button>
                 
                 <button id="lb-stats-btn-mobile" class="nav-btn-wide">
                     <span class="material-symbols-outlined">analytics</span>
-                    STATISTICS
+                    <span id="txt-pr-stats">${e.t("player_result.stats")}</span>
                 </button>
 
-                <button id="lb-stats-btn" class="nav-btn btn-right">
+                <button id="lb-stats-btn" class="nav-btn btn-right" title="${e.t("player_result.title_stats")}">
                     <span class="material-symbols-outlined">analytics</span>
                 </button>
             </div>
-        `,this.startCharacterSpawner(),this.attachListeners()}getCharacterVisuals(t){const e="background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;";let s="";if(t.hairId&&t.hairId>0){const n={1:"bowlhair",2:"curlyhair",3:"longhair",4:"mophair",5:"shorthair",6:"spikeyhair"}[t.hairId];n&&(s=`background-image: url('/assets/${n}_idle_strip9.png'); background-size: 864px 64px;`)}return{base:e,hair:s}}attachListeners(){setTimeout(()=>{const t=document.getElementById("lb-home-btn"),e=document.getElementById("lb-stats-btn");t&&(t.onclick=()=>{r.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})});const s=document.getElementById("lb-home-btn-mobile");s&&(s.onclick=()=>{r.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})}),e&&(e.onclick=()=>this.openStats());const i=document.getElementById("lb-stats-btn-mobile");i&&(i.onclick=()=>this.openStats())},50)}openStats(){const t=this.supabaseSessionId||localStorage.getItem("supabaseSessionId");t?window.open(`https://gameforsmartnewui.vercel.app/stat/${t}`,"_blank"):alert("ID Sesi tidak ditemukan.")}cleanup(){this.spawnerInterval&&(clearInterval(this.spawnerInterval),this.spawnerInterval=null),this.container&&this.container.remove();const t=document.getElementById("result-styles");t&&t.remove(),l.disable()}startCharacterSpawner(){if(this.spawnerInterval)return;const t=document.getElementById("result-walking-characters-container");t&&(this.checkAndSpawn(t),this.spawnerInterval=setInterval(()=>this.checkAndSpawn(t),5e3))}checkAndSpawn(t){const e=t.querySelectorAll(".walking-char").length;e>=3||Math.random()<(e===0?.8:.4)&&this.spawnCharacter(t)}spawnCharacter(t){const e=document.createElement("div");e.className="walking-char";const s=Math.random()>.5,i=20+Math.random()*10;s?e.style.animation=`base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${i}s linear forwards`:e.style.animation=`base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${i}s linear forwards`,t.appendChild(e),setTimeout(()=>{e.parentElement&&e.remove()},i*1e3+500)}}export{h as ResultManager};
+        `,d.startCharacterSpawner("result"),this.attachListeners()}getCharacterVisuals(t){const o="background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;";let s="";if(t.hairId&&t.hairId>0){const a={1:"bowlhair",2:"curlyhair",3:"longhair",4:"mophair",5:"shorthair",6:"spikeyhair"}[t.hairId];a&&(s=`background-image: url('/assets/${a}_idle_strip9.png'); background-size: 864px 64px;`)}return{base:o,hair:s}}attachListeners(){setTimeout(()=>{const t=document.getElementById("lb-home-btn"),o=document.getElementById("lb-stats-btn");t&&(t.onclick=()=>{l.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})});const s=document.getElementById("lb-home-btn-mobile");s&&(s.onclick=()=>{l.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})}),o&&(o.onclick=()=>this.openStats());const i=document.getElementById("lb-stats-btn-mobile");i&&(i.onclick=()=>this.openStats())},50)}openStats(){const t=this.supabaseSessionId||localStorage.getItem("supabaseSessionId");t?window.open(`https://gameforsmartnewui.vercel.app/stat/${t}`,"_blank"):alert(e.t("player_result.no_session"))}cleanup(){d.stopCharacterSpawner("result"),this.container&&this.container.remove();const t=document.getElementById("result-styles");t&&t.remove(),c.disable(),window.removeEventListener("languageChanged",this.handleLangChange)}}export{g as ResultManager};

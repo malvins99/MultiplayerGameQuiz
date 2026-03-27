@@ -76,6 +76,7 @@ export class ResultManager {
         this.container.style.width = '100%';
         this.container.style.height = '100%';
         this.container.style.zIndex = '1000';
+        this.container.style.pointerEvents = 'none'; // Background can be clicked through empty areas
         document.body.appendChild(this.container);
 
         if (!document.getElementById('result-styles')) {
@@ -327,7 +328,7 @@ export class ResultManager {
             <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
             <img src="/logo/gameforsmart-logo-fix.webp" class="logo-right" />
 
-            <div class="result-card">
+            <div class="result-card pointer-events-auto">
                 <div class="result-avatar-container">
                     <div class="char-anim result-char anim-play" style="${characterVisuals.base}"></div>
                     ${characterVisuals.hair ? `<div class="char-anim result-char anim-play" style="${characterVisuals.hair}"></div>` : ''}
