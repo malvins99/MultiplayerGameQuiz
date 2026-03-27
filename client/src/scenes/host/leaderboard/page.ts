@@ -112,12 +112,21 @@ export class HostLeaderboardManager {
         const statsBtnMobile = document.getElementById('lb-stats-btn-mobile');
 
         const handleStats = () => {
-            let sid = this.opts?.sessionId || localStorage.getItem('supabaseSessionId');
-            if (!sid && this.rankings.length > 0) sid = this.rankings[0].sessionId;
+            let sid = this.opts?.sessionId;
+            
+            // Coba ambil dari localStorage utama untuk Host
+            if (!sid) {
+                const currentRoomOpts = localStorage.getItem('currentRoomOptions');
+                if (currentRoomOpts) {
+                    try { sid = JSON.parse(currentRoomOpts).sessionId; } catch(e) {}
+                }
+            }
+            if (!sid) sid = localStorage.getItem('supabaseSessionId');
             if (!sid) {
                 sid = localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
                       localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1];
             }
+
             if (sid && sid !== "undefined" && sid !== "null") {
                 window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
             } else {
