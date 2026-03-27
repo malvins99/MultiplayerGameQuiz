@@ -1,4 +1,5 @@
 import { i18n } from '../../utils/i18n';
+import { GlobalBackground } from '../../ui/shared/GlobalBackground';
 
 export class LobbyUI {
     static render() {
@@ -8,81 +9,7 @@ export class LobbyUI {
             lobbyUI.id = 'lobby-ui';
             lobbyUI.className = 'fixed inset-0 z-10 hidden';
             lobbyUI.innerHTML = `
-                <!-- Full-Screen Background — palette gradient -->
-                <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
-
-                <!-- Pixel-art Background Decorations -->
-                <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <!-- Subtle pixel grid pattern -->
-                    <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 24px 24px;"></div>
-
-                    <!-- Diverse Pixel Clouds (Varying sizes, colors, speeds) -->
-                    
-                    <!-- L1: Back Layer (Small/Medium, Slow) -->
-                    <div class="absolute top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="transform: scale(1.0); left: -10%;">
-                        <div class="relative w-10 h-3 bg-white">
-                            <div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[45%] opacity-15 animate-[drift_95s_linear_infinite_reverse]" style="transform: scale(0.8); left: 80%;">
-                        <div class="relative w-12 h-4 bg-[#D3EE98]">
-                            <div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="transform: scale(1.2); left: 40%;">
-                        <div class="relative w-14 h-4 bg-white">
-                            <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
-                        </div>
-                    </div>
-
-                    <!-- L2: Mid Layer (Medium) -->
-                    <div class="absolute top-[25%] opacity-40 animate-[drift_45s_linear_infinite]" style="transform: scale(1.8); left: 15%;">
-                        <div class="relative w-16 h-5 bg-[#D3EE98]">
-                            <div class="absolute -top-3 left-4 w-6 h-3 bg-[#D3EE98]"></div>
-                            <div class="absolute -top-5 left-8 w-4 h-5 bg-[#D3EE98]"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[65%] opacity-35 animate-[drift_55s_linear_infinite_reverse]" style="transform: scale(1.5); left: 60%;">
-                        <div class="relative w-14 h-4 bg-white">
-                            <div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div>
-                            <div class="absolute -top-4 left-7 w-3 h-4 bg-white"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[5%] opacity-25 animate-[drift_70s_linear_infinite]" style="transform: scale(1.7); left: 75%;">
-                        <div class="relative w-16 h-5 bg-[#D3EE98]">
-                            <div class="absolute -top-3 left-5 w-6 h-3 bg-[#D3EE98]"></div>
-                        </div>
-                    </div>
-
-                    <!-- L3: Front Layer (Large, Faster) -->
-                    <div class="absolute top-[40%] opacity-30 animate-[drift_35s_linear_infinite]" style="transform: scale(2.5); left: -20%;">
-                        <div class="relative w-12 h-4 bg-[#FEFF9F]">
-                            <div class="absolute -top-2 left-2 w-4 h-2 bg-[#FEFF9F]"></div>
-                            <div class="absolute -top-4 left-5 w-4 h-4 bg-[#FEFF9F]"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[75%] opacity-25 animate-[drift_40s_linear_infinite_reverse]" style="transform: scale(2.2); left: 40%;">
-                        <div class="relative w-18 h-6 bg-white">
-                            <div class="absolute -top-3 left-5 w-7 h-3 bg-white"></div>
-                            <div class="absolute -top-6 left-10 w-5 h-6 bg-white"></div>
-                        </div>
-                    </div>
-                    <div class="absolute top-[50%] opacity-20 animate-[drift_30s_linear_infinite]" style="transform: scale(3.0); left: 10%;">
-                        <div class="relative w-14 h-4 bg-[#FEFF9F]">
-                            <div class="absolute -top-2 left-4 w-5 h-2 bg-[#FEFF9F]"></div>
-                        </div>
-                    </div>
-
-                    <!-- Floating Particles -->
-                    <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
-                    <div class="firefly !bg-[#D3EE98] !shadow-[0_0_15px_rgba(211,238,152,0.9)]" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
-                    <div class="firefly !bg-[#FEFF9F] !shadow-[0_0_15px_rgba(254,255,159,0.9)]" style="top: 85%; left: 20%; animation-delay: 4.5s;"></div>
-                    <div class="firefly !bg-white !shadow-[0_0_15px_rgba(255,255,255,0.8)]" style="top: 15%; left: 70%; animation-delay: 6s;"></div>
-                </div>
-
-                <!-- Walking Characters Container -->
-                <div id="lobby-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+                ${GlobalBackground.getHTML('lobby')}
 
                 <!-- Scrollable Content Layer -->
                 <div class="absolute inset-0 overflow-y-auto flex flex-col no-scrollbar">
@@ -228,7 +155,7 @@ export class LobbyUI {
             document.body.appendChild(lobbyUI);
 
             // Start Character Spawner
-            LobbyUI.startCharacterSpawner();
+            GlobalBackground.startCharacterSpawner('lobby');
 
             // Fullscreen Logic
             const fsBtn = document.getElementById('lobby-fullscreen-btn');
@@ -280,54 +207,5 @@ export class LobbyUI {
         }
     }
 
-    private static spawnerInterval: any = null;
     private static fsListenerAdded: boolean = false;
-    private static startCharacterSpawner() {
-        if (this.spawnerInterval) return;
-
-        const container = document.getElementById('lobby-walking-characters-container');
-        if (!container) return;
-
-        // Initial spawn check
-        this.checkAndSpawn(container);
-
-        this.spawnerInterval = setInterval(() => {
-            this.checkAndSpawn(container);
-        }, 5000); // Check every 5s
-    }
-
-    private static checkAndSpawn(container: HTMLElement) {
-        const activeChars = container.querySelectorAll('.walking-char').length;
-        if (activeChars >= 3) return;
-
-        // Higher chance if fewer chars
-        const chance = activeChars === 0 ? 0.8 : 0.4;
-
-        if (Math.random() < chance) {
-            this.spawnCharacter(container);
-        }
-    }
-
-    private static spawnCharacter(container: HTMLElement) {
-        const char = document.createElement('div');
-        char.className = 'walking-char';
-
-        const fromRight = Math.random() > 0.5;
-        const speed = 20 + Math.random() * 10; // 20-30s across screen
-
-        if (fromRight) {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
-            char.style.transform = 'scale(-1, 1)'; // Maintain 1.5:1 while flipping
-        } else {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
-            char.style.transform = 'scale(1, 1)';
-        }
-
-        container.appendChild(char);
-
-        // Cleanup
-        setTimeout(() => {
-            if (char.parentElement) char.remove();
-        }, speed * 1000 + 500);
-    }
 }

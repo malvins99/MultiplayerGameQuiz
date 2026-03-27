@@ -7,6 +7,7 @@ import type { RankingEntry } from './ui';
 import { LobbyManager } from '../../../scenes/lobby/page';
 import { initializeGame } from '../../../game';
 import { OrientationManager } from '../../../utils/OrientationManager';
+import { GlobalBackground } from '../../../ui/shared/GlobalBackground';
 
 export class HostLeaderboardManager {
     private container!: HTMLDivElement;
@@ -16,7 +17,6 @@ export class HostLeaderboardManager {
     private q: any;
     private sessionId: string | null = null;
     private isHost: boolean = true;
-    private spawnerInterval: any = null;
 
     start(data?: { rankings?: any[], isHost?: boolean, lastGameOptions?: any, lastSelectedQuiz?: any, mySessionId?: string }) {
         this.initializeClient();
@@ -93,7 +93,7 @@ export class HostLeaderboardManager {
         Router.navigate('/host/leaderboard');
         this.container.innerHTML = LeaderboardUI.generateHTML(this.rankings);
 
-        this.startCharacterSpawner();
+        GlobalBackground.startCharacterSpawner('leaderboard');
 
         this.attachListeners();
     }
@@ -177,10 +177,7 @@ export class HostLeaderboardManager {
     }
 
     cleanup() {
-        if (this.spawnerInterval) {
-            clearInterval(this.spawnerInterval);
-            this.spawnerInterval = null;
-        }
+        GlobalBackground.stopCharacterSpawner('leaderboard');
         if (this.container) {
             if (this.container.parentNode) this.container.parentNode.removeChild(this.container);
             this.container.remove();
@@ -193,33 +190,4 @@ export class HostLeaderboardManager {
         OrientationManager.disable();
     }
 
-    private startCharacterSpawner() {
-        if (this.spawnerInterval) return;
-        const container = document.getElementById('leaderboard-walking-characters-container');
-        if (!container) return;
-        this.checkAndSpawn(container);
-        this.spawnerInterval = setInterval(() => this.checkAndSpawn(container), 5000);
-    }
-
-    private checkAndSpawn(container: HTMLElement) {
-        const activeChars = container.querySelectorAll('.walking-char').length;
-        if (activeChars >= 3) return;
-        if (Math.random() < (activeChars === 0 ? 0.8 : 0.4)) {
-            this.spawnCharacter(container);
-        }
-    }
-
-    private spawnCharacter(container: HTMLElement) {
-        const char = document.createElement('div');
-        char.className = 'walking-char';
-        const fromRight = Math.random() > 0.5;
-        const speed = 20 + Math.random() * 10;
-        if (fromRight) {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
-        } else {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
-        }
-        container.appendChild(char);
-        setTimeout(() => { if (char.parentElement) char.remove(); }, speed * 1000 + 500);
-    }
 }

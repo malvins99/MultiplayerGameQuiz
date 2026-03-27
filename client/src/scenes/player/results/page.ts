@@ -3,6 +3,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 import { Router } from '../../../utils/Router';
 import { LobbyManager } from '../../lobby/page';
 import { OrientationManager } from '../../../utils/OrientationManager';
+import { GlobalBackground } from '../../../ui/shared/GlobalBackground';
 
 interface RankingEntry {
     rank: number;
@@ -23,7 +24,6 @@ export class ResultManager {
     private roomId: string = "";
     private supabaseSessionId: string = "";
     private room: any;
-    private spawnerInterval: any = null;
 
     constructor() {}
 
@@ -122,28 +122,6 @@ export class ResultManager {
                 background-image: radial-gradient(#2d5a30 1px, transparent 1px);
                 background-size: 24px 24px;
             }
-            .firefly {
-                position: absolute;
-                width: 4px; height: 4px;
-                background: #FEFF9F;
-                border-radius: 50%;
-                filter: blur(1px);
-                animation: firefly-bounce 4s infinite ease-in-out;
-                z-index: 1;
-            }
-            @keyframes firefly-bounce {
-                0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
-                50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-            }
-            @keyframes drift {
-                from { transform: translateX(-100%) scale(var(--s)); }
-                to { transform: translateX(100vw) scale(var(--s)); }
-            }
-            @keyframes drift-reverse {
-                from { transform: translateX(100vw) scale(var(--s)); }
-                to { transform: translateX(-100%) scale(var(--s)); }
-            }
-            .cloud { position: absolute; pointer-events: none; }
 
             .result-card {
                 background: white;
@@ -212,34 +190,17 @@ export class ResultManager {
             }
             .nav-btn {
                 pointer-events: auto; 
-                background: #92C140; 
+                background: #336B23; 
                 border: none;
-                border-bottom: 4px solid #386938;
+                border-bottom: 4px solid #1F4514;
                 border-radius: 12px; 
                 width: 72px; height: 72px;
                 display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; transition: all 0.2s;
                 box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             }
-            .nav-btn:hover { filter: brightness(110%); }
+            .nav-btn:hover { filter: brightness(85%); }
             .nav-btn:active { transform: translateY(4px); border-bottom-width: 0; }
             .nav-btn .material-symbols-outlined { font-size: 30px; }
- Simon: Darkened border-bottom to #386938.
-
-            @keyframes base-walk-cycle { from { background-position: 0 0; } to { background-position: -768px 0; } }
-            @keyframes walk-across-right { from { transform: translate3d(-100px, 0, 0) scale(1.5, 1.5); } to { transform: translate3d(100vw, 0, 0) scale(1.5, 1.5); } }
-            @keyframes walk-across-left { from { transform: translate3d(100vw, 0, 0) scale(-1.5, 1.5); } to { transform: translate3d(-100px, 0, 0) scale(-1.5, 1.5); } }
-            .walking-char {
-                position: absolute;
-                bottom: 20px;
-                left: 0;
-                width: 96px; height: 64px;
-                background-image: url('/assets/base_walk_strip8.png');
-                background-size: 768px 64px;
-                image-rendering: pixelated;
-                z-index: 2;
-                pointer-events: none;
-                will-change: transform;
-            }
 
             .logo-center {
                 position: fixed;
@@ -311,27 +272,26 @@ export class ResultManager {
                 .nav-btn-wide {
                     flex: 1;
                     pointer-events: auto;
-                    height: 56px;
+                    height: 44px;
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 10px;
+                    gap: 4px;
                     font-family: 'Retro Gaming', monospace;
-                    font-size: 14px;
+                    font-size: 9px;
                     text-transform: uppercase;
                     border: none;
                     cursor: pointer;
                     transition: all 0.2s;
-                    background: #92C140; 
+                    background: #336B23; 
                     color: white;
-                    border-bottom: 4px solid #386938;
-                    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+                    border-bottom: 3px solid #1F4514;
+                    box-shadow: 0 6px 0 #1F4514;
                 }
-                .nav-btn-wide:hover { filter: brightness(110%); }
-                .nav-btn-wide:active { transform: translateY(4px); border-bottom-width: 0; }
+                .nav-btn-wide:hover { filter: brightness(85%); }
+                .nav-btn-wide:active { transform: translateY(2px); border-bottom-width: 2px; box-shadow: 0 4px 0 #1F4514; }
                 .nav-btn { display: none; }
- Simon: Darkened border-bottom to #386938 for mobile.
             }
 
             @media (min-width: 769px) {
@@ -357,29 +317,7 @@ export class ResultManager {
         const characterVisuals = this.getCharacterVisuals(myEntry);
 
         this.container.innerHTML = `
-            <!-- Pixel-art Background Decorations -->
-            <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <div class="absolute inset-0 pixel-bg-pattern opacity-[0.06]"></div>
-
-                <!-- Clouds -->
-                <div class="cloud top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="--s: 1.0; left: -10%;">
-                    <div class="relative w-10 h-3 bg-white"><div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div></div>
-                </div>
-                <div class="cloud top-[45%] opacity-15 animate-[drift-reverse_95s_linear_infinite]" style="--s: 0.8; left: 80%;">
-                    <div class="relative w-12 h-4 bg-[#D3EE98]"><div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div></div>
-                </div>
-                <div class="cloud top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="--s: 1.2; left: 40%;">
-                    <div class="relative w-14 h-4 bg-white"><div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div></div>
-                </div>
-
-                <!-- Fireflies -->
-                <div class="firefly" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
-                <div class="firefly" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
-                <div class="firefly" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
-            </div>
-
-            <!-- Walking Characters Container -->
-            <div id="result-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+            ${GlobalBackground.getHTML('result')}
 
             <img src="/logo/Zigma-logo-fix.webp" class="logo-center" />
             <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
@@ -437,7 +375,7 @@ export class ResultManager {
             </div>
         `;
 
-        this.startCharacterSpawner();
+        GlobalBackground.startCharacterSpawner('result');
         this.attachListeners();
     }
 
@@ -497,43 +435,11 @@ export class ResultManager {
     }
 
     cleanup() {
-        if (this.spawnerInterval) {
-            clearInterval(this.spawnerInterval);
-            this.spawnerInterval = null;
-        }
+        GlobalBackground.stopCharacterSpawner('result');
         if (this.container) this.container.remove();
         const style = document.getElementById('result-styles');
         if (style) style.remove();
         OrientationManager.disable();
     }
 
-    private startCharacterSpawner() {
-        if (this.spawnerInterval) return;
-        const container = document.getElementById('result-walking-characters-container');
-        if (!container) return;
-        this.checkAndSpawn(container);
-        this.spawnerInterval = setInterval(() => this.checkAndSpawn(container), 5000);
-    }
-
-    private checkAndSpawn(container: HTMLElement) {
-        const activeChars = container.querySelectorAll('.walking-char').length;
-        if (activeChars >= 3) return;
-        if (Math.random() < (activeChars === 0 ? 0.8 : 0.4)) {
-            this.spawnCharacter(container);
-        }
-    }
-
-    private spawnCharacter(container: HTMLElement) {
-        const char = document.createElement('div');
-        char.className = 'walking-char';
-        const fromRight = Math.random() > 0.5;
-        const speed = 20 + Math.random() * 10;
-        if (fromRight) {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-left ${speed}s linear forwards`;
-        } else {
-            char.style.animation = `base-walk-cycle 0.8s steps(8) infinite, walk-across-right ${speed}s linear forwards`;
-        }
-        container.appendChild(char);
-        setTimeout(() => { if (char.parentElement) char.remove(); }, speed * 1000 + 500);
-    }
 }

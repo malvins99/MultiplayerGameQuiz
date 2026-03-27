@@ -1,3 +1,5 @@
+import { GlobalBackground } from '../../../ui/shared/GlobalBackground';
+
 export interface RankingEntry {
     rank: number;
     sessionId: string;
@@ -23,16 +25,6 @@ export class LeaderboardUI {
                 from { background-position: 0 0; } 
                 to { background-position: -864px 0; } 
             }
-            .pixel-bg-pattern { background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 24px 24px; }
-            .firefly { position: absolute; width: 4px; height: 4px; background: #FEFF9F; border-radius: 50%; filter: blur(1px); animation: firefly-bounce 4s infinite ease-in-out; z-index: 1; pointer-events: none; }
-            @keyframes firefly-bounce { 0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; } 50% { transform: translateY(-20px) scale(1.2); opacity: 1; } }
-            @keyframes drift { from { transform: translateX(-100%) scale(var(--s)); } to { transform: translateX(100vw) scale(var(--s)); } }
-            @keyframes drift-reverse { from { transform: translateX(100vw) scale(var(--s)); } to { transform: translateX(-100%) scale(var(--s)); } }
-            .cloud { position: absolute; pointer-events: none; }
-            @keyframes base-walk-cycle { from { background-position: 0 0; } to { background-position: -768px 0; } }
-            @keyframes walk-across-right { from { transform: translate3d(-100px, 0, 0) scale(1.5, 1.5); } to { transform: translate3d(100vw, 0, 0) scale(1.5, 1.5); } }
-            @keyframes walk-across-left { from { transform: translate3d(100vw, 0, 0) scale(-1.5, 1.5); } to { transform: translate3d(-100px, 0, 0) scale(-1.5, 1.5); } }
-            .walking-char { position: absolute; bottom: 20px; left: 0; width: 96px; height: 64px; background-image: url('/assets/base_walk_strip8.png'); background-size: 768px 64px; image-rendering: pixelated; z-index: 2; pointer-events: none; will-change: transform; }
             .logo-center { position: fixed; top: 25px; left: 0; right: 0; margin: 0 auto; width: 200px; z-index: 2000; pointer-events: none; display: none; }
             .logo-left { position: absolute; top: -30px; left: -40px; width: 280px; z-index: 20; pointer-events: none; }
             .logo-right { position: absolute; top: -45px; right: -15px; width: 320px; z-index: 20; pointer-events: none; }
@@ -179,31 +171,7 @@ export class LeaderboardUI {
         return `
             <div translate="no" class="notranslate fixed inset-0 w-full h-screen overflow-hidden text-white pointer-events-auto select-none" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);">
                 
-                <!-- Pixel-art Background Decorations -->
-                <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <div class="absolute inset-0 pixel-bg-pattern opacity-[0.06]"></div>
-
-                    <!-- Clouds -->
-                    <div class="cloud top-[10%] opacity-20 animate-[drift_80s_linear_infinite]" style="--s: 1.0; left: -10%;">
-                        <div class="relative w-10 h-3 bg-white"><div class="absolute -top-1 left-2 w-3 h-1 bg-white"></div></div>
-                    </div>
-                    <div class="cloud top-[45%] opacity-15 animate-[drift-reverse_95s_linear_infinite]" style="--s: 0.8; left: 80%;">
-                        <div class="relative w-12 h-4 bg-[#D3EE98]"><div class="absolute -top-2 left-3 w-4 h-2 bg-[#D3EE98]"></div></div>
-                    </div>
-                    <div class="cloud top-[15%] opacity-15 animate-[drift_110s_linear_infinite]" style="--s: 1.2; left: 40%;">
-                        <div class="relative w-14 h-4 bg-white"><div class="absolute -top-2 left-4 w-5 h-2 bg-white"></div></div>
-                    </div>
-
-                    <!-- Fireflies -->
-                    <div class="firefly" style="top: 25%; left: 15%; animation-delay: 0s;"></div>
-                    <div class="firefly" style="top: 65%; left: 80%; animation-delay: 1.5s;"></div>
-                    <div class="firefly" style="top: 45%; left: 45%; animation-delay: 3s;"></div>
-                    <div class="firefly" style="top: 15%; left: 30%; animation-delay: 1.2s; animation-duration: 5s;"></div>
-                    <div class="firefly" style="top: 85%; left: 20%; animation-delay: 2.1s; animation-duration: 6s;"></div>
-                </div>
-
-                <!-- Walking Characters Container -->
-                <div id="leaderboard-walking-characters-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+                ${GlobalBackground.getHTML('leaderboard')}
 
                 <!-- Logos -->
                 <img src="/logo/Zigma-logo-fix.webp" alt="Zigma Logo" class="logo-center" />
