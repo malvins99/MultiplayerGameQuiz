@@ -46,7 +46,7 @@ export class QuizSettingsUI {
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-question-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
-                                                <span id="settings-question-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.q_5')}</span>
+                                                <span id="settings-question-selected" class="font-['Space_Grotesk'] text-sm tracking-wide">${i18n.t('quiz_setting.q_5')}</span>
                                                 <span id="settings-question-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-question-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
@@ -65,7 +65,7 @@ export class QuizSettingsUI {
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-timer-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
-                                                <span id="settings-timer-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.m_5')}</span>
+                                                <span id="settings-timer-selected" class="font-['Space_Grotesk'] text-sm tracking-wide">${i18n.t('quiz_setting.m_5')}</span>
                                                 <span id="settings-timer-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-timer-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
@@ -84,7 +84,7 @@ export class QuizSettingsUI {
                                         </label>
                                         <div class="relative w-full">
                                             <button id="settings-difficulty-trigger" class="w-full h-10 md:h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl flex items-center justify-between px-4 text-[#478D47] font-bold hover:border-[#6CC452] transition-all group active:border-b-0 active:translate-y-0.5 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
-                                                <span id="settings-difficulty-selected" class="font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.diff_easy')}</span>
+                                                <span id="settings-difficulty-selected" class="font-['Space_Grotesk'] text-sm tracking-wide">${i18n.t('quiz_setting.diff_easy')}</span>
                                                 <span id="settings-difficulty-arrow" class="material-symbols-outlined text-[#6CC452]/50 transition-transform duration-300 group-hover:text-[#6CC452]">expand_more</span>
                                             </button>
                                             <div id="settings-difficulty-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
@@ -101,7 +101,7 @@ export class QuizSettingsUI {
                                             <span class="material-symbols-outlined text-sm">music_note</span> ${i18n.t('quiz_setting.music')}
                                         </label>
                                         <div id="sound-toggle-container" class="w-full h-10 md:h-12 flex items-center bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl px-4 justify-between group hover:border-[#6CC452] transition-all cursor-pointer ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
-                                            <span class="text-[#478D47] text-xs font-bold font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.music')}</span>
+                                            <span class="text-[#478D47] text-sm font-bold font-['Space_Grotesk'] tracking-wide">${i18n.t('quiz_setting.music')}</span>
                                             <button id="sound-toggle-btn" class="w-10 h-6 bg-white border border-[#6CC452]/20 rounded-full relative transition-colors duration-300 cursor-pointer shadow-inner shrink-0 pointer-events-none">
                                                 <div id="sound-toggle-knob" class="absolute top-[1px] left-[2px] w-5 h-5 bg-[#6CC452] rounded-full shadow-md transform transition-transform duration-300"></div>
                                             </button>

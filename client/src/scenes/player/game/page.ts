@@ -342,10 +342,14 @@ export class GameScene extends Phaser.Scene {
 
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = container as any;
+                
+                // Initial camera setup
                 this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
                 this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-                this.cameras.main.setZoom(window.innerWidth <= 768 ? 1.2 : 2);
                 this.cameras.main.roundPixels = true;
+                
+                // Initial resize call to set correct zoom and viewport
+                this.handleResize(this.scale.gameSize);
 
                 const uiScene = this.scene.get('UIScene') as UIScene;
                 if (uiScene) uiScene.updateScore(player.score);
@@ -681,6 +685,9 @@ export class GameScene extends Phaser.Scene {
 
         this.createPlayerIndicator();
         this.clickToMove = new ClickToMoveSystem(this);
+
+        // --- Handle Resizing ---
+        this.scale.on('resize', this.handleResize, this);
 
         this.room.onLeave((code) => {
             console.warn(`[GameScene] Disconnected from room (code: ${code})`);
@@ -1101,6 +1108,31 @@ export class GameScene extends Phaser.Scene {
                 this.quizPopup.show(questionData, name);
                 if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);
             }
+        }
+    }
+    private handleResize(gameSize: Phaser.Structs.Size) {
+        const { width, height } = gameSize;
+        console.log(`[GameScene] Resizing to ${width}x${height}`);
+
+        // Update main camera viewport to fill the new game size
+        this.cameras.main.setViewport(0, 0, width, height);
+
+        // Update zoom dynamically
+        // If landscape (typical for gameplay)
+        if (width > height) {
+            if (width <= 850) { // Mobile Landscape
+                this.cameras.main.setZoom(1.5);
+            } else { // Desktop/Tablet
+                this.cameras.main.setZoom(2);
+            }
+        } else {
+            // Portrait (during transition or warning)
+            this.cameras.main.setZoom(1.2);
+        }
+
+        // Re-ensure bounds and follow are correct
+        if (this.map) {
+            this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         }
     }
 }
