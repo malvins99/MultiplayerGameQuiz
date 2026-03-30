@@ -220,6 +220,13 @@ export class GameRoom extends Room<GameState> {
             (client as any).manualLeave = true;
         });
 
+        this.onMessage("engageEnemy", (client, data) => {
+            const enemy = this.state.enemies[data.enemyIndex];
+            if (enemy && enemy.isAlive) {
+                enemy.isBusy = true; // Freezes enemy in updateEnemies loop
+            }
+        });
+
         this.onMessage("correctAnswer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player && !player.isFinished) {
@@ -295,11 +302,11 @@ export class GameRoom extends Room<GameState> {
         this.onMessage("wrongAnswer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player && !player.isFinished) {
-                player.hasWrongAnswer = true;
-                player.lastWrongQuestionId = data.questionId;
                 player.wrongAnswers++;
                 player.answeredQuestions++;
-
+                player.hasWrongAnswer = true;
+                player.lastWrongQuestionId = data.questionId;
+                
                 // Track Answer
                 let answers = this.playerAnswers.get(client.sessionId);
                 if (!answers) {
@@ -313,15 +320,11 @@ export class GameRoom extends Room<GameState> {
                     timestamp: Date.now()
                 });
 
-                // Real-time sync to Supabase B
-
-
                 // 2. Fitur Reset Enemy (Dari Versi Teman/Incoming)
                 const enemyIndex = data.enemyIndex;
                 if (enemyIndex !== undefined) {
                     const enemy = this.state.enemies[enemyIndex];
                     if (enemy) {
-                        enemy.isBusy = false;
                         enemy.isFleeing = false;
                         enemy.targetX = 0;
                         enemy.targetY = 0;

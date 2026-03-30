@@ -681,6 +681,20 @@ export class PlayerWaitingRoomManager {
         base.style.animation = 'play-idle 1s steps(9) infinite';
         container.appendChild(base);
 
+        // Render Tools (Right Hand)
+        const toolsLayer = document.createElement('div');
+        toolsLayer.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+        toolsLayer.style.width = '96px';
+        toolsLayer.style.height = '64px';
+        toolsLayer.style.backgroundSize = '864px 64px';
+        toolsLayer.style.imageRendering = 'pixelated';
+        toolsLayer.style.position = 'absolute';
+        toolsLayer.style.top = '50%';
+        toolsLayer.style.left = '50%';
+        toolsLayer.style.transform = 'translate(-50%, -50%) scale(5)'; // Centered and SCALED UP (5x)
+        toolsLayer.style.animation = 'play-idle 1s steps(9) infinite';
+        container.appendChild(toolsLayer);
+
         // Render Hair
         if (hairId > 0) {
             import('../../../data/characterData').then(({ getHairById }) => {
@@ -993,6 +1007,13 @@ export class PlayerWaitingRoomManager {
                             <div style="
                                 position: absolute; inset: 0;
                                 background-image: url('/assets/base_idle_strip9.png');
+                                background-repeat: no-repeat;
+                                background-position: -32px -16px;
+                                image-rendering: pixelated;
+                            "></div>
+                            <div style="
+                                position: absolute; inset: 0;
+                                background-image: url('/assets/tools_idle_strip9.png');
                                 background-repeat: no-repeat;
                                 background-position: -32px -16px;
                                 image-rendering: pixelated;
