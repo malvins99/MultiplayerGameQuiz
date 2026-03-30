@@ -209,14 +209,14 @@ export class LoginManager {
             this.showFieldError('password', i18n.t('login.errors.required'));
             hasError = true;
         } else if (password.length < 6) {
-            this.showFieldError('password', 'Minimum 6 characters');
+            this.showFieldError('password', i18n.t('login.errors.min_password'));
             hasError = true;
         }
 
         if (hasError) return;
 
         // Show loading state
-        this.setLoadingState(true, 'Logging in...');
+        this.setLoadingState(true, i18n.t('login.alerts.logging_in'));
 
         // Attempt login with Supabase
         const result = await authService.loginWithEmailOrUsername(identifier, password);
@@ -224,7 +224,7 @@ export class LoginManager {
         this.setLoadingState(false);
 
         if (result.success && result.profile) {
-            this.showToast(`Welcome, ${result.profile.username}!`, 'success');
+            this.showToast(i18n.t('login.alerts.welcome').replace('{name}', result.profile.username || ''), 'success');
             console.log('Login successful:', result.profile.username);
             setTimeout(() => this.navigateToLobby(), 800);
         } else {
@@ -237,8 +237,8 @@ export class LoginManager {
     async handleGoogleLogin() {
         if (this.isLoading) return;
         console.log('Google Login initiated');
-        this.showToast('Redirecting to Google...', 'info');
-        this.setLoadingState(true, 'Redirecting to Google...');
+        this.showToast(i18n.t('login.alerts.redirecting_google'), 'info');
+        this.setLoadingState(true, i18n.t('login.alerts.redirecting_google'));
         const result = await authService.loginWithGoogle();
         if (!result.success) {
             this.setLoadingState(false);

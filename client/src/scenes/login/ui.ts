@@ -174,7 +174,7 @@ export class LoginUI {
 
                                 <!-- Register Link -->
                                 <div class="text-center pt-3 flex flex-col items-center justify-center mt-2">
-                                    <div class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-[11px] w-full font-bold">
+                                    <div class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-[11px] w-full font-bold ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
                                         <span class="text-[#46A881]/60 font-['Retro_Gaming'] tracking-widest">${i18n.t('login.dont_have_account')}</span>
                                         <a href="https://gameforsmart2026.vercel.app/auth/register" id="register-link" class="text-[#46A881] hover:text-[#388567] transition-all font-['Retro_Gaming'] font-black">${i18n.t('login.register')}</a>
                                     </div>

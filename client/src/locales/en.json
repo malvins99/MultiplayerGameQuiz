@@ -15,7 +15,13 @@
     "errors": {
       "required": "Required",
       "invalid_email": "Enter a valid email",
-      "invalid_login": "Invalid email or password"
+      "invalid_login": "Invalid email or password",
+      "min_password": "Minimum 6 characters"
+    },
+    "alerts": {
+      "welcome": "Welcome, {name}!",
+      "logging_in": "Logging in...",
+      "redirecting_google": "Redirecting to Google..."
     }
   },
   "loading": {
