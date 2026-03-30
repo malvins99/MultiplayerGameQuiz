@@ -217,7 +217,11 @@ export class LobbyManager {
         if (profile) {
             if (nameEl) nameEl.innerText = profile.nickname || profile.fullname || profile.username || profile.email || 'Guest';
             if (avatarEl && profile.avatar_url) {
-                avatarEl.src = profile.avatar_url;
+                let avatarUrl = profile.avatar_url;
+                if (avatarUrl.includes('googleusercontent.com')) {
+                    avatarUrl = avatarUrl.replace(/=s\d+(-c)?/, '=s384-c');
+                }
+                avatarEl.src = avatarUrl;
                 avatarEl.classList.remove('hidden');
                 if (avatarFallback) avatarFallback.classList.add('hidden');
                 avatarEl.onerror = () => {
@@ -640,6 +644,7 @@ export class LobbyManager {
                 const room = await this.client.joinById(targetRoom.roomId, {
                     name: nickname,
                     userId: userId,
+                    avatarUrl: profile.avatar_url,
                     sessionId: sessionData.id
                 });
 

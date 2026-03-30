@@ -41,6 +41,7 @@ export class Player extends Schema {
     @type("number") targetY: number = 0;
     @type("string") name!: string;
     @type("string") userId: string = "";
+    @type("string") avatarUrl: string = "";
     @type("number") hairId: number = 0;
     @type("number") score: number = 0;
     @type("number") correctAnswers: number = 0;

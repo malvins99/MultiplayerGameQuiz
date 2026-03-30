@@ -272,6 +272,7 @@ export class GameRoom extends Room<GameState> {
                         rank: -1,
                         sessionId: player.sessionId,
                         userId: player.userId,
+                        avatarUrl: player.avatarUrl,
                         name: player.name,
                         hairId: player.hairId || 0,
                         score: player.score,
@@ -695,6 +696,7 @@ export class GameRoom extends Room<GameState> {
         const player = new Player();
         player.sessionId = client.sessionId;
         player.userId = options.userId || "";
+        player.avatarUrl = options.avatarUrl || "";
         player.name = options.name || "Player " + (this.state.players.size + 1);
 
         // Assign spawn position from Map Data
@@ -1054,6 +1056,7 @@ export class GameRoom extends Room<GameState> {
                 rank: index + 1,
                 sessionId: player.sessionId,
                 userId: player.userId,
+                avatarUrl: player.avatarUrl,
                 name: player.name,
                 hairId: player.hairId || 0, // Ensure hairId is sent
                 score: player.score,

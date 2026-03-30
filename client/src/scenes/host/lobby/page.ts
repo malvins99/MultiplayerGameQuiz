@@ -732,7 +732,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
+                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
                                 ${i18n.t('host_lobby.exit')}
                             </button>
                             <!-- Start Button -->
