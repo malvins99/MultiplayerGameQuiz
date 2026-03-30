@@ -377,7 +377,6 @@ export class LobbyManager {
         const createRoomBtn = document.getElementById('create-room-btn');
         const joinBtn = document.getElementById('join-room-btn');
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
-        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
 
         if (createRoomBtn) {
             createRoomBtn.onclick = () => {
@@ -390,7 +389,7 @@ export class LobbyManager {
 
         if (joinBtn) {
             joinBtn.onclick = () => {
-                this.handleJoinRoom(codeInput?.value, nicknameInput?.value);
+                this.handleJoinRoom(codeInput?.value);
             };
         }
     }
@@ -561,15 +560,18 @@ export class LobbyManager {
         this.clearJoinErrors();
 
         const cleanCode = code ? code.trim() : "";
-        const nickname = nicknameInput ? nicknameInput.trim() : "";
+        
+        // Use provided nickname (autoJoin) OR fetch from stored profile
+        let nickname = (nicknameInput || "").trim();
+        if (!nickname) {
+            const profile = authService.getStoredProfile();
+            nickname = profile?.nickname || profile?.fullname || profile?.username || profile?.email?.split('@')[0] || 'Player';
+        }
+
         let hasError = false;
 
         if (!cleanCode || cleanCode.length !== 6) {
             this.showJoinFieldError('roomcode', i18n.t('lobby.join_errors.invalid_code'));
-            hasError = true;
-        }
-        if (!nickname) {
-            this.showJoinFieldError('nickname', i18n.t('lobby.join_errors.required'));
             hasError = true;
         }
         if (hasError) return;
@@ -693,13 +695,11 @@ export class LobbyManager {
     }
 
     private clearJoinErrors() {
-        ['nickname', 'roomcode', 'join'].forEach(id => {
+        ['roomcode', 'join'].forEach(id => {
             const errorEl = document.getElementById(`${id}-error`);
             if (errorEl) errorEl.classList.add('hidden');
         });
-        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
-        if (nicknameInput) nicknameInput.classList.remove('!border-red-500');
         if (codeInput) codeInput.classList.remove('!border-red-500');
     }
 }
