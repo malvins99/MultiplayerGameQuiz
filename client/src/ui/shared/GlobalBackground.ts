@@ -302,7 +302,7 @@ export class GlobalBackground {
         } else {
             const hairTypes = ['longhair', 'shorthair', 'curlyhair'];
             const selectedHair = hairTypes[Math.floor(Math.random() * hairTypes.length)];
-            sprite.style.backgroundImage = `url('/assets/${selectedHair}_walk_strip8.png'), url('/assets/base_walk_strip8.png')`;
+            sprite.style.backgroundImage = `url('/assets/${selectedHair}_walk_strip8.png'), url('/assets/tools_walk_strip8.png'), url('/assets/base_walk_strip8.png')`;
             sprite.style.animation = `base-walk-cycle 0.8s steps(8) infinite`;
         }
 
