@@ -1122,7 +1122,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     handleEnemyInteraction(enemyId: string) {
-        if (this.clickToMove) this.clickToMove.cancelMovement();
         const enemyState = this.room.state.enemies[enemyId];
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
             const enemySprite = this.enemyEntities[enemyId];
