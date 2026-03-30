@@ -575,34 +575,69 @@ export class GameRoom extends Room<GameState> {
                     }
                 });
 
+                // --- SMARTER BOUNDARY AVOIDANCE ---
+                const mapWidth = this.cachedMapData ? this.cachedMapData.mapWidth : 2000;
+                const mapHeight = this.cachedMapData ? this.cachedMapData.mapHeight : 1120;
+                const mapData = this.cachedMapData || MapParser.loadMapData(this.state.difficulty);
+                
+                let zone = { x: 50, y: 50, width: mapWidth - 100, height: mapHeight - 100 };
+                if (enemy.spawnZoneIndex !== -1 && mapData?.enemySpawnZones?.[enemy.spawnZoneIndex]) {
+                    zone = mapData.enemySpawnZones[enemy.spawnZoneIndex];
+                }
+
+                // Boundary repulsion (steer away from walls early)
+                const margin = 60; // Distance to start feeling wall pressure
+                let wallX = 0;
+                let wallY = 0;
+                if (enemy.x < zone.x + margin) wallX += (zone.x + margin - enemy.x) / margin;
+                if (enemy.x > zone.x + zone.width - margin) wallX -= (enemy.x - (zone.x + zone.width - margin)) / margin;
+                if (enemy.y < zone.y + margin) wallY += (zone.y + margin - enemy.y) / margin;
+                if (enemy.y > zone.y + zone.height - margin) wallY -= (enemy.y - (zone.y + zone.height - margin)) / margin;
+
                 // Combine Forces
                 const sepWeight = (this.state.difficulty === 'sulit') ? 2.5 : 1.8;
-                let moveX = fleeX * 1.0 + (neighbors > 0 ? (sepX / neighbors) * sepWeight : 0);
-                let moveY = fleeY * 1.0 + (neighbors > 0 ? (sepY / neighbors) * sepWeight : 0);
+                const wallWeight = 2.0; // Stronger than separation to prevent wall pinning
+                let moveX = fleeX * 1.0 + (neighbors > 0 ? (sepX / neighbors) * sepWeight : 0) + (wallX * wallWeight);
+                let moveY = fleeY * 1.0 + (neighbors > 0 ? (sepY / neighbors) * sepWeight : 0) + (wallY * wallWeight);
 
                 // Normalize Direction
                 const moveMag = Math.sqrt(moveX * moveX + moveY * moveY) || 1;
                 moveX /= moveMag;
                 moveY /= moveMag;
 
+                // --- SLIDING PHYSICS ---
+                // If moving into a wall, cancel that component and slide along it
+                const upcomingX = enemy.x + moveX * (ENEMY_SPEED * deltaTime / 1000);
+                const upcomingY = enemy.y + moveY * (ENEMY_SPEED * deltaTime / 1000);
+
+                if (upcomingX < zone.x || upcomingX > zone.x + zone.width) moveX = 0;
+                if (upcomingY < zone.y || upcomingY > zone.y + zone.height) moveY = 0;
+
+                // Re-normalize after sliding to maintain movement speed if possible
+                const slideMag = Math.sqrt(moveX * moveX + moveY * moveY);
+                if (slideMag > 0.1) {
+                    moveX /= slideMag;
+                    moveY /= slideMag;
+                }
+
                 // Move with Speed
                 const step = ENEMY_SPEED * (deltaTime / 1000);
+                const oldX = enemy.x;
+                const oldY = enemy.y;
+                
                 enemy.x += moveX * step;
                 enemy.y += moveY * step;
 
-                // Boundary Constraints & Spawn Zone Constraints
-                const mapWidth = this.cachedMapData ? this.cachedMapData.mapWidth : 2000;
-                const mapHeight = this.cachedMapData ? this.cachedMapData.mapHeight : 1120;
-                
-                // Keep inside spawn zone if assigned
-                const mapData = this.cachedMapData || MapParser.loadMapData(this.state.difficulty);
-                if (enemy.spawnZoneIndex !== -1 && mapData?.enemySpawnZones?.[enemy.spawnZoneIndex]) {
-                    const zone = mapData.enemySpawnZones[enemy.spawnZoneIndex];
-                    enemy.x = Math.max(zone.x, Math.min(zone.x + zone.width, enemy.x));
-                    enemy.y = Math.max(zone.y, Math.min(zone.y + zone.height, enemy.y));
-                } else {
-                    enemy.x = Math.max(50, Math.min(mapWidth - 50, enemy.x));
-                    enemy.y = Math.max(50, Math.min(mapHeight - 50, enemy.y));
+                // Hard Clamp (Final constraint)
+                enemy.x = Math.max(zone.x, Math.min(zone.x + zone.width, enemy.x));
+                enemy.y = Math.max(zone.y, Math.min(zone.y + zone.height, enemy.y));
+
+                // --- STUCK / CORNER DETECTION ---
+                const actualDist = Math.sqrt(Math.pow(enemy.x - oldX, 2) + Math.pow(enemy.y - oldY, 2));
+                // If blocked by corner (moving very little despite high step energy)
+                if (actualDist < step * 0.2 && dist < FLEE_RADIUS * 0.8) {
+                    enemy.isFleeing = false;
+                    enemy.restUntil = now + (REST_DURATION_MIN * 0.5); // Freeze briefly to look natural
                 }
 
                 // Stop fleeing if safe

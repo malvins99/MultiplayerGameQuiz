@@ -106,19 +106,15 @@ export class LobbyUI {
                             <h2 class="text-lg md:text-xl text-[#478D47] mb-1 uppercase tracking-wider">${i18n.t('lobby.join_card.title')}</h2>
                             <p class="text-[#478D47] text-[10px] md:text-xs leading-relaxed mb-3 max-w-[240px]">${i18n.t('lobby.join_card.desc')}</p>
                             <!-- Code Input Group -->
-                            <div class="w-full space-y-2 mt-auto">
+                            <div class="w-full space-y-3 mt-auto">
                                 <div>
-                                    <input id="lobby-nickname-input" class="w-full h-10 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-base text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="${i18n.t('lobby.join_card.placeholders.nickname')}" type="text" maxlength="12" />
-                                    <p id="nickname-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <input id="room-code-input" class="w-full h-12 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-xl tracking-[0.3em] text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all shadow-inner" placeholder="${i18n.t('lobby.join_card.placeholders.code')}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                                    <p id="roomcode-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-2 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
-                                <div>
-                                    <input id="room-code-input" class="w-full h-10 bg-[#F1F8E9] border-2 border-[#6CC452]/30 rounded-xl focus:border-[#6CC452] focus:ring-4 focus:ring-[#6CC452]/20 text-center text-lg tracking-[0.3em] text-[#478D47] uppercase placeholder:text-[#6CC452]/30 font-['Retro_Gaming'] transition-all" placeholder="${i18n.t('lobby.join_card.placeholders.code')}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
-                                    <p id="roomcode-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
-                                </div>
-                                <button id="join-room-btn" class="w-full py-2.5 bg-[#92C140] text-white font-bold font-['Retro_Gaming'] text-base rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
+                                <button id="join-room-btn" class="w-full py-3 bg-[#92C140] text-white font-bold font-['Retro_Gaming'] text-lg rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer">
                                     ${i18n.t('lobby.join_card.btn')}
                                 </button>
-                                <p id="join-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-0.5 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                <p id="join-error" class="hidden text-red-500 text-[8px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 justify-center"><span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                             </div>
                         </div>
 

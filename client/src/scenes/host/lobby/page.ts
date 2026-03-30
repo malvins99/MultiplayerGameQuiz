@@ -216,10 +216,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         const waitingUiEl = document.getElementById('waiting-ui');
         if (waitingUiEl) waitingUiEl.classList.add('hidden');
 
-        // Global TransitionManager handles countdown cleanup
-
-        Router.navigate('/host/select-quiz');
-        this.scene.start('LobbyScene');
+        // Force reload to Select Quiz to ensure clean state and proper routing
+        window.location.href = '/host/select-quiz';
     }
 
     /** Muncullkan Notifikasi Toast Kustom */
@@ -1654,8 +1652,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
             const lobbyUI = document.getElementById('lobby-ui');
             if (lobbyUI) lobbyUI.classList.remove('hidden');
-            Router.navigate('/host/select-quiz');
-            this.scene.start('LobbyScene');
+
+            // Force reload to Select Quiz to ensure clean state and proper routing
+            window.location.href = '/host/select-quiz';
 
             // Global TransitionManager handles cleanup
         }
