@@ -39,8 +39,8 @@ export class QuizSelectionUI {
                                 </div>
                                 <!-- Middle: Custom Dropdown -->
                                 <div class="relative min-w-[200px] shrink-0 border-t md:border-t-0 border-[#6CC452]/10 md:border-l md:border-[#6CC452]/20 z-50">
-                                    <button id="custom-cat-trigger" class="w-full h-10 md:h-12 flex items-center justify-between pl-4 pr-3 text-[#478D47] text-xs md:text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:bg-[#F1F8E9] transition-all focus:outline-none group rounded-xl">
-                                        <span id="custom-cat-selected" class="truncate mr-2">${i18n.t('select_quiz.all')}</span>
+                                    <button id="custom-cat-trigger" class="w-full h-10 md:h-12 flex items-center justify-between pl-4 pr-3 text-[#478D47] text-xs md:text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:bg-[#F1F8E9] transition-all focus:outline-none group rounded-xl ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
+                                        <span id="custom-cat-selected" class="truncate ${i18n.getLanguage() === 'ar' ? 'ml-2' : 'mr-2'}">${i18n.t('select_quiz.all')}</span>
                                         <span id="custom-cat-arrow" class="material-symbols-outlined text-sm md:text-lg text-[#6CC452] transition-transform duration-300 group-hover:rotate-180">expand_more</span>
                                     </button>
                                     <div id="custom-cat-menu" class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl origin-top transform transition-all duration-200 scale-95 opacity-0 flex flex-col p-1 max-h-[50vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar z-50">

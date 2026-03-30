@@ -302,13 +302,6 @@ export class LobbyManager {
                     const lang = (btn as HTMLElement).dataset.lang as 'en' | 'id' | 'ar';
                     console.log("Language selected:", lang);
                     
-                    if (lang === 'ar') {
-                        // For now we only have EN and ID in locales, but we can set it
-                        // if we want to support Arabic later. 
-                        // i18n.setLanguage(lang as any); 
-                        return;
-                    }
-                    
                     if (lang) {
                         i18n.setLanguage(lang);
                     }

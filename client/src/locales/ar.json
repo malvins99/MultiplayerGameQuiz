@@ -1,0 +1,170 @@
+{
+  "login": {
+    "title": "تسجيل الدخول",
+    "google_signin": "تسجيل الدخول باستخدام جوجل",
+    "or": "أو",
+    "email_username": "البريد الإلكتروني / اسم المستخدم",
+    "password": "كلمة المرور",
+    "login_btn": "دخول",
+    "dont_have_account": "ليس لديك حساب؟",
+    "register": "سجل الآن",
+    "placeholders": {
+      "email": "player@game.com",
+      "password": "••••••••"
+    },
+    "errors": {
+      "required": "مطلوب",
+      "invalid_email": "البريد الإلكتروني غير صالح",
+      "invalid_login": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+      "min_password": "الحد الأدنى 6 أحرف"
+    },
+    "alerts": {
+      "welcome": "مرحباً، {name}!",
+      "logging_in": "جاري الدخول...",
+      "redirecting_google": "جاري التوجيه إلى جوجل..."
+    }
+  },
+  "loading": {
+    "completing_login": "جاري إكمال تسجيل الدخول...",
+    "please_wait": "يرجى الانتظار"
+  },
+  "lobby": {
+    "guest": "ضيف",
+    "menu": {
+      "language": "اللغة",
+      "logout": "تسجيل الخروج"
+    },
+    "host_card": {
+      "title": "استضافة",
+      "desc": "قم بإنشاء عالم لعبتك وادعُ الناجين",
+      "btn": "إنشاء عالم"
+    },
+    "join_card": {
+      "title": "انضمام",
+      "desc": "أدخل الرمز للانضمام",
+      "btn": "انضمام",
+      "placeholders": {
+        "nickname": "الاسم المستعار",
+        "code": "الرمز"
+      },
+      "joining_btn": "جاري الانضمام..."
+    },
+    "logout_modal": {
+      "title": "تسجيل الخروج",
+      "desc": "هل أنت متأكد أنك تريد<br>تسجيل الخروج؟",
+      "cancel": "إلغاء",
+      "confirm": "تسجيل الخروج"
+    },
+    "join_errors": {
+      "invalid_code": "أدخل رمزًا صحيحًا من 6 أرقام",
+      "required": "مطلوب",
+      "room_not_found": "لم يتم العثور على الغرفة",
+      "game_started": "اللعبة بدأت أو انتهت بالفعل",
+      "login_first": "يرجى تسجيل الدخول أولاً",
+      "join_failed": "فشل الانضمام، حاول مرة أخرى",
+      "room_closed": "الغرفة مغلقة أو غير موجودة",
+      "conn_error": "خطأ في الاتصال، حاول مرة أخرى",
+      "joining_msg": "جاري الانضمام إلى الغرفة {code}...",
+      "autojoin_failed": "فشل الانضمام التلقائي: "
+    }
+  },
+  "quiz_setting": {
+    "question_count": "عدد الأسئلة",
+    "timer": "المؤقت",
+    "difficulty": "مستوى الصعوبة",
+    "music": "موسيقى",
+    "create": "إنشاء",
+    "creating": "جاري الإنشاء...",
+    "q_5": "5 أسئلة",
+    "q_10": "10 أسئلة",
+    "q_15": "15 سؤالاً",
+    "q_20": "20 سؤالاً",
+    "m_5": "5 دقائق",
+    "m_10": "10 دقائق",
+    "m_15": "15 دقيقة",
+    "m_20": "20 دقيقة",
+    "diff_easy": "سهل",
+    "diff_medium": "متوسط",
+    "diff_hard": "صعب",
+    "going_back": "جاري العودة...",
+    "create_failed": "فشل إنشاء جلسة اللعبة. يرجى المحاولة مرة أخرى.",
+    "create_error": "خطأ في إنشاء الغرفة. تحقق من وحدة التحكم."
+  },
+  "select_quiz": {
+    "search_placeholder": "ابحث عن اختبار...",
+    "all": "الكل",
+    "prev": "السابق",
+    "next": "التالي",
+    "favorites_tooltip": "المفضلة",
+    "my_quiz_tooltip": "اختباراتي",
+    "login_required_my_quiz": "يرجى تسجيل الدخول لعرض اختباراتك.",
+    "login_required_favorite": "يرجى تسجيل الدخول لحفظ المفضلة.",
+    "no_quiz_found": "لم يتم العثور على اختبار",
+    "reset_filter": "إعادة تعيين الفلتر",
+    "going_back": "جاري العودة..."
+  },
+  "categories": {
+    "math": "رياضيات",
+    "technology": "تكنولوجيا",
+    "science": "علوم",
+    "general": "عام",
+    "history": "تاريخ",
+    "sports": "رياضة",
+    "business": "أعمال",
+    "language": "لغات",
+    "matematika": "رياضيات",
+    "teknologi": "تكنولوجيا",
+    "sains": "علوم",
+    "umum": "عام",
+    "sejarah": "تاريخ",
+    "olahraga": "رياضة",
+    "bisnis": "أعمال",
+    "bahasa": "لغات"
+  },
+  "host_lobby": {
+    "selected_character": "الشخصية المحددة",
+    "your_name": "اسمك",
+    "player_placeholder": "لاعب",
+    "connected_players": "اللاعبون المتصلون",
+    "start_game": "ابدأ اللعبة",
+    "waiting_host": "في انتظار المضيف...",
+    "restoring_session": "استعادة الجلسة",
+    "syncing": "جاري المزامنة مع الخادم...",
+    "code": "الرمز",
+    "players_plural": "لاعبين",
+    "player_singular": "لاعب",
+    "player_upper": "لاعب",
+    "players_upper": "لاعبين",
+    "exit": "خروج",
+    "start": "بدء",
+    "waiting_players_join": "في انتظار انضمام اللاعبين...",
+    "leave_room_title": "مغادرة الغرفة؟",
+    "leave_room_desc": "سيتم تدمير الغرفة وفصل جميع اللاعبين.",
+    "cancel": "إلغاء",
+    "no": "لا",
+    "yes": "نعم",
+    "yes_end_game": "نعم، إنهاء اللعبة",
+    "end_game_title": "إنهاء اللعبة وإغلاق الغرفة؟",
+    "invite_groups": "دعوة مجموعات",
+    "search_group": "البحث عن مجموعة...",
+    "close": "إغلاق",
+    "invite_friends": "دعوة الأصدقاء",
+    "search_friend": "البحث عن صديق...",
+    "copied": "تم النسخ!",
+    "loading_groups": "جاري تحميل المجموعات...",
+    "login_to_view_groups": "يرجى تسجيل الدخول لعرض المجموعات.",
+    "no_groups_yet": "لم تنضم إلى أي مجموعات بعد.",
+    "no_groups_found": "لم يتم العثور على مجموعات بحثك.",
+    "failed_load_groups": "فشل تحميل المجموعات.",
+    "invited": "تمت الدعوة",
+    "invite": "دعوة",
+    "member": "عضو",
+    "loading_friends": "جاري تحميل الأصدقاء...",
+    "login_first": "يرجى تسجيل الدخول أولاً.",
+    "no_friends_yet": "ليس لديك أي أصدقاء بعد.",
+    "no_friends_found": "لم يتم العثور على أصدقاء بحثك.",
+    "failed_load_friends": "فشل تحميل الأصدقاء.",
+    "joined": "انضم",
+    "full": "ممتلئ"
+  }
+}

@@ -1,37 +1,69 @@
 import en from '../locales/en.json';
 import id from '../locales/id.json';
+import ar from '../locales/ar.json';
 
 type LocaleData = typeof en;
-type Language = 'en' | 'id';
+type Language = 'en' | 'id' | 'ar';
 
-const locales: Record<Language, LocaleData> = {
+const locales: Record<Language, any> = {
     en,
-    id
+    id,
+    ar
 };
 
 class I18n {
     private currentLang: Language = 'en';
 
     constructor() {
+        if (!document.getElementById('ar-font-styles')) {
+            const style = document.createElement('style');
+            style.id = 'ar-font-styles';
+            style.innerHTML = `
+                @font-face {
+                    font-family: 'LPMQ';
+                    src: url('/fonts/LPMQ IsepMisbah.ttf') format('truetype');
+                    unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+                }
+                .ar-font *:not(.material-symbols-outlined):not(.material-icons) {
+                    font-family: 'LPMQ', 'Retro Gaming', cursive, sans-serif !important;
+                    letter-spacing: normal !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         const savedLang = localStorage.getItem('app_lang') as Language;
         if (savedLang && locales[savedLang]) {
-            this.currentLang = savedLang;
+            this.setLanguage(savedLang, false);
         } else {
             // Default to browser language if available and supported, otherwise 'en'
             const browserLang = navigator.language.split('-')[0] as Language;
             if (locales[browserLang]) {
-                this.currentLang = browserLang;
+                this.setLanguage(browserLang, false);
+            } else {
+                this.setLanguage('en', false);
             }
         }
     }
 
-    setLanguage(lang: Language) {
+    setLanguage(lang: Language, dispatchEvent: boolean = true) {
         if (locales[lang]) {
             this.currentLang = lang;
             localStorage.setItem('app_lang', lang);
             
-            // Dispatch event for components to react
-            window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
+            document.documentElement.lang = lang;
+            document.documentElement.dir = 'ltr'; // Beban layout tetap kiri-ke-kanan, tulisan arab akan tetap render ke kanan sendiri.
+
+            if (lang === 'ar') {
+                document.documentElement.classList.add('ar-font');
+            } else {
+                document.documentElement.classList.remove('ar-font');
+            }
+            
+            if (dispatchEvent) {
+                // Dispatch event for components to react
+                window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
+            }
         }
     }
 

@@ -18,7 +18,7 @@ export class WaitingRoomUI {
                     <span class="material-symbols-outlined text-white/50 group-hover:text-white transition-colors">arrow_back</span>
                 </button>
 
-                <main class="flex-1 flex gap-6 overflow-hidden max-w-[1600px] mx-auto w-full pt-12">
+                <main class="flex-1 flex gap-6 overflow-hidden max-w-[1600px] mx-auto w-full pt-12 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
                     <!-- LEFT: Character & Profile - Adjusted Width -->
                     <section class="w-96 shrink-0 flex flex-col gap-3">
                     <div id="sidebar-card"
@@ -29,7 +29,7 @@ export class WaitingRoomUI {
                         <p id="player-ui-selected-char" class="text-[10px] font-bold text-white/40 uppercase tracking-widest text-center">${i18n.t('host_lobby.selected_character')}
                         </p>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
                             <button
                             class="w-8 h-8 bg-black/40 border-2 border-white/10 hover:border-primary flex items-center justify-center transition-colors rounded-lg">
                             <span class="material-symbols-outlined text-white/50">chevron_left</span>
@@ -54,9 +54,9 @@ export class WaitingRoomUI {
                         <div class="relative group">
                             <input id="player-name-input"
                             class="w-full h-11 bg-black/60 border-2 border-white/10 focus:border-primary focus:ring-0 px-4 font-bold tracking-widest uppercase text-white text-[11px] placeholder:text-white/20 font-['Retro_Gaming'] text-center rounded-xl transition-all hover:border-white/20"
-                            placeholder="${i18n.t('host_lobby.player_placeholder')}" type="text" maxlength="12" />
+                            placeholder="${i18n.t('host_lobby.player_placeholder')}" type="text" maxlength="12" ${i18n.getLanguage() === 'ar' ? 'dir="rtl"' : ''} />
                             <div
-                            class="absolute right-3 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none group-focus-within:opacity-100 transition-opacity">
+                            class="absolute ${i18n.getLanguage() === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 opacity-20 pointer-events-none group-focus-within:opacity-100 transition-opacity">
                             <span class="material-symbols-outlined text-primary text-sm">edit</span>
                             </div>
                         </div>
@@ -69,7 +69,7 @@ export class WaitingRoomUI {
                             class="text-3xl font-bold tracking-[0.2em] text-primary font-['Retro_Gaming'] drop-shadow-md text-center">------</span>
 
                         <button id="copy-code-btn"
-                            class="absolute top-2 right-2 p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                            class="absolute top-2 ${i18n.getLanguage() === 'ar' ? 'left-2' : 'right-2'} p-1.5 text-white/20 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                             title="Copy Code">
                             <span id="copy-icon" class="material-symbols-outlined text-sm">content_copy</span>
                         </button>
@@ -96,10 +96,10 @@ export class WaitingRoomUI {
                     <section class="flex-1 flex flex-col gap-4 min-w-0">
                     <div
                         class="bg-surface-dark border-4 border-black p-6 rounded-2xl flex-1 flex flex-col relative overflow-hidden shadow-xl">
-                        <div class="flex justify-between items-center mb-6 border-b-2 border-white/5 pb-4">
+                        <div class="flex justify-between items-center mb-6 border-b-2 border-white/5 pb-4 ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
                         <!-- Header Font Fix -->
                         <h3 id="waiting-header-text"
-                            class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3 font-['Retro_Gaming']">
+                            class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-3 font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end' : ''}">
                             <span class="flex size-3 relative">
                             <span
                                 class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>

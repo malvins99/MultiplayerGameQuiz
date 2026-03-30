@@ -212,7 +212,10 @@ export class SelectQuizManager {
             customMenu.appendChild(allBtn);
 
             categories.forEach(cat => {
-                const btn = this.createCustomOption(cat, cat);
+                const key = 'categories.' + cat.toLowerCase();
+                const translated = i18n.t(key);
+                const finalLabel = translated === key ? cat : translated;
+                const btn = this.createCustomOption(finalLabel, cat);
                 customMenu.appendChild(btn);
             });
         }
@@ -220,7 +223,8 @@ export class SelectQuizManager {
 
     createCustomOption(label: string, value: string): HTMLElement {
         const btn = document.createElement('button');
-        btn.className = "w-full text-left px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-[#478D47] uppercase tracking-tight flex items-center justify-between group mt-1";
+        const flexAlign = i18n.getLanguage() === 'ar' ? 'justify-end text-right' : 'justify-start text-left';
+        btn.className = `w-full ${flexAlign} px-3 py-2 md:px-4 md:py-3 text-xs md:text-lg font-['Retro_Gaming'] hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-[#478D47] uppercase tracking-tight flex items-center group mt-1`;
         btn.innerHTML = `<span>${label}</span>`;
         btn.dataset.value = value;
         btn.onclick = () => this.handleCategoryChange(value, label);
@@ -513,10 +517,13 @@ export class SelectQuizManager {
             let badgeColor = 'bg-[#6CC452] text-white border-2 border-[#478D47]';
 
             card.className = "group bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0";
+            const catKey = 'categories.' + quiz.category.toLowerCase();
+            const translatedCat = i18n.t(catKey) === catKey ? quiz.category : i18n.t(catKey);
+            
             card.innerHTML = `
                 <div class="absolute inset-0 bg-gradient-to-br from-[#4C5C2D]/0 to-[#1F7D53]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-1.5">
-                    <span class="px-1.5 py-0.5 md:px-2 md:py-1 ${badgeColor} text-[9px] md:text-[10px] font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${quiz.category}</span>
+                    <span class="px-1.5 py-0.5 md:px-2 md:py-1 ${badgeColor} text-[9px] md:text-[10px] font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${translatedCat}</span>
                     <button class="fav-btn p-1 flex items-center justify-center transition-all relative z-20 group/fav" data-id="${quiz.id}">
                         <span class="material-symbols-outlined text-[20px] md:text-[22px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
                     </button>
@@ -528,8 +535,16 @@ export class SelectQuizManager {
 
             const titleEl = card.querySelector('.quiz-title-tooltip-trigger');
             if (titleEl) {
-                titleEl.addEventListener('mouseenter', () => this.showTooltip(quiz.title));
-                titleEl.addEventListener('mousemove', (e: any) => this.moveTooltip(e));
+                const checkTruncation = () => {
+                    return titleEl.scrollHeight > titleEl.clientHeight || titleEl.scrollWidth > titleEl.clientWidth;
+                };
+
+                titleEl.addEventListener('mouseenter', () => {
+                    if (window.innerWidth > 768 && checkTruncation()) this.showTooltip(quiz.title);
+                });
+                titleEl.addEventListener('mousemove', (e: any) => {
+                    if (window.innerWidth > 768 && checkTruncation()) this.moveTooltip(e);
+                });
                 titleEl.addEventListener('mouseleave', () => this.hideTooltip());
             }
 

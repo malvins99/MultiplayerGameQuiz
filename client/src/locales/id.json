@@ -15,7 +15,13 @@
     "errors": {
       "required": "Wajib diisi",
       "invalid_email": "Masukkan email yang valid",
-      "invalid_login": "Email atau kata sandi salah"
+      "invalid_login": "Email atau kata sandi salah",
+      "min_password": "Minimal 6 karakter"
+    },
+    "alerts": {
+      "welcome": "Selamat datang, {name}!",
+      "logging_in": "Sedang masuk...",
+      "redirecting_google": "Mengarahkan ke Google..."
     }
   },
   "loading": {
