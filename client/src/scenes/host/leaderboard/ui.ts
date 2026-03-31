@@ -74,6 +74,8 @@ export class LeaderboardUI {
                 transform: scale(1.3); 
                 animation: lb-play-idle 1s steps(9) infinite; 
             }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `;
     }
 
@@ -113,23 +115,26 @@ export class LeaderboardUI {
             const isSecond = rank === 2;
 
             let colorHex = '#cd7f32'; // Bronze
+            let darkColorHex = '#8B4513'; // Saddle Brown (Dark Bronze)
             let colorBg = 'bg-orange-900/40';
             let colorGlow = 'rgba(205,127,50,0.5)';
             let icon = 'military_tech';
             let height = 'h-32';
             let width = 'w-[100px] md:w-[140px]';
-            let avatarSize = 'w-20 h-20 md:w-28 md:h-28';
+            let avatarSize = 'w-16 h-16 md:w-24 md:h-24'; // Slightly smaller to fit in the card
 
             if (isFirst) {
                 colorHex = '#ffcc00'; // Gold
+                darkColorHex = '#B8860B'; // Dark Gold
                 colorBg = 'bg-yellow-600/40';
                 colorGlow = 'rgba(255,204,0,0.6)';
                 icon = 'emoji_events';
                 height = 'h-48 md:h-56';
                 width = 'w-[120px] md:w-[180px]';
-                avatarSize = 'w-24 h-24 md:w-32 md:h-32';
+                avatarSize = 'w-20 h-20 md:w-28 md:h-28';
             } else if (isSecond) {
                 colorHex = '#c0c0c0'; // Silver
+                darkColorHex = '#708090'; // Slate Gray (Dark Silver)
                 colorBg = 'bg-gray-600/40';
                 colorGlow = 'rgba(192,192,192,0.5)';
                 height = 'h-40 md:h-44';
@@ -139,18 +144,28 @@ export class LeaderboardUI {
 
             return `
                 <div class="flex flex-col items-center relative z-20 group">
+                    
+                    <!-- SQUARE ROUNDED CARD (Tumpul) -->
+                    <div class="w-32 md:w-48 aspect-square rounded-[2rem] md:rounded-[3rem] p-3 md:p-4 mb-4 flex flex-col items-center justify-center border-b-8 shadow-2xl transition-transform group-hover:scale-105" 
+                         style="background: ${darkColorHex}; border-color: rgba(0,0,0,0.25);">
+                        
+                        <!-- Avatar -->
+                        <div class="${avatarSize} podium-avatar rounded-full border-4 flex items-center justify-center font-bold relative mb-2" style="background-color: ${colorHex}; border-color: ${colorHex};">
+                            ${p.avatarUrl ? `
+                                <img src="${upscaleAvatarUrl(p.avatarUrl)}" class="profile-img" alt="${p.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="initial-fallback hidden text-3xl md:text-5xl">${getInitials(p.name)}</div>
+                            ` : `
+                                <div class="initial-fallback text-3xl md:text-5xl">${getInitials(p.name)}</div>
+                            `}
+                        </div>
 
-
-                    <div class="${avatarSize} podium-avatar rounded-full border-4 flex items-center justify-center font-bold mb-4 relative" style="background-color: ${colorHex}; border-color: ${colorHex};">
-                        ${p.avatarUrl ? `
-                            <img src="${upscaleAvatarUrl(p.avatarUrl)}" class="profile-img" alt="${p.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="initial-fallback hidden text-4xl md:text-6xl">${getInitials(p.name)}</div>
-                        ` : `
-                            <div class="initial-fallback text-4xl md:text-6xl">${getInitials(p.name)}</div>
-                        `}
+                        <!-- Name (Truncated) -->
+                        <div class="w-full text-[10px] md:text-lg font-bold text-center uppercase truncate px-1" 
+                             style="color: #ffffff; font-family: 'Retro Gaming', monospace; text-shadow: 1px 1px 0 #000;"
+                             title="${p.name}">
+                            ${p.name}
+                        </div>
                     </div>
-
-                    <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: #ffffff; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.name}</div>
 
                     <!-- The literal podium block (Hidden on mobile) -->
                     <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden pointer-events-auto" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
@@ -196,7 +211,7 @@ export class LeaderboardUI {
                 <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart Logo" class="logo-right" />
 
                 <!-- MAIN CONTENT AREA: overflow-hidden for mobile to prevent scrollbars, auto for desktop -->
-                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-24 md:pt-28 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto custom-scrollbar pointer-events-none">
+                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-24 md:pt-28 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto hide-scrollbar pointer-events-none">
                     
 
 
@@ -219,7 +234,7 @@ export class LeaderboardUI {
                         </div>
                         
                         <!-- List (Make internal scrollable on mobile so we don't need body scroll) -->
-                        <div class="flex flex-col overflow-y-auto custom-scrollbar flex-1 min-h-0 pb-4 md:pb-0">
+                        <div class="flex flex-col overflow-y-auto hide-scrollbar flex-1 min-h-0 pb-4 md:pb-0 pointer-events-auto">
                             ${tableHtml}
                         </div>
                     </div>
