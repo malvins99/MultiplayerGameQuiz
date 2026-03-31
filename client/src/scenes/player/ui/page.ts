@@ -77,12 +77,18 @@ export class UIScene extends Phaser.Scene {
 
         // --- Handle Resize ---
         this.scale.on('resize', this.handleResize, this);
+        this.handleResize(this.scale.gameSize);
     }
 
 
     handleResize(gameSize: Phaser.Structs.Size) {
+        const { width, height } = gameSize;
+        
+        // Update viewport
+        this.cameras.main.setViewport(0, 0, width, height);
+        
         if (this.scoreContainer) {
-            this.scoreContainer.setPosition(gameSize.width / 2, 45);
+            this.scoreContainer.setPosition(width / 2, 45);
         }
     }
 

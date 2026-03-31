@@ -217,7 +217,11 @@ export class LobbyManager {
         if (profile) {
             if (nameEl) nameEl.innerText = profile.nickname || profile.fullname || profile.username || profile.email || 'Guest';
             if (avatarEl && profile.avatar_url) {
-                avatarEl.src = profile.avatar_url;
+                let avatarUrl = profile.avatar_url;
+                if (avatarUrl.includes('googleusercontent.com')) {
+                    avatarUrl = avatarUrl.replace(/=s\d+(-c)?/, '=s384-c');
+                }
+                avatarEl.src = avatarUrl;
                 avatarEl.classList.remove('hidden');
                 if (avatarFallback) avatarFallback.classList.add('hidden');
                 avatarEl.onerror = () => {
@@ -373,7 +377,6 @@ export class LobbyManager {
         const createRoomBtn = document.getElementById('create-room-btn');
         const joinBtn = document.getElementById('join-room-btn');
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
-        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
 
         if (createRoomBtn) {
             createRoomBtn.onclick = () => {
@@ -386,7 +389,7 @@ export class LobbyManager {
 
         if (joinBtn) {
             joinBtn.onclick = () => {
-                this.handleJoinRoom(codeInput?.value, nicknameInput?.value);
+                this.handleJoinRoom(codeInput?.value);
             };
         }
     }
@@ -557,15 +560,18 @@ export class LobbyManager {
         this.clearJoinErrors();
 
         const cleanCode = code ? code.trim() : "";
-        const nickname = nicknameInput ? nicknameInput.trim() : "";
+        
+        // Use provided nickname (autoJoin) OR fetch from stored profile
+        let nickname = (nicknameInput || "").trim();
+        if (!nickname) {
+            const profile = authService.getStoredProfile();
+            nickname = profile?.nickname || profile?.fullname || profile?.username || profile?.email?.split('@')[0] || 'Player';
+        }
+
         let hasError = false;
 
         if (!cleanCode || cleanCode.length !== 6) {
             this.showJoinFieldError('roomcode', i18n.t('lobby.join_errors.invalid_code'));
-            hasError = true;
-        }
-        if (!nickname) {
-            this.showJoinFieldError('nickname', i18n.t('lobby.join_errors.required'));
             hasError = true;
         }
         if (hasError) return;
@@ -640,6 +646,7 @@ export class LobbyManager {
                 const room = await this.client.joinById(targetRoom.roomId, {
                     name: nickname,
                     userId: userId,
+                    avatarUrl: profile.avatar_url,
                     sessionId: sessionData.id
                 });
 
@@ -688,13 +695,11 @@ export class LobbyManager {
     }
 
     private clearJoinErrors() {
-        ['nickname', 'roomcode', 'join'].forEach(id => {
+        ['roomcode', 'join'].forEach(id => {
             const errorEl = document.getElementById(`${id}-error`);
             if (errorEl) errorEl.classList.add('hidden');
         });
-        const nicknameInput = document.getElementById('lobby-nickname-input') as HTMLInputElement;
         const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
-        if (nicknameInput) nicknameInput.classList.remove('!border-red-500');
         if (codeInput) codeInput.classList.remove('!border-red-500');
     }
 }

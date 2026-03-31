@@ -3,12 +3,12 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "client/public/assets/map hard.tmx",
+    "activeFile": "C:/Users/USER/Downloads/untitled.tmj",
     "expandedProjectPaths": [
         ".",
         "client",
-        "client/public",
-        "client/public/assets"
+        "client/public/assets",
+        "client/public"
     ],
     "fileStates": {
         "": {
@@ -26,11 +26,11 @@
             "scaleInEditor": 4
         },
         "C:/Users/USER/Downloads/untitled.tmj": {
-            "scale": 32,
+            "scale": 3,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 213.46875,
-                "y": 180.90625
+                "x": 186.5,
+                "y": 119
             }
         },
         "C:/Zigma-gamev1/new-project/spr_tileset_sunnysideworld_16px.tsx": {
@@ -301,18 +301,16 @@
     "map.tileHeight": 16,
     "map.tileWidth": 16,
     "openFiles": [
-        "client/public/assets/map medium.tmj",
-        "client/public/assets/map hard.tmx",
         "C:/Users/USER/Downloads/untitled.tmj",
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
         "C:/Users/USER/Downloads/base_walk_strip8.tsx"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
-        "client/public/assets/map medium.tmj",
         "C:/Users/USER/Downloads/base_walk_strip8.tsx",
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
         "C:/Users/USER/Downloads/untitled.tmj",
+        "client/public/assets/map medium.tmj",
         "client/public/assets/map hard.tmx",
         "client/public/assets/map_baru1_tetap.tmj",
         "C:/new map/group map.tmx",

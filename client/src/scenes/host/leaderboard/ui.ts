@@ -5,6 +5,7 @@ export interface RankingEntry {
     rank: number;
     sessionId: string;
     name: string;
+    avatarUrl?: string;
     hairId?: number;
     score: number;
     duration: number;
@@ -13,7 +14,9 @@ export interface RankingEntry {
 export class LeaderboardUI {
     static getGlobalStyles(): string {
         return `
-            .podium-avatar { position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+            .podium-avatar { position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: 'Retro Gaming', monospace; background-color: #336B23; }
+            .profile-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; z-index: 2; image-rendering: auto; -webkit-font-smoothing: antialiased; }
+            .initial-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; z-index: 1; -webkit-font-smoothing: antialiased; line-height: 1; }
             .char-anim { 
                 width: 96px; 
                 height: 64px; 
@@ -91,6 +94,13 @@ export class LeaderboardUI {
         };
 
         const getInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
+        const upscaleAvatarUrl = (url?: string) => {
+            if (!url) return url;
+            if (url.includes('googleusercontent.com')) {
+                return url.replace(/=s\d+(-c)?/, '=s384-c');
+            }
+            return url;
+        };
 
         // Podium Display Order: 2nd, 1st, 3rd
         const displayOrder = [top3[1], top3[0], top3[2]];
@@ -132,10 +142,12 @@ export class LeaderboardUI {
 
 
                     <div class="${avatarSize} podium-avatar rounded-full border-4 flex items-center justify-center font-bold mb-4 relative" style="background-color: ${colorHex}; border-color: ${colorHex};">
-                        <!-- Character Animation -->
-                        <div class="char-anim" style="background-image: url('/assets/base_idle_strip9.png')"></div>
-                        ${hairKey ? `<div class="char-anim" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
-                        
+                        ${p.avatarUrl ? `
+                            <img src="${upscaleAvatarUrl(p.avatarUrl)}" class="profile-img" alt="${p.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="initial-fallback hidden text-4xl md:text-6xl">${getInitials(p.name)}</div>
+                        ` : `
+                            <div class="initial-fallback text-4xl md:text-6xl">${getInitials(p.name)}</div>
+                        `}
                     </div>
 
                     <div class="text-sm md:text-2xl mb-3 font-bold text-center uppercase tracking-widest" style="color: #ffffff; font-family: 'Retro Gaming', monospace; letter-spacing: 2px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.name}</div>
@@ -156,9 +168,13 @@ export class LeaderboardUI {
             <div class="grid grid-cols-[40px_1fr_60px_60px] md:grid-cols-[100px_1fr_150px_150px] p-4 text-gray-800 items-center border-b border-gray-200 hover:bg-gray-100 transition-colors group font-['Retro_Gaming']" style="-webkit-font-smoothing: none;">
                 <div class="text-center font-bold text-gray-600 group-hover:text-[#336B23] transition-colors text-sm md:text-lg">${p.rank}</div>
                 <div class="flex items-center gap-2 md:gap-3">
-                    <div class="hidden md:flex w-10 h-10 rounded-full bg-[#e2e8f0]/95 border-2 border-gray-300 items-center justify-center font-bold text-sm group-hover:border-[#336B23] transition-colors overflow-hidden relative podium-avatar">
-                        <div class="char-anim-sm" style="background-image: url('/assets/base_idle_strip9.png')"></div>
-                        ${hairKey ? `<div class="char-anim-sm" style="background-image: url('/assets/${hairKey}_idle_strip9.png')"></div>` : ''}
+                    <div class="hidden md:flex w-10 h-10 rounded-full bg-[#336B23] border-2 border-white items-center justify-center font-bold text-sm group-hover:border-[#336B23] transition-colors overflow-hidden relative podium-avatar">
+                        ${p.avatarUrl ? `
+                            <img src="${upscaleAvatarUrl(p.avatarUrl)}" class="profile-img" alt="${p.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="initial-fallback hidden text-lg">${getInitials(p.name)}</div>
+                        ` : `
+                            <div class="initial-fallback text-lg">${getInitials(p.name)}</div>
+                        `}
                     </div>
                     <div class="font-bold text-xs md:text-lg truncate max-w-[150px] md:max-w-[300px] py-1 uppercase text-[#336B23]">${p.name}</div>
                 </div>

@@ -216,10 +216,8 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         const waitingUiEl = document.getElementById('waiting-ui');
         if (waitingUiEl) waitingUiEl.classList.add('hidden');
 
-        // Global TransitionManager handles countdown cleanup
-
-        Router.navigate('/host/select-quiz');
-        this.scene.start('LobbyScene');
+        // Force reload to Select Quiz to ensure clean state and proper routing
+        window.location.href = '/host/select-quiz';
     }
 
     /** Muncullkan Notifikasi Toast Kustom */
@@ -732,7 +730,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
                         <div class="flex items-center gap-4">
                             <!-- Back Button MOVED here -->
-                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-[10px] md:text-[11px] rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
+                            <button id="host-back-btn" class="px-4 md:px-[30px] h-[40px] md:h-[52px] flex items-center justify-center bg-red-500 text-white font-['Retro_Gaming'] uppercase text-xs md:text-sm rounded-xl border-b-4 border-red-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all shadow-lg cursor-pointer shrink-0">
                                 ${i18n.t('host_lobby.exit')}
                             </button>
                             <!-- Start Button -->
@@ -1627,6 +1625,20 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         base.style.animation = 'play-idle 1s steps(9) infinite';
         container.appendChild(base);
 
+        // Render Tools (Right Hand)
+        const toolsLayer = document.createElement('div');
+        toolsLayer.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+        toolsLayer.style.width = '96px';
+        toolsLayer.style.height = '64px';
+        toolsLayer.style.backgroundSize = '864px 64px';
+        toolsLayer.style.imageRendering = 'pixelated';
+        toolsLayer.style.position = 'absolute';
+        toolsLayer.style.top = '50%';
+        toolsLayer.style.left = '50%';
+        toolsLayer.style.transform = 'translate(-50%, -50%) scale(5)'; // Centered and SCALED UP (5x)
+        toolsLayer.style.animation = 'play-idle 1s steps(9) infinite';
+        container.appendChild(toolsLayer);
+
         // Render Hair
         if (hairId > 0) {
             import('../../../data/characterData').then(({ getHairById }) => {
@@ -1690,8 +1702,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
             const lobbyUI = document.getElementById('lobby-ui');
             if (lobbyUI) lobbyUI.classList.remove('hidden');
-            Router.navigate('/host/select-quiz');
-            this.scene.start('LobbyScene');
+
+            // Force reload to Select Quiz to ensure clean state and proper routing
+            window.location.href = '/host/select-quiz';
 
             // Global TransitionManager handles cleanup
         }
