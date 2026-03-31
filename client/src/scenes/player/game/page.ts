@@ -90,7 +90,7 @@ export class GameScene extends Phaser.Scene {
 
         const cb = `?v=${Date.now()}`;
         console.log(`[GameScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
-        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
+        this.load.tilemapTiledJSON(mapKey, `/assets/maps/${mapFile}${cb}`);
         
         // --- Organized Tileset & Elements Paths ---
         this.load.image('tiles', `/assets/tileset/spr_tileset_sunnysideworld_16px.png${cb}`);
@@ -148,6 +148,7 @@ export class GameScene extends Phaser.Scene {
         this.load.image('selectbox_br', '/assets/selectbox_br.png');
         this.load.image('cancel', '/assets/cancel.png');
         this.load.image('expression_alerted', '/assets/expression_alerted.png');
+        this.load.image('expression_working', '/assets/elements/expression_working.png');
     }
 
     private async yieldThread() {
@@ -642,10 +643,28 @@ export class GameScene extends Phaser.Scene {
                             alpha: 0,
                             duration: 1000,
                             ease: 'Power1',
-                            onComplete: () => { alert.destroy(); }
+                            onComplete: () => { if (alert.active) alert.destroy(); }
                         });
                     }
                     enemySprite.setData('wasFleeing', enemy.isFleeing);
+
+                    // Fatigue/Resting Indicator
+                    if (enemy.isResting && !enemySprite.getData('wasResting')) {
+                        const tired = this.add.image(enemy.x, enemy.y - 40, 'expression_working');
+                        tired.setDepth(100);
+                        tired.setScale(1.5);
+                        
+                        // Descend slowly and fade out
+                        this.tweens.add({
+                            targets: tired,
+                            y: enemy.y - 10,
+                            alpha: { from: 1, to: 0 },
+                            duration: 4500, // Nearly the full 5s rest
+                            ease: 'Linear',
+                            onComplete: () => { if (tired.active) tired.destroy(); }
+                        });
+                    }
+                    enemySprite.setData('wasResting', enemy.isResting);
                 } else {
                     if (enemySprite.anims.currentAnim?.key.includes('death')) return;
                     const deathAnim = enemy.type === 'goblin' ? 'goblin_death' : 'skeleton_death';
@@ -753,16 +772,23 @@ export class GameScene extends Phaser.Scene {
             this.tryAttack(pointer);
         });
 
+        // Attack with Spacebar
+        this.input.keyboard?.on('keydown-SPACE', () => {
+            if (this.activeQuestionId !== null) return;
+            if (this.isChestPopupVisible) return;
+            this.tryAttack();
+        });
+
         // --- Handle Resizing ---
         this.scale.on('resize', this.handleResize, this);
-
+        
         this.room.onLeave((code) => {
             console.warn(`[GameScene] Disconnected from room (code: ${code})`);
             this.isGameReady = false;
         });
     }
 
-    tryAttack(pointer: Phaser.Input.Pointer) {
+    tryAttack(pointer?: Phaser.Input.Pointer) {
         if (this.isAttacking) return;
         this.isAttacking = true;
         
@@ -814,8 +840,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     performAttackHitbox(isLeft: boolean) {
-        const range = 45; // Decreased range to make it harder
-        const angleTolerance = Math.PI / 4; // 45 degrees spread instead of 60
+        const range = 55; // Increased range to make it easier (as requested)
+        const angleTolerance = Math.PI / 3; // Wider spread (60 degrees instead of 45)
 
         Object.keys(this.enemyEntities).forEach(id => {
             const enemySprite = this.enemyEntities[id];
