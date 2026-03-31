@@ -331,6 +331,7 @@ export class ResultManager {
             <div class="result-card pointer-events-auto">
                 <div class="result-avatar-container">
                     <div class="char-anim result-char anim-play" style="${characterVisuals.base}"></div>
+                    <div class="char-anim result-char anim-play" style="${characterVisuals.tools}"></div>
                     ${characterVisuals.hair ? `<div class="char-anim result-char anim-play" style="${characterVisuals.hair}"></div>` : ''}
                 </div>
                 <div class="result-name">${myEntry.name}</div>
@@ -386,6 +387,7 @@ export class ResultManager {
 
     private getCharacterVisuals(player: RankingEntry) {
         const base = `background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;`;
+        const tools = `background-image: url('/assets/tools_idle_strip9.png'); background-size: 864px 64px;`;
         let hair = '';
         if (player.hairId && player.hairId > 0) {
             const hairFiles: Record<number, string> = {
@@ -396,7 +398,7 @@ export class ResultManager {
                 hair = `background-image: url('/assets/${key}_idle_strip9.png'); background-size: 864px 64px;`;
             }
         }
-        return { base, hair };
+        return { base, tools, hair };
     }
 
     private attachListeners() {

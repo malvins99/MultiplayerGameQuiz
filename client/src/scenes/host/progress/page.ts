@@ -133,6 +133,8 @@ export class HostProgressScene extends Phaser.Scene {
         this.load.image('windmill_tiles', `/assets/spr_deco_windmill_withshadow_strip9.png${cb}`);
         this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_idle', '/assets/tools_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_walk', '/assets/tools_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
 
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
         hairKeys.forEach(key => {
@@ -196,6 +198,13 @@ export class HostProgressScene extends Phaser.Scene {
             });
             this.anims.create({
                 key: 'walk', frames: this.anims.generateFrameNumbers('character', { start: 0, end: 7 }), frameRate: 10, repeat: -1
+            });
+            // Tools Anims
+            this.anims.create({
+                key: 'tools_idle', frames: this.anims.generateFrameNumbers('tools_idle', { start: 0, end: 8 }), frameRate: 10, repeat: -1
+            });
+            this.anims.create({
+                key: 'tools_walk', frames: this.anims.generateFrameNumbers('tools_walk', { start: 0, end: 7 }), frameRate: 10, repeat: -1
             });
         }
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
@@ -282,10 +291,11 @@ export class HostProgressScene extends Phaser.Scene {
             container.setScale(2.5); // Diperbesar lagi agar karakter lebih dominan/jelas
 
             const baseSprite = this.add.sprite(0, 0, 'character').play('idle');
+            const toolsSprite = this.add.sprite(0, 0, 'tools_idle').play('tools_idle');
             const hairSprite = this.add.sprite(0, 0, '').setVisible(false);
 
-            container.add([baseSprite, hairSprite]);
-            container.setData({ baseSprite, hairSprite, subRoomId: player.subRoomId });
+            container.add([baseSprite, toolsSprite, hairSprite]);
+            container.setData({ baseSprite, toolsSprite, hairSprite, subRoomId: player.subRoomId });
 
             this.createNameTag(sessionId, player.name || 'Player', container);
             this.playerEntities[sessionId] = container;
@@ -295,17 +305,33 @@ export class HostProgressScene extends Phaser.Scene {
                 import('../../../data/characterData').then(({ getHairById }) => {
                     const h = getHairById(hairId);
                     if (h.id > 0) {
-                        const hairFiles: Record<number, string> = { 1: 'bowlhair', 2: 'curlyhair', 3: 'longhair', 4: 'mophair', 5: 'shorthair', 6: 'spikeyhair' };
-                        const key = hairFiles[h.id];
+                        const key = h.idleKey.split('_')[0];
                         if (key) {
-                            hairSprite.setTexture(`${key}_idle`);
+                            hairSprite.setTexture(`${key}_idle`).play(`${key}_idle`, true);
                             hairSprite.setVisible(true);
-                            hairSprite.play(`${key}_idle`);
                         }
-                    } else hairSprite.setVisible(false);
+                    } else {
+                        hairSprite.setVisible(false);
+                    }
                 });
             };
+
             updateHair();
+            this.disposers.push(player.onChange(() => {
+                container.setPosition(player.x, player.y);
+                const dx = player.x - container.x;
+                if (Math.abs(dx) > 0.1) {
+                    if (baseSprite.anims.currentAnim?.key !== 'walk') baseSprite.play('walk', true);
+                    if (toolsSprite.anims.currentAnim?.key !== 'tools_walk') toolsSprite.play('tools_walk', true);
+                    baseSprite.setFlipX(dx < 0);
+                    toolsSprite.setFlipX(dx < 0);
+                    hairSprite.setFlipX(dx < 0);
+                } else {
+                    if (baseSprite.anims.currentAnim?.key !== 'idle') baseSprite.play('idle', true);
+                    if (toolsSprite.anims.currentAnim?.key !== 'tools_idle') toolsSprite.play('tools_idle', true);
+                }
+                updateHair();
+            }));
             this.disposers.push(player.listen("hairId", updateHair));
 
             const updateProgress = () => {

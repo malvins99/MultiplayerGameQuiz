@@ -2036,6 +2036,14 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 background-position: -32px -16px;
                 image-rendering: pixelated;
                 "></div>
+                    <!-- Tools Layer -->
+                        <div style="
+                position: absolute; inset: 0;
+                background-image: url('/assets/tools_idle_strip9.png');
+                background-repeat: no-repeat;
+                background-position: -32px -16px;
+                image-rendering: pixelated;
+                "></div>
                     <!-- Hair Layer -->
                         ${(() => {
                     // Menggunakan getHairById yang sudah diimport di atas file

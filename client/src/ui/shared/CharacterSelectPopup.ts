@@ -57,6 +57,15 @@ export class CharacterSelectPopup {
         baseSprite.style.transform = mainScale; // Keep scale visible
         baseSprite.style.animation = 'play-idle 1s steps(9) infinite';
 
+        // Tools Overlay
+        const toolsSprite = document.createElement('div');
+        toolsSprite.className = 'absolute w-[96px] h-[64px]';
+        toolsSprite.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+        toolsSprite.style.backgroundSize = '864px 64px';
+        toolsSprite.style.imageRendering = 'pixelated';
+        toolsSprite.style.transform = mainScale;
+        toolsSprite.style.animation = 'play-idle 1s steps(9) infinite';
+
         // Hair Overlay
         this.bigPreview = document.createElement('div');
         this.bigPreview.className = 'absolute w-[96px] h-[64px]';
@@ -81,6 +90,7 @@ export class CharacterSelectPopup {
         }
 
         leftCol.appendChild(baseSprite);
+        leftCol.appendChild(toolsSprite);
         leftCol.appendChild(this.bigPreview);
 
         leftContainer.appendChild(leftCol);
@@ -248,6 +258,21 @@ export class CharacterSelectPopup {
             base.style.transform = `translate(-50%, -50%) ${gridScale}`;
 
             btn.appendChild(base);
+
+            // Tools layer
+            const tools = document.createElement('div');
+            tools.className = 'absolute';
+            tools.style.width = '96px';
+            tools.style.height = '64px';
+            tools.style.top = '50%';
+            tools.style.left = '50%';
+            tools.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+            tools.style.backgroundSize = '864px 64px';
+            tools.style.backgroundPosition = '0 0';
+            tools.style.imageRendering = 'pixelated';
+            tools.style.transform = `translate(-50%, -50%) ${gridScale}`;
+
+            btn.appendChild(tools);
 
             // Hair layer
             if (hair.id !== 0) {

@@ -100,12 +100,14 @@ export class GameScene extends Phaser.Scene {
         this.load.spritesheet('base_attack', '/assets/base_attack_strip10.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('tools_walk', '/assets/tools_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
         this.load.spritesheet('tools_idle', '/assets/tools_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_attack', '/assets/tools_attack_strip10.png', { frameWidth: 96, frameHeight: 64 });
 
         // Load Hair Assets
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
         hairKeys.forEach(key => {
             this.load.spritesheet(`${key}_walk`, `/assets/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
             this.load.spritesheet(`${key}_idle`, `/assets/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_attack`, `/assets/${key}_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
         });
 
         // Skeleton
@@ -257,6 +259,12 @@ export class GameScene extends Phaser.Scene {
             frameRate: 10,
             repeat: -1
         });
+        this.anims.create({
+            key: 'tools_attack',
+            frames: this.anims.generateFrameNumbers('tools_attack', { start: 0, end: 9 }),
+            frameRate: 15,
+            repeat: 0
+        });
 
         // Hair Animations
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
@@ -272,6 +280,12 @@ export class GameScene extends Phaser.Scene {
                 frames: this.anims.generateFrameNumbers(`${key}_idle`, { start: 0, end: 8 }),
                 frameRate: 10,
                 repeat: -1
+            });
+            this.anims.create({
+                key: `${key}_attack`,
+                frames: this.anims.generateFrameNumbers(`${key}_attack`, { start: 0, end: 9 }),
+                frameRate: 15,
+                repeat: 0
             });
         });
 
@@ -348,6 +362,10 @@ export class GameScene extends Phaser.Scene {
             this.playerEntities[sessionId] = container;
 
             const updateHairVisuals = () => {
+                if (this.isAttacking) {
+                    console.log("[Attack-Fix] updateHairVisuals skipped because isAttacking is true");
+                    return;
+                }
                 const hairId = player.hairId || 0;
                 import('../../../data/characterData').then(({ getHairById }) => {
                     const hairData = getHairById(hairId);
@@ -362,6 +380,7 @@ export class GameScene extends Phaser.Scene {
                         if (hairSprite.anims.currentAnim?.key !== newKey) {
                             hairSprite.play(newKey);
                         }
+                        container.setData('hairPrefix', hairData.id > 0 ? hairData.idleKey.split('_')[0] : null);
                     }
                 });
             };
@@ -721,11 +740,21 @@ export class GameScene extends Phaser.Scene {
         const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
         const tools = this.currentPlayer.getData('toolsSprite') as Phaser.GameObjects.Sprite;
 
-        // Force idle before attack
+        // Play base attack
         if (base) base.play('base_attack', true);
         
-        // Hide hair during base attack test (as requested), but KEEP tools visible
-        if (hair) hair.setVisible(false);
+        // Play corresponding hair attack animation
+        const hairPrefix = this.currentPlayer.getData('hairPrefix');
+        console.log(`[Attack-Fix] tryAttack: base_attack started, hairPrefix: ${hairPrefix}, hairVisible: ${hair?.visible}`);
+        
+        if (hair && hair.visible && hairPrefix) {
+            const attackKey = `${hairPrefix}_attack`;
+            console.log(`[Attack-Fix] Playing hair attack: ${attackKey}`);
+            hair.play(attackKey, true);
+        }
+
+        // Play tools attack
+        if (tools) tools.play('tools_attack', true);
 
         // Use current character facing direction for attack
         const isLeft = base ? base.flipX : false;
@@ -740,12 +769,13 @@ export class GameScene extends Phaser.Scene {
             if (anim.key === 'base_attack') {
                 this.isAttacking = false;
                 
-                // Restore visibility
-                const hairId = this.room.state.players.get(this.room.sessionId)?.hairId || 0;
-                if (hairId > 0 && hair) hair.setVisible(true);
-                
                 // Go back to idle
                 base.play('idle', true);
+                const hPrefix = this.currentPlayer.getData('hairPrefix');
+                if (hair && hair.visible && hPrefix) {
+                    hair.play(`${hPrefix}_idle`, true);
+                }
+                if (tools) tools.play('tools_idle', true);
             }
         });
     }
@@ -1008,9 +1038,8 @@ export class GameScene extends Phaser.Scene {
                     if (velocity.x !== 0) tools.setFlipX(velocity.x < 0);
                 }
                 if (hair && hair.visible) {
-                    const currentKey = hair.anims.currentAnim?.key || '';
-                    const baseKey = currentKey.split('_')[0];
-                    if (baseKey && baseKey !== 'walk' && baseKey !== 'idle') hair.play(baseKey + '_walk', true);
+                    const hPrefix = this.currentPlayer.getData('hairPrefix');
+                    if (hPrefix) hair.play(`${hPrefix}_walk`, true);
                     if (velocity.x !== 0) hair.setFlipX(velocity.x < 0);
                 }
 
@@ -1023,9 +1052,8 @@ export class GameScene extends Phaser.Scene {
                 if (base) base.play('idle', true);
                 if (tools) tools.play('tools_idle', true);
                 if (hair && hair.visible) {
-                    const currentKey = hair.anims.currentAnim?.key || '';
-                    const baseKey = currentKey.split('_')[0];
-                    if (currentKey && !currentKey.includes('idle')) hair.play(baseKey + '_idle', true);
+                    const hPrefix = this.currentPlayer.getData('hairPrefix');
+                    if (hPrefix) hair.play(`${hPrefix}_idle`, true);
                 }
             }
         }
