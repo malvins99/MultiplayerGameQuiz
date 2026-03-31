@@ -504,6 +504,18 @@ export class GameRoom extends Room<GameState> {
                 console.log(`[GameRoom] Non-host ${client.sessionId} attempted to end game. Ignored.`);
             }
         });
+
+        // --- Attack Animation Sync ---
+        this.onMessage("attack", (client) => {
+            const player = this.state.players.get(client.sessionId);
+            if (player) {
+                player.isAttacking = true;
+                // Auto-reset flag after typical animation duration
+                this.clock.setTimeout(() => {
+                    player.isAttacking = false;
+                }, 500);
+            }
+        });
     }
 
     update(deltaTime: number) {

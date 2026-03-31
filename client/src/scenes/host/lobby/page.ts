@@ -2067,7 +2067,15 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     <!-- Base Body -->
                         <div style="
                 position: absolute; inset: 0;
-                background-image: url('/assets/base_idle_strip9.png');
+                background-image: url('/assets/characters/Human/IDLE/base_idle_strip9.png');
+                background-repeat: no-repeat;
+                background-position: -32px -16px;
+                image-rendering: pixelated;
+                "></div>
+                    <!-- Tools Layer -->
+                        <div style="
+                position: absolute; inset: 0;
+                background-image: url('/assets/characters/Human/IDLE/tools_idle_strip9.png');
                 background-repeat: no-repeat;
                 background-position: -32px -16px;
                 image-rendering: pixelated;
@@ -2080,7 +2088,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         return `
                                         <div style="
                                             position: absolute; inset: 0;
-                                            background-image: url('/assets/${hair.idleKey}_strip9.png');
+                                            background-image: url('/assets/characters/Human/IDLE/${hair.idleKey}_strip9.png');
                                             background-repeat: no-repeat;
                                             background-position: -32px -16px;
                                             image-rendering: pixelated;
