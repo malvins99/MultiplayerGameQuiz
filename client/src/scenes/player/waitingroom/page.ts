@@ -792,7 +792,7 @@ export class PlayerWaitingRoomManager {
                 .btn-confirm-exit:hover { filter: brightness(1.15); }
                 .btn-confirm-exit:active { border-bottom-width: 2px; transform: translateY(2px); }
             </style>
-            <div id="exit-confirm-box">
+            <div id="exit-confirm-box" ${i18n.getLanguage() === 'ar' ? 'dir="rtl"' : ''}>
                 <h2 id="exit-confirm-title">${i18n.t('player_lobby.dialog_exit_title')}</h2>
                 <p id="exit-confirm-desc">${i18n.t('player_lobby.dialog_exit_desc')}</p>
                 <div class="exit-btn-row">
@@ -911,7 +911,7 @@ export class PlayerWaitingRoomManager {
                     ? 'bg-primary text-black font-bold pixel-btn-green border-black'
                     : 'bg-secondary text-black font-bold pixel-btn-blue border-black hover:brightness-110';
 
-            const btnText = isMyRoom ? 'JOINED' : isFull ? 'FULL' : 'JOIN';
+            const btnText = isMyRoom ? i18n.t('host_lobby.joined') : isFull ? i18n.t('host_lobby.full') : i18n.t('host_lobby.join');
             // Host cannot join rooms
             const action = (this.isHost || isFull || isMyRoom) ? '' : `onclick="window.switchRoom('${subRoom.id}')"`;
             const btnVisibility = this.isHost ? 'invisible' : '';
@@ -932,7 +932,7 @@ export class PlayerWaitingRoomManager {
                     count++;
                 }
             });
-            if (count === 0) playerListHTML = '<span class="text-[10px] text-white/30 italic pl-1">Empty</span>';
+            if (count === 0) playerListHTML = `<span class="text-[10px] text-white/30 italic pl-1">${i18n.t('host_lobby.empty')}</span>`;
 
             html += `
                 <div class="w-full max-w-[320px] border-2 ${borderClass} p-4 rounded-xl transition-all duration-300 relative group">
@@ -1039,7 +1039,7 @@ export class PlayerWaitingRoomManager {
                     <!-- Player Name -->
                     <div style="text-align: center; width: 100%; margin-top: 2px; padding: 0 4px;">
                         <span style="font-size: 11px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);' : ''}">
-                            ${player.name || 'PLAYER'}
+                            ${player.name || i18n.t('host_lobby.player_upper')}
                         </span>
                     </div>
 

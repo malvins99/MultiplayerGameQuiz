@@ -182,7 +182,16 @@
     "dialog_exit_title": "⚠ EXIT?",
     "dialog_exit_desc": "You are going to leave<br>this room.",
     "dialog_exit_cancel": "CANCEL",
-    "dialog_exit_confirm": "YES, EXIT"
+    "dialog_exit_confirm": "YES, EXIT",
+    "ok": "OK",
+    "hair_0": "DEFAULT (NONE)",
+    "hair_1": "BOWL HAIR",
+    "hair_2": "CURLY HAIR",
+    "hair_3": "LONG HAIR",
+    "hair_4": "MOP HAIR",
+    "hair_5": "SHORT HAIR",
+    "hair_6": "SPIKEY HAIR"
+
   },
   "host_leaderboard": {
     "rank": "RANK",

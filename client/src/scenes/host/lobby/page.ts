@@ -985,6 +985,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 manageUsersModal.classList.remove('hidden');
                 this.updateManageUsersList();
             };
+            
+            // Close on click outside
+            manageUsersModal.onclick = (e) => {
+                if (e.target === manageUsersModal) {
+                    manageUsersModal.classList.add('hidden');
+                }
+            };
         }
         if (closeManageUsersBtn && manageUsersModal) {
             closeManageUsersBtn.onclick = () => {
@@ -993,7 +1000,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         }
 
         // Host add user button binding
-        const addUserBtn = document.getElementById('host-add-user-btn');
+        const addUserBtn = document.getElementById('host-add-friends-btn');
         const addUserModal = document.getElementById('host-add-user-modal');
         const closeAddUserBtn = document.getElementById('close-add-user-btn');
         const modalInviteCode = document.getElementById('modal-invite-code');
@@ -1003,6 +1010,13 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             addUserBtn.onclick = () => {
                 addUserModal.classList.remove('hidden');
                 this.updateFriendsList();
+            };
+
+            // Close on click outside
+            addUserModal.onclick = (e) => {
+                if (e.target === addUserModal) {
+                    addUserModal.classList.add('hidden');
+                }
             };
         }
         if (closeAddUserBtn && addUserModal) {
@@ -1035,6 +1049,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 }
             };
         }
+
+        // Add Escape key listener to close modals
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (manageUsersModal && !manageUsersModal.classList.contains('hidden')) {
+                    manageUsersModal.classList.add('hidden');
+                }
+                if (addUserModal && !addUserModal.classList.contains('hidden')) {
+                    addUserModal.classList.add('hidden');
+                }
+            }
+        });
     }
 
     async updateManageUsersList() {
@@ -1166,6 +1192,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         if (!profileStr || !currentRoomId) throw new Error("Missing profile or room ID");
                         const profile = JSON.parse(profileStr);
 
+                        const dbSessionId = localStorage.getItem('supabaseSessionId');
                         const notificationsToInsert: any[] = [];
 
                         if (Array.isArray(group.members)) {
@@ -1177,6 +1204,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                                         actor_id: profile.id,
                                         type: 'sessionGroup',
                                         entity_type: 'session',
+                                        entity_id: dbSessionId,
                                         from_group_id: group.id
                                     });
                                 }
@@ -1412,11 +1440,14 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         if (!profileStr) throw new Error("Missing profile");
                         const profile = JSON.parse(profileStr);
 
+                        const dbSessionId = localStorage.getItem('supabaseSessionId');
+
                         const notificationsToInsert = [{
                             user_id: friend.id,
                             actor_id: profile.id,
                             type: 'sessionFriend',
-                            entity_type: 'session'
+                            entity_type: 'session',
+                            entity_id: dbSessionId
                         }];
 
                         const { error } = await supabase.from('notifications').insert(notificationsToInsert);
@@ -1462,7 +1493,12 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         let filteredFriends = this.allFetchedFriends;
         if (this.friendSearchQuery.trim() !== '') {
-            filteredFriends = filteredFriends.filter(f => (f.username || '').toLowerCase().includes(this.friendSearchQuery));
+            const query = this.friendSearchQuery.toLowerCase();
+            filteredFriends = filteredFriends.filter(f => 
+                (f.username || '').toLowerCase().includes(query) ||
+                (f.nickname || '').toLowerCase().includes(query) ||
+                (f.fullname || '').toLowerCase().includes(query)
+            );
         }
 
         if (filteredFriends.length === 0) {
@@ -1664,9 +1700,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             localStorage.removeItem('currentReconnectionToken'); // v0.15 token
 
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.remove('hidden');
-
+            
             // Force reload to Select Quiz to ensure clean state and proper routing
             window.location.href = '/host/select-quiz';
 
