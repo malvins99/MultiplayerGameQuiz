@@ -386,8 +386,9 @@ export class ResultManager {
     }
 
     private getCharacterVisuals(player: RankingEntry) {
-        const base = `background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;`;
-        const tools = `background-image: url('/assets/tools_idle_strip9.png'); background-size: 864px 64px;`;
+        const humanPath = '/assets/characters/Human/IDLE';
+        const base = `background-image: url('${humanPath}/base_idle_strip9.png'); background-size: 864px 64px;`;
+        const tools = `background-image: url('${humanPath}/tools_idle_strip9.png'); background-size: 864px 64px;`;
         let hair = '';
         if (player.hairId && player.hairId > 0) {
             const hairFiles: Record<number, string> = {
@@ -395,7 +396,7 @@ export class ResultManager {
             };
             const key = hairFiles[player.hairId];
             if (key) {
-                hair = `background-image: url('/assets/${key}_idle_strip9.png'); background-size: 864px 64px;`;
+                hair = `background-image: url('${humanPath}/${key}_idle_strip9.png'); background-size: 864px 64px;`;
             }
         }
         return { base, tools, hair };

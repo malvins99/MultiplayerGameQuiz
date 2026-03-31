@@ -56,6 +56,7 @@ export class Player extends Schema {
     @type("string") subRoomId!: string; // Track which sub-room the player is in
     @type("number") spawnIndex: number = -1; // Track assigned spawn point index
     @type("boolean") isHost: boolean = false;
+    @type("boolean") isAttacking: boolean = false;
     @type(["number"]) questionOrder = new ArraySchema<number>(); // Personalized randomized question order
 }
 

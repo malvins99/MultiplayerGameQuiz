@@ -91,23 +91,28 @@ export class GameScene extends Phaser.Scene {
         const cb = `?v=${Date.now()}`;
         console.log(`[GameScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
         this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
-        this.load.image('tiles', `/assets/spr_tileset_sunnysideworld_16px.png${cb}`);
-        this.load.image('forest_tiles', `/assets/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
-        this.load.image('coracle_tiles', `/assets/spr_deco_coracle_strip4.png${cb}`);
-        this.load.image('windmill_tiles', `/assets/spr_deco_windmill_withshadow_strip9.png${cb}`);
-        this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('base_attack', '/assets/base_attack_strip10.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('tools_walk', '/assets/tools_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('tools_idle', '/assets/tools_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('tools_attack', '/assets/tools_attack_strip10.png', { frameWidth: 96, frameHeight: 64 });
-
-        // Load Hair Assets
+        
+        // --- Organized Tileset & Elements Paths ---
+        this.load.image('tiles', `/assets/tileset/spr_tileset_sunnysideworld_16px.png${cb}`);
+        this.load.image('forest_tiles', `/assets/tileset/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
+        this.load.image('coracle_tiles', `/assets/elements/spr_deco_coracle_strip4.png${cb}`);
+        this.load.image('windmill_tiles', `/assets/elements/spr_deco_windmill_withshadow_strip9.png${cb}`);
+        
+        // --- Human Character Assets (Organized) ---
+        const humanPath = '/assets/characters/Human';
+        this.load.spritesheet('character', `${humanPath}/WALKING/base_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('base_idle', `${humanPath}/IDLE/base_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('base_attack', `${humanPath}/ATTACK/base_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
+        
+        this.load.spritesheet('tools_walk', `${humanPath}/WALKING/tools_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_idle', `${humanPath}/IDLE/tools_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_attack', `${humanPath}/ATTACK/tools_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
+        
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
         hairKeys.forEach(key => {
-            this.load.spritesheet(`${key}_walk`, `/assets/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
-            this.load.spritesheet(`${key}_idle`, `/assets/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
-            this.load.spritesheet(`${key}_attack`, `/assets/${key}_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_walk`, `${humanPath}/WALKING/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_idle`, `${humanPath}/IDLE/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_attack`, `${humanPath}/ATTACK/${key}_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
         });
 
         // Skeleton
@@ -121,7 +126,7 @@ export class GameScene extends Phaser.Scene {
         this.load.spritesheet('goblin_death', '/assets/characters/Goblin/PNG/spr_death_strip13.png', { frameWidth: 96, frameHeight: 64 });
 
         // Load Chest Tileset as Spritesheet for frame access
-        this.load.spritesheet('chest_tiles', '/assets/spr_tileset_sunnysideworld_16px.png', {
+        this.load.spritesheet('chest_tiles', '/assets/tileset/spr_tileset_sunnysideworld_16px.png', {
             frameWidth: 16,
             frameHeight: 16,
             margin: 0,
@@ -426,7 +431,32 @@ export class GameScene extends Phaser.Scene {
                         const hSprite = entity.getData('hairSprite') as Phaser.GameObjects.Sprite;
                         const tSprite = entity.getData('toolsSprite') as Phaser.GameObjects.Sprite;
 
-                        if (dx !== 0 || Math.abs(dx) > 0.1) {
+                        // 1. Attack Animation Priority
+                        if (player.isAttacking) {
+                            if (bSprite.anims.currentAnim?.key !== 'base_attack') bSprite.play('base_attack', true);
+                            if (tSprite && tSprite.anims.currentAnim?.key !== 'tools_attack') tSprite.play('tools_attack', true);
+                            
+                            const hairId = player.hairId || 0;
+                            if (hairId > 0) {
+                                import('../../../data/characterData').then(({ getHairById }) => {
+                                    const h = getHairById(hairId);
+                                    const hPrefix = h.idleKey.split('_')[0];
+                                    const attackKey = `${hPrefix}_attack`;
+                                    if (hSprite.anims.currentAnim?.key !== attackKey) {
+                                        hSprite.play(attackKey, true);
+                                    }
+                                });
+                            }
+                            
+                            // Handle Flip while attacking (if moving and attacking at same time)
+                            if (Math.abs(dx) > 0.1) {
+                                bSprite.setFlipX(dx < 0);
+                                hSprite.setFlipX(dx < 0);
+                                if (tSprite) tSprite.setFlipX(dx < 0);
+                            }
+                        }
+                        // 2. Walk Animation
+                        else if (dx !== 0 || Math.abs(dx) > 0.1) {
                             if (bSprite.anims.currentAnim?.key !== 'walk') bSprite.play('walk', true);
                             if (tSprite && tSprite.anims.currentAnim?.key !== 'tools_walk') tSprite.play('tools_walk', true);
                             
@@ -735,6 +765,9 @@ export class GameScene extends Phaser.Scene {
     tryAttack(pointer: Phaser.Input.Pointer) {
         if (this.isAttacking) return;
         this.isAttacking = true;
+        
+        // Sync attack state to server for spectators and other players
+        this.room.send("attack");
 
         const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
         const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;

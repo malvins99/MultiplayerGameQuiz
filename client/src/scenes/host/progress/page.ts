@@ -127,19 +127,28 @@ export class HostProgressScene extends Phaser.Scene {
         const cb = `?v=${Date.now()}`;
         console.log(`[HostProgressScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
         this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
-        this.load.image('tiles', `/assets/spr_tileset_sunnysideworld_16px.png${cb}`);
-        this.load.image('forest_tiles', `/assets/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
-        this.load.image('coracle_tiles', `/assets/spr_deco_coracle_strip4.png${cb}`);
-        this.load.image('windmill_tiles', `/assets/spr_deco_windmill_withshadow_strip9.png${cb}`);
-        this.load.spritesheet('character', '/assets/base_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('base_idle', '/assets/base_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('tools_idle', '/assets/tools_idle_strip9.png', { frameWidth: 96, frameHeight: 64 });
-        this.load.spritesheet('tools_walk', '/assets/tools_walk_strip8.png', { frameWidth: 96, frameHeight: 64 });
-
+        
+        // --- Organized Tileset & Elements Paths ---
+        this.load.image('tiles', `/assets/tileset/spr_tileset_sunnysideworld_16px.png${cb}`);
+        this.load.image('forest_tiles', `/assets/tileset/spr_tileset_sunnysideworld_forest_32px.png${cb}`);
+        this.load.image('coracle_tiles', `/assets/elements/spr_deco_coracle_strip4.png${cb}`);
+        this.load.image('windmill_tiles', `/assets/elements/spr_deco_windmill_withshadow_strip9.png${cb}`);
+        
+        // --- Human Character Assets (Organized) ---
+        const humanPath = '/assets/characters/Human';
+        this.load.spritesheet('character', `${humanPath}/WALKING/base_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('base_idle', `${humanPath}/IDLE/base_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('base_attack', `${humanPath}/ATTACK/base_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
+        
+        this.load.spritesheet('tools_walk', `${humanPath}/WALKING/tools_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_idle', `${humanPath}/IDLE/tools_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+        this.load.spritesheet('tools_attack', `${humanPath}/ATTACK/tools_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
+ 
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
         hairKeys.forEach(key => {
-            this.load.spritesheet(`${key}_walk`, `/assets/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
-            this.load.spritesheet(`${key}_idle`, `/assets/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_walk`, `${humanPath}/WALKING/${key}_walk_strip8.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_idle`, `${humanPath}/IDLE/${key}_idle_strip9.png`, { frameWidth: 96, frameHeight: 64 });
+            this.load.spritesheet(`${key}_attack`, `${humanPath}/ATTACK/${key}_attack_strip10.png`, { frameWidth: 96, frameHeight: 64 });
         });
     }
 
@@ -206,6 +215,13 @@ export class HostProgressScene extends Phaser.Scene {
             this.anims.create({
                 key: 'tools_walk', frames: this.anims.generateFrameNumbers('tools_walk', { start: 0, end: 7 }), frameRate: 10, repeat: -1
             });
+            // Attack Anims
+            this.anims.create({
+                key: 'base_attack', frames: this.anims.generateFrameNumbers('base_attack', { start: 0, end: 9 }), frameRate: 15, repeat: 0
+            });
+            this.anims.create({
+                key: 'tools_attack', frames: this.anims.generateFrameNumbers('tools_attack', { start: 0, end: 9 }), frameRate: 15, repeat: 0
+            });
         }
         const hairKeys = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
         hairKeys.forEach(key => {
@@ -215,6 +231,9 @@ export class HostProgressScene extends Phaser.Scene {
                 });
                 this.anims.create({
                     key: `${key}_idle`, frames: this.anims.generateFrameNumbers(`${key}_idle`, { start: 0, end: 8 }), frameRate: 10, repeat: -1
+                });
+                this.anims.create({
+                    key: `${key}_attack`, frames: this.anims.generateFrameNumbers(`${key}_attack`, { start: 0, end: 9 }), frameRate: 15, repeat: 0
                 });
             }
         });
@@ -304,12 +323,13 @@ export class HostProgressScene extends Phaser.Scene {
                 const hairId = player.hairId || 0;
                 import('../../../data/characterData').then(({ getHairById }) => {
                     const h = getHairById(hairId);
-                    if (h.id > 0) {
-                        const key = h.idleKey.split('_')[0];
-                        if (key) {
-                            hairSprite.setTexture(`${key}_idle`).play(`${key}_idle`, true);
-                            hairSprite.setVisible(true);
+                    if (h && h.id > 0) {
+                        const hPrefix = h.idleKey.split('_')[0];
+                        container.setData('hairPrefix', hPrefix);
+                        if (!player.isAttacking) {
+                            hairSprite.setTexture(`${hPrefix}_idle`).play(`${hPrefix}_idle`, true);
                         }
+                        hairSprite.setVisible(true);
                     } else {
                         hairSprite.setVisible(false);
                     }
@@ -318,19 +338,67 @@ export class HostProgressScene extends Phaser.Scene {
 
             updateHair();
             this.disposers.push(player.onChange(() => {
-                container.setPosition(player.x, player.y);
+                // Determine movement direction and state BEFORE moving
                 const dx = player.x - container.x;
-                if (Math.abs(dx) > 0.1) {
+                const dy = player.y - container.y;
+                const isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
+
+                container.setPosition(player.x, player.y);
+
+                // Attack takes priority
+                if (player.isAttacking) {
+                    if (baseSprite.anims.currentAnim?.key !== 'base_attack') baseSprite.play('base_attack', true);
+                    if (toolsSprite.anims.currentAnim?.key !== 'tools_attack') toolsSprite.play('tools_attack', true);
+                    
+                    const hPrefix = container.getData('hairPrefix');
+                    if (hPrefix) {
+                        const attackKey = `${hPrefix}_attack`;
+                        if (hairSprite.anims.currentAnim?.key !== attackKey) {
+                            hairSprite.play(attackKey, true);
+                        }
+                    }
+                    
+                    // Allow flipping while attacking if also moving
+                    if (Math.abs(dx) > 0.1) {
+                        const flip = dx < 0;
+                        baseSprite.setFlipX(flip);
+                        toolsSprite.setFlipX(flip);
+                        hairSprite.setFlipX(flip);
+                    }
+                } 
+                // Walk animation
+                else if (isMoving) {
                     if (baseSprite.anims.currentAnim?.key !== 'walk') baseSprite.play('walk', true);
                     if (toolsSprite.anims.currentAnim?.key !== 'tools_walk') toolsSprite.play('tools_walk', true);
-                    baseSprite.setFlipX(dx < 0);
-                    toolsSprite.setFlipX(dx < 0);
-                    hairSprite.setFlipX(dx < 0);
-                } else {
+                    
+                    const hPrefix = container.getData('hairPrefix');
+                    if (hPrefix) {
+                        const walkKey = `${hPrefix}_walk`;
+                        if (hairSprite.anims.currentAnim?.key !== walkKey) {
+                            hairSprite.play(walkKey, true);
+                        }
+                    }
+
+                    const flip = dx < 0;
+                    if (Math.abs(dx) > 0.1) {
+                        baseSprite.setFlipX(flip);
+                        toolsSprite.setFlipX(flip);
+                        hairSprite.setFlipX(flip);
+                    }
+                } 
+                // Idle animation
+                else {
                     if (baseSprite.anims.currentAnim?.key !== 'idle') baseSprite.play('idle', true);
                     if (toolsSprite.anims.currentAnim?.key !== 'tools_idle') toolsSprite.play('tools_idle', true);
+                    
+                    const hPrefix = container.getData('hairPrefix');
+                    if (hPrefix) {
+                        const idleKey = `${hPrefix}_idle`;
+                        if (hairSprite.anims.currentAnim?.key !== idleKey) {
+                            hairSprite.play(idleKey, true);
+                        }
+                    }
                 }
-                updateHair();
             }));
             this.disposers.push(player.listen("hairId", updateHair));
 

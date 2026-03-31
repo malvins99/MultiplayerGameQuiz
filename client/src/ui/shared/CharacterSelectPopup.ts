@@ -51,7 +51,7 @@ export class CharacterSelectPopup {
         // Base Character
         const baseSprite = document.createElement('div');
         baseSprite.className = 'absolute w-[96px] h-[64px]';
-        baseSprite.style.backgroundImage = `url('/assets/base_idle_strip9.png')`;
+        baseSprite.style.backgroundImage = `url('/assets/characters/Human/IDLE/base_idle_strip9.png')`;
         baseSprite.style.backgroundSize = '864px 64px'; // 9 frames * 96
         baseSprite.style.imageRendering = 'pixelated';
         baseSprite.style.transform = mainScale; // Keep scale visible
@@ -60,7 +60,7 @@ export class CharacterSelectPopup {
         // Tools Overlay
         const toolsSprite = document.createElement('div');
         toolsSprite.className = 'absolute w-[96px] h-[64px]';
-        toolsSprite.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+        toolsSprite.style.backgroundImage = `url('/assets/characters/Human/IDLE/tools_idle_strip9.png')`;
         toolsSprite.style.backgroundSize = '864px 64px';
         toolsSprite.style.imageRendering = 'pixelated';
         toolsSprite.style.transform = mainScale;
@@ -217,7 +217,7 @@ export class CharacterSelectPopup {
             if (hair.id === 0) {
                 this.bigPreview.style.backgroundImage = 'none';
             } else {
-                this.bigPreview.style.backgroundImage = `url('/assets/${hair.idleKey}_strip9.png')`;
+                this.bigPreview.style.backgroundImage = `url('/assets/characters/Human/IDLE/${hair.idleKey}_strip9.png')`;
             }
         }
     }
@@ -251,7 +251,7 @@ export class CharacterSelectPopup {
             base.style.height = '64px';
             base.style.top = '50%';
             base.style.left = '50%';
-            base.style.backgroundImage = `url('/assets/base_idle_strip9.png')`;
+            base.style.backgroundImage = `url('/assets/characters/Human/IDLE/base_idle_strip9.png')`;
             base.style.backgroundSize = '864px 64px'; // Full strip size
             base.style.backgroundPosition = '0 0'; // Show first frame (idle)
             base.style.imageRendering = 'pixelated';
@@ -266,7 +266,7 @@ export class CharacterSelectPopup {
             tools.style.height = '64px';
             tools.style.top = '50%';
             tools.style.left = '50%';
-            tools.style.backgroundImage = `url('/assets/tools_idle_strip9.png')`;
+            tools.style.backgroundImage = `url('/assets/characters/Human/IDLE/tools_idle_strip9.png')`;
             tools.style.backgroundSize = '864px 64px';
             tools.style.backgroundPosition = '0 0';
             tools.style.imageRendering = 'pixelated';
@@ -282,7 +282,7 @@ export class CharacterSelectPopup {
                 layer.style.height = '64px';
                 layer.style.top = '50%';
                 layer.style.left = '50%';
-                layer.style.backgroundImage = `url('/assets/${hair.idleKey}_strip9.png')`;
+                layer.style.backgroundImage = `url('/assets/characters/Human/IDLE/${hair.idleKey}_strip9.png')`;
                 layer.style.backgroundSize = '864px 64px';
                 layer.style.backgroundPosition = '0 0';
                 layer.style.imageRendering = 'pixelated';
