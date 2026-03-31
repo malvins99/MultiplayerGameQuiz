@@ -1700,9 +1700,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             localStorage.removeItem('currentReconnectionToken'); // v0.15 token
 
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            const lobbyUI = document.getElementById('lobby-ui');
-            if (lobbyUI) lobbyUI.classList.remove('hidden');
-
+            
             // Force reload to Select Quiz to ensure clean state and proper routing
             window.location.href = '/host/select-quiz';
 
