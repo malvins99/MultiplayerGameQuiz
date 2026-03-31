@@ -300,9 +300,10 @@ export class GlobalBackground {
             speed = 22 + Math.random() * 6;
             sprite.style.animation = `base-walk-cycle 0.8s steps(8) infinite`;
         } else {
-            const hairTypes = ['longhair', 'shorthair', 'curlyhair'];
+            const hairTypes = ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'];
             const selectedHair = hairTypes[Math.floor(Math.random() * hairTypes.length)];
-            sprite.style.backgroundImage = `url('/assets/${selectedHair}_walk_strip8.png'), url('/assets/tools_walk_strip8.png'), url('/assets/base_walk_strip8.png')`;
+            const humanPath = '/assets/characters/Human/WALKING';
+            sprite.style.backgroundImage = `url('${humanPath}/${selectedHair}_walk_strip8.png'), url('${humanPath}/tools_walk_strip8.png'), url('${humanPath}/base_walk_strip8.png')`;
             sprite.style.animation = `base-walk-cycle 0.8s steps(8) infinite`;
         }
 
@@ -358,8 +359,8 @@ export class GlobalBackground {
         const cleanup = () => {
             if (charContainer.parentElement && this.draggedElement !== charContainer) {
                 const rect = charContainer.getBoundingClientRect();
-                const isOffLeft = rect.right < 0;
-                const isOffRight = rect.left > window.innerWidth;
+                const isOffLeft = rect.right <= 5;
+                const isOffRight = rect.left >= window.innerWidth - 5;
                 
                 if (isOffLeft || isOffRight) {
                     charContainer.remove();

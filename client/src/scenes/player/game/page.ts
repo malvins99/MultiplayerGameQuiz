@@ -365,10 +365,24 @@ export class GameScene extends Phaser.Scene {
             container.setData('toolsSprite', toolsSprite);
             container.setData('baseSprite', baseSprite);
 
+            // -- Visual Difference for Other Players --
+            if (sessionId !== this.room.sessionId) {
+                const otherAlpha = 0.6;
+                const otherTint = 0x999999;
+                
+                baseSprite.setAlpha(otherAlpha);
+                toolsSprite.setAlpha(otherAlpha);
+                hairSprite.setAlpha(otherAlpha);
+                
+                baseSprite.setTint(otherTint);
+                toolsSprite.setTint(otherTint);
+                hairSprite.setTint(otherTint);
+            }
+
             this.playerEntities[sessionId] = container;
 
             const updateHairVisuals = () => {
-                if (this.isAttacking) {
+                if (this.isAttacking && sessionId === this.room.sessionId) {
                     console.log("[Attack-Fix] updateHairVisuals skipped because isAttacking is true");
                     return;
                 }
@@ -897,6 +911,12 @@ export class GameScene extends Phaser.Scene {
         labelRight.setOrigin(0.5, 0.5);
 
         container.add([labelLeft, labelMiddle, labelRight, nameText]);
+        
+        // -- Visual Difference for Other Players' Name Tags --
+        if (sessionId !== this.room.sessionId) {
+            container.setAlpha(0.85); // Slightly transparent but still readable
+        }
+
         this.nameTagContainers[sessionId] = container;
     }
 
