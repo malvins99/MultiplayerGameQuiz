@@ -16,6 +16,8 @@ export class Enemy extends Schema {
     @type("number") spawnZoneIndex: number = -1; // Index of the spawn zone this enemy belongs to
     @type("boolean") isBusy: boolean = false; // True if engaged in a quiz
     @type("number") lastRecalc: number = 0; // Timestamp of last flee waypoint recalculation
+    @type("number") fleeStartTime: number = 0; // Timestamp when fleeing started
+    @type("boolean") isResting: boolean = false; // True if fatigue/resting
 }
 
 export class Question extends Schema {

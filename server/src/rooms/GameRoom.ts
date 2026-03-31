@@ -541,9 +541,11 @@ export class GameRoom extends Room<GameState> {
             // Rest logic (If active, still don't move)
             if (enemy.restUntil > 0 && now < enemy.restUntil) {
                 enemy.isFleeing = false;
+                enemy.isResting = true;
                 return;
             } else {
                 enemy.restUntil = 0;
+                enemy.isResting = false;
             }
 
             // 1. Calculate Distances
@@ -560,16 +562,31 @@ export class GameRoom extends Room<GameState> {
             }
 
             // 3. Trigger Fleeing (Sensitivity)
-            if (dist < FLEE_RADIUS || distToTarget < (FLEE_RADIUS * 0.7) || enemy.isFleeing) {
-                enemy.isFleeing = true;
-                enemy.restUntil = 0; // Cancel rest if being chased
+            const isNearPlayer = (dist < FLEE_RADIUS || distToTarget < (FLEE_RADIUS * 0.7));
+
+            if (isNearPlayer || enemy.isFleeing) {
+                // If we JUST started fleeing, record the time
+                if (!enemy.isFleeing) {
+                    enemy.fleeStartTime = now;
+                    enemy.isFleeing = true;
+                    enemy.isResting = false;
+                }
+
+                // CHECK FATIGUE: If fleeing for more than 10 seconds
+                if (now - enemy.fleeStartTime > 10000) {
+                    enemy.isFleeing = false;
+                    enemy.isResting = true;
+                    enemy.restUntil = now + 5000; // Rest for 5 seconds
+                    enemy.fleeStartTime = 0;
+                    return; // Stop moving immediately
+                }
 
                 // --- PROFESSIONAL STEERING BEHAVIOR ---
                 // Flee Vector (Away from player)
                 let fleeX = dx / (dist || 1);
                 let fleeY = dy / (dist || 1);
-
-                // Separation Vector (Away from other enemies)
+                
+                // ... separation logic follows ...
                 let sepX = 0;
                 let sepY = 0;
                 let neighbors = 0;

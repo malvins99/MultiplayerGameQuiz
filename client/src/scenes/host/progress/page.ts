@@ -126,7 +126,7 @@ export class HostProgressScene extends Phaser.Scene {
 
         const cb = `?v=${Date.now()}`;
         console.log(`[HostProgressScene][Preload] Loading Map. Difficulty: ${difficulty}, MapKey: ${mapKey}, MapFile: ${mapFile}`);
-        this.load.tilemapTiledJSON(mapKey, `/assets/${mapFile}${cb}`);
+        this.load.tilemapTiledJSON(mapKey, `/assets/maps/${mapFile}${cb}`);
         
         // --- Organized Tileset & Elements Paths ---
         this.load.image('tiles', `/assets/tileset/spr_tileset_sunnysideworld_16px.png${cb}`);
