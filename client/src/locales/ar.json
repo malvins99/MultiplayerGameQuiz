@@ -166,5 +166,35 @@
     "failed_load_friends": "فشل تحميل الأصدقاء.",
     "joined": "انضم",
     "full": "ممتلئ"
+  },
+  "player_lobby": {
+    "exit": "خروج",
+    "choose_character": "اختر الشخصية",
+    "you": "أنت",
+    "dialog_exit_title": "⚠ هل تريد الخروج؟",
+    "dialog_exit_desc": "أنت على وشك<br>مغادرة هذه الغرفة.",
+    "dialog_exit_cancel": "إلغاء",
+    "dialog_exit_confirm": "نعم، خروج",
+    "ok": "موافق",
+    "hair_0": "تلقائي (بدون)",
+    "hair_1": "شعر وعاء",
+    "hair_2": "شعر مجعد",
+    "hair_3": "شعر طويل",
+    "hair_4": "شعر ممسحة",
+    "hair_5": "شعر قصير",
+    "hair_6": "شعر شائك"
+  },
+  "player_result": {
+    "rank": "المركز",
+    "score": "النقاط",
+    "correct": "الإجابات",
+    "time": "الوقت",
+    "home": "الرئيسية",
+    "stats": "الإحصائيات",
+    "title_home": "الرئيسية",
+    "title_stats": "الإحصائيات",
+    "no_session": "لم يتم العثور على معرف الجلسة.",
+    "portrait_req_title": "مطلوب وضع الرأسي",
+    "portrait_req_desc": "وضع الرأسي مطلوب لهذا المشهد"
   }
 }

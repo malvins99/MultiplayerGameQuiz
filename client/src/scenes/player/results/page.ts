@@ -179,7 +179,13 @@ export class ResultManager {
             .stat-box:hover { transform: translateY(-5px); }
             .stat-icon { font-size: 28px; margin-bottom: 12px; color: #478D47; }
             .stat-value { font-family: 'Retro Gaming', monospace; font-size: 18px; color: #478D47; margin-bottom: 6px; }
-            .stat-label { font-size: 9px; color: #6CC452; text-transform: uppercase; letter-spacing: 1px; }
+            .stat-label { 
+                font-size: 11px; 
+                color: #6CC452; 
+                text-transform: uppercase; 
+                letter-spacing: 1px;
+                font-weight: 800;
+            }
 
             .lb-footer { 
                 position: fixed; 
@@ -265,7 +271,11 @@ export class ResultManager {
                 }
                 .stat-box .material-symbols-outlined { font-size: 22px; margin-bottom: 6px; color: #478D47; }
                 .stat-value { font-size: 14px; margin-bottom: 2px; color: #478D47; }
-                .stat-label { font-size: 8px; color: #6CC452; }
+                .stat-label { 
+                    font-size: ${i18n.getLanguage() === 'ar' ? '10px' : '8px'}; 
+                    color: #6CC452; 
+                    font-weight: 800;
+                }
                 .lb-footer {
                     top: auto;
                     bottom: 40px;

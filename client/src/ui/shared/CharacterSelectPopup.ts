@@ -1,3 +1,5 @@
+import { i18n } from '../../utils/i18n';
+
 export class CharacterSelectPopup {
     private overlay!: HTMLElement;
     private popup!: HTMLElement;
@@ -18,6 +20,27 @@ export class CharacterSelectPopup {
         this.onClose = onClose;
 
         this.createDOM();
+        this.setupLanguageListener();
+    }
+
+    private setupLanguageListener() {
+        window.addEventListener('languageChanged', () => {
+            this.okBtn.innerText = i18n.t('player_lobby.ok');
+            this.updatePreview(); 
+            this.renderGrid();
+            
+            // Update footer alignment
+            const footer = this.okBtn.parentElement;
+            if (footer) {
+                footer.className = 'flex justify-end pt-2';
+            }
+
+            // Update content layout
+            const content = this.popup.querySelector('.flex-1.flex');
+            if (content) {
+                content.className = 'flex-1 flex flex-col md:flex-row gap-4 md:gap-8 overflow-hidden';
+            }
+        });
     }
 
     private createDOM() {
@@ -68,7 +91,7 @@ export class CharacterSelectPopup {
         // Style Name Label
         this.nameLabel = document.createElement('div');
         this.nameLabel.className = 'text-white font-bold uppercase tracking-widest text-lg font-["Retro_Gaming"] text-center mt-2';
-        this.nameLabel.innerText = 'DEFAULT';
+        this.nameLabel.innerText = i18n.t('player_lobby.hair_0');
 
         // Add style for animation if not exists
         if (!document.getElementById('anim-style-idle')) {
@@ -122,6 +145,7 @@ export class CharacterSelectPopup {
             cursor: pointer;
             transition: all 0.1s;
         `;
+        this.okBtn.innerText = i18n.t('player_lobby.ok');
         this.okBtn.onmousedown = () => {
             this.okBtn.style.borderBottomWidth = '0';
             this.okBtn.style.transform = 'translateY(4px)';
@@ -134,7 +158,6 @@ export class CharacterSelectPopup {
             this.okBtn.style.borderBottomWidth = '4px';
             this.okBtn.style.transform = 'translateY(0)';
         };
-        this.okBtn.innerText = 'OK';
 
         footer.appendChild(this.okBtn);
 
@@ -203,7 +226,7 @@ export class CharacterSelectPopup {
     private updatePreview() {
         const hair = this.hairOptions.find(h => h.id === this.selectedHairId);
         if (hair) {
-            this.nameLabel.innerText = hair.name || 'DEFAULT';
+            this.nameLabel.innerText = i18n.t(`player_lobby.hair_${hair.id}`);
             if (hair.id === 0) {
                 this.bigPreview.style.backgroundImage = 'none';
             } else {

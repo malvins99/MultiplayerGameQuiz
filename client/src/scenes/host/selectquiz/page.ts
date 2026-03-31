@@ -25,7 +25,6 @@ export class SelectQuizManager {
     tooltip: HTMLElement | null = null;
     lastFavoritedId: string | null = null;
     
-    private searchTimeout: any = null;
     private _outsideClickHandler: ((e: MouseEvent) => void) | null = null;
 
     constructor() {}
@@ -44,6 +43,10 @@ export class SelectQuizManager {
 
         this.createTooltip();
         this.setupEventListeners();
+        this.updateFilterUI();
+        
+        const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
+        if (searchInput) searchInput.value = this.searchQuery;
 
         window.addEventListener('selectQuizUIReRendered', async () => {
             this.quizSelectionUI = document.getElementById('quiz-selection-ui');
@@ -305,16 +308,28 @@ export class SelectQuizManager {
         document.addEventListener('click', this._outsideClickHandler);
 
         const searchInput = document.getElementById('quiz-search-input') as HTMLInputElement;
+        const searchBtn = document.getElementById('search-trigger-btn');
+
+        const performSearch = () => {
+            if (searchInput) {
+                this.searchQuery = searchInput.value.trim();
+                this.currentPage = 1;
+                this.applyFilters();
+            }
+        };
+
         if (searchInput) {
-            // Replaced keydown logic with debounced input hook for perfect execution
-            searchInput.addEventListener('input', (e) => {
-                if (this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => {
-                    this.searchQuery = (e.target as HTMLInputElement).value;
-                    this.currentPage = 1;
-                    this.applyFilters();
-                }, 300);
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
             });
+        }
+
+        if (searchBtn) {
+            searchBtn.onclick = () => {
+                performSearch();
+            };
         }
 
         const favBtn = document.getElementById('quiz-filter-fav-btn');
@@ -378,9 +393,9 @@ export class SelectQuizManager {
         if (favIcon) {
             if (this.showFavoritesOnly) {
                 favIcon.classList.remove('text-[#94A3B8]');
-                favIcon.classList.add('text-red-500', 'fill-current', 'heart-water-fill');
+                favIcon.classList.add('text-red-500', 'fill-icon', 'heart-water-fill');
             } else {
-                favIcon.classList.remove('text-red-500', 'fill-current', 'heart-water-fill');
+                favIcon.classList.remove('text-red-500', 'fill-icon', 'heart-water-fill');
                 favIcon.classList.add('text-[#94A3B8]');
             }
         }
@@ -496,14 +511,14 @@ export class SelectQuizManager {
         if (pageItems.length === 0) {
             grid.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                    <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
-                        <span class="material-symbols-outlined text-3xl text-white/20">search_off</span>
+                    <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mb-6 border border-white/20">
+                        <span class="material-symbols-outlined text-4xl text-white/60">search_off</span>
                     </div>
-                    <p class="text-white/70 font-['Retro_Gaming'] text-lg uppercase mb-2 tracking-widest">
+                    <p class="text-white font-['Retro_Gaming'] text-2xl uppercase mb-6 tracking-widest drop-shadow-lg">
                         ${i18n.t('select_quiz.no_quiz_found')}
                     </p>
-                    <button id="reset-filters-btn" class="px-6 py-3 bg-[#1F7D53]/10 border border-[#1F7D53]/30 text-[#1F7D53] hover:bg-[#1F7D53] hover:text-white font-['Retro_Gaming'] text-lg uppercase rounded-lg transition-all flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">refresh</span> ${i18n.t('select_quiz.reset_filter')}
+                    <button id="reset-filters-btn" class="px-8 py-4 bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] text-[#478D47] hover:bg-[#F1F8E9] hover:scale-105 active:translate-y-1 active:border-b-4 font-['Retro_Gaming'] text-xl uppercase rounded-2xl transition-all flex items-center gap-3 shadow-2xl cursor-pointer">
+                        <span class="material-symbols-outlined text-xl">refresh</span> ${i18n.t('select_quiz.reset_filter')}
                     </button>
                 </div>
             `;
@@ -525,7 +540,7 @@ export class SelectQuizManager {
                 <div class="relative z-10 flex justify-between items-start shrink-0 gap-2 mb-1.5">
                     <span class="px-1.5 py-0.5 md:px-2 md:py-1 ${badgeColor} text-[9px] md:text-[10px] font-bold rounded uppercase tracking-wider font-['Retro_Gaming'] leading-none truncate max-w-[70%]">${translatedCat}</span>
                     <button class="fav-btn p-1 flex items-center justify-center transition-all relative z-20 group/fav" data-id="${quiz.id}">
-                        <span class="material-symbols-outlined text-[20px] md:text-[22px] ${isFav ? 'text-red-500 fill-current' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
+                        <span class="material-symbols-outlined text-[20px] md:text-[22px] ${isFav ? 'text-red-500 fill-icon' : 'text-[#94A3B8]'} ${quiz.id === this.lastFavoritedId ? 'heart-water-fill' : ''} transition-all group-hover/fav:scale-110">favorite</span>
                     </button>
                 </div>
                 <div class="relative z-10 font-bold text-[#478D47] -mt-2 group-hover:text-[#6CC452] transition-colors leading-[1.4] font-['Retro_Gaming'] tracking-tight text-sm sm:text-base break-words whitespace-normal w-full">
@@ -672,7 +687,6 @@ export class SelectQuizManager {
             document.removeEventListener('click', this._outsideClickHandler);
             this._outsideClickHandler = null;
         }
-        if (this.searchTimeout) clearTimeout(this.searchTimeout);
     }
 
     private startManager(managerName: string, data?: any) {

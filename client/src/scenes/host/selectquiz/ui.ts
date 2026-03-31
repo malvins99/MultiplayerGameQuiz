@@ -27,34 +27,38 @@ export class QuizSelectionUI {
                     <div class="w-full max-w-5xl flex flex-col h-full shrink-0 items-center">
                         <!-- Unified Search & Filter Bar (Solid Style) -->
                         <div class="w-full mb-3 shrink-0 relative z-50 mt-3 md:mt-5">
-                            <div class="flex flex-col md:flex-row items-stretch md:items-center bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] rounded-2xl p-1.5 gap-2 shadow-2xl">
-                                <!-- Search Section -->
-                                <div class="relative flex-grow flex items-center">
+                            <div class="flex flex-col md:flex-row items-stretch md:items-center bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] rounded-2xl p-1 md:p-1.5 gap-1.5 md:gap-0 shadow-2xl">
+                                <!-- Search Section (Top Row Mobile) -->
+                                <div class="relative flex-grow flex items-center pr-1 md:pr-4">
                                     <input id="quiz-search-input"
                                     class="w-full h-10 md:h-12 pl-4 pr-12 bg-[#F1F8E9] border-none focus:ring-4 focus:ring-[#6CC452]/20 text-[#478D47] placeholder:text-[#6CC452]/40 font-medium text-base md:text-xl font-['Retro_Gaming'] tracking-tight rounded-xl"
                                     placeholder="${i18n.t('select_quiz.search_placeholder')}" type="text" />
-                                    <button id="search-trigger-btn" class="absolute right-4 text-[#6CC452] hover:scale-110 transition-transform cursor-pointer p-1">
+                                    <button id="search-trigger-btn" class="absolute right-5 md:right-8 text-[#6CC452] hover:scale-110 transition-transform cursor-pointer p-1">
                                         <span class="material-symbols-outlined font-bold">search</span>
                                     </button>
                                 </div>
-                                <!-- Middle: Custom Dropdown -->
-                                <div class="relative min-w-[200px] shrink-0 border-t md:border-t-0 border-[#6CC452]/10 md:border-l md:border-[#6CC452]/20 z-50">
-                                    <button id="custom-cat-trigger" class="w-full h-10 md:h-12 flex items-center justify-between pl-4 pr-3 text-[#478D47] text-xs md:text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight hover:bg-[#F1F8E9] transition-all focus:outline-none group rounded-xl ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
-                                        <span id="custom-cat-selected" class="truncate ${i18n.getLanguage() === 'ar' ? 'ml-2' : 'mr-2'}">${i18n.t('select_quiz.all')}</span>
-                                        <span id="custom-cat-arrow" class="material-symbols-outlined text-sm md:text-lg text-[#6CC452] transition-transform duration-300 group-hover:rotate-180">expand_more</span>
-                                    </button>
-                                    <div id="custom-cat-menu" class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl origin-top transform transition-all duration-200 scale-95 opacity-0 flex flex-col p-1 max-h-[50vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar z-50">
+
+                                <!-- Action Section (Bottom Row Mobile: Row Layout) -->
+                                <div class="flex flex-row items-center border-t md:border-t-0 border-[#6CC452]/20 md:contents">
+                                    <!-- Middle: Custom Dropdown -->
+                                    <div class="relative flex-grow md:min-w-[200px] shrink-0 md:border-l-2 md:border-[#6CC452]/20 z-50 px-1 md:px-0">
+                                        <button id="custom-cat-trigger" class="w-full h-10 md:h-12 flex items-center justify-between pl-3 md:pl-6 pr-2 md:pr-4 text-[#478D47] text-[10px] md:text-lg font-bold uppercase cursor-pointer font-['Retro_Gaming'] tracking-tight bg-[#F1F8E9]/50 md:bg-transparent hover:bg-[#F1F8E9] transition-all focus:outline-none group rounded-xl md:rounded-none ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
+                                            <span id="custom-cat-selected" class="truncate ${i18n.getLanguage() === 'ar' ? 'ml-2' : 'mr-2'}">${i18n.t('select_quiz.all')}</span>
+                                            <span id="custom-cat-arrow" class="material-symbols-outlined text-sm md:text-lg text-[#6CC452] transition-transform duration-300 group-hover:rotate-180">expand_more</span>
+                                        </button>
+                                        <div id="custom-cat-menu" class="hidden absolute top-[calc(100%+8px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl origin-top transform transition-all duration-200 scale-95 opacity-0 flex flex-col p-1 max-h-[50vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar z-50">
+                                        </div>
+                                        <select id="quiz-category-select" class="hidden"></select>
                                     </div>
-                                    <select id="quiz-category-select" class="hidden"></select>
-                                </div>
-                                <!-- Right: Icons -->
-                                <div class="flex items-center gap-2 pl-2 border-t md:border-t-0 border-[#6CC452]/10 md:border-l md:border-[#6CC452]/20 py-2 md:py-0 justify-end px-2">
-                                    <button id="quiz-filter-fav-btn" class="flex items-center justify-center transition-all group p-1" title="${i18n.t('select_quiz.favorites_tooltip')}">
-                                        <span class="material-symbols-outlined text-[#94A3B8] hover:scale-125 transition-transform text-2xl font-bold">favorite</span>
-                                    </button>
-                                    <button id="quiz-filter-my-btn" class="w-10 h-10 rounded-xl bg-[#F1F8E9] border-2 border-[#6CC452]/20 hover:border-[#6CC452] hover:bg-white flex items-center justify-center transition-all group" title="${i18n.t('select_quiz.my_quiz_tooltip')}">
-                                        <span class="material-symbols-outlined text-[#6CC452]/40 group-hover:text-[#6CC452] text-lg">person</span>
-                                    </button>
+                                    <!-- Right: Icons -->
+                                    <div class="flex items-center gap-1 md:gap-3 pl-1.5 md:pl-4 border-l-2 border-[#6CC452]/20 py-1 md:py-0 justify-end">
+                                        <button id="quiz-filter-fav-btn" class="flex items-center justify-center transition-all group p-1" title="${i18n.t('select_quiz.favorites_tooltip')}">
+                                            <span class="material-symbols-outlined text-[#94A3B8] hover:scale-125 transition-transform text-2xl font-bold">favorite</span>
+                                        </button>
+                                        <button id="quiz-filter-my-btn" class="w-10 h-10 rounded-xl bg-[#F1F8E9] border-2 border-[#6CC452]/20 hover:border-[#6CC452] hover:bg-white flex items-center justify-center transition-all group" title="${i18n.t('select_quiz.my_quiz_tooltip')}">
+                                            <span class="material-symbols-outlined text-[#6CC452]/40 group-hover:text-[#6CC452] text-lg">person</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -117,6 +121,7 @@ export class QuizSelectionUI {
                     }
                     .heart-red { color: #EF4444 !important; }
                     .heart-idle { color: #94A3B8 !important; }
+                    .fill-icon { font-variation-settings: 'FILL' 1 !important; }
                 `;
                 document.head.appendChild(style);
             }
