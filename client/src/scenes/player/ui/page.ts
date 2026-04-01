@@ -64,9 +64,9 @@ export class UIScene extends Phaser.Scene {
 
         // Timer Text (below score box)
         const initialMinutes = this.room?.state?.totalTimeMinutes || 5;
-        this.timerText = this.add.text(0, 32, `${String(initialMinutes).padStart(2, '0')}:00`, {
+        this.timerText = this.add.text(0, 45, `${String(initialMinutes).padStart(2, '0')}:00`, {
             fontFamily: '"Retro Gaming", monospace',
-            fontSize: '14px',
+            fontSize: '24px', // Increased from 14px
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
@@ -74,6 +74,7 @@ export class UIScene extends Phaser.Scene {
         });
         this.timerText.setOrigin(0.5, 0.5);
         this.scoreContainer.add(this.timerText);
+
 
         // --- Handle Resize ---
         this.scale.on('resize', this.handleResize, this);

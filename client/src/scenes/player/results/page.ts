@@ -11,6 +11,7 @@ interface RankingEntry {
     sessionId: string;
     name: string;
     hairId?: number;
+    avatarUrl?: string; // Added avatarUrl
     score: number;
     finishTime: number;
     duration: number;
@@ -145,10 +146,15 @@ export class ResultManager {
                 width: 180px; height: 180px;
                 background: #F1F8E9;
                 border: 2px solid #478D47;
-                border-radius: 24px;
+                border-radius: 50%;
                 display: flex; align-items: center; justify-content: center;
                 margin-bottom: 25px;
-                position: relative; overflow: visible;
+                position: relative; overflow: hidden; // Ensures avatar image is clipped
+            }
+            .result-avatar-img {
+                width: 100%; height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
             }
 
             .char-anim { width: 96px; height: 64px; image-rendering: pixelated; position: absolute; transform: scale(4.5); }
@@ -254,7 +260,7 @@ export class ResultManager {
                     border: 4px solid #6CC452;
                     border-bottom: 10px solid #478D47;
                 }
-                .result-avatar-container { width: 140px; height: 140px; background: #F1F8E9; border-color: #478D47; }
+                .result-avatar-container { width: 140px; height: 140px; background: #F1F8E9; border-color: #478D47; border-radius: 50%; }
                 .result-name { font-size: 20px; margin-bottom: 30px; color: #478D47; }
                 .result-stats-row { 
                     gap: 6px; 
@@ -329,6 +335,14 @@ export class ResultManager {
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         };
 
+        const upscaleAvatarUrl = (url?: string) => {
+            if (!url) return url;
+            if (url.includes('googleusercontent.com')) {
+                return url.replace(/=s\d+(-c)?/, '=s384-c');
+            }
+            return url;
+        };
+
         const characterVisuals = this.getCharacterVisuals(myEntry);
 
         this.container.innerHTML = `
@@ -340,16 +354,19 @@ export class ResultManager {
 
             <div class="result-card pointer-events-auto">
                 <div class="result-avatar-container">
-                    <div class="char-anim result-char anim-play" style="${characterVisuals.base}"></div>
-                    <div class="char-anim result-char anim-play" style="${characterVisuals.tools}"></div>
-                    ${characterVisuals.hair ? `<div class="char-anim result-char anim-play" style="${characterVisuals.hair}"></div>` : ''}
+                    ${myEntry.avatarUrl ? 
+                        `<img src="${upscaleAvatarUrl(myEntry.avatarUrl)}" class="result-avatar-img" />` :
+                        `<div class="char-anim result-char anim-play" style="${characterVisuals.base}"></div>
+                         <div class="char-anim result-char anim-play" style="${characterVisuals.tools}"></div>
+                         ${characterVisuals.hair ? `<div class="char-anim result-char anim-play" style="${characterVisuals.hair}"></div>` : ''}`
+                    }
                 </div>
                 <div class="result-name">${myEntry.name}</div>
                 
                 <div class="result-stats-row">
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
-                        <div class="stat-value">${myEntry.rank === -1 ? '#?' : '#' + myEntry.rank}</div>
+                        <div class="stat-value">${myEntry.rank === -1 ? (this.room?.state?.players?.size === 1 ? '#1' : '#?') : '#' + myEntry.rank}</div>
                         <div id="txt-pr-rank" class="stat-label">${i18n.t('player_result.rank')}</div>
                     </div>
                     <div class="stat-box">
