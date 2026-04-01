@@ -107,7 +107,7 @@ export const TransitionManager = {
             const textContent = document.createElement('div');
             textContent.id = 'transition-countdown-text';
             textContent.style.fontFamily = "'Retro Gaming', monospace";
-            textContent.style.fontSize = '120px'; // Matched to player
+            textContent.style.fontSize = '240px'; // Increased from 120px to 240px
             textContent.style.color = '#00ff88'; // Matched to player
             textContent.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
             textContent.style.transition = 'transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
@@ -123,9 +123,9 @@ export const TransitionManager = {
         textEl.innerText = text;
 
         if (text.length > 5) {
-            textEl.style.fontSize = '60px';
+            textEl.style.fontSize = '120px'; // Increased from 60px
         } else {
-            textEl.style.fontSize = '120px';
+            textEl.style.fontSize = '240px'; // Increased from 120px
         }
 
         // Color Logic

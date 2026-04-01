@@ -629,8 +629,10 @@ export class LobbyManager {
                     nickname: nickname,
                     user_id: userId,
                     joined_at: new Date().toISOString(),
-                    score: 0
+                    score: 0,
+                    char: 'none'
                 });
+
                 if (partError && partError.code !== '23505') {
                     this.showJoinError(i18n.t('lobby.join_errors.join_failed'));
                     return;

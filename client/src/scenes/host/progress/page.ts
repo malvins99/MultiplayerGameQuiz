@@ -482,7 +482,7 @@ export class HostProgressScene extends Phaser.Scene {
 
             <div class="absolute top-[20px] md:top-[30px] left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-4">
                 <span id="timer-icon" class="material-symbols-outlined text-[32px] md:text-[48px] text-white drop-shadow-md">timer</span>
-                <span id="game-timer" class="text-[32px] md:text-[48px] text-white font-bold" style="
+                <span id="game-timer" class="text-[48px] md:text-[72px] text-white font-bold" style="
                     text-shadow: 
                         -2px -2px 0 #000,  
                          2px -2px 0 #000,
@@ -632,7 +632,7 @@ export class HostProgressScene extends Phaser.Scene {
     createNameTag(sessionId: string, name: string, container: Phaser.GameObjects.Container) {
         // Render font lebih besar dengan resolusi lebih tinggi lalu di-scale agar tetap tajam (anti-blur)
         // Lowered position from -38 to -25 to be closer to player head
-        const nameText = this.add.text(0, -25, name, { fontSize: '24px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
+        const nameText = this.add.text(0, -25, name, { fontSize: '32px', fontFamily: '"Retro Gaming"', color: '#ffffff', stroke: '#000000', strokeThickness: 4, resolution: 2 }).setOrigin(0.5, 0.5).setScale(0.5);
         nameText.setName('nameTag');
 
         // Progress bar tepat di bawah nama (jarak ~6px dalam skala container)

@@ -17,8 +17,11 @@ export interface Quiz {
     favorite: any[];
     status: string;
     played: number;
-    questionCount?: number; // Computed from questions array length
+    questionCount?: number;
+    creator_username?: string;
+    creator_avatar?: string | null;
 }
+
 
 // --- SUPABASE FUNCTIONS ---
 
@@ -29,7 +32,10 @@ export async function fetchQuizById(id: string): Promise<Quiz | null> {
     try {
         const { data, error } = await supabase
             .from('quizzes')
-            .select('*')
+            .select(`
+                id, title, description, category, language, image_url, cover_image, is_public, creator_id, questions, created_at, updated_at, favorite, status, played,
+                creator:profiles(nickname, fullname, username, avatar_url)
+            `)
             .eq('id', id)
             .single();
 
@@ -38,24 +44,30 @@ export async function fetchQuizById(id: string): Promise<Quiz | null> {
             return null;
         }
 
+        const row = data as any;
         return {
-            id: data.id,
-            title: data.title || 'Untitled Quiz',
-            description: data.description || '',
-            category: formatCategory(data.category || 'general'),
-            language: data.language || 'id',
-            image_url: data.image_url || null,
-            cover_image: data.cover_image || null,
-            is_public: data.is_public ?? true,
-            creator_id: data.creator_id,
-            questions: data.questions || [],
-            created_at: data.created_at,
-            updated_at: data.updated_at,
-            favorite: data.favorite || [],
-            status: data.status || 'active',
-            played: data.played || 0,
-            questionCount: Array.isArray(data.questions) ? data.questions.length : 0,
+            id: row.id,
+            title: row.title || 'Untitled Quiz',
+            description: row.description || '',
+            category: formatCategory(row.category || 'general'),
+            language: row.language || 'id',
+            image_url: row.image_url || null,
+            cover_image: row.cover_image || null,
+            is_public: row.is_public ?? true,
+            creator_id: row.creator_id,
+            questions: row.questions || [],
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            favorite: row.favorite || [],
+            status: row.status || 'active',
+            played: row.played || 0,
+            questionCount: Array.isArray(row.questions) ? row.questions.length : 0,
+            creator_username: row.creator ? (Array.isArray(row.creator) ? (row.creator[0]?.nickname || row.creator[0]?.fullname || row.creator[0]?.username) : (row.creator.nickname || row.creator.fullname || row.creator.username)) : 'kizuko',
+            creator_avatar: row.creator ? (Array.isArray(row.creator) ? row.creator[0]?.avatar_url : row.creator.avatar_url) : null
         };
+
+
+
     } catch (err) {
         console.error('Unexpected error fetching quiz:', err);
         return null;
@@ -148,10 +160,13 @@ export async function fetchQuizzesPaginated(options: PaginatedQuizOptions): Prom
     const to = from + limit - 1;
 
     try {
-        // Build the query with count
+        // Build the query with count and join with profiles
         let query = supabase
             .from('quizzes')
-            .select('id, title, description, category, language, image_url, cover_image, is_public, creator_id, questions, created_at, updated_at, favorite, status, played', { count: 'exact' })
+            .select(`
+                id, title, description, category, language, image_url, cover_image, is_public, creator_id, questions, created_at, updated_at, favorite, status, played,
+                creator:profiles(nickname, fullname, username, avatar_url)
+            `, { count: 'exact' })
             .eq('is_public', true)
             .eq('is_hidden', false)
             .eq('status', 'active')
@@ -190,7 +205,7 @@ export async function fetchQuizzesPaginated(options: PaginatedQuizOptions): Prom
         const totalCount = count || 0;
         const totalPages = Math.ceil(totalCount / limit);
 
-        const quizzes: Quiz[] = (data || []).map((row: any) => ({
+        const quizzes: Quiz[] = (data as any[] || []).map((row: any) => ({
             id: row.id,
             title: row.title || 'Untitled Quiz',
             description: row.description || '',
@@ -207,7 +222,12 @@ export async function fetchQuizzesPaginated(options: PaginatedQuizOptions): Prom
             status: row.status || 'active',
             played: row.played || 0,
             questionCount: Array.isArray(row.questions) ? row.questions.length : 0,
+            creator_username: row.creator ? (Array.isArray(row.creator) ? (row.creator[0]?.nickname || row.creator[0]?.fullname || row.creator[0]?.username) : (row.creator.nickname || row.creator.fullname || row.creator.username)) : 'kizuko',
+            creator_avatar: row.creator ? (Array.isArray(row.creator) ? row.creator[0]?.avatar_url : row.creator.avatar_url) : null
         }));
+
+
+
 
         console.log(`[Paginated] Page ${page}/${totalPages}, showing ${quizzes.length} of ${totalCount} quizzes`);
         return { quizzes, totalCount, totalPages, currentPage: page };

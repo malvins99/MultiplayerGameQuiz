@@ -22,6 +22,17 @@ const ROOM_CONFIG = {
     }
 };
 
+const HAIR_SLUGS: { [key: number]: string } = {
+    0: "none",
+    1: "bowl-hair",
+    2: "curly-hair",
+    3: "long-hair",
+    4: "mop-hair",
+    5: "short-hair",
+    6: "spikey-hair"
+};
+
+
 const LOBBY_MAX_PLAYERS = 51; // 50 players + 1 host
 
 export class GameRoom extends Room<GameState> {
@@ -40,6 +51,8 @@ export class GameRoom extends Room<GameState> {
     private questionLimit: string = "all";
     private quizDetail: any = {};
     private enemyCountOption: number = 0;
+    private countdownStartedAt: string | null = null;
+
 
     // Local storage for detailed answers (not synced)
     playerAnswers: Map<string, any[]> = new Map();
@@ -178,7 +191,13 @@ export class GameRoom extends Room<GameState> {
 
             // Start Countdown
             this.state.countdown = 10;
+            this.countdownStartedAt = new Date().toISOString();
             console.log("[GameRoom] Starting countdown: 10");
+
+            // Update countdown_started_at in Supabase Utama immediately
+            this.updateCountdownStartedAt().catch(e => console.error("[Supabase Utama] Countdown Sync Error:", e));
+
+
 
             // Initialize game elements (map, enemies, etc.) immediately so clients can preload
             console.log("[GameRoom] Pre-initializing game elements during countdown...");
@@ -365,20 +384,15 @@ export class GameRoom extends Room<GameState> {
         // Redundant score handler removed (Moved to correctAnswer for authority)
 
         this.onMessage("addScoreFromChest", (client, data) => {
+            // Nilai dari peti dihilangkan sesuai permintaan user.
+            // Cukup lakukan sinkronisasi jika diperlukan, atau kosongkan.
             const player = this.state.players.get(client.sessionId);
             if (player) {
-                // Chest gives a small bonus (e.g., 5 points fixed or 25% of a question)
-                const qLimit = parseInt(this.questionLimit);
-                const totalQuestions = isNaN(qLimit) ? (this.state.questions.length || 1) : qLimit;
-                const pointsPerCorrect = 100 / (totalQuestions || 1);
-                const chestPoints = pointsPerCorrect * 0.5; // Bonus set at half a question value
-
-                player.score = Math.min(100, player.score + chestPoints);
-
-                // Real-time sync to Supabase B
+                console.log(`[Chest] Player ${player.name} used a chest. No score added.`);
                 this.syncParticipantToSupabaseB(client);
             }
         });
+
 
         // Kill enemy without counting as answered (for wrong answer case)
         this.onMessage("killEnemy", (client, data) => {
@@ -422,8 +436,11 @@ export class GameRoom extends Room<GameState> {
             const player = this.state.players.get(client.sessionId);
             if (player && data.hairId !== undefined) {
                 player.hairId = Number(data.hairId);
+                // Sync to Supabase B when character changes
+                this.syncParticipantToSupabaseB(client).catch(e => console.error("[Supabase B] Hair Sync Error:", e));
             }
         });
+
 
         // --- Kick Player Handler ---
         this.onMessage("kickPlayer", (client, payload) => {
@@ -1164,11 +1181,12 @@ export class GameRoom extends Room<GameState> {
                     started: new Date(this.state.gameStartTime).toISOString(),
                     ended: r.finishTime > 0 ? new Date(r.finishTime).toISOString() : new Date().toISOString(),
                     eliminated: false,
-                    spacecraft: r.hairId ? `hair_${r.hairId}.png` : "galaksi1.webp", // Mocking spacecraft visual 
+                    char: HAIR_SLUGS[r.hairId] || "none", // Changed from spacecraft to char with slug 
                     total_question: !isNaN(parseInt(this.questionLimit)) ? parseInt(this.questionLimit) : this.state.questions.length,
                     current_question: r.currentQuestion
                 }
             });
+
 
             // Construct 'responses' Array of JSON
             const responsesDataArray = rankings.map((r) => {
@@ -1209,12 +1227,14 @@ export class GameRoom extends Room<GameState> {
                 responses: responsesDataArray,
                 current_questions: questionsDataArray,
                 created_at: new Date(this.state.gameStartTime - 1000).toISOString(),
+                countdown_started_at: this.countdownStartedAt,
                 started_at: new Date(this.state.gameStartTime).toISOString(),
                 ended_at: new Date().toISOString(),
-                application: "zigma",
+                application: "zigma", // Reverted back to zigma as per user request
                 quiz_detail: this.quizDetail,
                 difficulty: this.originalDifficulty
             };
+
 
             const { data, error } = await supabaseUtama
                 .from('game_sessions')
@@ -1270,10 +1290,14 @@ export class GameRoom extends Room<GameState> {
                 responses: [],
                 current_questions: questionsDataArray,
                 created_at: new Date().toISOString(),
+                countdown_started_at: null,
+                started_at: null,
+                ended_at: null,
                 application: "zigma",
                 quiz_detail: this.quizDetail,
                 difficulty: this.originalDifficulty
             };
+
 
             const { error } = await supabaseUtama
                 .from('game_sessions')
@@ -1349,10 +1373,12 @@ export class GameRoom extends Room<GameState> {
                 correct: player.correctAnswers,
                 score: Math.round(player.score),
                 answers: answers,
+                char: HAIR_SLUGS[player.hairId] || "none", // Sync professional slug to 'char' column
                 completion: player.isFinished,
                 finished_at: player.isFinished ? new Date(player.finishTime).toISOString() : null,
                 duration: player.isFinished ? Math.round((player.finishTime - this.state.gameStartTime) / 1000) : 0
             };
+
 
             const { data, error } = await supabaseB
                 .from('participants')
@@ -1434,7 +1460,28 @@ export class GameRoom extends Room<GameState> {
             console.error("[Supabase Utama] Exception on updateSessionToActive:", e.message);
         }
     }
+
+    private async updateCountdownStartedAt() {
+        if (!this.sessionId || !this.countdownStartedAt) return;
+        try {
+            const { error } = await supabaseUtama
+                .from('game_sessions')
+                .update({
+                    countdown_started_at: this.countdownStartedAt
+                })
+                .eq('id', this.sessionId);
+
+            if (error) {
+                console.error("[Supabase Utama] GAGAL UPDATE countdown_started_at:", error.message);
+            } else {
+                console.log("[Supabase Utama] countdown_started_at Berhasil Diperbarui.");
+            }
+        } catch (e: any) {
+            console.error("[Supabase Utama] Exception on updateCountdownStartedAt:", e.message);
+        }
+    }
 }
+
 
 
 //ikan
