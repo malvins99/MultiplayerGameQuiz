@@ -71,7 +71,8 @@ export function initializeGame(startScene?: string, sceneData?: any) {
         ],
         scale: {
             mode: Phaser.Scale.RESIZE,
-            autoCenter: Phaser.Scale.CENTER_BOTH
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            expandParent: true
         },
         dom: {
             createContainer: true

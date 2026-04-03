@@ -3,16 +3,18 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "C:/Users/USER/Downloads/untitled.tmj",
+    "activeFile": "client/public/assets/maps/map_newest_easy_nomor1.tmj",
     "expandedProjectPaths": [
-        ".",
-        "client",
+        "client/public",
         "client/public/assets",
-        "client/public"
+        ".",
+        "client"
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "": {
-            "scaleInDock": 3
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "#spr_tileset_sunnysideworld_16px": {
             "scaleInDock": 2
@@ -22,7 +24,7 @@
             "scaleInEditor": 4
         },
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx": {
-            "scaleInDock": 4,
+            "scaleInDock": 2,
             "scaleInEditor": 4
         },
         "C:/Users/USER/Downloads/untitled.tmj": {
@@ -174,6 +176,46 @@
         "client/public/assets/map_baru1_tetap.tmj#spr_tileset_sunnysideworld_forest_32px": {
             "scaleInDock": 1
         },
+        "client/public/assets/maps/map_medium.tmj": {
+            "expandedGroupLayers": [
+                6,
+                5,
+                3
+            ],
+            "scale": 0.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 912,
+                "y": 703
+            }
+        },
+        "client/public/assets/maps/map_medium.tmj#spr_deco_coracle_strip4": {
+            "scaleInDock": 1
+        },
+        "client/public/assets/maps/map_medium.tmj#spr_deco_windmill_withshadow_strip9": {
+            "scaleInDock": 1
+        },
+        "client/public/assets/maps/map_medium.tmj#spr_tileset_sunnysideworld_16px": {
+            "scaleInDock": 1
+        },
+        "client/public/assets/maps/map_newest_easy_nomor1.tmj": {
+            "expandedGroupLayers": [
+                5,
+                3
+            ],
+            "scale": 0.5,
+            "selectedLayer": 33,
+            "viewCenter": {
+                "x": 179,
+                "y": 210
+            }
+        },
+        "client/public/assets/maps/map_newest_easy_nomor1.tmj#spr_tileset_sunnysideworld_16px": {
+            "scaleInDock": 1
+        },
+        "client/public/assets/maps/map_newest_easy_nomor1.tmj#spr_tileset_sunnysideworld_forest_32px": {
+            "scaleInDock": 1
+        },
         "map_baru1.(update).tmj": {
             "scale": 0.33,
             "selectedLayer": 1,
@@ -301,24 +343,24 @@
     "map.tileHeight": 16,
     "map.tileWidth": 16,
     "openFiles": [
-        "C:/Users/USER/Downloads/untitled.tmj",
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
-        "C:/Users/USER/Downloads/base_walk_strip8.tsx"
+        "client/public/assets/maps/map_medium.tmj",
+        "client/public/assets/maps/map_newest_easy_nomor1.tmj"
     ],
     "project": "untitled.tiled-project",
     "recentFiles": [
-        "C:/Users/USER/Downloads/base_walk_strip8.tsx",
         "C:/Users/USER/Downloads/spr_tileset_sunnysideworld_16px.tsx",
+        "client/public/assets/maps/map_medium.tmj",
+        "client/public/assets/maps/map_newest_easy_nomor1.tmj",
         "C:/Users/USER/Downloads/untitled.tmj",
+        "C:/Users/USER/Downloads/base_walk_strip8.tsx",
         "client/public/assets/map medium.tmj",
         "client/public/assets/map hard.tmx",
         "client/public/assets/map_baru1_tetap.tmj",
         "C:/new map/group map.tmx",
         "client/public/assets/characters/untitled.tmx",
         "map_baru1.tmx",
-        "map_baru1.(update).tmj",
-        "server/src/maps/map_easy.json",
-        "untitled.tmx"
+        "map_baru1.(update).tmj"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

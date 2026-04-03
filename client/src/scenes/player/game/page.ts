@@ -28,6 +28,7 @@ export class GameScene extends Phaser.Scene {
     controls!: HTMLControlAdapter;
     indicatorContainer: Phaser.GameObjects.Container | null = null;
     isAttacking: boolean = false;
+    barrierAreas: any[] = []; // Menampung rectangle maupun data polygon asli
 
     isGameReady: boolean = false; // Block input until countdown finishes
     private lastNetworkSendTime: number = 0;
@@ -212,6 +213,9 @@ export class GameScene extends Phaser.Scene {
                 }
             });
         }
+
+        // --- Barrier Collision Setup ---
+        this.parseBarriers();
 
         // Force NEAREST filtering on the tileset textures
         if (this.textures.exists('tiles')) {
@@ -1101,8 +1105,24 @@ export class GameScene extends Phaser.Scene {
             if (velocity.x !== 0 || velocity.y !== 0) {
                 const length = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
                 velocity.x /= length; velocity.y /= length;
-                this.currentPlayer.x += velocity.x * speed * (delta / 1000);
-                this.currentPlayer.y += velocity.y * speed * (delta / 1000);
+
+                // Simpan posisi lama sebelum bergerak
+                const prevX = this.currentPlayer.x;
+                const prevY = this.currentPlayer.y;
+
+                // Hitung posisi baru
+                const newX = prevX + velocity.x * speed * (delta / 1000);
+                const newY = prevY + velocity.y * speed * (delta / 1000);
+
+                // Cek collision per-axis (sliding collision)
+                // Coba X dulu
+                if (!this.isInsideBarrier(newX, prevY)) {
+                    this.currentPlayer.x = newX;
+                } 
+                // Coba Y
+                if (!this.isInsideBarrier(this.currentPlayer.x, newY)) {
+                    this.currentPlayer.y = newY;
+                }
 
                 const base = this.currentPlayer.getData('baseSprite') as Phaser.GameObjects.Sprite;
                 const hair = this.currentPlayer.getData('hairSprite') as Phaser.GameObjects.Sprite;
@@ -1254,17 +1274,141 @@ export class GameScene extends Phaser.Scene {
             }
         }
     }
+
+    // ═══════════════════════════════════════════════
+    // BARRIER COLLISION SYSTEM
+    // ═══════════════════════════════════════════════
+
+    /**
+     * Membaca semua object rectangle dari layer "barrier" di Tiled map.
+     * Object dengan width/height = 0 (titik/ellipse kosong) diabaikan.
+     */
+    private parseBarriers() {
+        this.barrierAreas = [];
+
+        // HANYA cari layer yang namanya persis "Barrier"
+        const targetLayerName = 'Barrier';
+
+        // 1. Cek di daftar objects utama Phaser
+        if (this.map.objects) {
+            const layer = this.map.objects.find(l => l.name === targetLayerName);
+            if (layer && layer.objects) {
+                this.parseLayerObjects(layer.objects);
+            }
+        }
+
+        console.log(`[Barrier] Loaded ${this.barrierAreas.length} precise barrier areas from layer "${targetLayerName}".`);
+        // Debug mode dimatikan sesuai permintaan user
+        // this.drawDebugBarriers();
+    }
+
+
+
+    /**
+     * Memproses daftar objek dari sebuah layer dan memasukkannya ke barrierAreas
+     */
+    private parseLayerObjects(objects: any[]) {
+        for (const obj of objects) {
+            // Case 1: Rectangle
+            if (obj.width && obj.height && obj.width > 0 && obj.height > 0 && !obj.polygon && !obj.polyline) {
+                this.barrierAreas.push({
+                    type: 'rect',
+                    x: obj.x ?? 0,
+                    y: obj.y ?? 0,
+                    width: obj.width,
+                    height: obj.height
+                });
+            } 
+            // Case 2: Polygon
+            else if (obj.polygon) {
+                const points = (obj.polygon as any[]).map(p => ({
+                    x: (obj.x ?? 0) + p.x,
+                    y: (obj.y ?? 0) + p.y
+                }));
+
+                this.barrierAreas.push({
+                    type: 'poly',
+                    points: points
+                });
+            }
+        }
+    }
+
+
+    private drawDebugBarriers() {
+        const debugGraphics = this.add.graphics();
+        debugGraphics.setDepth(1000);
+        debugGraphics.lineStyle(2, 0xff0000, 1);
+        debugGraphics.fillStyle(0xff0000, 0.2);
+
+        this.barrierAreas.forEach(area => {
+            if (area.type === 'rect') {
+                debugGraphics.strokeRect(area.x, area.y, area.width, area.height);
+                debugGraphics.fillRect(area.x, area.y, area.width, area.height);
+            } else if (area.type === 'poly') {
+                debugGraphics.beginPath();
+                debugGraphics.moveTo(area.points[0].x, area.points[0].y);
+                for (let i = 1; i < area.points.length; i++) {
+                    debugGraphics.lineTo(area.points[i].x, area.points[i].y);
+                }
+                debugGraphics.closePath();
+                debugGraphics.strokePath();
+                debugGraphics.fillPath();
+            }
+        });
+    }
+
+
+    /**
+     * Mengecek apakah posisi (px, py) berada di dalam salah satu barrier rectangle.
+     * Menggunakan hitbox kecil (8px) sebagai radius karakter.
+     * Return: true = terblokir, false = aman.
+     */
+    private isInsideBarrier(px: number, py: number): boolean {
+        const playerRadius = 4; // Lebih kecil agar tidak gampang nyangkut
+        
+        for (const area of this.barrierAreas) {
+            if (area.type === 'rect') {
+                if (px + playerRadius > area.x && px - playerRadius < area.x + area.width &&
+                    py + playerRadius > area.y && py - playerRadius < area.y + area.height) {
+                    return true;
+                }
+            } else if (area.type === 'poly') {
+                // Ray Casting Algorithm untuk Point-in-Polygon presisi
+                let inside = false;
+                const points = area.points;
+                for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+                    const xi = points[i].x, yi = points[i].y;
+                    const xj = points[j].x, yj = points[j].y;
+                    
+                    const intersect = ((yi > py) !== (yj > py)) &&
+                        (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                if (inside) return true;
+            }
+        }
+        return false;
+    }
+
+
     private handleResize(gameSize: Phaser.Structs.Size) {
-        const { width, height } = gameSize;
-        console.log(`[GameScene] Resizing to ${width}x${height}`);
+        // Use window dimensions directly if gameSize is not yet updated properly (common on mobile)
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        console.log(`[GameScene] Resizing to ${width}x${height} (ScaleManager said: ${gameSize.width}x${gameSize.height})`);
+
+        // Update the scale manager size directly to force the canvas to match the window
+        this.scale.resize(width, height);
 
         // Update main camera viewport to fill the new game size
         this.cameras.main.setViewport(0, 0, width, height);
 
         // Update zoom dynamically
-        // If landscape (typical for gameplay)
         if (width > height) {
-            if (width <= 850) { // Mobile Landscape
+            // Mobile Landscape or Desktop Wide
+            if (width <= 950) { // Mobile Landscape (including larger phones)
                 this.cameras.main.setZoom(1.5);
             } else { // Desktop/Tablet
                 this.cameras.main.setZoom(2);
@@ -1277,6 +1421,11 @@ export class GameScene extends Phaser.Scene {
         // Re-ensure bounds and follow are correct
         if (this.map) {
             this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+        }
+
+        // Re-center character follow if active
+        if (this.currentPlayer) {
+            this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
         }
     }
 }
