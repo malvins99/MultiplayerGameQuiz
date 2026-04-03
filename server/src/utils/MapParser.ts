@@ -25,6 +25,7 @@ export class MapParser {
                                      .concat(this.findLayerObjects(map.layers, 'enemies'))
                                      .concat(this.findLayerObjects(map.layers, 'spawn enemies')),
                 chests: this.findLayerObjects(map.layers, 'chest'),
+                barriers: this.findLayerObjects(map.layers, 'Barrier'),
                 mapWidth: map.width * map.tilewidth,
                 mapHeight: map.height * map.tileheight
             };
@@ -34,6 +35,7 @@ export class MapParser {
                 playerSpawns: [{ x: 400, y: 300 }],
                 enemySpawnZones: [{ x: 100, y: 100, width: 800, height: 600 }],
                 chests: [],
+                barriers: [],
                 mapWidth: 1000,
                 mapHeight: 1000
             };
@@ -44,23 +46,20 @@ export class MapParser {
         let results: any[] = [];
 
         for (const layer of layers) {
-            // Case 1: The layer itself matches the name and is an ObjectGroup
-            if (layer.name.toLowerCase() === layerName.toLowerCase() && layer.type === 'objectgroup') {
+            const name = layer.name || '';
+
+            // Case 1: The layer itself matches the name (Nama harus persis sesuai parameter)
+            if (name === layerName && layer.type === 'objectgroup') {
                 const objects = layer.objects.map((obj: any) => {
                     if (obj.point) return { x: obj.x, y: obj.y };
-                    if (obj.width && obj.height) return { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
                     if (obj.polygon || obj.polyline) {
-                        const points = obj.polygon || obj.polyline;
-                        let minX = 0, maxX = 0, minY = 0, maxY = 0;
-                        points.forEach((p: any) => {
-                            if (p.x < minX) minX = p.x;
-                            if (p.x > maxX) maxX = p.x;
-                            if (p.y < minY) minY = p.y;
-                            if (p.y > maxY) maxY = p.y;
-                        });
-                        return { x: obj.x + minX, y: obj.y + minY, width: maxX - minX, height: maxY - minY };
+                        const points = (obj.polygon || obj.polyline).map((p: any) => ({
+                            x: obj.x + p.x,
+                            y: obj.y + p.y
+                        }));
+                        return { type: 'poly', points: points };
                     }
-                    return { x: obj.x, y: obj.y };
+                    return { type: 'rect', x: obj.x, y: obj.y, width: obj.width, height: obj.height };
                 });
                 results = results.concat(objects);
             }
@@ -68,7 +67,7 @@ export class MapParser {
             // Case 2: It's a Group Layer
             if (layer.layers && layer.type === 'group') {
                 // If the group matches the name, we want EVERYTHING inside it regardless of child name
-                if (layer.name.toLowerCase() === layerName.toLowerCase()) {
+                if (name === layerName) {
                     const children = this.getAllObjectsFromGroup(layer);
                     results = results.concat(children);
                 } else {
@@ -87,8 +86,15 @@ export class MapParser {
             if (layer.type === 'objectgroup') {
                 const layerObjs = layer.objects.map((obj: any) => {
                     if (obj.point) return { x: obj.x, y: obj.y };
-                    if (obj.width && obj.height) return { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
-                    return { x: obj.x, y: obj.y };
+                    if (obj.polygon || obj.polyline) {
+                        const points = (obj.polygon || obj.polyline).map((p: any) => ({
+                            x: obj.x + p.x,
+                            y: obj.y + p.y
+                        }));
+                        return { type: 'poly', points: points };
+                    }
+                    return { type: 'rect', x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+
                 });
                 objects = objects.concat(layerObjs);
             } else if (layer.type === 'group') {
