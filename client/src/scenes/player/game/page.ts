@@ -1403,15 +1403,14 @@ export class GameScene extends Phaser.Scene {
         if (width > height) {
             // Mobile Landscape or Desktop Wide
             if (width <= 950) { 
-                // Smaller landscape (mobile) - Zoom 2 is usually best for pixel art
-                this.cameras.main.setZoom(2);
+                // Smaller landscape (mobile) - Wide view requested
+                this.cameras.main.setZoom(1);
             } else { 
-                // Desktop/Large Tablet
+                // Desktop/Large Tablet - Closer view is fine
                 this.cameras.main.setZoom(2);
             }
         } else {
             // Portrait (during transition or warning)
-            // Zoom 1 is safest for portrait to ensure everything fits and no tearing
             this.cameras.main.setZoom(1);
         }
 
