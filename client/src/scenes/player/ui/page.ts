@@ -90,7 +90,14 @@ export class UIScene extends Phaser.Scene {
         this.cameras.main.setViewport(0, 0, width, height);
         
         if (this.scoreContainer) {
-            this.scoreContainer.setPosition(width / 2, 45);
+            // Shrink UI on mobile landscape
+            if (width < 950 && width > height) {
+                this.scoreContainer.setScale(0.85); // 15% smaller
+                this.scoreContainer.setPosition(width / 2, 35); // Slightly higher
+            } else {
+                this.scoreContainer.setScale(1); // Standard size
+                this.scoreContainer.setPosition(width / 2, 45); // Standard height
+            }
         }
     }
 
