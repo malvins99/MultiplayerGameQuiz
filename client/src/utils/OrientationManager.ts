@@ -81,7 +81,8 @@ export class OrientationManager {
                 console.log("[OrientationManager] Requirement met. Forcing resize event.");
                 window.dispatchEvent(new Event('resize'));
                 // Trigger an extra one briefly after to ensure mobile viewport has stabilized
-                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 400); 
             }
         }
     }

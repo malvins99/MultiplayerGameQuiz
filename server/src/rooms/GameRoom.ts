@@ -412,11 +412,20 @@ export class GameRoom extends Room<GameState> {
         // Redundant score handler removed (Moved to correctAnswer for authority)
 
         this.onMessage("addScoreFromChest", (client, data) => {
-            // Nilai dari peti dihilangkan sesuai permintaan user.
-            // Cukup lakukan sinkronisasi jika diperlukan, atau kosongkan.
             const player = this.state.players.get(client.sessionId);
-            if (player) {
-                console.log(`[Chest] Player ${player.name} used a chest. No score added.`);
+            if (player && !player.isFinished) {
+                // Calculate dynamic chest reward (50% of standard point)
+                const qLimit = parseInt(this.state.questionLimit);
+                const totalQs = isNaN(qLimit) ? (this.state.questions.length || 1) : qLimit;
+                const pointsPerCorrect = 100 / (totalQs || 1);
+                const chestReward = pointsPerCorrect / 2;
+
+                player.score = Math.min(100, player.score + chestReward);
+                player.correctAnswers++;
+                
+                console.log(`[Chest] Player ${player.name} retry correct. Added ${chestReward.toFixed(2)} points. (Standard: ${pointsPerCorrect.toFixed(2)})`);
+                
+                // Sync to Supabase B to update leaderboards
                 this.syncParticipantToSupabaseB(client);
             }
         });

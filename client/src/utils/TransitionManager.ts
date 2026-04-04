@@ -109,7 +109,7 @@ export const TransitionManager = {
             textContent.style.fontFamily = "'Retro Gaming', monospace";
             textContent.style.fontSize = '240px'; // Increased from 120px to 240px
             textContent.style.color = '#00ff88'; // Matched to player
-            textContent.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
+            textContent.style.filter = 'none';
             textContent.style.transition = 'transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             container.appendChild(textContent);
 
@@ -131,10 +131,10 @@ export const TransitionManager = {
         // Color Logic
         if (text === 'GO!' || text === '0') {
             textEl.style.color = '#fff';
-            textEl.style.filter = 'drop-shadow(0 0 50px #fff)';
+            textEl.style.filter = 'none';
         } else {
             textEl.style.color = '#00ff88';
-            textEl.style.filter = 'drop-shadow(0 0 30px rgba(0, 255, 136, 0.6))';
+            textEl.style.filter = 'none';
         }
 
         // Pulse animation ONLY if it's a number (for countdown)
