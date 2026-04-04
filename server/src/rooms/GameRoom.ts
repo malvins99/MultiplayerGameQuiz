@@ -1180,7 +1180,7 @@ export class GameRoom extends Room<GameState> {
                 avatarUrl: player.avatarUrl,
                 name: player.name,
                 hairId: player.hairId || 0, // Ensure hairId is sent
-                score: player.score,
+                score: Math.round(player.score),
                 finishTime: player.finishTime,
                 duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0, // Calculate duration
                 correctAnswers: player.correctAnswers,

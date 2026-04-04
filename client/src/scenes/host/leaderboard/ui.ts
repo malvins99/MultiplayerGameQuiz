@@ -170,7 +170,7 @@ export class LeaderboardUI {
                     <!-- The literal podium block (Hidden on mobile) -->
                     <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden pointer-events-auto" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
                         <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10"></div>
-                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: #ffffff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${p.score}</div>
+                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: #ffffff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${Math.round(p.score)}</div>
                         <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
                     </div>
                 </div>
@@ -193,7 +193,7 @@ export class LeaderboardUI {
                     </div>
                     <div class="font-bold text-xs md:text-lg truncate max-w-[150px] md:max-w-[300px] py-1 uppercase text-[#336B23]">${p.name}</div>
                 </div>
-                <div class="text-center text-[#478D47] font-bold text-sm md:text-xl">${p.score}</div>
+                <div class="text-center text-[#478D47] font-bold text-sm md:text-xl">${Math.round(p.score)}</div>
                 <div class="text-center text-gray-700 text-xs md:text-base font-bold">
                     ${formatTime(p.duration)}
                 </div>

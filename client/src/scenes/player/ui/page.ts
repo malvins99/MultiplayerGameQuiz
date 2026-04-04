@@ -98,38 +98,42 @@ export class UIScene extends Phaser.Scene {
         if (newScore === this.currentScore) return;
 
         const oldScore = this.currentScore;
-        this.currentScore = newScore;
-        const scoreDiff = newScore - oldScore;
+        this.currentScore = newScore; // Update leading currentScore
+        const roundedScore = Math.round(newScore);
+        const roundedOldScore = Math.round(oldScore);
+        const roundedDiff = roundedScore - roundedOldScore;
 
         // --- Float Up + Fade Out Animation for Old Score ---
-        const floatText = this.add.text(
-            0,
-            0,
-            `+${scoreDiff}`,
-            {
-                fontFamily: '"Retro Gaming", monospace',
-                fontSize: '14px',
-                color: '#4ade80',
-                stroke: '#166534',
-                strokeThickness: 2
-            }
-        );
-        floatText.setOrigin(0.5, 0.5);
-        this.scoreContainer.add(floatText);
+        if (roundedDiff !== 0) {
+            const floatText = this.add.text(
+                0,
+                0,
+                `+${roundedDiff}`,
+                {
+                    fontFamily: '"Retro Gaming", monospace',
+                    fontSize: '14px',
+                    color: '#4ade80',
+                    stroke: '#166534',
+                    strokeThickness: 2
+                }
+            );
+            floatText.setOrigin(0.5, 0.5);
+            this.scoreContainer.add(floatText);
 
-        this.tweens.add({
-            targets: floatText,
-            y: -40,
-            alpha: 0,
-            duration: 1000,
-            ease: 'Power2',
-            onComplete: () => {
-                floatText.destroy();
-            }
-        });
+            this.tweens.add({
+                targets: floatText,
+                y: -40,
+                alpha: 0,
+                duration: 1000,
+                ease: 'Power2',
+                onComplete: () => {
+                    floatText.destroy();
+                }
+            });
+        }
 
         // --- Shake Animation for New Score ---
-        this.scoreText.setText(newScore.toString());
+        this.scoreText.setText(roundedScore.toString());
 
         this.tweens.add({
             targets: this.scoreText,

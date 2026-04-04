@@ -4,6 +4,7 @@ import { TransitionManager } from '../../../utils/TransitionManager';
 import { CharacterSelectPopup } from '../../../ui/shared/CharacterSelectPopup';
 import { QRCodePopup } from '../../../ui/shared/QRCodePopup';
 import { HAIR_OPTIONS, getHairById } from '../../../data/characterData';
+import { OrientationManager } from '../../../utils/OrientationManager';
 import { i18n } from '../../../utils/i18n';
 
 export class PlayerWaitingRoomManager {
@@ -107,6 +108,7 @@ export class PlayerWaitingRoomManager {
         // TransitionManager handles countdown cleanup
 
         document.getElementById('exit-confirm-modal')?.remove();
+        OrientationManager.disable();
         Router.navigate('/');
         this.startManager('LobbyManager');
     }
@@ -231,6 +233,9 @@ export class PlayerWaitingRoomManager {
             this.room.state.listen("isGameStarted", (isStarted: boolean) => {
                 if (isStarted) this.handleGameStart();
             });
+
+            // Enforce Landscape early in waiting room
+            OrientationManager.requireLandscape();
         }
     }
 
@@ -833,6 +838,7 @@ export class PlayerWaitingRoomManager {
         localStorage.removeItem('pendingJoinRoomCode');
 
         if (this.waitingUI) this.waitingUI.classList.add('hidden');
+        OrientationManager.disable();
 
         // TransitionManager handles iris/overlay
 
