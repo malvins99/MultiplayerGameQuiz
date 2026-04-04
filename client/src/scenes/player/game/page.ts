@@ -715,11 +715,8 @@ export class GameScene extends Phaser.Scene {
                 uiLayer.classList.add('hidden');
                 this.scene.stop('UIScene');
                 if (this.quizPopup) this.quizPopup.hide();
-                OrientationManager.disable();
             });
         }
-
-        OrientationManager.requireLandscape();
 
         // --- Game Events from Server ---
         this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
