@@ -47,11 +47,18 @@ export class ResultManager {
             this.rankings = registryRankings;
             this.mySessionId = registrySessionId;
             this.roomId = registryRoomId;
+            
+            // Get dynamic question total
+            const qLimit = this.room?.state?.questionLimit || "5";
+            const qCount = this.room?.state?.questions?.length || 5;
+            const finalTotal = (qLimit === 'all') ? qCount : parseInt(qLimit);
+
             sessionStorage.setItem('playerResultState', JSON.stringify({
                 rankings: this.rankings,
                 mySessionId: this.mySessionId,
                 roomId: this.roomId,
-                supabaseSessionId: this.supabaseSessionId
+                supabaseSessionId: this.supabaseSessionId,
+                questionTotal: finalTotal
             }));
         } else {
             const savedState = sessionStorage.getItem('playerResultState');
@@ -343,6 +350,9 @@ export class ResultManager {
             return url;
         };
 
+        const savedState = sessionStorage.getItem('playerResultState');
+        const questionTotal = savedState ? (JSON.parse(savedState).questionTotal || 5) : 5;
+
         const characterVisuals = this.getCharacterVisuals(myEntry);
 
         this.container.innerHTML = `
@@ -371,12 +381,12 @@ export class ResultManager {
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">workspace_premium</span>
-                        <div class="stat-value">${myEntry.score}</div>
+                        <div class="stat-value">${Math.round(myEntry.score)}</div>
                         <div id="txt-pr-score" class="stat-label">${i18n.t('player_result.score')}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">task_alt</span>
-                        <div class="stat-value">${myEntry.correctAnswers}/5</div>
+                        <div class="stat-value">${myEntry.correctAnswers}/${questionTotal}</div>
                         <div id="txt-pr-correct" class="stat-label">${i18n.t('player_result.correct')}</div>
                     </div>
                     <div class="stat-box">

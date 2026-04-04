@@ -418,7 +418,7 @@ export class GameScene extends Phaser.Scene {
                 // Initial camera setup
                 this.cameras.main.startFollow(this.currentPlayer, true, 0.2, 0.2);
                 this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-                this.cameras.main.roundPixels = true;
+                this.cameras.main.setRoundPixels(true);
                 
                 // Initial resize call to set correct zoom and viewport
                 this.handleResize(this.scale.gameSize);
@@ -798,7 +798,7 @@ export class GameScene extends Phaser.Scene {
         });
 
         // --- Handle Resizing ---
-        this.scale.on('resize', this.handleResize, this);
+        this.scale.on('resize', () => this.handleResize(), this);
         
         this.room.onLeave((code) => {
             console.warn(`[GameScene] Disconnected from room (code: ${code})`);
@@ -1392,31 +1392,33 @@ export class GameScene extends Phaser.Scene {
     }
 
 
-    private handleResize(gameSize: Phaser.Structs.Size) {
+    private handleResize(gameSize?: Phaser.Structs.Size) {
         // Use window dimensions directly if gameSize is not yet updated properly (common on mobile)
         const width = window.innerWidth;
         const height = window.innerHeight;
         
-        console.log(`[GameScene] Resizing to ${width}x${height} (ScaleManager said: ${gameSize.width}x${gameSize.height})`);
-
-        // Update the scale manager size directly to force the canvas to match the window
-        this.scale.resize(width, height);
+        console.log(`[GameScene] Resizing: ${width}x${height}`);
 
         // Update main camera viewport to fill the new game size
         this.cameras.main.setViewport(0, 0, width, height);
 
-        // Update zoom dynamically
+        // Update zoom dynamically - Use INTEGER zoom levels to prevent tearing (lines between tiles)
         if (width > height) {
             // Mobile Landscape or Desktop Wide
-            if (width <= 950) { // Mobile Landscape (including larger phones)
-                this.cameras.main.setZoom(1.5);
-            } else { // Desktop/Tablet
+            if (width <= 950) { 
+                // Smaller landscape (mobile) - Zoom 2 is usually best for pixel art
+                this.cameras.main.setZoom(2);
+            } else { 
+                // Desktop/Large Tablet
                 this.cameras.main.setZoom(2);
             }
         } else {
             // Portrait (during transition or warning)
-            this.cameras.main.setZoom(1.2);
+            // Zoom 1 is safest for portrait to ensure everything fits and no tearing
+            this.cameras.main.setZoom(1);
         }
+
+        this.cameras.main.setRoundPixels(true);
 
         // Re-ensure bounds and follow are correct
         if (this.map) {
