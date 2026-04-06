@@ -784,10 +784,15 @@ export class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (this.activeQuestionId !== null) return;
             if (this.isChestPopupVisible) return;
+            
+            // Disable general screen tap attack on mobile to favor the new button
+            const isMobile = this.scale.width <= 950;
+            if (isMobile) return;
+
             this.tryAttack(pointer);
         });
 
-        // Attack with Spacebar
+        // Attack with Spacebar (Desktop)
         this.input.keyboard?.on('keydown-SPACE', () => {
             if (this.activeQuestionId !== null) return;
             if (this.isChestPopupVisible) return;
@@ -1176,6 +1181,14 @@ export class GameScene extends Phaser.Scene {
         const margin = 200;
         const viewRect = new Phaser.Geom.Rectangle(view.x - margin, view.y - margin, view.width + margin * 2, view.height + margin * 2);
 
+        // --- ATTACK LOGIC (Mobile Button) ---
+        if (this.controls.getAttack()) {
+            if (this.activeQuestionId === null && !this.isChestPopupVisible) {
+                this.tryAttack();
+            }
+            this.controls.resetAttack();
+        }
+
         Object.keys(this.enemyEntities).forEach(id => {
             const enemy = this.enemyEntities[id];
             const tx = enemy.getData('targetX');
@@ -1283,20 +1296,20 @@ export class GameScene extends Phaser.Scene {
     private parseBarriers() {
         this.barrierAreas = [];
 
-        // HANYA cari layer yang namanya persis "Barrier"
-        const targetLayerName = 'Barrier';
+        // Cari di kedua layer yang mungkin berisi barrier
+        const targetLayers = ['Barrier', 'obstacle barrier'];
 
         // 1. Cek di daftar objects utama Phaser
         if (this.map.objects) {
-            const layer = this.map.objects.find(l => l.name === targetLayerName);
-            if (layer && layer.objects) {
-                this.parseLayerObjects(layer.objects);
-            }
+            targetLayers.forEach(layerName => {
+                const layer = this.map.objects.find(l => l.name === layerName);
+                if (layer && layer.objects) {
+                    this.parseLayerObjects(layer.objects);
+                }
+            });
         }
 
-        console.log(`[Barrier] Loaded ${this.barrierAreas.length} precise barrier areas from layer "${targetLayerName}".`);
-        // Debug mode dimatikan sesuai permintaan user
-        // this.drawDebugBarriers();
+        console.log(`[Barrier] Loaded ${this.barrierAreas.length} precise barrier areas.`);
     }
 
 

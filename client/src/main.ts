@@ -10,8 +10,10 @@ import { WaitingRoomUI } from './scenes/host/lobby/ui';
 import { AuthLoadingUI } from './scenes/login/auth-loading-ui';
 import { GameOverlayUI } from './scenes/player/game/ui';
 
+import { TestLabManager } from './scenes/TestLabManager';
+
 async function bootstrap() {
-    // Pre-render all global UIs to replace the ones removed from index.html
+    // Pre-render all global UIs
     LoginUI.render();
     LobbyUI.render();
     CreateRoomUI.render();
@@ -22,6 +24,13 @@ async function bootstrap() {
     GameOverlayUI.render();
 
     const currentPath = window.location.pathname;
+
+    // ROUTE KHUSUS: Laboratorium Eksperimen
+    if (currentPath === '/tes-dasar') {
+        const testLabManager = new TestLabManager();
+        testLabManager.init();
+        return;
+    }
 
     if (currentPath === '/login' || currentPath.startsWith('/login')) {
         const loginManager = new LoginManager();
