@@ -25,7 +25,8 @@ export class MapParser {
                                      .concat(this.findLayerObjects(map.layers, 'enemies'))
                                      .concat(this.findLayerObjects(map.layers, 'spawn enemies')),
                 chests: this.findLayerObjects(map.layers, 'chest'),
-                barriers: this.findLayerObjects(map.layers, 'Barrier'),
+                barriers: this.findLayerObjects(map.layers, 'Barrier')
+                                     .concat(this.findLayerObjects(map.layers, 'obstacle barrier')),
                 mapWidth: map.width * map.tilewidth,
                 mapHeight: map.height * map.tileheight
             };

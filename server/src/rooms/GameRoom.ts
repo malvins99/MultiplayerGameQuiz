@@ -179,34 +179,11 @@ export class GameRoom extends Room<GameState> {
         this.onMessage("movePlayer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player) {
-                const mapData = this.cachedMapData;
-                if (mapData && mapData.barriers && mapData.barriers.length > 0) {
-                    const px = data.x;
-                    const py = data.y;
-                    const r = 4; // player hitbox radius (sama dengan client)
-
-                    for (const area of mapData.barriers) {
-                        if (area.type === 'rect') {
-                            if (px + r > area.x && px - r < area.x + area.width &&
-                                py + r > area.y && py - r < area.y + area.height) {
-                                return; // Terblokir
-                            }
-                        } else if (area.type === 'poly') {
-                            // Ray Casting Algorithm untuk Point-in-Polygon
-                            let inside = false;
-                            const points = area.points;
-                            for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-                                const xi = points[i].x, yi = points[i].y;
-                                const xj = points[j].x, yj = points[j].y;
-                                
-                                const intersect = ((yi > py) !== (yj > py)) &&
-                                    (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
-                                if (intersect) inside = !inside;
-                            }
-                            if (inside) return; // Terblokir
-                        }
-                    }
+                // Gunakan helper terpusat (radius player = 4px)
+                if (this.checkBarrierCollision(data.x, data.y, 4)) {
+                    return; // Terblokir oleh barrier
                 }
+                
                 player.x = data.x;
                 player.y = data.y;
                 if (data.targetX !== undefined) player.targetX = data.targetX;
@@ -691,32 +668,38 @@ export class GameRoom extends Room<GameState> {
                 moveX /= moveMag;
                 moveY /= moveMag;
 
-                // --- SLIDING PHYSICS ---
-                // If moving into a wall, cancel that component and slide along it
-                const upcomingX = enemy.x + moveX * (ENEMY_SPEED * deltaTime / 1000);
-                const upcomingY = enemy.y + moveY * (ENEMY_SPEED * deltaTime / 1000);
+                // --- SLIDING & BARRIER PHYSICS ---
+                const step = ENEMY_SPEED * (deltaTime / 1000);
+                let nextX = enemy.x + moveX * step;
+                let nextY = enemy.y + moveY * step;
 
-                if (upcomingX < zone.x || upcomingX > zone.x + zone.width) moveX = 0;
-                if (upcomingY < zone.y || upcomingY > zone.y + zone.height) moveY = 0;
+                // 1. Cek Barrier Map (Batu, Tembok, dll)
+                // Jika posisi selanjutnya nabrak barrier, batalkan gerakan di sumbu tersebut
+                if (this.checkBarrierCollision(nextX, nextY, 4)) {
+                    // Coba 'slide' (geser) dengan mengecek per sumbu jika memungkinkan
+                    const canMoveX = !this.checkBarrierCollision(nextX, enemy.y, 4);
+                    const canMoveY = !this.checkBarrierCollision(enemy.x, nextY, 4);
 
-                // Re-normalize after sliding to maintain movement speed if possible
-                const slideMag = Math.sqrt(moveX * moveX + moveY * moveY);
-                if (slideMag > 0.1) {
-                    moveX /= slideMag;
-                    moveY /= slideMag;
+                    if (canMoveX) {
+                        nextY = enemy.y; // Batalkan gerakan Y
+                    } else if (canMoveY) {
+                        nextX = enemy.x; // Batalkan gerakan X
+                    } else {
+                        // Jika keduanya nabrak, berhenti total
+                        nextX = enemy.x;
+                        nextY = enemy.y;
+                    }
                 }
 
-                // Move with Speed
-                const step = ENEMY_SPEED * (deltaTime / 1000);
+                // 2. Hard Clamp (Batas Zone Spawn)
+                nextX = Math.max(zone.x, Math.min(zone.x + zone.width, nextX));
+                nextY = Math.max(zone.y, Math.min(zone.y + zone.height, nextY));
+
                 const oldX = enemy.x;
                 const oldY = enemy.y;
                 
-                enemy.x += moveX * step;
-                enemy.y += moveY * step;
-
-                // Hard Clamp (Final constraint)
-                enemy.x = Math.max(zone.x, Math.min(zone.x + zone.width, enemy.x));
-                enemy.y = Math.max(zone.y, Math.min(zone.y + zone.height, enemy.y));
+                enemy.x = nextX;
+                enemy.y = nextY;
 
                 // --- STUCK / CORNER DETECTION ---
                 const actualDist = Math.sqrt(Math.pow(enemy.x - oldX, 2) + Math.pow(enemy.y - oldY, 2));
@@ -871,6 +854,41 @@ export class GameRoom extends Room<GameState> {
             player.subRoomId = assignedRoom.id;
             assignedRoom.playerIds.push(client.sessionId);
         }
+    }
+
+    /**
+     * Mengecek apakah koordinat (x,y) menabrak barrier apapun (kotak atau polygon).
+     * @param x Koordinat X objek
+     * @param y Koordinat Y objek
+     * @param r Radius hitbox sederhana
+     */
+    private checkBarrierCollision(x: number, y: number, r: number = 0): boolean {
+        const mapData = this.cachedMapData;
+        if (!mapData || !mapData.barriers || mapData.barriers.length === 0) return false;
+
+        for (const area of mapData.barriers) {
+            if (area.type === 'rect') {
+                // Rectangle Collision (AABB)
+                if (x + r > area.x && x - r < area.x + area.width &&
+                    y + r > area.y && y - r < area.y + area.height) {
+                    return true;
+                }
+            } else if (area.type === 'poly') {
+                // Point-in-Polygon (Ray Casting)
+                let inside = false;
+                const points = area.points;
+                for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+                    const xi = points[i].x, yi = points[i].y;
+                    const xj = points[j].x, yj = points[j].y;
+                    
+                    const intersect = ((yi > y) !== (yj > y)) &&
+                                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                if (inside) return true;
+            }
+        }
+        return false;
     }
 
     async onLeave(client: Client, consented: boolean) {
