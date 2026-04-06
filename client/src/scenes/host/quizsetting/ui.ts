@@ -41,7 +41,7 @@ export class QuizSettingsUI {
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 md:gap-y-6 relative z-30">
                                     <!-- Question Count -->
                                     <div class="space-y-1 md:space-y-2 relative z-[60]">
-                                        <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
+                                        <label class="flex items-center gap-2 text-[#336B23] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
                                             <span class="material-symbols-outlined text-sm">numbers</span> ${i18n.t('quiz_setting.question_count')}
                                         </label>
                                         <div class="relative w-full">
@@ -52,7 +52,6 @@ export class QuizSettingsUI {
                                             <div id="settings-question-menu" class="hidden absolute top-[calc(100%+4px)] left-0 w-full bg-white border-2 border-[#6CC452] rounded-xl shadow-2xl overflow-hidden transform transition-all duration-200 origin-top z-[60] flex flex-col p-1">
                                                 <button class="question-opt w-full ${i18n.getLanguage() === 'ar' ? 'text-right' : 'text-left'} px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="5" data-label="${i18n.t('quiz_setting.q_5')}">${i18n.t('quiz_setting.q_5')}</button>
                                                 <button class="question-opt w-full ${i18n.getLanguage() === 'ar' ? 'text-right' : 'text-left'} px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="10" data-label="${i18n.t('quiz_setting.q_10')}">${i18n.t('quiz_setting.q_10')}</button>
-                                                <button class="question-opt w-full ${i18n.getLanguage() === 'ar' ? 'text-right' : 'text-left'} px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="15" data-label="${i18n.t('quiz_setting.q_15')}">${i18n.t('quiz_setting.q_15')}</button>
                                                 <button class="question-opt w-full ${i18n.getLanguage() === 'ar' ? 'text-right' : 'text-left'} px-4 py-2 hover:bg-[#F1F8E9] hover:text-[#478D47] rounded-lg transition-colors text-xs font-bold font-['Space_Grotesk'] text-[#478D47]" data-value="20" data-label="${i18n.t('quiz_setting.q_20')}">${i18n.t('quiz_setting.q_20')}</button>
                                             </div>
                                         </div>
@@ -60,7 +59,7 @@ export class QuizSettingsUI {
 
                                     <!-- Timer -->
                                     <div class="space-y-1 md:space-y-2 relative z-[50]">
-                                        <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
+                                        <label class="flex items-center gap-2 text-[#336B23] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
                                             <span class="material-symbols-outlined text-sm">timer</span> ${i18n.t('quiz_setting.timer')}
                                         </label>
                                         <div class="relative w-full">
@@ -79,7 +78,7 @@ export class QuizSettingsUI {
 
                                     <!-- Difficulty -->
                                     <div class="space-y-1 md:space-y-2 relative z-[40]">
-                                        <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
+                                        <label class="flex items-center gap-2 text-[#336B23] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
                                             <span class="material-symbols-outlined text-sm">hotel_class</span> ${i18n.t('quiz_setting.difficulty')}
                                         </label>
                                         <div class="relative w-full">
@@ -97,7 +96,7 @@ export class QuizSettingsUI {
 
                                     <!-- Music Toggle -->
                                     <div class="space-y-1 md:space-y-2 relative z-[30]">
-                                        <label class="flex items-center gap-2 text-[#478D47] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
+                                        <label class="flex items-center gap-2 text-[#336B23] text-[9px] md:text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse justify-end w-full' : ''}">
                                             <span class="material-symbols-outlined text-sm">music_note</span> ${i18n.t('quiz_setting.music')}
                                         </label>
                                         <div id="sound-toggle-container" class="w-full h-10 md:h-12 flex items-center bg-[#F1F8E9] border-2 border-[#6CC452]/30 border-b-4 border-[#478D47]/30 rounded-xl px-4 justify-between group hover:border-[#6CC452] transition-all cursor-pointer ${i18n.getLanguage() === 'ar' ? 'flex-row-reverse' : ''}">
@@ -112,7 +111,7 @@ export class QuizSettingsUI {
 
                             <!-- Footer -->
                             <div class="p-4 md:p-5 bg-[#F1F8E9] flex justify-center mt-auto border-t-2 border-[#6CC452]/10">
-                                <button id="settings-continue-btn" class="w-full md:w-auto px-12 h-12 md:h-14 bg-[#92C140] text-white font-bold text-base md:text-lg uppercase rounded-xl border-b-4 border-[#478D47] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-lg">
+                                <button id="settings-continue-btn" class="pixel-text-outline w-full md:w-auto px-12 h-12 md:h-14 bg-[#336B23] text-white font-bold text-base md:text-lg uppercase rounded-xl border-b-4 border-[#1F4514] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all font-['Retro_Gaming'] flex items-center justify-center gap-3 shadow-lg">
                                     ${i18n.t('quiz_setting.create')}
                                 </button>
                             </div>

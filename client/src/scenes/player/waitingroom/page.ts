@@ -386,14 +386,14 @@ export class PlayerWaitingRoomManager {
                 }
                 .btn-choose-char-green {
                     padding: 0 40px;
-                    background: #92C140;
+                    background: #336B23;
                     border-radius: 12px;
                     color: white;
                     font-family: 'Retro Gaming';
                     text-transform: uppercase;
                     font-size: 11px;
                     border: none;
-                    border-bottom: 4px solid #478D47;
+                    border-bottom: 4px solid #1F4514;
                     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                 }
                 .btn-choose-char-green:active {
@@ -612,7 +612,7 @@ export class PlayerWaitingRoomManager {
                 </button>
 
                 <!-- Pill Choose Character (Host Start Button Style) -->
-                <button id="player-choose-char-btn" class="standard-pixel-btn btn-choose-char-green">
+                <button id="player-choose-char-btn" class="pixel-text-outline standard-pixel-btn btn-choose-char-green">
                     ${i18n.t('player_lobby.choose_character')}
                 </button>
             </div>

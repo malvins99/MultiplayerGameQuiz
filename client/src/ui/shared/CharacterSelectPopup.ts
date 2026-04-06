@@ -140,9 +140,10 @@ export class CharacterSelectPopup {
         footer.className = 'flex justify-end pt-2';
 
         this.okBtn = document.createElement('button');
+        this.okBtn.className = 'pixel-text-outline';
         this.okBtn.style.cssText = `
             padding: 12px 40px;
-            background: #92C140;
+            background: #336B23;
             border-radius: 12px;
             color: white;
             font-family: 'Retro Gaming';
@@ -150,7 +151,7 @@ export class CharacterSelectPopup {
             font-size: 14px;
             font-weight: bold;
             border: none;
-            border-bottom: 4px solid #478D47;
+            border-bottom: 4px solid #1F4514;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: all 0.1s;
