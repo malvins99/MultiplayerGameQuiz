@@ -70,12 +70,12 @@ export class QuizSelectionUI {
 
                         <!-- Pagination -->
                         <div class="pt-4 pb-2 flex justify-center items-center gap-4 shrink-0 w-full mt-auto">
-                            <button id="prev-page-btn" class="px-3 py-1.5 bg-[#6CC452] rounded-xl border border-b-4 border-[#478D47] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
+                            <button id="prev-page-btn" class="pixel-text-outline px-3 py-1.5 bg-[#336B23] rounded-xl border-b-4 border-[#1F4514] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
                                 <span class="material-symbols-outlined text-base">chevron_left</span>
                                 <span class="text-base font-bold uppercase">${i18n.t('select_quiz.prev')}</span>
                             </button>
                             <div id="pagination-numbers" class="flex items-center gap-2"></div>
-                            <button id="next-page-btn" class="px-3 py-1.5 bg-[#6CC452] rounded-xl border border-b-4 border-[#478D47] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
+                            <button id="next-page-btn" class="pixel-text-outline px-3 py-1.5 bg-[#336B23] rounded-xl border-b-4 border-[#1F4514] hover:brightness-110 text-white flex items-center gap-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed active:border-b-0 active:translate-y-1 cursor-pointer">
                                 <span class="text-base font-bold uppercase">${i18n.t('select_quiz.next')}</span>
                                 <span class="material-symbols-outlined text-base">chevron_right</span>
                             </button>

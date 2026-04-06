@@ -166,8 +166,8 @@ export class LoginUI {
                                     <p id="password-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
-                                <!-- Login Button — solid #72BF78 -->
-                                <button type="submit" id="login-btn" class="w-full h-14 flex items-center justify-center text-white font-['Retro_Gaming'] font-extrabold uppercase text-lg rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer gap-3" style="background: #46A881;">
+                                <!-- Login Button — matched with HomePage -->
+                                <button type="submit" id="login-btn" class="pixel-text-outline w-full h-14 flex items-center justify-center text-white font-['Retro_Gaming'] font-extrabold uppercase text-lg rounded-2xl bg-[#336B23] border-b-4 border-[#1F4514] shadow-lg hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer gap-3">
                                     <span class="material-symbols-outlined text-2xl">login</span>
                                     ${i18n.t('login.login_btn')}
                                 </button>

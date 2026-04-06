@@ -529,8 +529,8 @@ export class SelectQuizManager {
         pageItems.forEach(quiz => {
             const isFav = this.favorites.has(quiz.id);
             const card = document.createElement('div');
-            let badgeColor = 'bg-[#6CC452] text-white border-2 border-[#478D47]';
-
+            let badgeColor = 'pixel-text-outline bg-[#336B23] text-white border-2 border-[#1F4514]';
+            
             card.className = "group bg-white border-4 border-[#6CC452] border-b-[6px] border-b-[#478D47] p-2 md:p-3 rounded-2xl hover:bg-[#F1F8E9] transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col min-h-[90px] md:min-h-[100px] w-full min-w-0";
             const catKey = 'categories.' + quiz.category.toLowerCase();
             const translatedCat = i18n.t(catKey) === catKey ? quiz.category : i18n.t(catKey);
