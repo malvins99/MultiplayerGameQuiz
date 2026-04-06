@@ -73,7 +73,17 @@ export class OrientationManager {
         }
 
         if (this.overlay) {
+            const wasShown = this.overlay.style.display === 'flex';
             this.overlay.style.display = shouldShow ? 'flex' : 'none';
+            
+            // If it was hidden, trigger a resize event to notify the game engine
+            if (wasShown && !shouldShow) {
+                console.log("[OrientationManager] Requirement met. Forcing resize event.");
+                window.dispatchEvent(new Event('resize'));
+                // Trigger an extra one briefly after to ensure mobile viewport has stabilized
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 400); 
+            }
         }
     }
 

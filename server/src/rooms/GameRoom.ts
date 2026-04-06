@@ -179,6 +179,34 @@ export class GameRoom extends Room<GameState> {
         this.onMessage("movePlayer", (client, data) => {
             const player = this.state.players.get(client.sessionId);
             if (player) {
+                const mapData = this.cachedMapData;
+                if (mapData && mapData.barriers && mapData.barriers.length > 0) {
+                    const px = data.x;
+                    const py = data.y;
+                    const r = 4; // player hitbox radius (sama dengan client)
+
+                    for (const area of mapData.barriers) {
+                        if (area.type === 'rect') {
+                            if (px + r > area.x && px - r < area.x + area.width &&
+                                py + r > area.y && py - r < area.y + area.height) {
+                                return; // Terblokir
+                            }
+                        } else if (area.type === 'poly') {
+                            // Ray Casting Algorithm untuk Point-in-Polygon
+                            let inside = false;
+                            const points = area.points;
+                            for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+                                const xi = points[i].x, yi = points[i].y;
+                                const xj = points[j].x, yj = points[j].y;
+                                
+                                const intersect = ((yi > py) !== (yj > py)) &&
+                                    (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+                                if (intersect) inside = !inside;
+                            }
+                            if (inside) return; // Terblokir
+                        }
+                    }
+                }
                 player.x = data.x;
                 player.y = data.y;
                 if (data.targetX !== undefined) player.targetX = data.targetX;
@@ -384,11 +412,20 @@ export class GameRoom extends Room<GameState> {
         // Redundant score handler removed (Moved to correctAnswer for authority)
 
         this.onMessage("addScoreFromChest", (client, data) => {
-            // Nilai dari peti dihilangkan sesuai permintaan user.
-            // Cukup lakukan sinkronisasi jika diperlukan, atau kosongkan.
             const player = this.state.players.get(client.sessionId);
-            if (player) {
-                console.log(`[Chest] Player ${player.name} used a chest. No score added.`);
+            if (player && !player.isFinished) {
+                // Calculate dynamic chest reward (50% of standard point)
+                const qLimit = parseInt(this.state.questionLimit);
+                const totalQs = isNaN(qLimit) ? (this.state.questions.length || 1) : qLimit;
+                const pointsPerCorrect = 100 / (totalQs || 1);
+                const chestReward = pointsPerCorrect / 2;
+
+                player.score = Math.min(100, player.score + chestReward);
+                player.correctAnswers++;
+                
+                console.log(`[Chest] Player ${player.name} retry correct. Added ${chestReward.toFixed(2)} points. (Standard: ${pointsPerCorrect.toFixed(2)})`);
+                
+                // Sync to Supabase B to update leaderboards
                 this.syncParticipantToSupabaseB(client);
             }
         });
@@ -1143,7 +1180,7 @@ export class GameRoom extends Room<GameState> {
                 avatarUrl: player.avatarUrl,
                 name: player.name,
                 hairId: player.hairId || 0, // Ensure hairId is sent
-                score: player.score,
+                score: Math.round(player.score),
                 finishTime: player.finishTime,
                 duration: player.finishTime > 0 ? (player.finishTime - this.state.gameStartTime) : 0, // Calculate duration
                 correctAnswers: player.correctAnswers,

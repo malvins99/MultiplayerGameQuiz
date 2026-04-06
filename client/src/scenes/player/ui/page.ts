@@ -5,6 +5,8 @@ export class UIScene extends Phaser.Scene {
     scoreText!: Phaser.GameObjects.Text;
     timerText!: Phaser.GameObjects.Text;
     currentScore: number = 0;
+    private scoreBoxGraphics!: Phaser.GameObjects.Graphics;
+    private timerMinutes: number = 5;
 
     constructor() {
         super({ key: 'UIScene', active: false });
@@ -14,43 +16,21 @@ export class UIScene extends Phaser.Scene {
 
     init(data: { room: any }) {
         this.room = data.room;
+        this.timerMinutes = this.room?.state?.totalTimeMinutes || 5;
     }
 
 
     create() {
         const screenWidth = this.scale.width;
 
-        // --- Logos (Handled by HTML UI Overlay) ---
-
-        // Create Container positioned at Top Center
+        // Create Container
         this.scoreContainer = this.add.container(screenWidth / 2, 45);
         this.scoreContainer.setScrollFactor(0);
         this.scoreContainer.setDepth(100);
 
-        // --- Score UI Background Box ---
-        const boxWidth = 120;
-        const boxHeight = 40;
-        const cornerRadius = 10;
-        const fillColor = 0xefe4ca; // Beige/Tan
-        const borderColor = 0x4a3d2e; // Dark Brown
-        const shadowColor = 0x000000;
-        const shadowOffset = 4;
-
-        const graphics = this.add.graphics();
-
-        // 1. Shadow (Bayangan)
-        graphics.fillStyle(shadowColor, 0.4);
-        graphics.fillRoundedRect(-boxWidth / 2 + shadowOffset, -boxHeight / 2 + shadowOffset, boxWidth, boxHeight, cornerRadius);
-
-        // 2. Main Box Fill
-        graphics.fillStyle(fillColor, 1);
-        graphics.fillRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, cornerRadius);
-
-        // 3. Border
-        graphics.lineStyle(4, borderColor, 1);
-        graphics.strokeRoundedRect(-boxWidth / 2, -boxHeight / 2, boxWidth, boxHeight, cornerRadius);
-
-        this.scoreContainer.add(graphics);
+        // Background Graphics
+        this.scoreBoxGraphics = this.add.graphics();
+        this.scoreContainer.add(this.scoreBoxGraphics);
 
         // Score Text
         this.scoreText = this.add.text(0, 0, '0', {
@@ -62,11 +42,10 @@ export class UIScene extends Phaser.Scene {
         this.scoreText.setOrigin(0.5, 0.5);
         this.scoreContainer.add(this.scoreText);
 
-        // Timer Text (below score box)
-        const initialMinutes = this.room?.state?.totalTimeMinutes || 5;
-        this.timerText = this.add.text(0, 45, `${String(initialMinutes).padStart(2, '0')}:00`, {
+        // Timer Text
+        this.timerText = this.add.text(0, 45, `${String(this.timerMinutes).padStart(2, '0')}:00`, {
             fontFamily: '"Retro Gaming", monospace',
-            fontSize: '24px', // Increased from 14px
+            fontSize: '24px',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
@@ -77,19 +56,70 @@ export class UIScene extends Phaser.Scene {
 
 
         // --- Handle Resize ---
-        this.scale.on('resize', this.handleResize, this);
-        this.handleResize(this.scale.gameSize);
+        this.scale.on('resize', () => this.handleResize(), this);
+        this.handleResize();
     }
 
 
-    handleResize(gameSize: Phaser.Structs.Size) {
-        const { width, height } = gameSize;
+    handleResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const isMobile = width < 950 && width > height;
         
-        // Update viewport
+        // Update viewport to match game size
         this.cameras.main.setViewport(0, 0, width, height);
         
         if (this.scoreContainer) {
-            this.scoreContainer.setPosition(width / 2, 45);
+            // 1. Position & Scale (Always 1.0 for sharpness)
+            const yPos = isMobile ? 28 : 45;
+            this.scoreContainer.setPosition(Math.round(width / 2), yPos);
+            this.scoreContainer.setScale(1); 
+
+            // 2. Clear and Redraw Graphics (Sharp integers)
+            this.scoreBoxGraphics.clear();
+            
+            const boxWidth = isMobile ? 80 : 120;
+            const boxHeight = isMobile ? 28 : 40;
+            const cornerRadius = isMobile ? 6 : 10;
+            const shadowOffset = isMobile ? 2 : 4;
+            
+            const fillColor = 0xefe4ca;
+            const borderColor = 0x4a3d2e;
+            const shadowColor = 0x000000;
+
+            // Shadow
+            this.scoreBoxGraphics.fillStyle(shadowColor, 0.4);
+            this.scoreBoxGraphics.fillRoundedRect(
+                Math.round(-boxWidth / 2 + shadowOffset), 
+                Math.round(-boxHeight / 2 + shadowOffset), 
+                boxWidth, boxHeight, cornerRadius
+            );
+
+            // Main Box
+            this.scoreBoxGraphics.fillStyle(fillColor, 1);
+            this.scoreBoxGraphics.fillRoundedRect(
+                Math.round(-boxWidth / 2), 
+                Math.round(-boxHeight / 2), 
+                boxWidth, boxHeight, cornerRadius
+            );
+
+            // Border
+            this.scoreBoxGraphics.lineStyle(isMobile ? 2 : 4, borderColor, 1);
+            this.scoreBoxGraphics.strokeRoundedRect(
+                Math.round(-boxWidth / 2), 
+                Math.round(-boxHeight / 2), 
+                boxWidth, boxHeight, cornerRadius
+            );
+
+            // 3. Update Text Sizes & Positions
+            const scoreSize = isMobile ? '13px' : '18px';
+            const timerSize = isMobile ? '18px' : '24px';
+            const timerY = isMobile ? 32 : 45;
+
+            this.scoreText.setFontSize(scoreSize);
+            this.timerText.setFontSize(timerSize);
+            this.timerText.setY(timerY);
+            this.timerText.setStroke('#000000', isMobile ? 2 : 3);
         }
     }
 
@@ -97,38 +127,42 @@ export class UIScene extends Phaser.Scene {
         if (newScore === this.currentScore) return;
 
         const oldScore = this.currentScore;
-        this.currentScore = newScore;
-        const scoreDiff = newScore - oldScore;
+        this.currentScore = newScore; // Update leading currentScore
+        const roundedScore = Math.round(newScore);
+        const roundedOldScore = Math.round(oldScore);
+        const roundedDiff = roundedScore - roundedOldScore;
 
         // --- Float Up + Fade Out Animation for Old Score ---
-        const floatText = this.add.text(
-            0,
-            0,
-            `+${scoreDiff}`,
-            {
-                fontFamily: '"Retro Gaming", monospace',
-                fontSize: '14px',
-                color: '#4ade80',
-                stroke: '#166534',
-                strokeThickness: 2
-            }
-        );
-        floatText.setOrigin(0.5, 0.5);
-        this.scoreContainer.add(floatText);
+        if (roundedDiff !== 0) {
+            const floatText = this.add.text(
+                0,
+                0,
+                `+${roundedDiff}`,
+                {
+                    fontFamily: '"Retro Gaming", monospace',
+                    fontSize: '14px',
+                    color: '#4ade80',
+                    stroke: '#166534',
+                    strokeThickness: 2
+                }
+            );
+            floatText.setOrigin(0.5, 0.5);
+            this.scoreContainer.add(floatText);
 
-        this.tweens.add({
-            targets: floatText,
-            y: -40,
-            alpha: 0,
-            duration: 1000,
-            ease: 'Power2',
-            onComplete: () => {
-                floatText.destroy();
-            }
-        });
+            this.tweens.add({
+                targets: floatText,
+                y: -40,
+                alpha: 0,
+                duration: 1000,
+                ease: 'Power2',
+                onComplete: () => {
+                    floatText.destroy();
+                }
+            });
+        }
 
         // --- Shake Animation for New Score ---
-        this.scoreText.setText(newScore.toString());
+        this.scoreText.setText(roundedScore.toString());
 
         this.tweens.add({
             targets: this.scoreText,
