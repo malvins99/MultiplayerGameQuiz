@@ -8,6 +8,7 @@ export class HTMLControlAdapter {
 
     private joystickVector = { x: 0, y: 0 };
     private isJoystickActive = false;
+    private attackClicked = false;
 
     // Joystick Config
     private base: HTMLElement | null = null;
@@ -18,6 +19,7 @@ export class HTMLControlAdapter {
         this.initWASD();
         this.initJoystick();
         this.initKeyboardSync();
+        this.initAttackButton();
     }
 
     // --- WASD Logic ---
@@ -165,6 +167,20 @@ export class HTMLControlAdapter {
         this.cursors.down = this.joystickVector.y > 0.3;
         this.cursors.up = this.joystickVector.y < -0.3;
     }
+    
+    // --- Attack Button Logic ---
+    private initAttackButton() {
+        const btn = document.getElementById('attack-button');
+        if (!btn) return;
+
+        const startHandler = (e: Event) => {
+            e.preventDefault();
+            this.attackClicked = true;
+        };
+
+        btn.addEventListener('mousedown', startHandler);
+        btn.addEventListener('touchstart', startHandler, { passive: false });
+    }
 
     public getNav() {
         return this.cursors;
@@ -172,5 +188,13 @@ export class HTMLControlAdapter {
 
     public getJoystickVector() {
         return this.joystickVector;
+    }
+
+    public getAttack() {
+        return this.attackClicked;
+    }
+
+    public resetAttack() {
+        this.attackClicked = false;
     }
 }
