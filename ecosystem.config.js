@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "MindVenture-Server",
+      name: "Zigma",
       // Path ke file server.js yang sudah di-build (JS bukan TS)
       script: "./server/build/server.js", 
       cwd: "./",
