@@ -41,7 +41,7 @@ export class ResultManager {
         let registrySessionId = this.room ? this.room.sessionId : "";
         let registryRoomId = this.room ? this.room.id : "";
 
-        this.supabaseSessionId = localStorage.getItem('supabaseSessionId') || "";
+        this.supabaseSessionId = localStorage.getItem('supabaseSessionId') || this.room?.metadata?.sessionId || "";
 
         if (registryRankings.length > 0 && registrySessionId && registryRoomId) {
             this.rankings = registryRankings;
@@ -471,7 +471,7 @@ export class ResultManager {
     }
 
     private openStats() {
-        const sid = this.supabaseSessionId || localStorage.getItem('supabaseSessionId');
+        const sid = this.supabaseSessionId || localStorage.getItem('supabaseSessionId') || this.room?.metadata?.sessionId;
         if (sid) {
             window.open(`https://app.gameforsmart.com/stat/${sid}`, '_blank');
         } else {

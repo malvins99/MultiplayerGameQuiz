@@ -805,6 +805,7 @@ export class GameRoom extends Room<GameState> {
         player.userId = options.userId || "";
         player.avatarUrl = options.avatarUrl || "";
         player.name = options.name || "Player " + (this.state.players.size + 1);
+        player.hairId = Math.floor(Math.random() * 7); // Randomize hair (0-6) on join
 
         // Assign spawn position from Map Data
         const mapData = MapParser.loadMapData(this.state.difficulty);

@@ -112,19 +112,23 @@ export class HostLeaderboardManager {
         const statsBtnMobile = document.getElementById('lb-stats-btn-mobile');
 
         const handleStats = () => {
-            let sid = this.opts?.sessionId;
+            // Prioritize Supabase session ID as specified by user
+            let sid = localStorage.getItem('supabaseSessionId');
+
+            if (!sid || sid === "undefined" || sid === "null") {
+                sid = this.opts?.sessionId;
+            }
             
-            // Coba ambil dari localStorage utama untuk Host
-            if (!sid) {
+            if (!sid || sid === "undefined" || sid === "null") {
                 const currentRoomOpts = localStorage.getItem('currentRoomOptions');
                 if (currentRoomOpts) {
                     try { sid = JSON.parse(currentRoomOpts).sessionId; } catch(e) {}
                 }
             }
-            if (!sid) sid = localStorage.getItem('supabaseSessionId');
-            if (!sid) {
-                sid = localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
-                      localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1];
+
+            if (!sid || sid === "undefined" || sid === "null") {
+                sid = (localStorage.getItem('lastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1] ||
+                      localStorage.getItem('hostLastGameOptions')?.match(/"sessionId":"([^"]+)"/)?.[1]) || null;
             }
 
             if (sid && sid !== "undefined" && sid !== "null") {
