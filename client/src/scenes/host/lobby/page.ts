@@ -114,16 +114,25 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`[Restore] Attempt ${attempt} via joinById...`);
+                const savedToken = localStorage.getItem('currentReconnectionToken');
+                
+                if (savedToken) {
+                    try {
+                        console.log(`[Restore] 🔄 Attempting REJOIN with token: ${savedToken.substring(0, 8)}...`);
+                        this.room = await client.rejoin(savedToken);
+                        console.log("[Restore] ✅ REJOIN Success!");
+                    } catch (e) {
+                        console.warn("[Restore] ⚠️ Rejoin token failed, falling back to joinById:", e);
+                    }
+                }
 
-                const profile = JSON.parse(localStorage.getItem('game_user_profile') || '{}');
-                const name = profile.nickname || profile.fullname || "Host";
-
-                this.room = await client.joinById(savedRoomId, {
-                    name,
-                    sessionId: savedSessionId,
-                    isHost: true
-                });
+                if (!this.room) {
+                    this.room = await client.joinById(savedRoomId, {
+                        name,
+                        sessionId: savedSessionId,
+                        isHost: true
+                    });
+                }
 
                 // Berhasil!
                 this.mySessionId = this.room.sessionId;

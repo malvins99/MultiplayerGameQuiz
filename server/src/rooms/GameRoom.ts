@@ -248,7 +248,7 @@ export class GameRoom extends Room<GameState> {
         });
 
         this.onMessage("engageEnemy", (client, data) => {
-            const enemy = this.state.enemies[data.enemyIndex];
+            const enemy = this.state.enemies.get(data.enemyId);
             if (enemy && enemy.isAlive) {
                 enemy.isBusy = true; // Freezes enemy in updateEnemies loop
             }
@@ -281,17 +281,31 @@ export class GameRoom extends Room<GameState> {
 
                 // Real-time sync to Supabase B
 
-                // Target SPECIFIC enemy by index to avoid sync issues
-                const enemyIndex = data.enemyIndex;
-                if (enemyIndex !== undefined) {
-                    const enemy = this.state.enemies[enemyIndex];
+                // Target SPECIFIC enemy by ID to avoid sync issues
+                const enemyId = data.enemyId;
+                if (enemyId !== undefined) {
+                    const enemy = this.state.enemies.get(enemyId);
                     // Validate ownership and liveness
                     if (enemy && enemy.ownerId === client.sessionId && enemy.isAlive) {
                         enemy.isAlive = false;
+                        console.log(`[GameRoom] Enemy ID ${enemyId} killed by ${client.sessionId}. Marking as dead.`);
                         enemy.isBusy = false;
                         enemy.isFleeing = false;
                         enemy.targetX = 0;
                         enemy.targetY = 0;
+
+                        // Permanent removal from state after death animation period
+                        setTimeout(() => {
+                            try {
+                                const stillEnemy = this.state.enemies.get(enemyId);
+                                if (stillEnemy && !stillEnemy.isAlive) {
+                                    this.state.enemies.delete(enemyId);
+                                    console.log(`[GameRoom] Permanent cleanup: Enemy ID ${enemyId} removed.`);
+                                }
+                            } catch (err) {
+                                // Silent fail
+                            }
+                        }, 3000);
                     }
                 }
 
@@ -348,9 +362,9 @@ export class GameRoom extends Room<GameState> {
                 });
 
                 // 2. Fitur Reset Enemy (Dari Versi Teman/Incoming)
-                const enemyIndex = data.enemyIndex;
-                if (enemyIndex !== undefined) {
-                    const enemy = this.state.enemies[enemyIndex];
+                const enemyId = data.enemyId;
+                if (enemyId !== undefined) {
+                    const enemy = this.state.enemies.get(enemyId);
                     if (enemy) {
                         enemy.isFleeing = false;
                         enemy.targetX = 0;
@@ -413,15 +427,25 @@ export class GameRoom extends Room<GameState> {
 
         // Kill enemy without counting as answered (for wrong answer case)
         this.onMessage("killEnemy", (client, data) => {
-            const enemyIndex = data.enemyIndex;
-            if (enemyIndex !== undefined) {
-                const enemy = this.state.enemies[enemyIndex];
+            const enemyId = data.enemyId;
+            if (enemyId !== undefined) {
+                const enemy = this.state.enemies.get(enemyId);
                 if (enemy && enemy.ownerId === client.sessionId && enemy.isAlive) {
                     enemy.isAlive = false;
                     enemy.isBusy = false;
                     enemy.isFleeing = false;
                     enemy.targetX = 0;
                     enemy.targetY = 0;
+
+                    // Support permanent cleanup from state too
+                    setTimeout(() => {
+                        try {
+                            const stillEnemy = this.state.enemies.get(enemyId);
+                            if (stillEnemy && !stillEnemy.isAlive) {
+                                this.state.enemies.delete(enemyId);
+                            }
+                        } catch (e) {}
+                    }, 3000);
                 }
             }
         });
@@ -511,22 +535,7 @@ export class GameRoom extends Room<GameState> {
         // Monitor Enemy Flee Logic (10 FPS is enough)
         this.setSimulationInterval((deltaTime) => this.update(deltaTime));
 
-        // --- Engage Enemy Handler ---
-        this.onMessage("engageEnemy", (client, data) => {
-            const enemyIndex = data.enemyIndex;
-            // Map key is string, but sometimes passed as number index if array
-            // Our state.enemies is ArraySchema, so index is correct
-            if (enemyIndex !== undefined) {
-                const enemy = this.state.enemies[enemyIndex];
-                if (enemy && enemy.isAlive) {
-                    enemy.isBusy = true;
-                    enemy.isFleeing = false;
-                    enemy.targetX = 0;
-                    enemy.targetY = 0;
-                    console.log(`Enemy ${enemyIndex} engaged by ${client.sessionId}. Movement halted.`);
-                }
-            }
-        });
+
 
         // --- Host End Game Handler ---
         this.onMessage("hostEndGame", (client) => {
@@ -921,12 +930,11 @@ export class GameRoom extends Room<GameState> {
             }
         }
 
-        // --- NON-HOST PLAYERS ONLY ---
-        // Beri window reconnect untuk player biasa (kecuali jika di-kick)
         if (!isKicked) {
-            console.log(`[GameRoom] Player ${client.sessionId} disconnected. Allowing 10s reconnection...`);
+            console.log(`[GameRoom] Player ${client.sessionId} disconnected. Allowing 60s reconnection...`);
             try {
-                await this.allowReconnection(client, 10);
+                // Allow reconnection for 60 seconds (Standard professional practice)
+                await this.allowReconnection(client, 60);
                 console.log(`[GameRoom] Player ${client.sessionId} reconnected!`);
                 return;
             } catch (e) {
@@ -986,7 +994,7 @@ export class GameRoom extends Room<GameState> {
         // Helper function to check distance from existing enemies and players
         const isValidSpawnPosition = (x: number, y: number, minDist: number = 96): boolean => {
             // Check against existing enemies
-            for (const existingEnemy of this.state.enemies) {
+            for (const existingEnemy of this.state.enemies.values()) {
                 const dx = existingEnemy.x - x;
                 const dy = existingEnemy.y - y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1104,7 +1112,8 @@ export class GameRoom extends Room<GameState> {
                 }
 
                 if (foundPosition) {
-                    this.state.enemies.push(enemy);
+                    const uniqueEnemyId = `e_${player.sessionId}_${i}_${Math.random().toString(36).substr(2, 5)}`;
+                    this.state.enemies.set(uniqueEnemyId, enemy);
                     enemiesSpawnedForPlayer++;
                 } else {
                     console.warn(`[Spawn] Could not find valid position for enemy belonging to ${player.name} even with relaxed rules.`);
