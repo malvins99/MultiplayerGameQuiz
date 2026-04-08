@@ -387,6 +387,9 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     from { background-position: 0 0; }
                     to { background-position: -864px 0; }
                 }
+                .name-container:hover .name-tooltip {
+                    opacity: 1 !important;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -2099,12 +2102,18 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 </div>
                     </div>
 
-                    <!-- Player Name -->
-                        <div style="text-align: center; width: 100%; padding: 0 2px;">
-                            <span style="font-size: 8px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                    <!-- Player Name Container with Tooltip Trigger -->
+                        <div class="name-container" style="text-align: center; width: 100%; padding: 0 2px; position: relative; pointer-events: auto;">
+                            <span style="font-size: 12px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
                                 ${player.name || 'PLAYER'}
-                </span>
-                    </div>
+                            </span>
+                            
+                            <!-- Tooltip (Only shows when name-container is hovered via CSS) -->
+                            <div class="name-tooltip absolute bottom-[-28px] left-1/2 -translate-x-1/2 bg-black/90 text-white text-[8px] py-1.5 px-2.5 rounded-lg opacity-0 transition-opacity whitespace-nowrap z-50 pointer-events-none font-['Retro_Gaming'] border border-primary/30 shadow-[0_0_10px_rgba(0,255,136,0.2)]">
+                                ${player.name || 'PLAYER'}
+                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/90 rotate-45 border-l border-t border-primary/30"></div>
+                            </div>
+                        </div>
                     </div>
                         `;
         });
