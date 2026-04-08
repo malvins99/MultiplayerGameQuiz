@@ -7,6 +7,7 @@ export class LoginUI {
             loginUI = document.createElement('div');
             loginUI.id = 'login-ui';
             loginUI.className = 'hidden fixed top-0 left-0 w-full h-full z-30 overflow-hidden';
+            const isRTL = i18n.getLanguage() === 'ar';
             loginUI.innerHTML = `
                 <!-- Full-Screen Background — palette gradient -->
                 <div class="absolute inset-0" style="background: linear-gradient(180deg, #6CC452 0%, #478D47 100%);"></div>
@@ -139,31 +140,31 @@ export class LoginUI {
                                 </div>
 
                                 <!-- Email/Username Input -->
-                                <div class="space-y-1 relative">
-                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                <div class="space-y-1 relative ${isRTL ? 'text-right' : ''}" dir="${isRTL ? 'rtl' : 'ltr'}">
+                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${isRTL ? 'flex-row-reverse' : ''}">
                                         <span class="material-symbols-outlined text-sm text-[#46A881]">person</span> ${i18n.t('login.email_username')}
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-email" type="text" placeholder="${i18n.t('login.placeholders.email')}" autocomplete="off" class="w-full h-12 border border-gray-200 rounded-2xl px-4 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
-                                        <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <input id="login-email" type="text" placeholder="${i18n.t('login.placeholders.email')}" autocomplete="off" class="w-full h-12 border border-gray-200 rounded-2xl ${isRTL ? 'pl-12 pr-4' : 'px-4'} font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
+                                        <div class="absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2">
                                             <span class="material-symbols-outlined text-[#46A881] hover:text-[#388567] transition-colors cursor-pointer">mail</span>
                                         </div>
                                     </div>
-                                    <p id="email-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <p id="email-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
                                 <!-- Password Input -->
-                                <div class="space-y-1 relative">
-                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming']">
+                                <div class="space-y-1 relative ${isRTL ? 'text-right' : ''}" dir="${isRTL ? 'rtl' : 'ltr'}">
+                                    <label class="flex items-center gap-2 text-[#46A881] text-[10px] font-bold uppercase tracking-widest font-['Retro_Gaming'] ${isRTL ? 'flex-row-reverse' : ''}">
                                         <span class="material-symbols-outlined text-sm text-[#46A881]">lock</span> ${i18n.t('login.password')}
                                     </label>
                                     <div class="relative w-full">
-                                        <input id="login-password" type="password" placeholder="${i18n.t('login.placeholders.password')}" class="w-full h-12 border border-gray-200 rounded-2xl px-4 pr-12 font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
-                                        <button type="button" id="password-toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-[#46A881] hover:text-[#388567] transition-colors">
+                                        <input id="login-password" type="password" placeholder="${i18n.t('login.placeholders.password')}" class="w-full h-12 border border-gray-200 rounded-2xl ${isRTL ? 'pl-12 pr-4' : 'px-4'} font-['Retro_Gaming'] text-base transition-all focus:ring-4 focus:ring-[#46A881]/20 focus:border-[#46A881] group bg-[#FBFBFB] text-gray-800" />
+                                        <button type="button" id="password-toggle" class="absolute ${isRTL ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-[#46A881] hover:text-[#388567] transition-colors">
                                             <span class="material-symbols-outlined">visibility_off</span>
                                         </button>
                                     </div>
-                                    <p id="password-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
+                                    <p id="password-error" class="hidden text-red-600 text-[9px] font-['Retro_Gaming'] mt-1 flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">error</span><span></span></p>
                                 </div>
 
                                 <!-- Login Button — matched with HomePage -->

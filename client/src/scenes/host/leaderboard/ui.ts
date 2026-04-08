@@ -119,9 +119,9 @@ export class LeaderboardUI {
             let colorBg = 'bg-orange-900/40';
             let colorGlow = 'rgba(205,127,50,0.5)';
             let icon = 'military_tech';
-            let height = 'h-32';
-            let width = 'w-[100px] md:w-[140px]';
-            let avatarSize = 'w-16 h-16 md:w-24 md:h-24'; // Slightly smaller to fit in the card
+            let boxWidth = 'w-24 md:w-36';
+            let height = 'h-16 md:h-24';
+            let avatarSize = 'w-12 h-12 md:w-16 md:h-16'; 
 
             if (isFirst) {
                 colorHex = '#ffcc00'; // Gold
@@ -129,15 +129,14 @@ export class LeaderboardUI {
                 colorBg = 'bg-yellow-600/40';
                 colorGlow = 'rgba(255,204,0,0.6)';
                 icon = 'emoji_events';
-                height = 'h-48 md:h-56';
-                width = 'w-[120px] md:w-[180px]';
-                avatarSize = 'w-20 h-20 md:w-28 md:h-28';
+                height = 'h-32 md:h-40';
+                avatarSize = 'w-14 h-14 md:w-20 md:h-20';
             } else if (isSecond) {
                 colorHex = '#c0c0c0'; // Silver
                 darkColorHex = '#708090'; // Slate Gray (Dark Silver)
                 colorBg = 'bg-gray-600/40';
                 colorGlow = 'rgba(192,192,192,0.5)';
-                height = 'h-40 md:h-44';
+                height = 'h-24 md:h-32';
             }
 
             const hairKey = p.hairId ? ['bowlhair', 'curlyhair', 'longhair', 'mophair', 'shorthair', 'spikeyhair'][p.hairId - 1] : null;
@@ -146,7 +145,7 @@ export class LeaderboardUI {
                 <div class="flex flex-col items-center relative z-20 group">
                     
                     <!-- SQUARE ROUNDED CARD (Tumpul) -->
-                    <div class="w-32 md:w-48 aspect-square rounded-[2rem] md:rounded-[3rem] p-3 md:p-4 mb-4 flex flex-col items-center justify-center border-b-8 shadow-2xl transition-transform group-hover:scale-105" 
+                    <div class="z-30 ${boxWidth} aspect-square rounded-[1.5rem] md:rounded-[2rem] p-2 md:p-3 mb-[-8px] flex flex-col items-center justify-center border-b-8 transition-transform group-hover:scale-105" 
                          style="background: ${darkColorHex}; border-color: rgba(0,0,0,0.25);">
                         
                         <!-- Avatar -->
@@ -160,18 +159,21 @@ export class LeaderboardUI {
                         </div>
 
                         <!-- Name (Truncated) -->
-                        <div class="w-full text-[10px] md:text-lg font-bold text-center uppercase truncate px-1" 
+                        <div class="w-full text-[10px] md:text-md font-bold text-center uppercase truncate px-1" 
                              style="color: #ffffff; font-family: 'Retro Gaming', monospace; text-shadow: 1px 1px 0 #000;"
                              title="${p.name}">
                             ${p.name}
                         </div>
                     </div>
 
-                    <!-- The literal podium block (Hidden on mobile) -->
-                    <div class="hidden md:flex ${width} ${height} rounded-t-2xl border-4 border-b-0 flex-col items-center justify-center relative overflow-hidden pointer-events-auto" style="border-color: ${colorHex}; background: linear-gradient(to top, rgba(0,0,0,0.9), ${colorBg});">
-                        <div class="absolute inset-0 bg-[url('/assets/bg_pattern.png')] opacity-10"></div>
-                        <div class="text-2xl md:text-5xl font-bold mb-2 relative z-10" style="font-family: 'Retro Gaming', monospace; color: #ffffff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">${Math.round(p.score)}</div>
-                        <span class="material-symbols-outlined text-4xl md:text-6xl opacity-40 relative z-10" style="color: ${colorHex}">${icon}</span>
+                    <!-- The literal podium block (Always visible now) -->
+                    <div class="flex z-20 ${boxWidth} ${height} border-x-4 border-t-8 border-b-0 flex-col items-center justify-center relative shadow-2xl" 
+                         style="border-color: ${colorHex}; border-top-color: rgba(0,0,0,0.3); background: linear-gradient(to bottom, ${darkColorHex}, rgba(0,0,0,0.8));">
+                        
+                        <!-- Rank Number on Podium -->
+                        <div class="text-4xl md:text-7xl font-bold relative z-10" style="font-family: 'Retro Gaming', monospace; color: ${colorHex}; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; -webkit-font-smoothing: none;">
+                            ${rank}
+                        </div>
                     </div>
                 </div>
             `;
@@ -211,7 +213,7 @@ export class LeaderboardUI {
                 <img src="/logo/gameforsmart-logo-fix.webp" alt="GameForSmart Logo" class="logo-right" />
 
                 <!-- MAIN CONTENT AREA: overflow-hidden for mobile to prevent scrollbars, auto for desktop -->
-                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-24 md:pt-28 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto hide-scrollbar pointer-events-none">
+                <div class="relative z-10 w-full h-[100dvh] flex flex-col items-center pt-16 md:pt-16 pb-20 md:pb-12 px-4 overflow-hidden md:overflow-y-auto hide-scrollbar pointer-events-none">
                     
 
 

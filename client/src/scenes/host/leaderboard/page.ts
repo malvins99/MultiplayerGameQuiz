@@ -128,7 +128,7 @@ export class HostLeaderboardManager {
             }
 
             if (sid && sid !== "undefined" && sid !== "null") {
-                window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+                window.open(`https://app.gameforsmart.com/stat/${sid}`, '_blank');
             } else {
                 alert(i18n.t('host_leaderboard.no_session_id'));
             }

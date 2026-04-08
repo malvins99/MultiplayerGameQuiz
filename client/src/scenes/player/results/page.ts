@@ -473,7 +473,7 @@ export class ResultManager {
     private openStats() {
         const sid = this.supabaseSessionId || localStorage.getItem('supabaseSessionId');
         if (sid) {
-            window.open(`https://gameforsmartnewui.vercel.app/stat/${sid}`, '_blank');
+            window.open(`https://app.gameforsmart.com/stat/${sid}`, '_blank');
         } else {
             alert(i18n.t('player_result.no_session'));
         }
