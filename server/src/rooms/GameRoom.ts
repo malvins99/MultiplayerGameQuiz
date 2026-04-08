@@ -52,6 +52,9 @@ export class GameRoom extends Room<GameState> {
     private quizDetail: any = {};
     private enemyCountOption: number = 0;
     private countdownStartedAt: string | null = null;
+    private hostStateId: any = null;
+    private hostCityId: any = null;
+    private hostCountryId: any = null;
 
 
     // Local storage for detailed answers (not synced)
@@ -1272,6 +1275,9 @@ export class GameRoom extends Room<GameState> {
                 id: this.sessionId, // Maintain same ID to avoid duplicates if possible, assuming Supabase Utama allows setting ID
                 quiz_id: this.originalQuizId,
                 host_id: this.originalHostId,
+                state_id: this.hostStateId,
+                city_id: this.hostCityId,
+                country_id: this.hostCountryId,
                 game_pin: this.gamePin,
                 status: "finished",
                 total_time_minutes: this.totalTimeMinutes,
@@ -1315,6 +1321,22 @@ export class GameRoom extends Room<GameState> {
                 return;
             }
 
+            try {
+                const { data: profileObj, error: profileErr } = await supabaseUtama
+                    .from('profiles')
+                    .select('state_id, city_id, country_id')
+                    .eq('id', this.originalHostId)
+                    .single();
+                
+                if (!profileErr && profileObj) {
+                    this.hostStateId = profileObj.state_id || null;
+                    this.hostCityId = profileObj.city_id || null;
+                    this.hostCountryId = profileObj.country_id || null;
+                }
+            } catch (e) {
+                console.warn("[Supabase Utama] Failed to fetch host profile:", e);
+            }
+
             // Reconstruct 'current_questions' JSON
             const questionsDataArray = this.state.questions.map((q: any) => {
                 return {
@@ -1335,6 +1357,9 @@ export class GameRoom extends Room<GameState> {
                 id: this.sessionId,
                 quiz_id: this.originalQuizId,
                 host_id: this.originalHostId,
+                state_id: this.hostStateId,
+                city_id: this.hostCityId,
+                country_id: this.hostCountryId,
                 game_pin: this.gamePin,
                 status: "waiting", // Awal masuk statusnya waiting
                 total_time_minutes: this.totalTimeMinutes,
