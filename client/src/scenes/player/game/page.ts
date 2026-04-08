@@ -15,6 +15,7 @@ export class GameScene extends Phaser.Scene {
     chestContainers: { [index: number]: Phaser.GameObjects.Container } = {};
     nameTagContainers: { [sessionId: string]: Phaser.GameObjects.Container } = {};
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    mySessionId: string = '';
     currentPlayer!: Phaser.GameObjects.Container;
     map!: Phaser.Tilemaps.Tilemap;
 
@@ -39,11 +40,90 @@ export class GameScene extends Phaser.Scene {
         super('GameScene');
     }
 
-    init(data: { room: Room }) {
-        this.room = data.room;
+    init(data: { room?: Room }) {
+        if (data.room) {
+            this.room = data.room;
+        }
+
+        if (!this.room) {
+            console.error("[GameScene] Fatal: No room session provided or restored.");
+            TransitionManager.close(() => {
+                window.location.href = '/';
+            });
+            return;
+        }
+
         // Store room in registry for reliable cleanup by other scenes
         this.registry.set('room', this.room);
-        console.log(`[GameScene][Room:${this.room.id}] Initialized. SessionId: ${this.room.sessionId}`);
+        this.mySessionId = this.room.sessionId;
+        console.log(`[GameScene][Room:${this.room.id}] Initialized. SessionId: ${this.mySessionId}`);
+
+        // --- Server Message Listeners (Pre-registered for stability) ---
+        this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
+            const uiScene = this.scene.get('UIScene') as UIScene;
+            if (uiScene && uiScene.updateTimer) {
+                uiScene.updateTimer(data.remaining);
+            }
+        });
+
+        this.room.onMessage('playerFinished', (data: any) => {
+            this.registry.set('leaderboardData', [data]);
+            if (this.quizPopup) this.quizPopup.hide();
+            TransitionManager.close(() => {
+                const engine = (window as any).gameInstance;
+                if (engine) {
+                    engine.destroy(true);
+                    (window as any).gameInstance = null;
+                }
+                import('../results/page').then((m) => {
+                    const manager = new m.ResultManager();
+                    manager.start({ room: this.room, leaderboardData: [data] });
+                });
+            });
+        });
+
+        this.room.onMessage('gameEnded', (data: { rankings: any[] }) => {
+            const isHost = this.room.sessionId === this.room.state.hostId;
+            this.registry.set('isHost', isHost);
+            this.registry.set('leaderboardData', data.rankings);
+
+            if (this.quizPopup) this.quizPopup.hide();
+
+            if (isHost) {
+                this.room.leave();
+                TransitionManager.close(() => {
+                    const engine = (window as any).gameInstance;
+                    if (engine) {
+                        engine.destroy(true);
+                        (window as any).gameInstance = null;
+                    }
+                    import('../../host/leaderboard/page').then((m) => {
+                        const manager = new m.HostLeaderboardManager();
+                        manager.start({
+                            rankings: data.rankings,
+                            isHost: isHost,
+                            mySessionId: this.room.sessionId
+                        });
+                    });
+                });
+            } else {
+                TransitionManager.close(() => {
+                    const engine = (window as any).gameInstance;
+                    if (engine) {
+                        engine.destroy(true);
+                        (window as any).gameInstance = null;
+                    }
+                    import('../results/page').then((m) => {
+                        const manager = new m.ResultManager();
+                        manager.start({ room: this.room, leaderboardData: data.rankings });
+                    });
+                });
+            }
+        });
+
+        this.room.onMessage('retryQuestion', (data: { questionId: number }) => {
+            this.showRetryQuestionPopup(data.questionId);
+        });
 
         // --- BACKGROUND LOADING SYNC ---
         // Ensure screen is closed and showing countdown EVEN DURING PRELOAD
@@ -590,12 +670,19 @@ export class GameScene extends Phaser.Scene {
             }
         });
 
-        this.room.onMessage('retryQuestion', (data: { questionId: number }) => {
-            this.showRetryQuestionPopup(data.questionId);
+        // --- Enemy Sync ---
+        this.room.state.enemies.onRemove((enemy: any, index: string) => {
+            const entity = this.enemyEntities[index];
+            if (entity) {
+                entity.destroy();
+                delete this.enemyEntities[index];
+            }
         });
 
-        // --- Enemy Sync ---
-        this.room.state.enemies.onAdd((enemy: any, index: number) => {
+        this.room.state.enemies.onAdd((enemy: any, index: string) => {
+            // Guard: Prevent spawning dead enemies (prevents 'ghost' mobs on refresh)
+            if (!enemy.isAlive) return;
+            
             if (enemy.ownerId !== this.room.sessionId) return;
 
             const type = enemy.type || 'skeleton';
@@ -622,6 +709,7 @@ export class GameScene extends Phaser.Scene {
 
             // Enemy pointerdown logic removed. Players now left-click to attack.
 
+            enemySprite.setData('id', index); // 'index' is now the string key for MapSchema
             this.enemyEntities[index] = enemySprite;
 
             enemy.onChange(() => {
@@ -718,69 +806,6 @@ export class GameScene extends Phaser.Scene {
             });
         }
 
-        // --- Game Events from Server ---
-        this.room.onMessage('timerUpdate', (data: { remaining: number }) => {
-            const uiScene = this.scene.get('UIScene') as UIScene;
-            if (uiScene && uiScene.updateTimer) {
-                uiScene.updateTimer(data.remaining);
-            }
-        });
-
-        this.room.onMessage('playerFinished', (data: any) => {
-            this.registry.set('leaderboardData', [data]);
-            if (this.quizPopup) this.quizPopup.hide();
-            TransitionManager.close(() => {
-                const engine = (window as any).gameInstance;
-                if (engine) {
-                    engine.destroy(true);
-                    (window as any).gameInstance = null;
-                }
-                import('../results/page').then((m) => {
-                    const manager = new m.ResultManager();
-                    manager.start({ room: this.room, leaderboardData: [data] });
-                });
-            });
-        });
-
-        this.room.onMessage('gameEnded', (data: { rankings: any[] }) => {
-            const isHost = this.room.sessionId === this.room.state.hostId;
-            this.registry.set('isHost', isHost);
-            this.registry.set('leaderboardData', data.rankings);
-
-            if (this.quizPopup) this.quizPopup.hide();
-
-            if (isHost) {
-                this.room.leave();
-                TransitionManager.close(() => {
-                    const engine = (window as any).gameInstance;
-                    if (engine) {
-                        engine.destroy(true);
-                        (window as any).gameInstance = null;
-                    }
-                    import('../../host/leaderboard/page').then((m) => {
-                        const manager = new m.HostLeaderboardManager();
-                        manager.start({
-                            rankings: data.rankings,
-                            isHost: isHost,
-                            mySessionId: this.room.sessionId
-                        });
-                    });
-                });
-            } else {
-                TransitionManager.close(() => {
-                    const engine = (window as any).gameInstance;
-                    if (engine) {
-                        engine.destroy(true);
-                        (window as any).gameInstance = null;
-                    }
-                    import('../results/page').then((m) => {
-                        const manager = new m.ResultManager();
-                        manager.start({ room: this.room, leaderboardData: data.rankings });
-                    });
-                });
-            }
-        });
-
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (this.activeQuestionId !== null) return;
             if (this.isChestPopupVisible) return;
@@ -865,7 +890,7 @@ export class GameScene extends Phaser.Scene {
 
         Object.keys(this.enemyEntities).forEach(id => {
             const enemySprite = this.enemyEntities[id];
-            const enemyState = this.room.state.enemies[id as any];
+            const enemyState = this.room.state.enemies.get(id);
             
             if (enemySprite && enemyState && enemyState.isAlive && !this.cooldownEnemies.has(id)) {
                 const dist = Phaser.Math.Distance.Between(this.currentPlayer.x, this.currentPlayer.y, enemySprite.x, enemySprite.y);
@@ -947,40 +972,7 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    triggerQuiz(enemy: any) {
-        // Use questions from the server state instead of local dummy data
-        const questions = this.room.state.questions;
-        const qIndex = enemy.questionId;
-        const currentQ = questions[qIndex];
 
-        if (currentQ) {
-            const questionData = {
-                id: qIndex, // Using the index as ID for mapping feedback
-                question: currentQ.text,
-                image: currentQ.imageUrl,
-                options: Array.from(currentQ.options), // Convert ArraySchema to regular array
-                correctAnswer: currentQ.correctAnswer
-            };
-
-            this.activeQuestionId = qIndex;
-            let foundKey: string | null = null;
-            this.room.state.enemies.forEach((val: any, key: string) => {
-                if (val === enemy) foundKey = key;
-            });
-            this.activeEnemyId = foundKey;
-            this.isChestPopupVisible = false;
-            this.activeChestIndex = null;
-
-            if (this.quizPopup) {
-                this.quizPopup.show(questionData, (enemy.type || 'SKELETON').toUpperCase());
-                if (this.activeEnemyId !== null) {
-                    this.room.send("engageEnemy", { enemyIndex: this.activeEnemyId });
-                    const enemySprite = this.enemyEntities[this.activeEnemyId];
-                    if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);
-                }
-            }
-        }
-    }
 
     handleAnswer(answerIndex: number, btnElement?: HTMLElement) {
         const isFromChest = this.isChestPopupVisible;
@@ -997,12 +989,12 @@ export class GameScene extends Phaser.Scene {
                 if (isFromChest) {
                     this.room.send("addScoreFromChest", { amount: 10 });
                 } else {
-                    this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId, answerId: answerIndex });
+                    this.room.send("correctAnswer", { questionId: this.activeQuestionId, enemyId: this.activeEnemyId, answerId: answerIndex });
                 }
             } else {
                 if (!isFromChest) {
-                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId, enemyIndex: this.activeEnemyId, answerId: answerIndex });
-                    this.room.send("killEnemy", { enemyIndex: this.activeEnemyId });
+                    this.room.send("wrongAnswer", { questionId: this.activeQuestionId, enemyId: this.activeEnemyId, answerId: answerIndex });
+                    this.room.send("killEnemy", { enemyId: this.activeEnemyId });
                 }
             }
         }
@@ -1259,7 +1251,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     handleEnemyInteraction(enemyId: string) {
-        const enemyState = this.room.state.enemies[enemyId];
+        const enemyState = this.room.state.enemies.get(enemyId);
         if (enemyState && enemyState.isAlive && !this.cooldownEnemies.has(enemyId)) {
             const enemySprite = this.enemyEntities[enemyId];
             this.activeEnemyId = enemyId;
@@ -1277,7 +1269,7 @@ export class GameScene extends Phaser.Scene {
                 const name = (enemyState.type || 'ENEMY').toUpperCase();
                 
                 // SEND ENGAGE SIGNAL TO SERVER TO FREEZE ENEMY
-                this.room.send("engageEnemy", { enemyIndex: Number(enemyId) });
+                this.room.send("engageEnemy", { enemyId: enemyId });
                 
                 this.quizPopup.show(questionData, name);
                 if (enemySprite) this.startCombatCamera(enemySprite.x, enemySprite.y);

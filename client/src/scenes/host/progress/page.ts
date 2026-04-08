@@ -30,6 +30,7 @@ export class HostProgressScene extends Phaser.Scene {
             return;
         }
         this.room = data.room;
+        if ((data as any).isRestore) this.registry.set('isRestore', true);
 
         // Store room in registry for reliable cleanup by other scenes
         this.registry.set('room', this.room);
@@ -44,8 +45,8 @@ export class HostProgressScene extends Phaser.Scene {
             // --- UNIFIED GLOBAL COUNTDOWN SYNC ---
             // If the scene starts during countdown (early loading), keep the overlay updated
             this.room.state.listen("countdown", (val: number, previousVal: number) => {
-                if (val > 0) {
-                    TransitionManager.ensureClosed(); // Stay black during load
+                if (val > 0 && !this.registry.get('isRestore')) {
+                    TransitionManager.ensureClosed(); // Stay black during load only for new games
                     TransitionManager.setCountdownText(val.toString());
                 } else if (val === 0 && (previousVal || 0) > 0) {
                     TransitionManager.setCountdownText("GO!");
@@ -161,6 +162,11 @@ export class HostProgressScene extends Phaser.Scene {
         if (!this.room) {
             console.error("[Spectator] Create failed: No room!");
             return;
+        }
+
+        // --- SPEED OPTIMIZATION: Open Iris immediately if game is already active during refresh ---
+        if (this.room.state.isGameStarted) {
+            TransitionManager.open();
         }
 
         // --- Map Rendering ---
@@ -451,8 +457,10 @@ export class HostProgressScene extends Phaser.Scene {
         // TransitionManager.open() is now handled in init() via the isGameStarted listener
         // to ensure it only opens when the countdown hits 0.
         this.isGameReady = true; 
+        // Logic moved to top of create() for faster restoration feel
         if (this.room.state.isGameStarted) {
-            TransitionManager.open();
+             // Redundant but safe check
+             TransitionManager.open();
         }
     }
 
@@ -489,7 +497,7 @@ export class HostProgressScene extends Phaser.Scene {
                         -2px  2px 0 #000,
                          2px  2px 0 #000,
                          0 0 15px rgba(255,255,255,0.2);
-                ">${String(this.room.state.totalTimeMinutes || 5).padStart(2, '0')}:00</span>
+                ">${this.room.state.isGameStarted ? '--:--' : String(this.room.state.totalTimeMinutes || 5).padStart(2, '0') + ':00'}</span>
             </div>
 
             <button id="spec-volume-btn" class="absolute bottom-4 md:bottom-10 left-4 md:left-10 bg-black/60 border-2 border-[#00ff88]/30 text-[#00ff88] w-12 h-12 md:w-16 md:h-16 rounded-full cursor-pointer flex items-center justify-center pointer-events-auto backdrop-blur-sm transition-all duration-200">

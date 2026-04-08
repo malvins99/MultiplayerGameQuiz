@@ -394,7 +394,39 @@ export class LobbyManager {
         }
     }
 
-    private startGameEngine(startScene: string, sceneData?: any) {
+    private async startGameEngine(startScene: string, sceneData?: any) {
+        // --- PROFESSIONAL RECONNECTION HANDLING ---
+        // Handle reconnection BEFORE starting Phaser to ensure room is ready
+        if (sceneData?.isRestore && !sceneData.room && sceneData.client) {
+            const token = localStorage.getItem('currentReconnectionToken');
+            if (token) {
+                try {
+                    console.log(`[LobbyManager] 🔄 Pre-loading session for ${startScene}...`);
+                    sceneData.room = await sceneData.client.reconnect(token);
+                    console.log(`[LobbyManager] ✅ Session restored for ${startScene}!`);
+                    localStorage.setItem('currentReconnectionToken', sceneData.room.reconnectionToken);
+                } catch (e) {
+                    console.error(`[LobbyManager] ❌ Pre-loading session failed:`, e);
+                    
+                    // FALLBACK: Try fresh join if we have the roomId and it's a host scene
+                    const roomId = localStorage.getItem('currentRoomId');
+                    const isHostScene = startScene.toLowerCase().includes('host') || startScene.toLowerCase().includes('spectator');
+                    
+                    if (roomId && isHostScene) {
+                        try {
+                            console.log(`[LobbyManager] 🔄 Re-joining as Host for ${startScene}...`);
+                            const opts = JSON.parse(localStorage.getItem('lastGameOptions') || '{}');
+                            sceneData.room = await sceneData.client.joinById(roomId, { ...opts, isHost: true });
+                            console.log(`[LobbyManager] ✅ Re-joined successfully!`);
+                            localStorage.setItem('currentReconnectionToken', sceneData.room.reconnectionToken);
+                        } catch (err2) {
+                            console.error(`[LobbyManager] ❌ Re-join failed:`, err2);
+                        }
+                    }
+                }
+            }
+        }
+
         import('../../game').then((engine) => {
             engine.initializeGame(startScene, sceneData);
         }).catch(err => {
@@ -403,7 +435,36 @@ export class LobbyManager {
         });
     }
 
-    private startManager(managerName: string, data?: any) {
+    private async startManager(managerName: string, data?: any) {
+        // --- PRE-RECONNECTION FOR MANAGERS ---
+        if (data?.isRestore && !data.room && data.client) {
+            const token = localStorage.getItem('currentReconnectionToken');
+            if (token) {
+                try {
+                    console.log(`[LobbyManager] 🔄 Pre-loading session for ${managerName}...`);
+                    data.room = await data.client.reconnect(token);
+                    console.log(`[LobbyManager] ✅ Session restored for ${managerName}!`);
+                    localStorage.setItem('currentReconnectionToken', data.room.reconnectionToken);
+                } catch (e) {
+                    console.error(`[LobbyManager] ❌ Pre-loading session failed for ${managerName}:`, e);
+
+                    // FALLBACK: Try fresh join for host managers
+                    const roomId = localStorage.getItem('currentRoomId');
+                    if (roomId && managerName.toLowerCase().includes('host')) {
+                        try {
+                            console.log(`[LobbyManager] 🔄 Re-joining as Host for ${managerName}...`);
+                            const opts = JSON.parse(localStorage.getItem('lastGameOptions') || '{}');
+                            data.room = await data.client.joinById(roomId, { ...opts, isHost: true });
+                            console.log(`[LobbyManager] ✅ Re-joined successfully!`);
+                            localStorage.setItem('currentReconnectionToken', data.room.reconnectionToken);
+                        } catch (err2) {
+                            console.error(`[LobbyManager] ❌ Re-join failed:`, err2);
+                        }
+                    }
+                }
+            }
+        }
+
         if (managerName === 'SelectQuizManager') {
             import('../host/selectquiz/page').then(m => {
                 const manager = new m.SelectQuizManager();

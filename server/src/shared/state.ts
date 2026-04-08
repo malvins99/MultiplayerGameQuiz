@@ -70,7 +70,7 @@ export class SubRoom extends Schema {
 
 export class GameState extends Schema {
     @type({ map: Player }) players = new MapSchema<Player>();
-    @type([Enemy]) enemies = new ArraySchema<Enemy>();
+    @type({ map: Enemy }) enemies = new MapSchema<Enemy>();
     @type([Chest]) chests = new ArraySchema<Chest>();
     @type([Question]) questions = new ArraySchema<Question>();
     @type([SubRoom]) subRooms = new ArraySchema<SubRoom>();
