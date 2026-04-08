@@ -35,7 +35,7 @@
       color: white;
     }
   </style>
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" type="image/webp" href="/logo/SkeletonV1.webp" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Primary Meta Tags -->
@@ -164,9 +164,10 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       z-index: 1;
+      overflow: hidden;
     }
 
     /* Lobby Overlay Styles */
@@ -231,6 +232,10 @@
 
     .pixel-border {
       box-shadow: 0 -4px 0 0 #000, 0 4px 0 0 #000, -4px 0 0 0 #000, 4px 0 0 0 #000;
+    }
+
+    .pixel-text-outline {
+      text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
     }
 
     .pixel-btn-green {
@@ -677,14 +682,16 @@
       pointer-events: none;
       will-change: transform, left, top;
       transition: filter 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      touch-action: none; /* Prevent scrolling while dragging */
+      touch-action: none;
+      /* Prevent scrolling while dragging */
     }
 
     .walking-char-container.is-dragged {
-      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
       transform: scale(1.1);
       z-index: 1000 !important;
-      transition: none; /* Disable transition while dragging for instant feedback */
+      transition: none;
+      /* Disable transition while dragging for instant feedback */
     }
 
     .walking-char-sprite {
@@ -746,7 +753,7 @@
       backface-visibility: hidden;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-OG9pQZm3.js"></script>
+  <script type="module" crossorigin src="/assets/index-DQt8FJhi.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white">
@@ -772,7 +779,7 @@
   <!-- GLOBAL TRANSITION OVERLAY -->
   <div id="transition-overlay"></div>
 
-  <!-- MAIN SCRIPT -->
+  <!-- MAIN SCRIPT -->
 </body>
 
 </html>

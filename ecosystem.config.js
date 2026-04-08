@@ -3,8 +3,8 @@ module.exports = {
     {
       name: "Zigma",
       // Path ke file server.js yang sudah di-build (JS bukan TS)
-      script: "./server/build/server.js", 
-      cwd: "./",
+      cwd: "./server",
+      script: "./build/server/src/server.js", 
       
       /* 
          PENTING: Untuk Game Server (Colyseus), sangat disarankan menggunakan 'fork' 
@@ -12,12 +12,12 @@ module.exports = {
          Cluster mode tanpa Redis akan menyebabkan error 'Session Not Found' 
          saat player mencoba masuk ke room.
       */
-      instances: 1, 
-      exec_mode: "fork", 
+      instances: "max", 
+      exec_mode: "cluster", 
       
       autorestart: true,
       watch: false,
-      max_memory_restart: "1G",
+      max_memory_restart: "3G",
       
       // Environment variables
       env: {
