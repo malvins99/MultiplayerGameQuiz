@@ -1,4 +1,4 @@
-import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"./OrientationManager-Br2LilYK.js";class g{constructor(){this.rankings=[],this.mySessionId="",this.roomId="",this.supabaseSessionId="",this.handleLangChange=()=>{const t=document.getElementById("txt-pr-rank");t&&(t.innerText=e.t("player_result.rank"));const o=document.getElementById("txt-pr-score");o&&(o.innerText=e.t("player_result.score"));const s=document.getElementById("txt-pr-correct");s&&(s.innerText=e.t("player_result.correct"));const i=document.getElementById("txt-pr-time");i&&(i.innerText=e.t("player_result.time"));const a=document.getElementById("lb-home-btn");a&&(a.title=e.t("player_result.title_home"));const n=document.getElementById("lb-stats-btn");n&&(n.title=e.t("player_result.title_stats"));const r=document.getElementById("txt-pr-home");r&&(r.innerText=e.t("player_result.home"));const p=document.getElementById("txt-pr-stats");p&&(p.innerText=e.t("player_result.stats"))}}start(t){l.ensureClosed(),c.requirePortrait(e.t("player_result.portrait_req_title"),e.t("player_result.portrait_req_desc")),window.addEventListener("languageChanged",this.handleLangChange);let o=(t==null?void 0:t.leaderboardData)||[];this.room=t==null?void 0:t.room;let s=this.room?this.room.sessionId:"",i=this.room?this.room.id:"";if(this.supabaseSessionId=localStorage.getItem("supabaseSessionId")||"",o.length>0&&s&&i)this.rankings=o,this.mySessionId=s,this.roomId=i,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId}));else{const n=sessionStorage.getItem("playerResultState");if(n){const r=JSON.parse(n);this.rankings=r.rankings,this.mySessionId=r.mySessionId,this.roomId=r.roomId,r.supabaseSessionId&&(this.supabaseSessionId=r.supabaseSessionId)}}const a=document.getElementById("result-ui");if(a&&a.remove(),this.container=document.createElement("div"),this.container.id="result-ui",this.container.style.position="absolute",this.container.style.top="0",this.container.style.left="0",this.container.style.width="100%",this.container.style.height="100%",this.container.style.zIndex="1000",this.container.style.pointerEvents="none",document.body.appendChild(this.container),!document.getElementById("result-styles")){const n=document.createElement("style");n.id="result-styles",n.innerHTML=this.getStyles(),document.head.appendChild(n)}this.renderIndividualResult(),this.room&&this.room.onMessage("gameEnded",n=>{this.rankings=n.rankings,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId})),this.renderIndividualResult()}),setTimeout(()=>{l.open()},100)}getStyles(){return`
+import{i as e,T as g,R as f,G as b}from"./index-B8QAg1Qe.js";import{O as x}from"./OrientationManager-BIJbSAkI.js";class S{constructor(){this.rankings=[],this.mySessionId="",this.roomId="",this.supabaseSessionId="",this.handleLangChange=()=>{const t=document.getElementById("txt-pr-rank");t&&(t.innerText=e.t("player_result.rank"));const s=document.getElementById("txt-pr-score");s&&(s.innerText=e.t("player_result.score"));const i=document.getElementById("txt-pr-correct");i&&(i.innerText=e.t("player_result.correct"));const o=document.getElementById("txt-pr-time");o&&(o.innerText=e.t("player_result.time"));const d=document.getElementById("lb-home-btn");d&&(d.title=e.t("player_result.title_home"));const r=document.getElementById("lb-stats-btn");r&&(r.title=e.t("player_result.title_stats"));const l=document.getElementById("txt-pr-home");l&&(l.innerText=e.t("player_result.home"));const p=document.getElementById("txt-pr-stats");p&&(p.innerText=e.t("player_result.stats"))}}start(t){var r,l,p,m,a,u,h;g.ensureClosed(),x.requirePortrait(e.t("player_result.portrait_req_title"),e.t("player_result.portrait_req_desc")),window.addEventListener("languageChanged",this.handleLangChange);let s=(t==null?void 0:t.leaderboardData)||[];this.room=t==null?void 0:t.room;let i=this.room?this.room.sessionId:"",o=this.room?this.room.id:"";if(this.supabaseSessionId=localStorage.getItem("supabaseSessionId")||((l=(r=this.room)==null?void 0:r.metadata)==null?void 0:l.sessionId)||"",s.length>0&&i&&o){this.rankings=s,this.mySessionId=i,this.roomId=o;const n=((m=(p=this.room)==null?void 0:p.state)==null?void 0:m.questionLimit)||"5",c=((h=(u=(a=this.room)==null?void 0:a.state)==null?void 0:u.questions)==null?void 0:h.length)||5,y=n==="all"?c:parseInt(n);sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId,questionTotal:y}))}else{const n=sessionStorage.getItem("playerResultState");if(n){const c=JSON.parse(n);this.rankings=c.rankings,this.mySessionId=c.mySessionId,this.roomId=c.roomId,c.supabaseSessionId&&(this.supabaseSessionId=c.supabaseSessionId)}}const d=document.getElementById("result-ui");if(d&&d.remove(),this.container=document.createElement("div"),this.container.id="result-ui",this.container.style.position="absolute",this.container.style.top="0",this.container.style.left="0",this.container.style.width="100%",this.container.style.height="100%",this.container.style.zIndex="1000",this.container.style.pointerEvents="none",document.body.appendChild(this.container),!document.getElementById("result-styles")){const n=document.createElement("style");n.id="result-styles",n.innerHTML=this.getStyles(),document.head.appendChild(n)}this.renderIndividualResult(),this.room&&this.room.onMessage("gameEnded",n=>{this.rankings=n.rankings,sessionStorage.setItem("playerResultState",JSON.stringify({rankings:this.rankings,mySessionId:this.mySessionId,roomId:this.roomId,supabaseSessionId:this.supabaseSessionId})),this.renderIndividualResult()}),setTimeout(()=>{g.open()},100)}getStyles(){return`
             @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
             #result-ui {
@@ -36,10 +36,15 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
                 width: 180px; height: 180px;
                 background: #F1F8E9;
                 border: 2px solid #478D47;
-                border-radius: 24px;
+                border-radius: 50%;
                 display: flex; align-items: center; justify-content: center;
                 margin-bottom: 25px;
-                position: relative; overflow: visible;
+                position: relative; overflow: hidden; // Ensures avatar image is clipped
+            }
+            .result-avatar-img {
+                width: 100%; height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
             }
 
             .char-anim { width: 96px; height: 64px; image-rendering: pixelated; position: absolute; transform: scale(4.5); }
@@ -70,7 +75,13 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
             .stat-box:hover { transform: translateY(-5px); }
             .stat-icon { font-size: 28px; margin-bottom: 12px; color: #478D47; }
             .stat-value { font-family: 'Retro Gaming', monospace; font-size: 18px; color: #478D47; margin-bottom: 6px; }
-            .stat-label { font-size: 9px; color: #6CC452; text-transform: uppercase; letter-spacing: 1px; }
+            .stat-label { 
+                font-size: 11px; 
+                color: #6CC452; 
+                text-transform: uppercase; 
+                letter-spacing: 1px;
+                font-weight: 800;
+            }
 
             .lb-footer { 
                 position: fixed; 
@@ -139,7 +150,7 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
                     border: 4px solid #6CC452;
                     border-bottom: 10px solid #478D47;
                 }
-                .result-avatar-container { width: 140px; height: 140px; background: #F1F8E9; border-color: #478D47; }
+                .result-avatar-container { width: 140px; height: 140px; background: #F1F8E9; border-color: #478D47; border-radius: 50%; }
                 .result-name { font-size: 20px; margin-bottom: 30px; color: #478D47; }
                 .result-stats-row { 
                     gap: 6px; 
@@ -156,7 +167,11 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
                 }
                 .stat-box .material-symbols-outlined { font-size: 22px; margin-bottom: 6px; color: #478D47; }
                 .stat-value { font-size: 14px; margin-bottom: 2px; color: #478D47; }
-                .stat-label { font-size: 8px; color: #6CC452; }
+                .stat-label { 
+                    font-size: ${e.getLanguage()==="ar"?"10px":"8px"}; 
+                    color: #6CC452; 
+                    font-weight: 800;
+                }
                 .lb-footer {
                     top: auto;
                     bottom: 40px;
@@ -193,8 +208,8 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
             @media (min-width: 769px) {
                 .nav-btn-wide { display: none; }
             }
-        `}renderIndividualResult(){m.navigate("/player/result"),this.container.innerHTML="";const t=this.rankings.find(i=>i.sessionId===this.mySessionId)||this.rankings[0];if(!t)return;const o=i=>{const a=Math.floor(i/1e3),n=Math.floor(a/60),r=a%60;return`${n.toString().padStart(2,"0")}:${r.toString().padStart(2,"0")}`},s=this.getCharacterVisuals(t);this.container.innerHTML=`
-            ${d.getHTML("result")}
+        `}renderIndividualResult(){var l,p,m;f.navigate("/player/result"),this.container.innerHTML="";const t=this.rankings.find(a=>a.sessionId===this.mySessionId)||this.rankings[0];if(!t)return;const s=a=>{const u=Math.floor(a/1e3),h=Math.floor(u/60),n=u%60;return`${h.toString().padStart(2,"0")}:${n.toString().padStart(2,"0")}`},i=a=>a&&(a.includes("googleusercontent.com")?a.replace(/=s\d+(-c)?/,"=s384-c"):a),o=sessionStorage.getItem("playerResultState"),d=o&&JSON.parse(o).questionTotal||5,r=this.getCharacterVisuals(t);this.container.innerHTML=`
+            ${b.getHTML("result")}
 
             <img src="/logo/Zigma-logo-fix.webp" class="logo-center" />
             <img src="/logo/Zigma-logo-fix.webp" class="logo-left" />
@@ -202,30 +217,31 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
 
             <div class="result-card pointer-events-auto">
                 <div class="result-avatar-container">
-                    <div class="char-anim result-char anim-play" style="${s.base}"></div>
-                    ${s.hair?`<div class="char-anim result-char anim-play" style="${s.hair}"></div>`:""}
+                    ${t.avatarUrl?`<img src="${i(t.avatarUrl)}" class="result-avatar-img" />`:`<div class="char-anim result-char anim-play" style="${r.base}"></div>
+                         <div class="char-anim result-char anim-play" style="${r.tools}"></div>
+                         ${r.hair?`<div class="char-anim result-char anim-play" style="${r.hair}"></div>`:""}`}
                 </div>
                 <div class="result-name">${t.name}</div>
                 
                 <div class="result-stats-row">
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">military_tech</span>
-                        <div class="stat-value">${t.rank===-1?"#?":"#"+t.rank}</div>
+                        <div class="stat-value">${t.rank===-1?((m=(p=(l=this.room)==null?void 0:l.state)==null?void 0:p.players)==null?void 0:m.size)===1?"#1":"#?":"#"+t.rank}</div>
                         <div id="txt-pr-rank" class="stat-label">${e.t("player_result.rank")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">workspace_premium</span>
-                        <div class="stat-value">${t.score}</div>
+                        <div class="stat-value">${Math.round(t.score)}</div>
                         <div id="txt-pr-score" class="stat-label">${e.t("player_result.score")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">task_alt</span>
-                        <div class="stat-value">${t.correctAnswers}/5</div>
+                        <div class="stat-value">${t.correctAnswers}/${d}</div>
                         <div id="txt-pr-correct" class="stat-label">${e.t("player_result.correct")}</div>
                     </div>
                     <div class="stat-box">
                         <span class="material-symbols-outlined stat-icon">schedule</span>
-                        <div class="stat-value">${o(t.duration)}</div>
+                        <div class="stat-value">${s(t.duration)}</div>
                         <div id="txt-pr-time" class="stat-label">${e.t("player_result.time")}</div>
                     </div>
                 </div>
@@ -250,4 +266,4 @@ import{i as e,T as l,R as m,G as d}from"./index-OG9pQZm3.js";import{O as c}from"
                     <span class="material-symbols-outlined">analytics</span>
                 </button>
             </div>
-        `,d.startCharacterSpawner("result"),this.attachListeners()}getCharacterVisuals(t){const o="background-image: url('/assets/base_idle_strip9.png'); background-size: 864px 64px;";let s="";if(t.hairId&&t.hairId>0){const a={1:"bowlhair",2:"curlyhair",3:"longhair",4:"mophair",5:"shorthair",6:"spikeyhair"}[t.hairId];a&&(s=`background-image: url('/assets/${a}_idle_strip9.png'); background-size: 864px 64px;`)}return{base:o,hair:s}}attachListeners(){setTimeout(()=>{const t=document.getElementById("lb-home-btn"),o=document.getElementById("lb-stats-btn");t&&(t.onclick=()=>{l.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})});const s=document.getElementById("lb-home-btn-mobile");s&&(s.onclick=()=>{l.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})}),o&&(o.onclick=()=>this.openStats());const i=document.getElementById("lb-stats-btn-mobile");i&&(i.onclick=()=>this.openStats())},50)}openStats(){const t=this.supabaseSessionId||localStorage.getItem("supabaseSessionId");t?window.open(`https://gameforsmartnewui.vercel.app/stat/${t}`,"_blank"):alert(e.t("player_result.no_session"))}cleanup(){d.stopCharacterSpawner("result"),this.container&&this.container.remove();const t=document.getElementById("result-styles");t&&t.remove(),c.disable(),window.removeEventListener("languageChanged",this.handleLangChange)}}export{g as ResultManager};
+        `,b.startCharacterSpawner("result"),this.attachListeners()}getCharacterVisuals(t){const s="/assets/characters/Human/IDLE",i=`background-image: url('${s}/base_idle_strip9.png'); background-size: 864px 64px;`,o=`background-image: url('${s}/tools_idle_strip9.png'); background-size: 864px 64px;`;let d="";if(t.hairId&&t.hairId>0){const l={1:"bowlhair",2:"curlyhair",3:"longhair",4:"mophair",5:"shorthair",6:"spikeyhair"}[t.hairId];l&&(d=`background-image: url('${s}/${l}_idle_strip9.png'); background-size: 864px 64px;`)}return{base:i,tools:o,hair:d}}attachListeners(){setTimeout(()=>{const t=document.getElementById("lb-home-btn"),s=document.getElementById("lb-stats-btn");t&&(t.onclick=()=>{g.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})});const i=document.getElementById("lb-home-btn-mobile");i&&(i.onclick=()=>{g.transitionTo(()=>{this.cleanup(),this.room&&this.room.leave(),window.location.href="/"})}),s&&(s.onclick=()=>this.openStats());const o=document.getElementById("lb-stats-btn-mobile");o&&(o.onclick=()=>this.openStats())},50)}openStats(){var s,i;const t=this.supabaseSessionId||localStorage.getItem("supabaseSessionId")||((i=(s=this.room)==null?void 0:s.metadata)==null?void 0:i.sessionId);t?window.open(`https://app.gameforsmart.com/stat/${t}`,"_blank"):alert(e.t("player_result.no_session"))}cleanup(){b.stopCharacterSpawner("result"),this.container&&this.container.remove();const t=document.getElementById("result-styles");t&&t.remove(),x.disable(),window.removeEventListener("languageChanged",this.handleLangChange)}}export{S as ResultManager};
