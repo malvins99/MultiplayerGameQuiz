@@ -117,7 +117,7 @@ app.post("/api/githubWebhook", async (req, res) => {
     const payload = req.body;
 
     // Check branch
-    if (payload.ref !== "refs/heads/main" && payload.ref !== "refs/heads/merge-akhir") {
+    if (payload.ref !== "refs/heads/main" && payload.ref !== "refs/heads/merge-akhir" && payload.ref !== "refs/heads/test") {
         return res.json({ message: "Not a monitored branch" });
     }
 
