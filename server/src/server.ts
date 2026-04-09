@@ -36,7 +36,7 @@ process.on('unhandledRejection', (reason: any) => {
 
 const port = Number(process.env.PORT || 2567);
 const app = express();
-
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 
@@ -70,6 +70,7 @@ app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(clientBuildPath, "s
 const server = http.createServer(app);
 const gameServer = new Server({
     server,
+    publicAddress: "zigma.gameforsmart.com",
     pingInterval: 5000, // 5 detik — cukup untuk deteksi disconnect tanpa mengganggu initial handshake
     pingMaxRetries: 3,
 });
