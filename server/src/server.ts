@@ -70,8 +70,9 @@ app.get("/sitemap.xml", (req, res) => res.sendFile(path.join(clientBuildPath, "s
 const server = http.createServer(app);
 const gameServer = new Server({
     server,
-    publicAddress: "zigma.gameforsmart.com",
-    pingInterval: 5000, // 5 detik — cukup untuk deteksi disconnect tanpa mengganggu initial handshake
+    // Gunakan publicAddress hanya jika didefinisikan (untuk production/VPS)
+    publicAddress: process.env.PUBLIC_ADDRESS || undefined,
+    pingInterval: 5000,
     pingMaxRetries: 3,
 });
 

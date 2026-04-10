@@ -115,7 +115,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 const savedToken = localStorage.getItem('currentReconnectionToken');
-                
+
                 if (savedToken) {
                     try {
                         console.log(`[Restore] 🔄 Attempting REJOIN with token: ${savedToken.substring(0, 8)}...`);
@@ -398,6 +398,39 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 }
                 .name-container:hover .name-tooltip {
                     opacity: 1 !important;
+                    visibility: visible !important;
+                    transform: translateX(-50%) translateY(2px) !important;
+                }
+                .name-tooltip {
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(0);
+                    background: #1a1a2e;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    font-size: 10px;
+                    font-family: 'Press Start 2P', cursive;
+                    white-space: nowrap;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 2px solid #6CC452;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+                    pointer-events: none;
+                    z-index: 100;
+                    margin-top: 2px;
+                }
+                .name-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-width: 6px;
+                    border-style: solid;
+                    border-color: transparent transparent #6CC452 transparent;
                 }
             `;
             document.head.appendChild(style);
@@ -547,7 +580,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             // Host UI Updates
             const hCode = document.getElementById('host-ui-code-text');
             if (hCode) hCode.innerText = i18n.t('host_lobby.code');
-            
+
             const hBackBtn = document.getElementById('host-back-btn');
             if (hBackBtn) hBackBtn.innerText = i18n.t('host_lobby.exit');
 
@@ -572,7 +605,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
 
             const mMngGrpTitle = document.getElementById('host-ui-invite-group-title');
             if (mMngGrpTitle) mMngGrpTitle.innerHTML = `<span class="material-symbols-outlined text-primary text-3xl">group</span> ${i18n.t('host_lobby.invite_groups')}`;
-            
+
             const mMngGrpSearch = document.getElementById('group-search-input') as HTMLInputElement;
             if (mMngGrpSearch) mMngGrpSearch.placeholder = i18n.t('host_lobby.search_group');
 
@@ -997,7 +1030,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                 manageUsersModal.classList.remove('hidden');
                 this.updateManageUsersList();
             };
-            
+
             // Close on click outside
             manageUsersModal.onclick = (e) => {
                 if (e.target === manageUsersModal) {
@@ -1506,7 +1539,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
         let filteredFriends = this.allFetchedFriends;
         if (this.friendSearchQuery.trim() !== '') {
             const query = this.friendSearchQuery.toLowerCase();
-            filteredFriends = filteredFriends.filter(f => 
+            filteredFriends = filteredFriends.filter(f =>
                 (f.username || '').toLowerCase().includes(query) ||
                 (f.nickname || '').toLowerCase().includes(query) ||
                 (f.fullname || '').toLowerCase().includes(query)
@@ -1712,7 +1745,7 @@ export class HostWaitingRoomScene extends Phaser.Scene {
             localStorage.removeItem('currentReconnectionToken'); // v0.15 token
 
             if (this.waitingUI) this.waitingUI.classList.add('hidden');
-            
+
             // Force reload to Select Quiz to ensure clean state and proper routing
             window.location.href = '/host/select-quiz';
 
@@ -2112,15 +2145,20 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                     </div>
 
                     <!-- Player Name Container with Tooltip Trigger -->
-                        <div class="name-container" style="text-align: center; width: 100%; padding: 0 2px; position: relative; pointer-events: auto;">
-                            <span style="font-size: 12px; color: ${isMe ? '#00ff88' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+                        <div class="name-container" style="text-align: center; width: 100%; padding: 0 4px; position: relative; pointer-events: auto; margin-top: 4px;">
+                            <span style="font-size: 14px; color: ${isMe ? '#FFFFFF' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);' : ''}">
                                 ${player.name || 'PLAYER'}
+                                <span style="font-size: 10px; opacity: 0.8; margin-left: 4px;">
+                                    ${(() => {
+                        const hair = getHairById(player.hairId || 0);
+                        return i18n.t(`player_lobby.hair_${hair.id}`);
+                    })()}
+                                </span>
                             </span>
                             
                             <!-- Tooltip (Only shows when name-container is hovered via CSS) -->
-                            <div class="name-tooltip absolute bottom-[-28px] left-1/2 -translate-x-1/2 bg-black/90 text-white text-[8px] py-1.5 px-2.5 rounded-lg opacity-0 transition-opacity whitespace-nowrap z-50 pointer-events-none font-['Retro_Gaming'] border border-primary/30 shadow-[0_0_10px_rgba(0,255,136,0.2)]">
+                            <div class="name-tooltip">
                                 ${player.name || 'PLAYER'}
-                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/90 rotate-45 border-l border-t border-primary/30"></div>
                             </div>
                         </div>
                     </div>

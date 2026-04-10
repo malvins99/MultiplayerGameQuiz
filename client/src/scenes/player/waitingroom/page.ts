@@ -35,7 +35,7 @@ export class PlayerWaitingRoomManager {
     characterPreviewEl: HTMLElement | null = null;
     qrPopup: QRCodePopup | null = null;
 
-    constructor() {}
+    constructor() { }
 
     async init(data: { room?: Room, isHost?: boolean, client?: any, isRestore?: boolean }) {
         if (data.room) {
@@ -280,9 +280,9 @@ export class PlayerWaitingRoomManager {
                     padding: 25px;
                     display: flex;
                     flex-direction: column;
-                    margin-top: 10px;
+                    margin-top: 2px;
                 }
-                .custom-scrollbar {
+                .name-tooltip::after {
                     scrollbar-width: none !important;
                     -ms-overflow-style: none !important;
                 }
@@ -504,6 +504,52 @@ export class PlayerWaitingRoomManager {
                     .player-card-wrapper {
                         max-width: 100%;
                     }
+                }
+
+                /* Tooltip Styles */
+                .player-name-container {
+                    position: relative;
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
+                }
+                .player-name-tooltip {
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(0);
+                    background: #1a1a2e;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    font-size: 10px;
+                    font-family: 'Press Start 2P', cursive;
+                    white-space: nowrap;
+                    opacity: 0;
+                    visibility: hidden;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 2px solid #6CC452;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+                    pointer-events: none;
+                    z-index: 100;
+                    margin-top: 2px;
+                }
+                .player-name-container:hover .player-name-tooltip {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateX(-50%) translateY(2px);
+                }
+                .player-name-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-width: 6px;
+                    border-style: solid;
+                    border-color: transparent transparent #6CC452 transparent;
                 }
             `;
             document.head.appendChild(style);
@@ -1043,10 +1089,19 @@ export class PlayerWaitingRoomManager {
                     </div>
                     
                     <!-- Player Name -->
-                    <div style="text-align: center; width: 100%; margin-top: 2px; padding: 0 4px;">
-                        <span style="font-size: 11px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);' : ''}">
+                    <div class="player-name-container" style="text-align: center; width: 100%; margin-top: 4px; padding: 0 4px;">
+                        <span style="font-size: 14px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);' : ''}">
                             ${player.name || i18n.t('host_lobby.player_upper')}
+                            <span style="font-size: 10px; opacity: 0.8; margin-left: 4px;">
+                                ${(() => {
+                        const hair = getHairById(player.hairId || 0);
+                        return i18n.t(`player_lobby.hair_${hair.id}`);
+                    })()}
+                            </span>
                         </span>
+                        <div class="player-name-tooltip">
+                            ${player.name || i18n.t('host_lobby.player_upper')}
+                        </div>
                     </div>
 
                     ${youPill}
