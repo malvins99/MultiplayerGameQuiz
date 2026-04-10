@@ -26,9 +26,9 @@ export class CharacterSelectPopup {
     private setupLanguageListener() {
         window.addEventListener('languageChanged', () => {
             this.okBtn.innerText = i18n.t('player_lobby.ok');
-            this.updatePreview(); 
+            this.updatePreview();
             this.renderGrid();
-            
+
             // Update footer alignment
             const footer = this.okBtn.parentElement;
             if (footer) {
