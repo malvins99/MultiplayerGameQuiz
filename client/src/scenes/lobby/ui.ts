@@ -131,9 +131,9 @@ export class LobbyUI {
                 </button>
 
                 <!-- Logout Modal -->
-                <div id="logout-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
-                    <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-                    <div class="relative z-10 bg-white border-4 border-[#6CC452] border-b-[10px] border-b-[#478D47] rounded-[32px] p-8 max-w-sm w-full text-center overflow-hidden shadow-2xl">
+                <div id="logout-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center px-4 pointer-events-auto">
+                    <div id="logout-modal-backdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"></div>
+                    <div class="relative z-10 bg-white border-4 border-[#6CC452] border-b-[10px] border-b-[#478D47] rounded-[32px] p-8 max-w-sm w-full text-center overflow-hidden shadow-2xl pointer-events-auto">
                         <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#2d5a30 1px, transparent 1px); background-size: 16px 16px;"></div>
                         
                         <div class="relative z-10 flex flex-col items-center">
@@ -143,9 +143,9 @@ export class LobbyUI {
                             <h3 class="text-[#478D47] font-['Retro_Gaming'] text-lg uppercase tracking-wider mb-1">${i18n.t('lobby.logout_modal.title')}</h3>
                             <p id="logout-modal-name" class="text-[#6CC452] font-['Retro_Gaming'] text-[11px] mb-2 uppercase font-bold"></p>
                             <p class="text-[#478D47]/70 font-['Retro_Gaming'] text-[10px] mb-8 leading-relaxed">${i18n.t('lobby.logout_modal.desc')}</p>
-                            <div class="flex gap-4 w-full">
-                                <button id="logout-cancel-btn" class="flex-1 py-3 bg-[#F1F8E9] text-[#478D47] font-['Retro_Gaming'] text-xs uppercase rounded-xl border-b-4 border-[#6CC452]/50 hover:bg-[#E8F5E9] active:border-b-0 active:translate-y-1 transition-all cursor-pointer">${i18n.t('lobby.logout_modal.cancel')}</button>
-                                <button id="logout-confirm-btn" class="flex-1 py-3 bg-[#FF5C5C] text-white font-['Retro_Gaming'] text-xs uppercase rounded-xl border-b-4 border-[#C0392B] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-lg">${i18n.t('lobby.logout_modal.confirm')}</button>
+                            <div class="flex gap-4 w-full relative z-20">
+                                <button id="logout-cancel-btn" class="flex-1 py-3 bg-[#F1F8E9] text-[#478D47] font-['Retro_Gaming'] text-xs uppercase rounded-xl border-b-4 border-[#6CC452]/50 hover:bg-[#E8F5E9] active:border-b-0 active:translate-y-1 transition-all cursor-pointer pointer-events-auto">${i18n.t('lobby.logout_modal.cancel')}</button>
+                                <button id="logout-confirm-btn" class="flex-1 py-3 bg-[#FF5C5C] text-white font-['Retro_Gaming'] text-xs uppercase rounded-xl border-b-4 border-[#C0392B] hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all cursor-pointer shadow-lg pointer-events-auto">${i18n.t('lobby.logout_modal.confirm')}</button>
                             </div>
                         </div>
                     </div>
