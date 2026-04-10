@@ -2148,12 +2148,6 @@ export class HostWaitingRoomScene extends Phaser.Scene {
                         <div class="name-container" style="text-align: center; width: 100%; padding: 0 4px; position: relative; pointer-events: auto; margin-top: 4px;">
                             <span style="font-size: 14px; color: ${isMe ? '#FFFFFF' : 'white'}; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);' : ''}">
                                 ${player.name || 'PLAYER'}
-                                <span style="font-size: 10px; opacity: 0.8; margin-left: 4px;">
-                                    ${(() => {
-                        const hair = getHairById(player.hairId || 0);
-                        return i18n.t(`player_lobby.hair_${hair.id}`);
-                    })()}
-                                </span>
                             </span>
                             
                             <!-- Tooltip (Only shows when name-container is hovered via CSS) -->

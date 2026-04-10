@@ -1092,12 +1092,6 @@ export class PlayerWaitingRoomManager {
                     <div class="player-name-container" style="text-align: center; width: 100%; margin-top: 4px; padding: 0 4px;">
                         <span style="font-size: 14px; color: #FFFFFF; font-family: 'Press Start 2P', cursive; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; width: 100%; ${isMe ? 'text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);' : ''}">
                             ${player.name || i18n.t('host_lobby.player_upper')}
-                            <span style="font-size: 10px; opacity: 0.8; margin-left: 4px;">
-                                ${(() => {
-                        const hair = getHairById(player.hairId || 0);
-                        return i18n.t(`player_lobby.hair_${hair.id}`);
-                    })()}
-                            </span>
                         </span>
                         <div class="player-name-tooltip">
                             ${player.name || i18n.t('host_lobby.player_upper')}

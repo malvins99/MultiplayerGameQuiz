@@ -12,7 +12,6 @@ export class CharacterSelectPopup {
     private onClose: () => void;
     private hairOptions: { id: number, name: string, idleKey: string }[];
     private isVisible: boolean = false;
-    private nameLabel!: HTMLElement;
 
     constructor(hairOptions: any[], onSelect: (id: number) => void, onClose: () => void) {
         this.hairOptions = hairOptions;
@@ -97,10 +96,7 @@ export class CharacterSelectPopup {
         this.bigPreview.style.transform = mainScale;
         this.bigPreview.style.animation = 'play-idle 1s steps(9) infinite';
 
-        // Style Name Label
-        this.nameLabel = document.createElement('div');
-        this.nameLabel.className = 'text-white font-bold uppercase tracking-widest text-lg font-["Retro_Gaming"] text-center mt-2';
-        this.nameLabel.innerText = i18n.t('player_lobby.hair_0');
+
 
         // Add style for animation if not exists
         if (!document.getElementById('anim-style-idle')) {
@@ -117,7 +113,6 @@ export class CharacterSelectPopup {
         leftCol.appendChild(this.bigPreview);
 
         leftContainer.appendChild(leftCol);
-        leftContainer.appendChild(this.nameLabel);
 
         // RIGHT: Grid
         const rightCol = document.createElement('div');
@@ -237,7 +232,6 @@ export class CharacterSelectPopup {
     private updatePreview() {
         const hair = this.hairOptions.find(h => h.id === this.selectedHairId);
         if (hair) {
-            this.nameLabel.innerText = i18n.t(`player_lobby.hair_${hair.id}`);
             if (hair.id === 0) {
                 this.bigPreview.style.backgroundImage = 'none';
             } else {
