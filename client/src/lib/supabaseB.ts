@@ -8,7 +8,13 @@ const supabaseUrl = import.meta.env?.NEXT_PUBLIC_B_SUPABASE_URL || 'https://ctmv
 const supabaseAnonKey = import.meta.env?.NEXT_PUBLIC_B_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0bXZ1c2xpcGhxbW9wcnhncHRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NDc2MDcsImV4cCI6MjA4NjQyMzYwN30.KmW-LWg_2PwjkR_AP6Wsk3vOfBuGkP_WoILUCKg-d04';
 
 // Create a separate client instance
-export const supabaseB = createClient(supabaseUrl, supabaseAnonKey);
+export const supabaseB = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+    }
+});
 
 export const SESSION_TABLE = 'sessions';
 export const PARTICIPANT_TABLE = 'participants';
